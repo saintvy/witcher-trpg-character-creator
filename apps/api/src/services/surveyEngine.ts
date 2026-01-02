@@ -69,7 +69,7 @@ type CounterIncrementConfig = {
   step?: unknown;
 };
 
-const SHOP_ALLOWED_TABLES = new Set(['wcc_items_weapons', 'wcc_items_armor', 'wcc_item_weapons_v']);
+const SHOP_ALLOWED_TABLES = new Set(['wcc_items_weapons', 'wcc_items_armor', 'wcc_item_weapons_v', 'wcc_item_armors_v']);
 
 function isSafeIdentifier(value: string): boolean {
   return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value);
@@ -250,6 +250,41 @@ function collectI18nUuids(value: unknown, uuids: Set<string>): void {
       collectI18nUuids(item, uuids);
     }
   }
+}
+
+/**
+ * Recursively resolves i18n_uuid objects in a value using i18nTextsMap
+ */
+function resolveI18nValue(value: unknown, i18nTextsMap: Map<string, Map<string, string>>, lang: string): unknown {
+  if (value === null || value === undefined) {
+    return value;
+  }
+  
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    const obj = value as Record<string, unknown>;
+    
+    // Check if this is an object with i18n_uuid
+    if ('i18n_uuid' in obj && typeof obj.i18n_uuid === 'string' && Object.keys(obj).length === 1) {
+      const texts = i18nTextsMap.get(obj.i18n_uuid);
+      if (texts) {
+        return texts.get(lang) ?? texts.get('en') ?? obj.i18n_uuid;
+      }
+      return obj.i18n_uuid;
+    }
+    
+    // Recursively process object
+    const resolved: Record<string, unknown> = {};
+    for (const key in obj) {
+      resolved[key] = resolveI18nValue(obj[key], i18nTextsMap, lang);
+    }
+    return resolved;
+  }
+  
+  if (Array.isArray(value)) {
+    return value.map(item => resolveI18nValue(item, i18nTextsMap, lang));
+  }
+  
+  return value;
 }
 
 /**
@@ -850,6 +885,11 @@ async function loadMinimalSurveyData(
         }
       }
     }
+    
+    // Collect i18n UUIDs from entire metadata (for shop, drop_down_detailed, etc.)
+    if (row.metadata) {
+      collectI18nUuids(row.metadata, i18nUuids);
+    }
   }
 
   // Collect UUIDs from effects
@@ -947,6 +987,14 @@ async function loadMinimalSurveyData(
       }
     }
     
+    // Resolve i18n UUIDs in metadata for shop renderer
+    if (question.metadata && typeof question.metadata === 'object') {
+      const metadata = question.metadata as Record<string, unknown>;
+      if (metadata.renderer === 'shop') {
+        question.metadata = resolveI18nValue(question.metadata, i18nTextsMap, lang) as Record<string, unknown>;
+      }
+    }
+    
     questions.set(row.qu_id, question);
   }
 
@@ -959,53 +1007,12 @@ async function loadMinimalSurveyData(
       answerOptions.set(row.qu_qu_id, []);
     }
     
-    // Resolve i18n UUIDs in metadata for drop_down_detailed
-    let resolvedMetadata = row.metadata ?? {};
-    const question = questions.get(row.qu_qu_id);
-    if (question?.qtype === 'drop_down_detailed' && resolvedMetadata) {
-      const metadata = resolvedMetadata as Record<string, unknown>;
-      const newMetadata: Record<string, unknown> = { ...metadata };
-      
-      // Resolve title
-      if (metadata.title) {
-        const titleValue = metadata.title;
-        if (typeof titleValue === 'string') {
-          const texts = i18nTextsMap.get(titleValue);
-          if (texts) {
-            newMetadata.title = texts.get(lang) ?? texts.get('en') ?? titleValue;
-          }
-        } else if (titleValue && typeof titleValue === 'object' && !Array.isArray(titleValue)) {
-          const titleObj = titleValue as Record<string, unknown>;
-          if ('i18n_uuid' in titleObj && typeof titleObj.i18n_uuid === 'string') {
-            const texts = i18nTextsMap.get(titleObj.i18n_uuid);
-            if (texts) {
-              newMetadata.title = texts.get(lang) ?? texts.get('en') ?? titleObj.i18n_uuid;
-            }
-          }
-        }
+      // Resolve i18n UUIDs in metadata for drop_down_detailed
+      let resolvedMetadata = row.metadata ?? {};
+      const question = questions.get(row.qu_qu_id);
+      if (question?.qtype === 'drop_down_detailed' && resolvedMetadata) {
+        resolvedMetadata = resolveI18nValue(resolvedMetadata, i18nTextsMap, lang) as Record<string, unknown>;
       }
-      
-      // Resolve description
-      if (metadata.description) {
-        const descValue = metadata.description;
-        if (typeof descValue === 'string') {
-          const texts = i18nTextsMap.get(descValue);
-          if (texts) {
-            newMetadata.description = texts.get(lang) ?? texts.get('en') ?? descValue;
-          }
-        } else if (descValue && typeof descValue === 'object' && !Array.isArray(descValue)) {
-          const descObj = descValue as Record<string, unknown>;
-          if ('i18n_uuid' in descObj && typeof descObj.i18n_uuid === 'string') {
-            const texts = i18nTextsMap.get(descObj.i18n_uuid);
-            if (texts) {
-              newMetadata.description = texts.get(lang) ?? texts.get('en') ?? descObj.i18n_uuid;
-            }
-          }
-        }
-      }
-      
-      resolvedMetadata = newMetadata;
-    }
     
     const option: AnswerOptionRow = {
       id: row.an_id,
@@ -1493,7 +1500,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
       );
       
       // Collect UUIDs from answer option metadata for drop_down_detailed
-      // and column headers for single_table
+      // and column headers for single_table, and shop metadata
       const metadataI18nUuids = new Set<string>();
       if (question.qtype === 'drop_down_detailed') {
         for (const row of answerOptionsResult.rows) {
@@ -1507,6 +1514,13 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
         const columnIds = extractColumnIds(qMeta?.columns);
         for (const id of columnIds) {
           metadataI18nUuids.add(id);
+        }
+      }
+      // Collect UUIDs from shop metadata
+      if (question.metadata && typeof question.metadata === 'object') {
+        const qMeta = question.metadata as Record<string, unknown>;
+        if (qMeta.renderer === 'shop') {
+          collectI18nUuids(question.metadata, metadataI18nUuids);
         }
       }
       
@@ -1547,53 +1561,20 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
         }
       }
       
+      // Resolve i18n UUIDs in metadata for shop renderer
+      if (question.metadata && typeof question.metadata === 'object') {
+        const qMeta = question.metadata as Record<string, unknown>;
+        if (qMeta.renderer === 'shop') {
+          question.metadata = resolveI18nValue(question.metadata, metadataI18nTextsMap, lang) as Record<string, unknown>;
+        }
+      }
+      
       const visibleRules = new Map<string, Record<string, unknown>>();
       for (const row of answerOptionsResult.rows) {
         // Resolve i18n UUIDs in metadata for drop_down_detailed
         let resolvedMetadata = row.metadata ?? {};
         if (question.qtype === 'drop_down_detailed' && resolvedMetadata) {
-          const metadata = resolvedMetadata as Record<string, unknown>;
-          const newMetadata: Record<string, unknown> = { ...metadata };
-          
-          // Resolve title
-          if (metadata.title) {
-            const titleValue = metadata.title;
-            if (typeof titleValue === 'string') {
-              const texts = metadataI18nTextsMap.get(titleValue);
-              if (texts) {
-                newMetadata.title = texts.get(lang) ?? texts.get('en') ?? titleValue;
-              }
-            } else if (titleValue && typeof titleValue === 'object' && !Array.isArray(titleValue)) {
-              const titleObj = titleValue as Record<string, unknown>;
-              if ('i18n_uuid' in titleObj && typeof titleObj.i18n_uuid === 'string') {
-                const texts = metadataI18nTextsMap.get(titleObj.i18n_uuid);
-                if (texts) {
-                  newMetadata.title = texts.get(lang) ?? texts.get('en') ?? titleObj.i18n_uuid;
-                }
-              }
-            }
-          }
-          
-          // Resolve description
-          if (metadata.description) {
-            const descValue = metadata.description;
-            if (typeof descValue === 'string') {
-              const texts = metadataI18nTextsMap.get(descValue);
-              if (texts) {
-                newMetadata.description = texts.get(lang) ?? texts.get('en') ?? descValue;
-              }
-            } else if (descValue && typeof descValue === 'object' && !Array.isArray(descValue)) {
-              const descObj = descValue as Record<string, unknown>;
-              if ('i18n_uuid' in descObj && typeof descObj.i18n_uuid === 'string') {
-                const texts = metadataI18nTextsMap.get(descObj.i18n_uuid);
-                if (texts) {
-                  newMetadata.description = texts.get(lang) ?? texts.get('en') ?? descObj.i18n_uuid;
-                }
-              }
-            }
-          }
-          
-          resolvedMetadata = newMetadata;
+          resolvedMetadata = resolveI18nValue(resolvedMetadata, metadataI18nTextsMap, lang) as Record<string, unknown>;
         }
         
         const option: AnswerOptionRow = {

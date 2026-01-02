@@ -7,8 +7,9 @@
 -- Use with caution.
 -- ============================================================================
 
-DROP TABLE IF EXISTS wcc_item_weapons_to_effects CASCADE;
+DROP TABLE IF EXISTS wcc_item_to_effects CASCADE;
 DROP TABLE IF EXISTS wcc_item_weapons CASCADE;
+DROP TABLE IF EXISTS wcc_item_armors CASCADE;
 DROP TABLE IF EXISTS wcc_item_classes CASCADE;
 DROP TABLE IF EXISTS wcc_item_effects CASCADE;
 DROP TABLE IF EXISTS wcc_item_effect_conditions CASCADE;

@@ -39,30 +39,31 @@ SELECT wiw.w_id
   LEFT JOIN i18n_text idb ON idb.id = wiw.is_bludgeoning AND idb.lang = i.lang
   LEFT JOIN i18n_text ide ON ide.id = wiw.is_elemental AND ide.lang = i.lang
   LEFT JOIN (
-    SELECT wiwte.w_w_id
+    SELECT ite.item_id
          , ie.lang
          , string_agg(
-             replace(coalesce(ie.text, ''), '<mod>', coalesce(wiwte.modifier::text, ''))
+             replace(coalesce(ie.text, ''), '<mod>', coalesce(ite.modifier::text, ''))
              || coalesce(nullif('[' || coalesce(iec.text, '') || ']', '[]'), ''),
              E'\n'
-             ORDER BY wiwte.e_e_id
+             ORDER BY ite.e_e_id
            ) AS effect_names
          , string_agg(CASE WHEN e.description_id is not null then
-             replace(coalesce(ie.text, ''), '<mod>', coalesce(wiwte.modifier::text, ''))
+             replace(coalesce(ie.text, ''), '<mod>', coalesce(ite.modifier::text, ''))
              || ' -' || coalesce(nullif(' [' || coalesce(iec.text, '') || ']', ' []'), '')
-			 || ' ' || replace(coalesce(ide.text, ''), '<mod>', coalesce(wiwte.modifier::text, ''))
+			 || ' ' || replace(coalesce(ide.text, ''), '<mod>', coalesce(ite.modifier::text, ''))
 			 end,
              E'\n'
-             ORDER BY wiwte.e_e_id
+             ORDER BY ite.e_e_id
            ) AS effect_descriptions
-      FROM wcc_item_weapons_to_effects wiwte
-      LEFT JOIN wcc_item_effects e ON e.e_id = wiwte.e_e_id
+      FROM wcc_item_to_effects ite
+      LEFT JOIN wcc_item_effects e ON e.e_id = ite.e_e_id
       LEFT JOIN i18n_text ie ON ie.id = e.name_id
       LEFT JOIN i18n_text ide ON ide.id = e.description_id AND ide.lang = ie.lang
-      LEFT JOIN wcc_item_effect_conditions ec ON ec.ec_id = wiwte.ec_ec_id
+      LEFT JOIN wcc_item_effect_conditions ec ON ec.ec_id = ite.ec_ec_id
       LEFT JOIN i18n_text iec ON iec.id = ec.description_id AND iec.lang = ie.lang
-     GROUP BY wiwte.w_w_id, ie.lang
-  ) ef ON wiw.w_id = ef.w_w_id AND ef.lang = i.lang
+     WHERE ite.item_id LIKE 'W%'
+     GROUP BY ite.item_id, ie.lang
+  ) ef ON wiw.w_id = ef.item_id AND ef.lang = i.lang
  ORDER BY wiw.w_id;
 
 -- Helpful indexes for shop queries

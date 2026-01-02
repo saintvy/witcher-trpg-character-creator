@@ -47,25 +47,25 @@ COMMENT ON COLUMN wcc_item_weapons.description_id IS
   'i18n UUID для описания оружия. Генерируется детерминированно: ck_id(''witcher_cc.items.weapon.description.''||w_id).';
 
 COMMENT ON COLUMN wcc_item_weapons.availability_id IS
-  'i18n UUID для доступности оружия. Генерируется детерминированно: ck_id(''witcher_cc.items.weapon.availability.''||<E|C|P|R|U>). Значения: Повсеместный (E/Everywhere), Обычный (C/Common), Редкий (P/Poor), Редкий (R/Rare), Уникальный (U/Unique).';
+  'i18n UUID для доступности оружия. Использует ключи из словаря: ck_id(''availability.''||<E|C|P|R|U>). Значения: Повсеместный (E), Обычный (C), Редкий (P), Редкий (R), Уникальный (U).';
 
 COMMENT ON COLUMN wcc_item_weapons.crafted_by_id IS
-  'i18n UUID для производителя оружия. Генерируется детерминированно: ck_id(''witcher_cc.items.weapon.crafted_by.''||<Humans|Non-humans|Witchers>). Значения: Люди (Humans), Нелюди (Non-humans), Ведьмаки (Witchers).';
+  'i18n UUID для производителя оружия. Использует ключи из словаря: ck_id(''crafted_by.''||<humans|non-humans|witchers>). Значения: Люди (humans), Нелюди (non-humans), Ведьмаки (witchers).';
 
 COMMENT ON COLUMN wcc_item_weapons.concealment_id IS
-  'i18n UUID для скрытности оружия. Генерируется детерминированно: ck_id(''witcher_cc.items.weapon.concealment.''||<T|S|L|N/A>). Значения: М (T/Tiny), Н (S/Small), К (L/Large), Н/C (N/A/Not Applicable).';
+  'i18n UUID для скрытности оружия. Использует ключи из словаря: ck_id(''concealment.''||<T|S|L|N/A>). Значения: М (T), Н (S), К (L), Н/C (N/A).';
 
 COMMENT ON COLUMN wcc_item_weapons.is_piercing IS
-  'i18n UUID для типа урона: колющий. Генерируется детерминированно: ck_id(''witcher_cc.items.weapon.damage_type.P''). Значения: К (P/Piercing).';
+  'i18n UUID для типа урона: колющий. Использует ключи из словаря: ck_id(''damage_type.P''). Значения: К (P).';
 
 COMMENT ON COLUMN wcc_item_weapons.is_slashing IS
-  'i18n UUID для типа урона: рубящий. Генерируется детерминированно: ck_id(''witcher_cc.items.weapon.damage_type.S''). Значения: Р (S/Slashing).';
+  'i18n UUID для типа урона: рубящий. Использует ключи из словаря: ck_id(''damage_type.S''). Значения: Р (S).';
 
 COMMENT ON COLUMN wcc_item_weapons.is_bludgeoning IS
-  'i18n UUID для типа урона: дробящий. Генерируется детерминированно: ck_id(''witcher_cc.items.weapon.damage_type.B''). Значения: Д (B/Bludgeoning).';
+  'i18n UUID для типа урона: дробящий. Использует ключи из словаря: ck_id(''damage_type.B''). Значения: Д (B).';
 
 COMMENT ON COLUMN wcc_item_weapons.is_elemental IS
-  'i18n UUID для типа урона: стихийный. Генерируется детерминированно: ck_id(''witcher_cc.items.weapon.damage_type.E''). Значения: С (E/Elemental).';
+  'i18n UUID для типа урона: стихийный. Использует ключи из словаря: ck_id(''damage_type.E''). Значения: С (E).';
 
 WITH raw_data (w_id, source_id, class_id, name_ru, name_en, is_piercing, is_slashing, is_bludgeoning, is_elemental, accuracy, crafted_by_id, availability_id , dmg, damage_dices, damage_modifier, reliability, hands, range, concealment_id, enhancements, weight, price, description_ru) AS ( VALUES
     ('W001', 'core', 'wt_crossbow', 'Арбалет', 'Crossbow', 'TRUE', NULL, NULL, NULL, 1, 'humans', 'E', '4d6+3', 4, 3, 5, 2, '100', 'XL', 1, '3', '455', 'Крепкий, точный, мощный. Да, я предвзято говорю, но арбалет я обожаю. На перезарядку требуется время, это да, но хороший стрелок нашпигует противника болтами с точностью, которая большинству человеческих лучников и не снилась. Ложе можно к плечу приложить, чтобы вдоль него прицелиться, - так выстрел точнее будет. Я с таким арбалетом прошёл всю Вторую войну - добрую он сослужил мне службу.'),
@@ -264,67 +264,30 @@ ins_i18n AS (
 	       'ru',
 		   rd.description_ru
 	  FROM raw_data rd
-	 WHERE nullif(rd.description_ru,'') is not null
-	UNION ALL
-    -- Availability
-    SELECT ck_id('witcher_cc.items.weapon.availability.E'), 'items', 'weapon_availability', 'ru', 'Повсеместный' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.availability.E'), 'items', 'weapon_availability', 'en', 'Everywhere' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.availability.C'), 'items', 'weapon_availability', 'ru', 'Обычный' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.availability.C'), 'items', 'weapon_availability', 'en', 'Common' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.availability.P'), 'items', 'weapon_availability', 'ru', 'Редкий' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.availability.P'), 'items', 'weapon_availability', 'en', 'Poor' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.availability.R'), 'items', 'weapon_availability', 'ru', 'Редкий' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.availability.R'), 'items', 'weapon_availability', 'en', 'Rare' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.availability.U'), 'items', 'weapon_availability', 'ru', 'Уникальный' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.availability.U'), 'items', 'weapon_availability', 'en', 'Unique' UNION ALL
-    -- Crafted by
-    SELECT ck_id('witcher_cc.items.weapon.crafted_by.Humans'), 'items', 'weapon_crafted_by', 'ru', 'Люди' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.crafted_by.Humans'), 'items', 'weapon_crafted_by', 'en', 'Humans' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.crafted_by.Non-humans'), 'items', 'weapon_crafted_by', 'ru', 'Нелюди' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.crafted_by.Non-humans'), 'items', 'weapon_crafted_by', 'en', 'Non-humans' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.crafted_by.Witchers'), 'items', 'weapon_crafted_by', 'ru', 'Ведьмаки' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.crafted_by.Witchers'), 'items', 'weapon_crafted_by', 'en', 'Witchers' UNION ALL
-    -- Concealment
-    SELECT ck_id('witcher_cc.items.weapon.concealment.T'), 'items', 'weapon_concealment', 'ru', 'М' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.concealment.T'), 'items', 'weapon_concealment', 'en', 'T' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.concealment.S'), 'items', 'weapon_concealment', 'ru', 'Н' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.concealment.S'), 'items', 'weapon_concealment', 'en', 'S' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.concealment.L'), 'items', 'weapon_concealment', 'ru', 'К' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.concealment.L'), 'items', 'weapon_concealment', 'en', 'L' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.concealment.N/A'), 'items', 'weapon_concealment', 'ru', 'Н/C' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.concealment.N/A'), 'items', 'weapon_concealment', 'en', 'N/A' UNION ALL
-    -- Damage types
-    SELECT ck_id('witcher_cc.items.weapon.damage_type.P'), 'items', 'weapon_damage_type', 'ru', 'К' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.damage_type.P'), 'items', 'weapon_damage_type', 'en', 'P' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.damage_type.S'), 'items', 'weapon_damage_type', 'ru', 'Р' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.damage_type.S'), 'items', 'weapon_damage_type', 'en', 'S' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.damage_type.B'), 'items', 'weapon_damage_type', 'ru', 'Д' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.damage_type.B'), 'items', 'weapon_damage_type', 'en', 'B' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.damage_type.E'), 'items', 'weapon_damage_type', 'ru', 'С' UNION ALL
-    SELECT ck_id('witcher_cc.items.weapon.damage_type.E'), 'items', 'weapon_damage_type', 'en', 'E' ) foo
+	 WHERE nullif(rd.description_ru,'') is not null ) foo
 )
 INSERT INTO wcc_item_weapons
   SELECT w_id
        , source_id AS dlc_dlc_id
 	   , class_id AS ic_ic_id
 	   , ck_id('witcher_cc.items.weapon.name.'||rd.w_id) AS name_id
-	   , CASE WHEN rd.is_piercing = 'TRUE' THEN ck_id('witcher_cc.items.weapon.damage_type.P') ELSE NULL END is_piercing
-	   , CASE WHEN rd.is_slashing = 'TRUE' THEN ck_id('witcher_cc.items.weapon.damage_type.S') ELSE NULL END is_slashing
-	   , CASE WHEN rd.is_bludgeoning = 'TRUE' THEN ck_id('witcher_cc.items.weapon.damage_type.B') ELSE NULL END is_bludgeoning
-	   , CASE WHEN rd.is_elemental = 'TRUE' THEN ck_id('witcher_cc.items.weapon.damage_type.E') ELSE NULL END is_elemental
+	   , CASE WHEN rd.is_piercing = 'TRUE' THEN ck_id('damage_type.P') ELSE NULL END is_piercing
+	   , CASE WHEN rd.is_slashing = 'TRUE' THEN ck_id('damage_type.S') ELSE NULL END is_slashing
+	   , CASE WHEN rd.is_bludgeoning = 'TRUE' THEN ck_id('damage_type.B') ELSE NULL END is_bludgeoning
+	   , CASE WHEN rd.is_elemental = 'TRUE' THEN ck_id('damage_type.E') ELSE NULL END is_elemental
 	   , accuracy
 	   , CASE 
-	       WHEN rd.crafted_by_id = 'humans' THEN ck_id('witcher_cc.items.weapon.crafted_by.Humans')
-	       WHEN rd.crafted_by_id = 'non-humans' THEN ck_id('witcher_cc.items.weapon.crafted_by.Non-humans')
-	       WHEN rd.crafted_by_id = 'witchers' THEN ck_id('witcher_cc.items.weapon.crafted_by.Witchers')
+	       WHEN rd.crafted_by_id = 'humans' THEN ck_id('crafted_by.humans')
+	       WHEN rd.crafted_by_id = 'non-humans' THEN ck_id('crafted_by.non-humans')
+	       WHEN rd.crafted_by_id = 'witchers' THEN ck_id('crafted_by.witchers')
 	       ELSE NULL
 	     END crafted_by_id
 	   , CASE 
-	       WHEN rd.availability_id = 'E' THEN ck_id('witcher_cc.items.weapon.availability.E')
-	       WHEN rd.availability_id = 'C' THEN ck_id('witcher_cc.items.weapon.availability.C')
-	       WHEN rd.availability_id = 'P' THEN ck_id('witcher_cc.items.weapon.availability.P')
-	       WHEN rd.availability_id = 'R' THEN ck_id('witcher_cc.items.weapon.availability.R')
-	       WHEN rd.availability_id = 'U' THEN ck_id('witcher_cc.items.weapon.availability.U')
+	       WHEN rd.availability_id = 'E' THEN ck_id('availability.E')
+	       WHEN rd.availability_id = 'C' THEN ck_id('availability.C')
+	       WHEN rd.availability_id = 'P' THEN ck_id('availability.P')
+	       WHEN rd.availability_id = 'R' THEN ck_id('availability.R')
+	       WHEN rd.availability_id = 'U' THEN ck_id('availability.U')
 	       ELSE NULL
 	     END availability_id
 	   , nullif(rd.dmg,'') dmg
@@ -334,10 +297,10 @@ INSERT INTO wcc_item_weapons
 	   , hands
 	   , nullif(rd.range,'') range
 	   , CASE 
-	       WHEN rd.concealment_id = 'S' THEN ck_id('witcher_cc.items.weapon.concealment.S')
-	       WHEN rd.concealment_id = 'M' THEN ck_id('witcher_cc.items.weapon.concealment.T')
-	       WHEN rd.concealment_id = 'L' THEN ck_id('witcher_cc.items.weapon.concealment.L')
-	       WHEN rd.concealment_id = 'XL' THEN ck_id('witcher_cc.items.weapon.concealment.N/A')
+	       WHEN rd.concealment_id = 'S' THEN ck_id('concealment.S')
+	       WHEN rd.concealment_id = 'M' THEN ck_id('concealment.T')
+	       WHEN rd.concealment_id = 'L' THEN ck_id('concealment.L')
+	       WHEN rd.concealment_id = 'XL' THEN ck_id('concealment.N/A')
 	       ELSE NULL
 	     END concealment_id
 	   , coalesce(enhancements,0) enhancements
