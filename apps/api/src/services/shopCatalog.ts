@@ -40,7 +40,7 @@ type ShopQuestionConfig = {
   sources?: unknown;
 };
 
-const ALLOWED_TABLES = new Set(['wcc_items_weapons', 'wcc_items_armor', 'wcc_item_weapons_v', 'wcc_item_armors_v']);
+const ALLOWED_TABLES = new Set(['wcc_items_weapons', 'wcc_items_armor', 'wcc_item_weapons_v', 'wcc_item_armors_v', 'wcc_item_ingredients_v']);
 
 export async function getShopSourceRows(
   payload: ShopSourceRowsRequest,
@@ -104,9 +104,12 @@ export async function getShopSourceRows(
   const allowedDlcs = asStringArray(shop?.allowedDlcs);
   const dlcs = allowedDlcs.length > 0 ? allowedDlcs : ['core'];
 
-  const filterType = (source.filters && typeof source.filters === 'object')
-    ? (source.filters as Record<string, unknown>).type
-    : undefined;
+  const filters = (source.filters && typeof source.filters === 'object')
+    ? (source.filters as Record<string, unknown>)
+    : {};
+  const filterType = filters.type;
+  const filterIsNull = filters.isNull;
+  const filterIsNotNull = filters.isNotNull;
 
   // Common WHERE for both "groups" and "rows"
   const whereParts: string[] = [`"${dlcColumn}" = ANY($1::text[])`];
@@ -123,6 +126,16 @@ export async function getShopSourceRows(
     whereParts.push(`"type" = $${paramIndex}`);
     params.push(filterType);
     paramIndex++;
+  }
+
+  // Support isNull filter: column IS NULL
+  if (typeof filterIsNull === 'string' && isSafeIdentifier(filterIsNull)) {
+    whereParts.push(`"${filterIsNull}" IS NULL`);
+  }
+
+  // Support isNotNull filter: column IS NOT NULL
+  if (typeof filterIsNotNull === 'string' && isSafeIdentifier(filterIsNotNull)) {
+    whereParts.push(`"${filterIsNotNull}" IS NOT NULL`);
   }
 
   // If grouping is enabled and caller didn't request a specific group, return only group headers.

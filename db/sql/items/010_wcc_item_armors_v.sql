@@ -70,7 +70,7 @@ SELECT ia.a_id
      WHERE ite.item_id LIKE 'A%'
      GROUP BY ite.item_id, ie.lang
   ) ef ON ia.a_id = ef.item_id AND ef.lang = iname.lang
- ORDER BY ia.a_id;
+ ORDER BY iname.text;
 
 -- Helpful indexes for shop queries
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_armors_v_aid_lang_uidx ON wcc_item_armors_v (a_id, lang);

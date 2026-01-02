@@ -64,7 +64,7 @@ SELECT wiw.w_id
      WHERE ite.item_id LIKE 'W%'
      GROUP BY ite.item_id, ie.lang
   ) ef ON wiw.w_id = ef.item_id AND ef.lang = i.lang
- ORDER BY wiw.w_id;
+ ORDER BY i.text;
 
 -- Helpful indexes for shop queries
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_weapons_v_wid_lang_uidx ON wcc_item_weapons_v (w_id, lang);
