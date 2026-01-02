@@ -1,0 +1,21 @@
+# Node
+node_modules
+npm-debug.log*
+dist
+.build
+.next
+.DS_Store
+
+# Env
+.env
+.env.local
+
+# CDK
+cdk.out
+
+# DB
+db/data
+db/*.log
+
+# OS
+Thumbs.db

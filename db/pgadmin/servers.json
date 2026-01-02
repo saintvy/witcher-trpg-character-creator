@@ -1,0 +1,22 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Witcher CC Database",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "postgres",
+      "Username": "cc_user",
+      "Password": "cc_pass",
+      "SSLMode": "prefer",
+      "Comment": "Auto-configured database connection",
+      "PassFile": "",
+      "BgColor": "",
+      "FgColor": "",
+      "Service": "",
+      "Shared": false,
+      "SharedUsername": "",
+      "SavePassword": true
+    }
+  }
+}

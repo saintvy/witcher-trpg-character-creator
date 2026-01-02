@@ -1,0 +1,1446 @@
+openapi: 3.0.3
+info:
+  title: "Witcher Character API"
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:4000
+    description: Локальный сервер разработки
+  - url: https://api.example.com
+    description: Продакшн сервер (заглушка)
+
+paths:
+  /generate-character:
+    post:
+      summary: "Генерация персонажа"
+      description: "Генерирует персонажа на основе characterRaw. Заменяет i18n объекты на строки из БД и удаляет logicFields."
+      operationId: generateCharacter
+      requestBody:
+        description: "characterRaw - персонаж с i18n объектами и logicFields"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CharacterRaw'
+            example:
+              name:
+                i18n_uuid: "550e8400-e29b-41d4-a716-446655440000"
+              age: 132
+              gender:
+                i18n_uuid: "550e8400-e29b-41d4-a716-446655440001"
+              logicFields:
+                someLogicKey: 42
+                anotherLogicKey: "value"
+      responses:
+        '200':
+          description: "Успешно сгенерирован персонаж"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Character'
+        '400':
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /survey/next:
+    post:
+      summary: "Получить следующий вопрос опроса"
+      description: "Возвращает следующий вопрос опроса на основе предыдущих ответов"
+      operationId: nextQuestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NextQuestionRequest'
+      responses:
+        '200':
+          description: "Следующий вопрос или завершение опроса"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NextQuestionResponse'
+        '400':
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /shop/sourceRows:
+    post:
+      summary: "Получить строки источника для shop-ноды"
+      description: "Возвращает строки (товары) для указанного источника в shop-ноду (для ленивой загрузки при раскрытии группы)."
+      operationId: shopSourceRows
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShopSourceRowsRequest'
+      responses:
+        '200':
+          description: "Список строк источника"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShopSourceRowsResponse'
+        '400':
+          description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+
+    Character:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Геральт"
+        age:
+          type: integer
+          example: 132
+        gender:
+          type: string
+          description: "Пол персонажа (enum из CSV)."
+          example: "Мужчина"
+        race:
+          type: string
+          example: "Ведьмак"
+
+        perks:
+          type: array
+          description: "Перки персонажа."
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "Стойкость мутанта"
+              description:
+                type: string
+                example: "После всех мутаций ведьмаки становятся невосприимчивы к болезням и способны использовать мутагены."
+            required: [name]
+
+        reputation:
+          type: integer
+          example: 4
+
+        gear:
+          type: array
+          description: "Снаряжение персонажа."
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "Дворянская грамота"
+              notes:
+                type: string
+                example: "+2 к репутации"
+              weight:
+                type: number
+                example: 0
+              amount:
+                type: integer
+                description: "Количество предметов (если больше 1)"
+                example: 2
+            required: [name]
+
+        social_status:
+          type: array
+          description: "Отношение разных групп к персонажу."
+          items:
+            type: object
+            properties:
+              group_name:
+                type: string
+                example: "Север"
+              group_status:
+                type: integer
+                example: "Ненависть"
+              group_is_feared:
+                type: boolean
+                example: true
+            required: [group_name, group_status, group_is_feared]
+
+        lore:
+          type: object
+          description: "История и социальный контекст персонажа."
+          properties:
+            homeland:
+              type: string
+              example: "Аэдирн"
+            home_language:
+              type: string
+              example: "Всеобщий"
+            family_fate:
+              type: string
+              example: "Из-за войн ваша семья оказалась в плачевном положении. Чтобы выжить, им пришлось встать на путь преступности."
+            parents_fate:
+              type: string
+              example: "Одного или обоих ваших родителей убило чудовище. Решите сами, что это была за тварь. (Мать)"
+            parents_fate_who:
+              type: string
+              example: "Отец"
+            family_status:
+              type: string
+              example: "Вы выросли в купеческой среде, под крики продавцов и звон монет."
+            friend:
+              type: string
+              example: "Граф: Наибольшее влияние на вас оказал граф (графиня), научивший брать себя в руки."
+
+            siblings:
+              type: array
+              description: "Братья и сёстры."
+              items:
+                type: object
+                properties:
+                  gender:
+                    type: string
+                    example: "Женский"
+                  age:
+                    type: string
+                    example: "Младше вас"
+                  attitude:
+                    type: string
+                    example: "Любит вас"
+                  feature:
+                    type: string
+                    example: "С причудами"
+                required: [gender]
+
+            alies:
+              type: array
+              description: "Союзники."
+              items:
+                type: object
+                properties:
+                  gender:
+                    type: string
+                    example: "Мужской"
+                  position:
+                    type: string
+                    example: "Князь/княгиня"
+                  how_met:
+                    type: string
+                    example: "Встретились в дороге"
+                  closeness:
+                    type: string
+                    example: "Связаны взаимной клятвой"
+                  is_alive:
+                    type: string
+                    example: "Союзник умер, прожив еще 20 лет с момента знакомства."
+                  death_reason:
+                    type: string
+                    example: "Война"
+                required: [gender, position]
+
+            enemies:
+              type: array
+              description: "Недруги персонажа."
+              items:
+                type: object
+                properties:
+                  gender:
+                    type: string
+                    example: "Мужской"
+                  position:
+                    type: string
+                    example: "Торговец"
+                  the_cause:
+                    type: string
+                    example: "Вы помешали его плану"
+                  you_are_the_victim:
+                    type: boolean
+                    description: "Является ли персонаж жертвой конфликта."
+                  power:
+                    type: string
+                    example: "Подручные"
+                  power_level:
+                    type: string
+                    description: "Уровень влияния врага."
+                required: [gender, position, the_cause]
+
+            escalation_level:
+              type: string
+              example: "Травля в отместку"
+
+            events:
+              type: array
+              description: "Жизненные события персонажа."
+              items:
+                type: object
+                properties:
+                  age:
+                    type: integer
+                    example: 50
+                  event_type:
+                    type: string
+                    example: "Удача"
+                  event_description:
+                    type: string
+                    example: "Благодарность дворянина: Вы что-то сделали для дворянина, и теперь он вам должен 1 услугу."
+                required: [age, event_type, event_description]
+
+            lifeEvents:
+              type: array
+              description: "Жизненные события персонажа с указанием временного периода."
+              items:
+                type: object
+                properties:
+                  timePeriod:
+                    type: string
+                    description: "Временной период события в формате 'начало-конец' (например, '10-20')"
+                    example: "10-20"
+                  eventType:
+                    type: string
+                    description: "Тип события (i18n объект)"
+                    example: "Удача"
+                  description:
+                    type: string
+                    description: "Описание события (i18n объект)"
+                    example: "Благодарность дворянина: Вы что-то сделали для дворянина, и теперь он вам должен 1 услугу."
+                required: [timePeriod, eventType, description]
+
+            diseases_and_curses:
+              type: array
+              description: "Заболевания и проклятия."
+              items:
+                type: object
+                properties:
+                  disease_type:
+                    type: string
+                    example: "Зависимость"
+                  disease_intensity:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Средняя"
+                  disease_description:
+                    type: string
+                    example: "Фисштех"
+                required: [disease_type]
+
+            style:
+              type: object
+              description: "Стиль и внешность."
+              properties:
+                clothing:
+                  type: string
+                  example: "Потрёпанная одежда"
+                personality:
+                  type: string
+                  example: "Вдумчивый"
+                hair_style:
+                  type: string
+                  example: "Длинные растрёпанные волосы"
+                affectations:
+                  type: string
+                  example: "Повязка на глаз"
+
+            values:
+              type: object
+              description: "Ценности персонажа."
+              properties:
+                valued_person:
+                  type: string
+                  example: "Друг"
+                value:
+                  type: string
+                  example: "Любовь"
+                feelings_on_people:
+                  type: string
+                  example: "Пускай другие сначала себя покажут"
+
+        statistics:
+          type: object
+          description: "Базовые и производные характеристики."
+          properties:
+            INT:
+              $ref: '#/components/schemas/Characteristic'
+            REF:
+              $ref: '#/components/schemas/Characteristic'
+            DEX:
+              $ref: '#/components/schemas/Characteristic'
+            BODY:
+              $ref: '#/components/schemas/Characteristic'
+            SPD:
+              $ref: '#/components/schemas/Characteristic'
+            EMP:
+              $ref: '#/components/schemas/Characteristic'
+            CRA:
+              $ref: '#/components/schemas/Characteristic'
+            WILL:
+              $ref: '#/components/schemas/Characteristic'
+            LUCK:
+              $ref: '#/components/schemas/Characteristic'
+
+            vigor:
+              type: integer
+              example: 2
+
+            calculated:
+              type: object
+              description: "Производные характеристики (из CSV: max_HP, STUN, STA, ENC, REC, bonus_punch, bonus_kick, run, leap)."
+              properties:
+                max_HP:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 25
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                STUN:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 5
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                STA:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 25
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                ENC:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 50
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                REC:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 5
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                bonus_punch:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 0
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                bonus_kick:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 4
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                run:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 15
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                leap:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 3
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+
+        skills:
+          type: object
+          description: "Навыки персонажа."
+          properties:
+            common:
+              type: object
+              description: "Общие навыки персонажа."
+              properties:
+                awareness:
+                  $ref: '#/components/schemas/Characteristic'
+                business:
+                  $ref: '#/components/schemas/Characteristic'
+                deduction:
+                  $ref: '#/components/schemas/Characteristic'
+                education:
+                  $ref: '#/components/schemas/Characteristic'
+                language:
+                  $ref: '#/components/schemas/Characteristic'
+                monster_lore:
+                  $ref: '#/components/schemas/Characteristic'
+                social_etiquette:
+                  $ref: '#/components/schemas/Characteristic'
+                streetwise:
+                  $ref: '#/components/schemas/Characteristic'
+                tactics:
+                  $ref: '#/components/schemas/Characteristic'
+                teaching:
+                  $ref: '#/components/schemas/Characteristic'
+                wilderness_survival:
+                  $ref: '#/components/schemas/Characteristic'
+                brawling:
+                  $ref: '#/components/schemas/Characteristic'
+                dodge:
+                  $ref: '#/components/schemas/Characteristic'
+                melee:
+                  $ref: '#/components/schemas/Characteristic'
+                riding:
+                  $ref: '#/components/schemas/Characteristic'
+                sailing:
+                  $ref: '#/components/schemas/Characteristic'
+                small_blades:
+                  $ref: '#/components/schemas/Characteristic'
+                staff:
+                  $ref: '#/components/schemas/Characteristic'
+                swordsmanship:
+                  $ref: '#/components/schemas/Characteristic'
+                archery:
+                  $ref: '#/components/schemas/Characteristic'
+                athletics:
+                  $ref: '#/components/schemas/Characteristic'
+                crossbow:
+                  $ref: '#/components/schemas/Characteristic'
+                sleight_of_hand:
+                  $ref: '#/components/schemas/Characteristic'
+                stealth:
+                  $ref: '#/components/schemas/Characteristic'
+                physique:
+                  $ref: '#/components/schemas/Characteristic'
+                endurance:
+                  $ref: '#/components/schemas/Characteristic'
+                charisma:
+                  $ref: '#/components/schemas/Characteristic'
+                deceit:
+                  $ref: '#/components/schemas/Characteristic'
+                fine_arts:
+                  $ref: '#/components/schemas/Characteristic'
+                gambling:
+                  $ref: '#/components/schemas/Characteristic'
+                grooming_and_style:
+                  $ref: '#/components/schemas/Characteristic'
+                human_perception:
+                  $ref: '#/components/schemas/Characteristic'
+                leadership:
+                  $ref: '#/components/schemas/Characteristic'
+                persuasion:
+                  $ref: '#/components/schemas/Characteristic'
+                performance:
+                  $ref: '#/components/schemas/Characteristic'
+                seduction:
+                  $ref: '#/components/schemas/Characteristic'
+                alchemy:
+                  $ref: '#/components/schemas/Characteristic'
+                crafting:
+                  $ref: '#/components/schemas/Characteristic'
+                disguise:
+                  $ref: '#/components/schemas/Characteristic'
+                first_aid:
+                  $ref: '#/components/schemas/Characteristic'
+                forgery:
+                  $ref: '#/components/schemas/Characteristic'
+                pick_lock:
+                  $ref: '#/components/schemas/Characteristic'
+                trap_crafting:
+                  $ref: '#/components/schemas/Characteristic'
+                courage:
+                  $ref: '#/components/schemas/Characteristic'
+                hex_weaving:
+                  $ref: '#/components/schemas/Characteristic'
+                intimidation:
+                  $ref: '#/components/schemas/Characteristic'
+                spell_casting:
+                  $ref: '#/components/schemas/Characteristic'
+                resist_magic:
+                  $ref: '#/components/schemas/Characteristic'
+                resist_coercion:
+                  $ref: '#/components/schemas/Characteristic'
+                ritual_crafting:
+                  $ref: '#/components/schemas/Characteristic'
+
+            defining:
+              type: object
+              description: "Определяющий навык (один объект, как в CSV)."
+              properties:
+                name:
+                  type: string
+                  example: "Уличное выступление"
+                description:
+                  type: string
+                  example: "Бард весьма полезен в группе, особенно когда у вас не хватает денег. Бард может потратить час времени и совершить проверку Уличного выступления в центре ближайшего города. Результат броска — это сумма, которую бард заработал за время уличного выступления. Критический провал может снизить результат броска. Отрицательный результат означает, что бард не только не заработал денег, но и был освистан местными, что даёт ему штраф -2 к Харизме при контакте со всеми в этом городе на остаток дня."
+                main_statistic:
+                  type: string
+                  example: "EMP"
+                lvl:
+                  $ref: '#/components/schemas/Characteristic'
+
+            professional:
+              type: array
+              description: "Профессиональные навыки."
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "Повторное выступление"
+                  description:
+                    type: string
+                    example: "Перед проверкой Уличного выступления бард может совершить проверку Повторного выступления со СЛ, установленной ведущим, чтобы определить, выступал ли он в этом городе раньше. При успехе бард уже завоевал популярность в этом городе. В таком случае доход с его Уличного выступления удваивается, а сам бард получает бонус +2 к Харизме при общении со всеми, кто пришёл на выступление."
+                  main_statistic:
+                    type: string
+                    example: "EMP"
+                  lvl:
+                    $ref: '#/components/schemas/Characteristic'
+      required:
+        - name
+        - age
+        - gender
+        - race
+        - statistics
+        - skills
+
+    I18nValue:
+      type: object
+      description: "Объект i18n с UUID для локализации"
+      properties:
+        i18n_uuid:
+          type: string
+          format: uuid
+          description: "UUID для поиска перевода в таблице i18n_text"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      required:
+        - i18n_uuid
+      additionalProperties: false
+
+    StringOrI18n:
+      oneOf:
+        - type: string
+        - $ref: '#/components/schemas/I18nValue'
+      description: "Может быть строкой или объектом i18n с ключом i18n_uuid"
+
+    CharacterRaw:
+      type: object
+      description: "Персонаж в сыром виде: строковые поля могут быть строками или i18n объектами, содержит logicFields"
+      properties:
+        name:
+          $ref: '#/components/schemas/StringOrI18n'
+          example: "Геральт"
+        age:
+          type: integer
+          example: 132
+        gender:
+          $ref: '#/components/schemas/StringOrI18n'
+          description: "Пол персонажа (enum из CSV)."
+          example: "Мужчина"
+        race:
+          $ref: '#/components/schemas/StringOrI18n'
+          example: "Ведьмак"
+
+        perks:
+          type: array
+          description: "Перки персонажа."
+          items:
+            type: object
+            properties:
+              name:
+                $ref: '#/components/schemas/StringOrI18n'
+                example: "Стойкость мутанта"
+              description:
+                $ref: '#/components/schemas/StringOrI18n'
+                example: "После всех мутаций ведьмаки становятся невосприимчивы к болезням и способны использовать мутагены."
+            required: [name]
+
+        reputation:
+          type: integer
+          example: 4
+
+        gear:
+          type: array
+          description: "Снаряжение персонажа."
+          items:
+            type: object
+            properties:
+              name:
+                $ref: '#/components/schemas/StringOrI18n'
+                example: "Дворянская грамота"
+              notes:
+                $ref: '#/components/schemas/StringOrI18n'
+                example: "+2 к репутации"
+              weight:
+                type: number
+                example: 0
+              amount:
+                type: integer
+                description: "Количество предметов (если больше 1)"
+                example: 2
+            required: [name]
+
+        social_status:
+          type: array
+          description: "Отношение разных групп к персонажу."
+          items:
+            type: object
+            properties:
+              group_name:
+                $ref: '#/components/schemas/StringOrI18n'
+                example: "Север"
+              group_status:
+                type: integer
+                example: 1
+              group_is_feared:
+                type: boolean
+                example: true
+            required: [group_name, group_status, group_is_feared]
+
+        lore:
+          type: object
+          description: "История и социальный контекст персонажа."
+          properties:
+            homeland:
+              $ref: '#/components/schemas/StringOrI18n'
+              example: "Аэдирн"
+            home_language:
+              $ref: '#/components/schemas/StringOrI18n'
+              example: "Всеобщий"
+            family_fate:
+              $ref: '#/components/schemas/StringOrI18n'
+              example: "Из-за войн ваша семья оказалась в плачевном положении. Чтобы выжить, им пришлось встать на путь преступности."
+            parents_fate:
+              $ref: '#/components/schemas/StringOrI18n'
+              example: "Одного или обоих ваших родителей убило чудовище. Решите сами, что это была за тварь. (Мать)"
+            parents_fate_who:
+              $ref: '#/components/schemas/StringOrI18n'
+              example: "Отец"
+            family_status:
+              $ref: '#/components/schemas/StringOrI18n'
+              example: "Вы выросли в купеческой среде, под крики продавцов и звон монет."
+            friend:
+              $ref: '#/components/schemas/StringOrI18n'
+              example: "Граф: Наибольшее влияние на вас оказал граф (графиня), научивший брать себя в руки."
+
+            siblings:
+              type: array
+              description: "Братья и сёстры."
+              items:
+                type: object
+                properties:
+                  gender:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Женский"
+                  age:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Младше вас"
+                  attitude:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Любит вас"
+                  feature:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "С причудами"
+                required: [gender]
+
+            alies:
+              type: array
+              description: "Союзники."
+              items:
+                type: object
+                properties:
+                  gender:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Мужской"
+                  position:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Князь/княгиня"
+                  how_met:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Встретились в дороге"
+                  closeness:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Связаны взаимной клятвой"
+                  is_alive:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Союзник умер, прожив еще 20 лет с момента знакомства."
+                  death_reason:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Война"
+                required: [gender, position]
+
+            enemies:
+              type: array
+              description: "Недруги персонажа."
+              items:
+                type: object
+                properties:
+                  gender:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Мужской"
+                  position:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Торговец"
+                  the_cause:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Вы помешали его плану"
+                  you_are_the_victim:
+                    type: boolean
+                    description: "Является ли персонаж жертвой конфликта."
+                  power:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Подручные"
+                  power_level:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    description: "Уровень влияния врага."
+                  escalation_level:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    description: "Уровень эскалации конфликта."
+                    example: "Травля в отместку"
+                  is_alive:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    description: "Статус жизни врага."
+                    example: "Враг жив"
+                  death_reason:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    description: "Причина смерти врага (если враг мертв)."
+                    example: "Враг умер, прожив еще 20 лет"
+                required: [gender, position, the_cause]
+
+            escalation_level:
+              $ref: '#/components/schemas/StringOrI18n'
+              example: "Травля в отместку"
+
+            events:
+              type: array
+              description: "Жизненные события персонажа."
+              items:
+                type: object
+                properties:
+                  age:
+                    type: integer
+                    example: 50
+                  event_type:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Удача"
+                  event_description:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Благодарность дворянина: Вы что-то сделали для дворянина, и теперь он вам должен 1 услугу."
+                required: [age, event_type, event_description]
+
+            diseases_and_curses:
+              type: array
+              description: "Заболевания и проклятия."
+              items:
+                type: object
+                properties:
+                  disease_type:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Зависимость"
+                  disease_intensity:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Средняя"
+                  disease_description:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Фисштех"
+                required: [disease_type]
+
+            style:
+              type: object
+              description: "Стиль и внешность."
+              properties:
+                clothing:
+                  $ref: '#/components/schemas/StringOrI18n'
+                  example: "Потрёпанная одежда"
+                personality:
+                  $ref: '#/components/schemas/StringOrI18n'
+                  example: "Вдумчивый"
+                hair_style:
+                  $ref: '#/components/schemas/StringOrI18n'
+                  example: "Длинные растрёпанные волосы"
+                affectations:
+                  $ref: '#/components/schemas/StringOrI18n'
+                  example: "Повязка на глаз"
+
+            values:
+              type: object
+              description: "Ценности персонажа."
+              properties:
+                valued_person:
+                  $ref: '#/components/schemas/StringOrI18n'
+                  example: "Друг"
+                value:
+                  $ref: '#/components/schemas/StringOrI18n'
+                  example: "Любовь"
+                feelings_on_people:
+                  $ref: '#/components/schemas/StringOrI18n'
+                  example: "Пускай другие сначала себя покажут"
+
+        money:
+          type: object
+          description: "Деньги персонажа."
+          properties:
+            crowns:
+              type: integer
+              description: "Количество крон"
+              example: 500
+          required: [crowns]
+
+        curses:
+          type: array
+          description: "Проклятия персонажа."
+          items:
+            type: object
+            properties:
+              name:
+                $ref: '#/components/schemas/StringOrI18n'
+                example: "Проклятие чудовищности"
+              intensity:
+                $ref: '#/components/schemas/StringOrI18n'
+                example: "Средняя"
+              description:
+                $ref: '#/components/schemas/StringOrI18n'
+                example: "Жертва выглядит чудовищно для всех, кто её видит..."
+            required: [name, intensity, description]
+
+        statistics:
+          type: object
+          description: "Базовые и производные характеристики."
+          properties:
+            INT:
+              $ref: '#/components/schemas/Characteristic'
+            REF:
+              $ref: '#/components/schemas/Characteristic'
+            DEX:
+              $ref: '#/components/schemas/Characteristic'
+            BODY:
+              $ref: '#/components/schemas/Characteristic'
+            SPD:
+              $ref: '#/components/schemas/Characteristic'
+            EMP:
+              $ref: '#/components/schemas/Characteristic'
+            CRA:
+              $ref: '#/components/schemas/Characteristic'
+            WILL:
+              $ref: '#/components/schemas/Characteristic'
+            LUCK:
+              $ref: '#/components/schemas/Characteristic'
+
+            vigor:
+              type: integer
+              example: 2
+
+            calculated:
+              type: object
+              description: "Производные характеристики (из CSV: max_HP, STUN, STA, ENC, REC, bonus_punch, bonus_kick, run, leap)."
+              properties:
+                max_HP:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 25
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                STUN:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 5
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                STA:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 25
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                ENC:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 50
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                REC:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 5
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                bonus_punch:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 0
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                bonus_kick:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 4
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                run:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 15
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+                leap:
+                  type: object
+                  properties:
+                    cur:
+                      type: integer
+                      example: 3
+                    bonus:
+                      type: integer
+                      example: 0
+                  required: [cur]
+
+        skills:
+          type: object
+          description: "Навыки персонажа."
+          properties:
+            common:
+              type: object
+              description: "Общие навыки персонажа."
+              properties:
+                awareness:
+                  $ref: '#/components/schemas/Characteristic'
+                business:
+                  $ref: '#/components/schemas/Characteristic'
+                deduction:
+                  $ref: '#/components/schemas/Characteristic'
+                education:
+                  $ref: '#/components/schemas/Characteristic'
+                language:
+                  $ref: '#/components/schemas/Characteristic'
+                monster_lore:
+                  $ref: '#/components/schemas/Characteristic'
+                social_etiquette:
+                  $ref: '#/components/schemas/Characteristic'
+                streetwise:
+                  $ref: '#/components/schemas/Characteristic'
+                tactics:
+                  $ref: '#/components/schemas/Characteristic'
+                teaching:
+                  $ref: '#/components/schemas/Characteristic'
+                wilderness_survival:
+                  $ref: '#/components/schemas/Characteristic'
+                brawling:
+                  $ref: '#/components/schemas/Characteristic'
+                dodge:
+                  $ref: '#/components/schemas/Characteristic'
+                melee:
+                  $ref: '#/components/schemas/Characteristic'
+                riding:
+                  $ref: '#/components/schemas/Characteristic'
+                sailing:
+                  $ref: '#/components/schemas/Characteristic'
+                small_blades:
+                  $ref: '#/components/schemas/Characteristic'
+                staff:
+                  $ref: '#/components/schemas/Characteristic'
+                swordsmanship:
+                  $ref: '#/components/schemas/Characteristic'
+                archery:
+                  $ref: '#/components/schemas/Characteristic'
+                athletics:
+                  $ref: '#/components/schemas/Characteristic'
+                crossbow:
+                  $ref: '#/components/schemas/Characteristic'
+                sleight_of_hand:
+                  $ref: '#/components/schemas/Characteristic'
+                stealth:
+                  $ref: '#/components/schemas/Characteristic'
+                physique:
+                  $ref: '#/components/schemas/Characteristic'
+                endurance:
+                  $ref: '#/components/schemas/Characteristic'
+                charisma:
+                  $ref: '#/components/schemas/Characteristic'
+                deceit:
+                  $ref: '#/components/schemas/Characteristic'
+                fine_arts:
+                  $ref: '#/components/schemas/Characteristic'
+                gambling:
+                  $ref: '#/components/schemas/Characteristic'
+                grooming_and_style:
+                  $ref: '#/components/schemas/Characteristic'
+                human_perception:
+                  $ref: '#/components/schemas/Characteristic'
+                leadership:
+                  $ref: '#/components/schemas/Characteristic'
+                persuasion:
+                  $ref: '#/components/schemas/Characteristic'
+                performance:
+                  $ref: '#/components/schemas/Characteristic'
+                seduction:
+                  $ref: '#/components/schemas/Characteristic'
+                alchemy:
+                  $ref: '#/components/schemas/Characteristic'
+                crafting:
+                  $ref: '#/components/schemas/Characteristic'
+                disguise:
+                  $ref: '#/components/schemas/Characteristic'
+                first_aid:
+                  $ref: '#/components/schemas/Characteristic'
+                forgery:
+                  $ref: '#/components/schemas/Characteristic'
+                pick_lock:
+                  $ref: '#/components/schemas/Characteristic'
+                trap_crafting:
+                  $ref: '#/components/schemas/Characteristic'
+                courage:
+                  $ref: '#/components/schemas/Characteristic'
+                hex_weaving:
+                  $ref: '#/components/schemas/Characteristic'
+                intimidation:
+                  $ref: '#/components/schemas/Characteristic'
+                spell_casting:
+                  $ref: '#/components/schemas/Characteristic'
+                resist_magic:
+                  $ref: '#/components/schemas/Characteristic'
+                resist_coercion:
+                  $ref: '#/components/schemas/Characteristic'
+                ritual_crafting:
+                  $ref: '#/components/schemas/Characteristic'
+
+            defining:
+              type: object
+              description: "Определяющий навык (один объект, как в CSV)."
+              properties:
+                name:
+                  $ref: '#/components/schemas/StringOrI18n'
+                  example: "Уличное выступление"
+                description:
+                  $ref: '#/components/schemas/StringOrI18n'
+                  example: "Бард весьма полезен в группе, особенно когда у вас не хватает денег. Бард может потратить час времени и совершить проверку Уличного выступления в центре ближайшего города. Результат броска — это сумма, которую бард заработал за время уличного выступления. Критический провал может снизить результат броска. Отрицательный результат означает, что бард не только не заработал денег, но и был освистан местными, что даёт ему штраф -2 к Харизме при контакте со всеми в этом городе на остаток дня."
+                main_statistic:
+                  type: string
+                  example: "EMP"
+                lvl:
+                  $ref: '#/components/schemas/Characteristic'
+
+            professional:
+              type: array
+              description: "Профессиональные навыки."
+              items:
+                type: object
+                properties:
+                  name:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Повторное выступление"
+                  description:
+                    $ref: '#/components/schemas/StringOrI18n'
+                    example: "Перед проверкой Уличного выступления бард может совершить проверку Повторного выступления со СЛ, установленной ведущим, чтобы определить, выступал ли он в этом городе раньше. При успехе бард уже завоевал популярность в этом городе. В таком случае доход с его Уличного выступления удваивается, а сам бард получает бонус +2 к Харизме при общении со всеми, кто пришёл на выступление."
+                  main_statistic:
+                    type: string
+                    example: "EMP"
+                  lvl:
+                    $ref: '#/components/schemas/Characteristic'
+
+        logicFields:
+          type: object
+          description: "Дополнительные логические поля (ключ-значение, значение - строка или число)"
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: number
+          example:
+            someLogicKey: 42
+            anotherLogicKey: "value"
+
+    Characteristic:
+      type: object
+      description: "Числовая характеристика с минимальным, текущим и максимальным значениями."
+      properties:
+        min:
+          type: integer
+          description: "Минимальное значение"
+          default: 1
+        cur:
+          type: integer
+          description: "Текущее значение"
+          default: 1
+        max:
+          type: integer
+          description: "Максимальное значение"
+          default: 10
+        bonus:
+          type: integer
+          description: "Бонус к характеристике"
+          default: 0
+      required: [min, cur, max]
+      example:
+        min: 1
+        cur: 5
+        max: 10
+        bonus: 0
+
+    NextQuestionRequest:
+      type: object
+      description: "Запрос следующего вопроса опроса"
+      properties:
+        surveyId:
+          type: string
+          description: "Идентификатор опроса (по умолчанию 'witcher_cc')"
+          example: "witcher_cc"
+        lang:
+          type: string
+          description: "Язык интерфейса (по умолчанию 'en')"
+          example: "ru"
+        answers:
+          type: array
+          description: "Массив ответов на предыдущие вопросы"
+          items:
+            $ref: '#/components/schemas/AnswerInput'
+
+    NextQuestionResponse:
+      type: object
+      description: "Ответ с следующим вопросом или завершением опроса"
+      properties:
+        done:
+          type: boolean
+          description: "Завершён ли опрос"
+          example: false
+        question:
+          type: object
+          description: "Вопрос опроса"
+          properties:
+            id:
+              type: string
+              description: "Идентификатор вопроса"
+              example: "q_001"
+            title:
+              type: string
+              nullable: true
+              description: "Заголовок вопроса"
+              example: "Выберите расу персонажа"
+            body:
+              type: string
+              nullable: true
+              description: "Подробное описание вопроса"
+              example: "Раса определяет базовые характеристики и доступные навыки"
+            qtype:
+              type: string
+              description: "Тип вопроса"
+              example: "single_choice"
+            metadata:
+              type: object
+              description: "Метаданные вопроса"
+              additionalProperties: true
+          required:
+            - id
+            - qtype
+            - metadata
+        answerOptions:
+          type: array
+          description: "Варианты ответов (только если done = false)"
+          items:
+            type: object
+            description: "Вариант ответа"
+            properties:
+              id:
+                type: string
+                description: "Идентификатор варианта ответа"
+                example: "a_001"
+              label:
+                type: string
+                nullable: true
+                description: "Текст варианта ответа"
+                example: "Ведьмак"
+              sortOrder:
+                type: integer
+                description: "Порядок сортировки"
+                example: 0
+              metadata:
+                type: object
+                description: "Метаданные варианта ответа"
+                additionalProperties: true
+            required:
+              - id
+              - sortOrder
+              - metadata
+        state:
+          type: object
+          description: "Текущее состояние опроса"
+          additionalProperties: true
+        historyAnswers:
+          type: array
+          description: "Все ответы, данные пользователем"
+          items:
+            $ref: '#/components/schemas/AnswerInput'
+        historyQuestions:
+          type: array
+          description: "История вопросов и навигационные хлебные крошки"
+          items:
+            type: object
+            description: "Информация о пройденном вопросе и его пути"
+            properties:
+              questionId:
+                type: string
+                description: "Идентификатор вопроса из базы"
+              path:
+                type: array
+                description: "Идентификаторы сегментов пути (может включать динамические значения)"
+                items:
+                  type: string
+              pathTexts:
+                type: array
+                description: "Локализованные подписи для каждого сегмента path"
+                items:
+                  type: string
+            required: [questionId, path, pathTexts]
+      required:
+        - done
+        - state
+        - historyAnswers
+        - historyQuestions
+
+    AnswerInput:
+      type: object
+      description: "Ответ на вопрос"
+      properties:
+        questionId:
+          type: string
+          description: "Идентификатор вопроса"
+          example: "q_001"
+        answerIds:
+          type: array
+          description: "Массив идентификаторов выбранных вариантов ответа"
+          items:
+            type: string
+          example: ["a_001", "a_002"]
+        value:
+          description: "Значение ответа для числовых или текстовых полей"
+          oneOf:
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum: ["number"]
+                data:
+                  type: number
+              required: [type, data]
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum: ["string"]
+                data:
+                  type: string
+              required: [type, data]
+      required:
+        - questionId
+        - answerIds
+
+    ShopSourceRowsRequest:
+      type: object
+      description: "Запрос строк источника для shop-ноды"
+      properties:
+        surveyId:
+          type: string
+          description: "Идентификатор опроса (по умолчанию 'witcher_cc')"
+        lang:
+          type: string
+          description: "Язык интерфейса (используется для будущего i18n каталога)"
+        questionId:
+          type: string
+          description: "ID shop-вопроса"
+          example: "wcc_shop"
+        sourceId:
+          type: string
+          description: "ID источника из metadata.shop.sources[].id"
+          example: "weapons"
+        groupValue:
+          type: string
+          description: "Если источник поддерживает подгруппы (metadata.shop.sources[].groupColumn), то при передаче groupValue вернутся строки только этой подгруппы. Если не передавать — вернутся группы."
+      required: [questionId, sourceId]
+
+    ShopSourceRowsResponse:
+      type: object
+      description: "Ответ со строками источника"
+      properties:
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        groups:
+          type: array
+          description: "Список подгрупп (если включено группирование)"
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              count:
+                type: number
+            required: [value, count]
+      required: []
+
+    ErrorResponse:
+      type: object
+      description: "Ответ об ошибке"
+      properties:
+        error:
+          type: string
+          description: "Описание ошибки"
+          example: "Failed to resolve next question"
+      required:
+        - error
