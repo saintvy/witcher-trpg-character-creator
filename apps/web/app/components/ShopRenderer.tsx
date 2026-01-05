@@ -54,6 +54,93 @@ function clampInt(value: number): number {
   return Math.max(0, Math.floor(value));
 }
 
+type SortColumn = 'checkbox' | 'qty' | string;
+
+function sortRows<T extends Record<string, unknown>>(
+  rows: T[],
+  column: SortColumn,
+  direction: 'asc' | 'desc',
+  sourceId: string,
+  keyColumn: string,
+  qtyBySource: Record<string, Record<string, number>>,
+  sourceColumns: ShopSourceColumn[],
+): T[] {
+  // Create a copy with original indices for stable sort
+  const rowsWithIndex = rows.map((row, idx) => ({ row, originalIndex: idx }));
+  
+  rowsWithIndex.sort((a, b) => {
+    let aVal: unknown;
+    let bVal: unknown;
+    
+    if (column === 'checkbox') {
+      // First column: checkbox (1 for checked, 0 for unchecked)
+      const aKey = a.row[keyColumn];
+      const bKey = b.row[keyColumn];
+      const aId = typeof aKey === 'string' ? aKey : String(a.originalIndex);
+      const bId = typeof bKey === 'string' ? bKey : String(b.originalIndex);
+      const aChecked = (qtyBySource[sourceId]?.[aId] ?? 0) > 0 ? 1 : 0;
+      const bChecked = (qtyBySource[sourceId]?.[bId] ?? 0) > 0 ? 1 : 0;
+      aVal = aChecked;
+      bVal = bChecked;
+    } else if (column === 'qty') {
+      // Second column: quantity
+      const aKey = a.row[keyColumn];
+      const bKey = b.row[keyColumn];
+      const aId = typeof aKey === 'string' ? aKey : String(a.originalIndex);
+      const bId = typeof bKey === 'string' ? bKey : String(b.originalIndex);
+      aVal = qtyBySource[sourceId]?.[aId] ?? 0;
+      bVal = qtyBySource[sourceId]?.[bId] ?? 0;
+    } else {
+      // Other columns: from row data
+      aVal = a.row[column];
+      bVal = b.row[column];
+    }
+    
+    // Handle null/undefined values: treat as "largest" (end for asc, start for desc)
+    const aIsEmpty = aVal === null || aVal === undefined || aVal === '';
+    const bIsEmpty = bVal === null || bVal === undefined || bVal === '';
+    
+    if (aIsEmpty && bIsEmpty) {
+      // Both empty: maintain original order (stable sort)
+      return a.originalIndex - b.originalIndex;
+    }
+    if (aIsEmpty) {
+      return direction === 'asc' ? 1 : -1;
+    }
+    if (bIsEmpty) {
+      return direction === 'asc' ? -1 : 1;
+    }
+    
+    // Compare values based on type
+    let compare: number;
+    
+    // Try to compare as numbers first
+    const aNum = typeof aVal === 'number' ? aVal : Number(aVal);
+    const bNum = typeof bVal === 'number' ? bVal : Number(bVal);
+    
+    if (Number.isFinite(aNum) && Number.isFinite(bNum)) {
+      compare = aNum - bNum;
+    } else {
+      // Compare as strings
+      const aStr = String(aVal);
+      const bStr = String(bVal);
+      compare = aStr.localeCompare(bStr, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    
+    // Apply direction
+    const result = direction === 'asc' ? compare : -compare;
+    
+    // If values are equal, maintain original order (stable sort)
+    if (result === 0) {
+      return a.originalIndex - b.originalIndex;
+    }
+    
+    return result;
+  });
+  
+  return rowsWithIndex.map((item) => item.row);
+}
+
 export function ShopRenderer(props: {
   questionId: string;
   shop: ShopConfig;
@@ -74,6 +161,7 @@ export function ShopRenderer(props: {
   const [loadingGroup, setLoadingGroup] = useState<Record<string, boolean>>({});
   const [loadErrorGroup, setLoadErrorGroup] = useState<Record<string, string | null>>({});
   const [qtyBySource, setQtyBySource] = useState<Record<string, Record<string, number>>>({});
+  const [sortBySource, setSortBySource] = useState<Record<string, { column: string | null; direction: 'asc' | 'desc' }>>({});
 
   const budgetValue = useMemo(() => {
     return clampInt(toNumber(getAtPath(state, shop.budget.path), 0));
@@ -196,6 +284,28 @@ export function ShopRenderer(props: {
     [qtyBySource, setQty],
   );
 
+  const handleSort = useCallback(
+    (sourceId: string, column: SortColumn) => {
+      setSortBySource((prev) => {
+        const current = prev[sourceId];
+        if (current?.column === column) {
+          // Toggle direction if same column
+          return {
+            ...prev,
+            [sourceId]: { column, direction: current.direction === 'asc' ? 'desc' : 'asc' },
+          };
+        } else {
+          // New column: start with ascending
+          return {
+            ...prev,
+            [sourceId]: { column, direction: 'asc' },
+          };
+        }
+      });
+    },
+    [],
+  );
+
   const purchases = useMemo(() => {
     const out: ShopPurchase[] = [];
     for (const source of shop.sources) {
@@ -232,6 +342,31 @@ export function ShopRenderer(props: {
 
   const canSubmit = totalCost <= budgetValue && !disabled;
 
+  // Helper to get sorted rows for a source
+  const getSortedRows = useCallback(
+    (
+      rows: Record<string, unknown>[],
+      sourceId: string,
+      keyColumn: string,
+      columns: ShopSourceColumn[],
+    ): Record<string, unknown>[] => {
+      const sortConfig = sortBySource[sourceId];
+      if (!sortConfig || !sortConfig.column) {
+        return rows;
+      }
+      return sortRows(
+        rows,
+        sortConfig.column,
+        sortConfig.direction,
+        sourceId,
+        keyColumn,
+        qtyBySource,
+        columns,
+      );
+    },
+    [sortBySource, qtyBySource],
+  );
+
   return (
     <div className="shop-node">
       <div className="shop-summary">
@@ -264,7 +399,7 @@ export function ShopRenderer(props: {
       <div className="shop-sources">
         {shop.sources.map((source) => {
           const isOpen = Boolean(expanded[source.id]);
-          const rows = rowsBySource[source.id] ?? [];
+          const rawRows = rowsBySource[source.id] ?? [];
           const groups = groupsBySource[source.id] ?? null;
           const isLoading = Boolean(loadingSource[source.id]);
           const err = loadErrorSource[source.id];
@@ -272,6 +407,8 @@ export function ShopRenderer(props: {
           const visibleColumns = source.groupColumn
             ? source.columns.filter((c) => c.field !== source.groupColumn)
             : source.columns;
+          const sortConfig = sortBySource[source.id];
+          const rows = getSortedRows(rawRows, source.id, source.keyColumn, source.columns);
 
           return (
             <div key={source.id} className="shop-source">
@@ -324,20 +461,59 @@ export function ShopRenderer(props: {
                               <div className="shop-source-body">
                                 {gLoading && <div className="shop-muted">Loading...</div>}
                                 {gErr && <div className="shop-error">Failed to load: {gErr}</div>}
-                                {!gLoading && !gErr && (
-                                  <div style={{ overflowX: "auto" }}>
-                                    <table className="survey-table shop-table">
-                                      <thead>
-                                        <tr>
-                                          <th style={{ width: 48 }}>✓</th>
-                                          <th style={{ width: 110 }}>Qty</th>
-                                          {visibleColumns.map((col) => (
-                                            <th key={col.field}>{col.label ?? col.field}</th>
-                                          ))}
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {gRows.map((row, idx) => {
+                                {!gLoading && !gErr && (() => {
+                                  const sortedGRows = getSortedRows(gRows, source.id, source.keyColumn, source.columns);
+                                  return (
+                                    <div style={{ overflowX: "auto" }}>
+                                      <table className="survey-table shop-table">
+                                        <thead>
+                                          <tr>
+                                            <th
+                                              style={{ width: 48, cursor: 'pointer' }}
+                                              onClick={() => handleSort(source.id, 'checkbox')}
+                                              className="shop-sortable-header"
+                                            >
+                                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                ✓
+                                                {sortConfig?.column === 'checkbox' && (
+                                                  <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                                )}
+                                              </span>
+                                            </th>
+                                            <th
+                                              style={{ width: 110, cursor: 'pointer' }}
+                                              onClick={() => handleSort(source.id, 'qty')}
+                                              className="shop-sortable-header"
+                                            >
+                                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                Qty
+                                                {sortConfig?.column === 'qty' && (
+                                                  <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                                )}
+                                              </span>
+                                            </th>
+                                            {visibleColumns.map((col) => {
+                                              const isSorted = sortConfig?.column === col.field;
+                                              return (
+                                                <th
+                                                  key={col.field}
+                                                  style={{ cursor: 'pointer' }}
+                                                  onClick={() => handleSort(source.id, col.field)}
+                                                  className="shop-sortable-header"
+                                                >
+                                                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    {col.label ?? col.field}
+                                                    {isSorted && (
+                                                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                                    )}
+                                                  </span>
+                                                </th>
+                                              );
+                                            })}
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {sortedGRows.map((row, idx) => {
                                           const key = row[source.keyColumn];
                                           const itemId = typeof key === "string" ? key : String(idx);
                                           const qty = selected[itemId] ?? 0;
@@ -375,7 +551,8 @@ export function ShopRenderer(props: {
                                       </tbody>
                                     </table>
                                   </div>
-                                )}
+                                  );
+                                })()}
                               </div>
                             )}
                           </div>
@@ -389,11 +566,48 @@ export function ShopRenderer(props: {
                       <table className="survey-table shop-table">
                         <thead>
                           <tr>
-                            <th style={{ width: 48 }}>✓</th>
-                            <th style={{ width: 110 }}>Qty</th>
-                            {source.columns.map((col) => (
-                              <th key={col.field}>{col.label ?? col.field}</th>
-                            ))}
+                            <th
+                              style={{ width: 48, cursor: 'pointer' }}
+                              onClick={() => handleSort(source.id, 'checkbox')}
+                              className="shop-sortable-header"
+                            >
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                ✓
+                                {sortConfig?.column === 'checkbox' && (
+                                  <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                )}
+                              </span>
+                            </th>
+                            <th
+                              style={{ width: 110, cursor: 'pointer' }}
+                              onClick={() => handleSort(source.id, 'qty')}
+                              className="shop-sortable-header"
+                            >
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                Qty
+                                {sortConfig?.column === 'qty' && (
+                                  <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                )}
+                              </span>
+                            </th>
+                            {source.columns.map((col) => {
+                              const isSorted = sortConfig?.column === col.field;
+                              return (
+                                <th
+                                  key={col.field}
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() => handleSort(source.id, col.field)}
+                                  className="shop-sortable-header"
+                                >
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    {col.label ?? col.field}
+                                    {isSorted && (
+                                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                    )}
+                                  </span>
+                                </th>
+                              );
+                            })}
                           </tr>
                         </thead>
                         <tbody>

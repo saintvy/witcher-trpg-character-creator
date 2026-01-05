@@ -1779,6 +1779,15 @@ body {
     vertical-align: top;
 }
 
+.shop-sortable-header {
+    user-select: none;
+    transition: background var(--transition-fast);
+}
+
+.shop-sortable-header:hover {
+    background: rgba(242,199,68,0.1);
+}
+
 .shop-qty-input {
     width: 90px;
     padding: 6px 8px;
