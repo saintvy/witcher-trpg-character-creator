@@ -21,7 +21,8 @@ WITH raw_data (ec_id, description_ru, description_en) AS ( VALUES
     ('EC006', 'Огонь', 'Fire'),
     ('EC007', 'Вода', 'Water'),
     ('EC008', 'Земля', 'Earth'),
-    ('EC009', 'Воздух', 'Air')
+    ('EC009', 'Воздух', 'Air'),
+    ('EC010', 'Смешанные элементы', 'Mixed elements')
 ),
 ins_descriptions AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

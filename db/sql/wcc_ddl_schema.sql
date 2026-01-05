@@ -1,9 +1,11 @@
 \echo 'wcc_ddl_schema.sql'
 
+DROP MATERIALIZED VIEW IF EXISTS wcc_item_upgrades_v CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS wcc_item_ingredients_v CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS wcc_item_armors_v CASCADE;
 DROP MATERIALIZED VIEW IF EXISTS wcc_item_weapons_v CASCADE;
 DROP TABLE IF EXISTS wcc_item_to_effects CASCADE;
+DROP TABLE IF EXISTS wcc_item_upgrades CASCADE;
 DROP TABLE IF EXISTS wcc_item_weapons CASCADE;
 DROP TABLE IF EXISTS wcc_item_armors CASCADE;
 DROP TABLE IF EXISTS wcc_item_ingredients CASCADE;

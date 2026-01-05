@@ -61,7 +61,22 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('damage_type.B',          'Д',                             'B'),
   ('damage_type.E',          'С',                             'E'),
   ('damage_type.Poison',     'Яд',                            'Poison'),
-  ('damage_type.Bleeding',   'Кровь',                         'Bleeding')
+  ('damage_type.Bleeding',   'Кровь',                         'Bleeding'),
+
+  -- Upgrades
+  ('upgrades.crossbow',                'Улучшение арбалета', 'Crossbow Upgrades'),
+  ('upgrades.rune',                    'Руна',               'Runes'),
+  ('upgrades.runeword',                'Рунное слово',       'Runewords'),
+  ('upgrades.armor',                   'Усиление брони',     'Armor enhancements'),
+  ('upgrades.glyph',                   'Глиф',               'Glyphs'),
+  ('upgrades.glyphword',               'Глифное слово',      'Glyphwords'),
+  ('upgrades.target.crossbow',         'Арбалеты',           'Crossbows'),
+  ('upgrades.target.head',             'Головная броня',     'Head Armor'),
+  ('upgrades.target.torso',            'Корпусная броня',    'Torso Armor'),
+  ('upgrades.target.legs',             'Ножная броня',       'Leg Armor'),
+  ('upgrades.target.weapon',           'Оружие',             'Weapon'),
+  ('upgrades.target.weapon_or_shield', 'Оружие, Щит',        'Weapon or Shield'),
+  ('upgrades.target.any_armor',        'Любая часть брони',  'Any Armor')
 ),
 ins_dict AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

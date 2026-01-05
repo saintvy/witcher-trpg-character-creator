@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS wcc_item_effects (
     e_id           varchar(10) PRIMARY KEY, -- e.g. 'E001'
     name_id        uuid NOT NULL,           -- ck_id('witcher_cc.items.effect.name.'||e_id)
-    description_id uuid NOT NULL            -- ck_id('witcher_cc.items.effect.description.'||e_id)
+    description_id uuid                     -- ck_id('witcher_cc.items.effect.description.'||e_id)
 );
 
 COMMENT ON TABLE wcc_item_effects IS
@@ -171,7 +171,11 @@ ins_descriptions AS (
 INSERT INTO wcc_item_effects (e_id, name_id, description_id)
 SELECT rd.e_id,
        ck_id('witcher_cc.items.effect.name.'||rd.e_id) AS name_id,
-       ck_id('witcher_cc.items.effect.description.'||rd.e_id) AS description_id
+       CASE 
+         WHEN nullif(rd.description_ru,'') IS NOT NULL OR nullif(rd.description_en,'') IS NOT NULL 
+         THEN ck_id('witcher_cc.items.effect.description.'||rd.e_id)
+         ELSE NULL
+       END AS description_id
   FROM raw_data rd
 ON CONFLICT (e_id) DO UPDATE
 SET name_id = EXCLUDED.name_id,
