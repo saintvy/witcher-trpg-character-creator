@@ -27,6 +27,10 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('source.weapons.title', 'en', 'Weapons'),
           ('source.armors.title', 'ru', 'Броня'),
           ('source.armors.title', 'en', 'Armors'),
+          ('source.general_gear.title', 'ru', 'Обычные вещи'),
+          ('source.general_gear.title', 'en', 'General Gear'),
+          ('source.vehicles.title', 'ru', 'Скакуны и транспорт'),
+          ('source.vehicles.title', 'en', 'Mounts & Vehicles'),
           ('source.ingredients_alchemy.title', 'ru', 'Алхимические ингредиенты'),
           ('source.ingredients_alchemy.title', 'en', 'Alchemy Ingredients'),
           ('source.ingredients_craft.title', 'ru', 'Ремесленные материалы'),
@@ -79,7 +83,16 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('column.target', 'ru', 'Цель'),
           ('column.target', 'en', 'Target'),
           ('column.slots', 'ru', 'Слоты'),
-          ('column.slots', 'en', 'Slots')
+          ('column.slots', 'en', 'Slots'),
+          -- Названия столбцов (специфичные для транспорта)
+          ('column.base', 'ru', 'Атлетика + ЛВК'),
+          ('column.base', 'en', 'DEX+Athletics'),
+          ('column.control_modifier', 'ru', 'Модификатор управления'),
+          ('column.control_modifier', 'en', 'Control Mod'),
+          ('column.speed', 'ru', 'Скорость'),
+          ('column.speed', 'en', 'Speed'),
+          ('column.hp', 'ru', 'ПЗ'),
+          ('column.hp', 'en', 'HP')
        ) AS v(key, lang, text)
 ON CONFLICT (id, lang) DO NOTHING;
 
@@ -223,6 +236,48 @@ SELECT meta.qu_id
                 jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
                 jsonb_build_object('field', 'availability', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.availability')::text)),
                 jsonb_build_object('field', 'effect_names', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.effects')::text)),
+                jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
+              )
+            ),
+            jsonb_build_object(
+              'id', 'general_gear',
+              'title', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.source.general_gear.title')::text),
+              'table', 'wcc_item_general_gear_v',
+              'dlcColumn', 'dlc_id',
+              'keyColumn', 't_id',
+              'langColumn', 'lang',
+              'langPath', 'characterRaw.lang',
+              'groupColumn', 'group_name',
+              'tooltipField', 'gear_description',
+              'targetPath', 'characterRaw.gear',
+              'columns', jsonb_build_array(
+                jsonb_build_object('field', 'gear_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
+                jsonb_build_object('field', 'group_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
+                jsonb_build_object('field', 'subgroup_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
+                jsonb_build_object('field', 'weight', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.weight')::text)),
+                jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
+                jsonb_build_object('field', 'availability', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.availability')::text)),
+                jsonb_build_object('field', 'concealment', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.concealment')::text)),
+                jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
+              )
+            ),
+            jsonb_build_object(
+              'id', 'vehicles',
+              'title', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.source.vehicles.title')::text),
+              'table', 'wcc_item_vehicles_v',
+              'dlcColumn', 'dlc_id',
+              'keyColumn', 'wt_id',
+              'langColumn', 'lang',
+              'langPath', 'characterRaw.lang',
+              'targetPath', 'characterRaw.gear',
+              'columns', jsonb_build_array(
+                jsonb_build_object('field', 'vehicle_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
+                jsonb_build_object('field', 'base', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.base')::text)),
+                jsonb_build_object('field', 'control_modifier', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.control_modifier')::text)),
+                jsonb_build_object('field', 'speed', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.speed')::text)),
+                jsonb_build_object('field', 'hp', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.hp')::text)),
+                jsonb_build_object('field', 'weight', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.weight')::text)),
+                jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
                 jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
               )
             )

@@ -76,7 +76,19 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('upgrades.target.legs',             'Ножная броня',       'Leg Armor'),
   ('upgrades.target.weapon',           'Оружие',             'Weapon'),
   ('upgrades.target.weapon_or_shield', 'Оружие, Щит',        'Weapon or Shield'),
-  ('upgrades.target.any_armor',        'Любая часть брони',  'Any Armor')
+  ('upgrades.target.any_armor',        'Любая часть брони',  'Any Armor'),
+
+  -- General gear groups
+  ('general_gear.group.clothing',      'Одежда',             'Clothing'),
+  ('general_gear.group.containers',   'Контейнеры',          'Containers'),
+  ('general_gear.group.food',          'Еда и напитки',       'Food & Drinks'),
+  ('general_gear.group.jewerly',       'Украшения',           'Jewelry'),
+  ('general_gear.group.other',         'Прочее',             'Other'),
+  ('general_gear.group.quest',         'Квестовые предметы',  'Quest Items'),
+  ('general_gear.group.standard',      'Стандартное',         'Standard'),
+  ('general_gear.group.tools',         'Инструменты',         'Tools'),
+  ('general_gear.group.transport',     'Транспорт',           'Transport'),
+  ('general_gear.group.harness',       'Упряжь',              'Outfitting for a mount')
 ),
 ins_dict AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
