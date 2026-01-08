@@ -43,6 +43,8 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('ingredients.sol',        'Солнце',                        'Sol'),
   ('ingredients.fulgur',     'Фульгор',                       'Fulgur'),
   ('ingredients.aether',     'Эфир',                          'Aether'),
+  ('ingredients.mutagen',    'Мутаген',                       'Mutagen'),
+  ('ingredients.spirits',    'Крепкий алкоголь',              'Spirits'),
 
   -- Crafted by
   ('crafted_by.humans',      'Люди',                          'Humans'),
@@ -88,7 +90,26 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('general_gear.group.standard',      'Стандартное',         'Standard'),
   ('general_gear.group.tools',         'Инструменты',         'Tools'),
   ('general_gear.group.transport',     'Транспорт',           'Transport'),
-  ('general_gear.group.harness',       'Упряжь',              'Outfitting for a mount')
+  ('general_gear.group.harness',       'Упряжь',              'Outfitting for a mount'),
+
+  -- Alchemy reciples
+  ('reciples.group.potion', 'Зелье', 'Potion'),
+  ('reciples.group.elixir', 'Эликсир', 'Elixir'),
+  ('reciples.group.medicine', 'Лекарство', 'Medicine'),
+  ('reciples.group.oil', 'Масло', 'Oil'),
+  ('reciples.group.decoction', 'Отвар', 'Decoction'),
+  ('reciples.group.alchemical_item', 'Химсостав', 'Alchemical item'),
+  ('craft.level.master', 'Мастер', 'Master'),
+  ('craft.level.journeyman', 'Подмастерье', 'Journeyman'),
+  ('craft.level.novice', 'Новичок', 'Novice'),
+  ('time.unit.minute', 'мин.', 'min'),
+  ('time.unit.round', 'р.', 'rnd'),
+  ('time.unit.hour', 'ч.', 'hr'),
+  ('time.unit.day', 'д.', 'd'),
+  -- Mutagen types
+  ('mutagen.color.red', 'Красный', 'Red'),
+  ('mutagen.color.green', 'Зелёный', 'Green'),
+  ('mutagen.color.blue', 'Синий', 'Blue')
 ),
 ins_dict AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

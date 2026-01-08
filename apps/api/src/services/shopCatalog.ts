@@ -40,7 +40,7 @@ type ShopQuestionConfig = {
   sources?: unknown;
 };
 
-const ALLOWED_TABLES = new Set(['wcc_item_weapons_v', 'wcc_item_armors_v', 'wcc_item_ingredients_v', 'wcc_item_upgrades_v', 'wcc_item_general_gear_v', 'wcc_item_vehicles_v']);
+const ALLOWED_TABLES = new Set(['wcc_item_weapons_v', 'wcc_item_armors_v', 'wcc_item_ingredients_v', 'wcc_item_upgrades_v', 'wcc_item_general_gear_v', 'wcc_item_vehicles_v', 'wcc_item_recipes_v', 'wcc_item_mutagens_v']);
 
 export async function getShopSourceRows(
   payload: ShopSourceRowsRequest,
