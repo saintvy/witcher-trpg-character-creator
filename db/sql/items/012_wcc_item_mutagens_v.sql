@@ -12,6 +12,7 @@ SELECT im.m_id
      , ieffect.text AS effect
      , im.alchemy_dc
      , iminor.text AS minor_mutation
+     , coalesce(im.price, 0) AS price
      , iav.text AS availability
      , iname.lang
   FROM wcc_item_mutagens im

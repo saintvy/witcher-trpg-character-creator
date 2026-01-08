@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS wcc_item_mutagens (
 
     effect_id       uuid NOT NULL,                    -- ck_id('witcher_cc.items.mutagen.effect.'||m_id)
     alchemy_dc      integer NOT NULL,
-    minor_mutation_id uuid NOT NULL                   -- ck_id('witcher_cc.items.mutagen.minor_mutation.'||m_id)
+    minor_mutation_id uuid NOT NULL,                 -- ck_id('witcher_cc.items.mutagen.minor_mutation.'||m_id)
+    price           integer NOT NULL DEFAULT 0
 );
 
 COMMENT ON TABLE wcc_item_mutagens IS
@@ -201,12 +202,12 @@ WITH raw_data (
   -- exp_toc mutagens (fourth screenshot pair with "Медведь")
   ('M033','exp_toc','mutagen.color.green','availability.U',
     'Медведь','Bear',
-    '+10HP','+10HP',
+    '+10 ПЗ','+10HP',
     20,
-    'Сильный рост волос','Prolific Hair Growth'),
+    'Обильный рост волос','Prolific Hair Growth'),
   ('M034','exp_toc','mutagen.color.blue','availability.U',
     'Кающийся','Penitent',
-    '+2 Порогу энергии','+2 Vigor Threshold',
+    '+2 к Энергии','+2 Vigor Threshold',
     18,
     'Светящиеся белые отметины','Glowing White Markings')
 ),
@@ -269,7 +270,8 @@ ins_i18n AS (
 INSERT INTO wcc_item_mutagens (
   m_id, dlc_dlc_id, name_id,
   color_id, availability_id,
-  effect_id, alchemy_dc, minor_mutation_id
+  effect_id, alchemy_dc, minor_mutation_id,
+  price
 )
 SELECT rd.m_id
      , rd.source_id AS dlc_dlc_id
@@ -279,6 +281,7 @@ SELECT rd.m_id
      , ck_id('witcher_cc.items.mutagen.effect.'||rd.m_id) AS effect_id
      , rd.alchemy_dc
      , ck_id('witcher_cc.items.mutagen.minor_mutation.'||rd.m_id) AS minor_mutation_id
+     , 0 AS price
   FROM raw_data rd
 ON CONFLICT (m_id) DO UPDATE
 SET
@@ -288,5 +291,6 @@ SET
   availability_id = EXCLUDED.availability_id,
   effect_id = EXCLUDED.effect_id,
   alchemy_dc = EXCLUDED.alchemy_dc,
-  minor_mutation_id = EXCLUDED.minor_mutation_id;
+  minor_mutation_id = EXCLUDED.minor_mutation_id,
+  price = EXCLUDED.price;
 

@@ -41,6 +41,8 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('source.recipes.title', 'en', 'Alchemy Recipes'),
           ('source.mutagens.title', 'ru', 'Мутагены'),
           ('source.mutagens.title', 'en', 'Mutagens'),
+          ('source.trophies.title', 'ru', 'Трофеи'),
+          ('source.trophies.title', 'en', 'Trophies'),
           -- Названия столбцов (общие)
           ('column.name', 'ru', 'Название'),
           ('column.name', 'en', 'Name'),
@@ -122,7 +124,10 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('column.alchemy_dc', 'ru', 'СЛ Алхимии'),
           ('column.alchemy_dc', 'en', 'Alchemy DC'),
           ('column.minor_mutation', 'ru', 'Малая мутация'),
-          ('column.minor_mutation', 'en', 'Minor Mutation')
+          ('column.minor_mutation', 'en', 'Minor Mutation'),
+          -- Названия столбцов (специфичные для трофеев)
+          ('column.monster_type', 'ru', 'Тип монстра'),
+          ('column.monster_type', 'en', 'Monster Type')
        ) AS v(key, lang, text)
 ON CONFLICT (id, lang) DO NOTHING;
 
@@ -353,6 +358,25 @@ SELECT meta.qu_id
                 jsonb_build_object('field', 'effect', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.effects')::text)),
                 jsonb_build_object('field', 'alchemy_dc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.alchemy_dc')::text)),
                 jsonb_build_object('field', 'minor_mutation', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.minor_mutation')::text)),
+                jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
+                jsonb_build_object('field', 'availability', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.availability')::text)),
+                jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
+              )
+            ),
+            jsonb_build_object(
+              'id', 'trophies',
+              'title', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.source.trophies.title')::text),
+              'table', 'wcc_item_trophies_v',
+              'dlcColumn', 'dlc_id',
+              'keyColumn', 'tr_id',
+              'langColumn', 'lang',
+              'langPath', 'characterRaw.lang',
+              'targetPath', 'characterRaw.gear',
+              'columns', jsonb_build_array(
+                jsonb_build_object('field', 'trophy_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
+                jsonb_build_object('field', 'monster_type', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.monster_type')::text)),
+                jsonb_build_object('field', 'effect', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.effects')::text)),
+                jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
                 jsonb_build_object('field', 'availability', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.availability')::text)),
                 jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
               )
