@@ -170,7 +170,7 @@ export function ShopRenderer(props: {
   lang: string;
   state: Record<string, unknown>;
   disabled?: boolean;
-  onSubmit: (payload: { v: 1; purchases: ShopPurchase[] }) => void;
+  onSubmit: (payload: { v: 1; purchases: ShopPurchase[]; ignoreWarnings?: boolean }) => void;
 }) {
   const { questionId, shop, lang, state, disabled, onSubmit } = props;
 
@@ -429,7 +429,13 @@ export function ShopRenderer(props: {
 
   const ensureLoadedSourceRoot = useCallback(
     async (sourceId: string) => {
-      if (rowsBySource[sourceId] || groupsBySource[sourceId]) return;
+      // Already loaded (even if empty)
+      if (
+        Object.prototype.hasOwnProperty.call(rowsBySource, sourceId) ||
+        Object.prototype.hasOwnProperty.call(groupsBySource, sourceId)
+      ) {
+        return;
+      }
       setLoadingSource((prev) => ({ ...prev, [sourceId]: true }));
       setLoadErrorSource((prev) => ({ ...prev, [sourceId]: null }));
       try {
@@ -456,8 +462,40 @@ export function ShopRenderer(props: {
         setLoadingSource((prev) => ({ ...prev, [sourceId]: false }));
       }
     },
-    [questionId, rowsBySource, groupsBySource, lang, state],
+    [questionId, rowsBySource, groupsBySource, lang, resolvedAllowedDlcs],
   );
+
+  // Prefetch root lists for all sources so we can hide empty sources
+  const prefetchKey = useMemo(() => `${lang}::${resolvedAllowedDlcs.join(",")}`, [lang, resolvedAllowedDlcs]);
+  const prefetchRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (prefetchRef.current === prefetchKey) return;
+    prefetchRef.current = prefetchKey;
+    void Promise.all(shop.sources.map((s) => ensureLoadedSourceRoot(s.id)));
+  }, [prefetchKey, shop.sources, ensureLoadedSourceRoot]);
+
+  const visibleSources = useMemo(() => {
+    return shop.sources.filter((source) => {
+      // If user already selected something in this source — keep it visible
+      const selected = qtyBySource[source.id] ?? {};
+      if (Object.values(selected).some((qty) => (qty ?? 0) > 0)) {
+        return true;
+      }
+
+      const hasLoadedRows = Object.prototype.hasOwnProperty.call(rowsBySource, source.id);
+      const hasLoadedGroups = Object.prototype.hasOwnProperty.call(groupsBySource, source.id);
+
+      if (hasLoadedGroups) {
+        return (groupsBySource[source.id]?.length ?? 0) > 0;
+      }
+      if (hasLoadedRows) {
+        return (rowsBySource[source.id]?.length ?? 0) > 0;
+      }
+
+      // Not loaded yet — keep it for now (will disappear once loaded if empty)
+      return true;
+    });
+  }, [shop.sources, qtyBySource, rowsBySource, groupsBySource]);
 
   const ensureLoadedGroupRows = useCallback(
     async (sourceId: string, groupValue: string) => {
@@ -715,7 +753,7 @@ export function ShopRenderer(props: {
       </div>
 
       <div className="shop-sources">
-        {shop.sources.map((source) => {
+        {visibleSources.map((source) => {
           const isOpen = Boolean(expanded[source.id]);
           const rawRows = rowsBySource[source.id] ?? [];
           const groups = groupsBySource[source.id] ?? null;

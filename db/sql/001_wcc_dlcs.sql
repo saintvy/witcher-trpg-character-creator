@@ -88,6 +88,7 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
        , meta.qtype
        , jsonb_build_object(
            'dice', 'd0',
+           'allowEmptySelection', true,
            'path', jsonb_build_array(
              ck_id('witcher_cc.hierarchy.identity')::text,
              ck_id('witcher_cc.hierarchy.dlcs')::text

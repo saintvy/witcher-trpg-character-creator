@@ -1271,11 +1271,19 @@ export default function BuilderPage() {
 
                 {!shopConfig && question.qtype === "multiple" && (
                   <>
+                    {/*
+                      allowEmptySelection:
+                      If true, user can continue with empty selection (submitAnswer([])).
+                    */}
+                    {(() => {
+                      const allowEmptySelection =
+                        Boolean((questionMetadata as Record<string, unknown>).allowEmptySelection);
+                      return (
                     <div className="survey-multiple-toolbar">
                       <button
                         type="button"
                         onClick={() => submitAnswer(pendingMultiple)}
-                        disabled={loading || pendingMultiple.length === 0}
+                        disabled={loading || (!allowEmptySelection && pendingMultiple.length === 0)}
                         className="btn btn-primary"
                       >
                         {displayLang === "ru" ? "Продолжить" : "Continue"}
@@ -1304,6 +1312,8 @@ export default function BuilderPage() {
                         </button>
                       </div>
                     </div>
+                      );
+                    })()}
 
                     <ul className="survey-options-list">
                       {options.map((option) => {
