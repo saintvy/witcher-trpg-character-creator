@@ -836,11 +836,15 @@ export default function BuilderPage() {
     setLoadingGenerateResult(true);
     setGenerateResultError(null);
     try {
-      // Используем текущий state как characterRaw
+      // Send characterRaw only (generate-character expects characterRaw, not full survey state)
+      const payload =
+        state && typeof state === "object" && !Array.isArray(state) && "characterRaw" in (state as any)
+          ? (state as any).characterRaw
+          : state;
       const response = await fetch(`${API_URL}/generate-character?lang=${lang}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(state),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {

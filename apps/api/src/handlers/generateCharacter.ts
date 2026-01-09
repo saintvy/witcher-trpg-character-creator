@@ -10,6 +10,8 @@ type I18nValue = { i18n_uuid: string };
 type CharacterRaw = Record<string, unknown> & { logicFields?: Record<string, unknown> };
 type Character = Record<string, unknown>;
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function isI18nValue(value: unknown): value is I18nValue {
   return (
     typeof value === 'object' &&
@@ -74,6 +76,12 @@ async function buildI18nResolver(uuids: Set<string>, lang: string): Promise<I18n
  * Collects all UUIDs for batch resolution
  */
 function collectI18nUuids(value: unknown, acc: Set<string>): void {
+  if (typeof value === 'string') {
+    if (UUID_PATTERN.test(value)) {
+      acc.add(value);
+    }
+    return;
+  }
   if (isI18nValue(value)) {
     acc.add(value.i18n_uuid);
     return;
@@ -96,7 +104,7 @@ function collectI18nUuids(value: unknown, acc: Set<string>): void {
 }
 
 /**
- * Recursively processes object: replaces i18n objects with strings
+ * Recursively processes object: replaces i18n objects and UUID strings with strings
  */
 async function resolveI18nRecursive(
   value: unknown,
@@ -114,6 +122,9 @@ async function resolveI18nRecursive(
   }
 
   if (typeof value === 'string') {
+    if (UUID_PATTERN.test(value)) {
+      return resolveText(value);
+    }
     return value;
   }
 
@@ -141,8 +152,14 @@ async function resolveI18nRecursive(
 }
 
 export async function generateCharacter(c: Context): Promise<Character> {
-  // Get characterRaw from request body
-  const characterRaw = (await c.req.json().catch(() => ({}))) as CharacterRaw;
+  // Accept either:
+  // - raw character object (CharacterRaw)
+  // - wrapper { characterRaw: CharacterRaw } (e.g. survey state)
+  const body = (await c.req.json().catch(() => ({}))) as unknown;
+  const characterRaw =
+    body && typeof body === 'object' && !Array.isArray(body) && 'characterRaw' in (body as Record<string, unknown>)
+      ? (((body as Record<string, unknown>).characterRaw ?? {}) as CharacterRaw)
+      : (body as CharacterRaw);
   
   // Get language from query parameter or header, default 'en'
   const lang = c.req.query('lang') || c.req.header('Accept-Language')?.split(',')[0]?.split('-')[0] || 'en';

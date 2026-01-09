@@ -139,13 +139,7 @@ type NextQuestionResponse = {
   state: SurveyState;
   historyAnswers: AnswerInput[];
   historyQuestions?: HistoryQuestion[];
-  debug_info?: {
-    state_lang?: string;
-    state_answers?: SurveyState['answers'];
-    state_values?: SurveyState['values'];
-    state_counters?: SurveyState['counters'];
-    question_metadata?: Record<string, unknown>;
-  };
+  debug_info?: Record<string, unknown>;
 };
 
 // Structure for preloaded survey data
@@ -174,6 +168,7 @@ type SurveyData = {
 
 const DEFAULT_SURVEY_ID = 'witcher_cc';
 const DEFAULT_LANG = 'en';
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Generates UUID from string, identical to SQL function ck_id
@@ -223,6 +218,13 @@ function collectI18nUuids(value: unknown, uuids: Set<string>): void {
     return;
   }
 
+  if (typeof value === 'string') {
+    if (UUID_PATTERN.test(value)) {
+      uuids.add(value);
+    }
+    return;
+  }
+
   if (typeof value === 'object' && !Array.isArray(value)) {
     const obj = value as Record<string, unknown>;
     
@@ -260,6 +262,16 @@ function resolveI18nValue(value: unknown, i18nTextsMap: Map<string, Map<string, 
   if (value === null || value === undefined) {
     return value;
   }
+
+  if (typeof value === 'string') {
+    if (UUID_PATTERN.test(value)) {
+      const texts = i18nTextsMap.get(value);
+      if (texts) {
+        return texts.get(lang) ?? texts.get('en') ?? value;
+      }
+    }
+    return value;
+  }
   
   if (typeof value === 'object' && !Array.isArray(value)) {
     const obj = value as Record<string, unknown>;
@@ -271,6 +283,20 @@ function resolveI18nValue(value: unknown, i18nTextsMap: Map<string, Map<string, 
         return texts.get(lang) ?? texts.get('en') ?? obj.i18n_uuid;
       }
       return obj.i18n_uuid;
+    }
+
+    // Check if this is an object with i18n_uuid_array
+    if ('i18n_uuid_array' in obj && Array.isArray(obj.i18n_uuid_array) && Object.keys(obj).length === 1) {
+      // Format: [separator, ...uuids]
+      const arr = obj.i18n_uuid_array as unknown[];
+      const separator = typeof arr[0] === 'string' ? (arr[0] as string) : '';
+      const parts: string[] = [];
+      for (let i = 1; i < arr.length; i++) {
+        const uuid = typeof arr[i] === 'string' ? (arr[i] as string) : String(arr[i]);
+        const texts = i18nTextsMap.get(uuid);
+        parts.push(texts?.get(lang) ?? texts?.get('en') ?? uuid);
+      }
+      return parts.join(separator);
     }
     
     // Recursively process object
@@ -286,6 +312,35 @@ function resolveI18nValue(value: unknown, i18nTextsMap: Map<string, Map<string, 
   }
   
   return value;
+}
+
+async function loadI18nTexts(
+  uuids: Set<string>,
+  lang: string,
+): Promise<Map<string, Map<string, string>>> {
+  const i18nTextsMap = new Map<string, Map<string, string>>();
+  if (uuids.size === 0) {
+    return i18nTextsMap;
+  }
+
+  const i18nResult = await db.query<I18nRow>(
+    `
+      SELECT id::text AS "id", lang AS "lang", text AS "text"
+      FROM i18n_text
+      WHERE id::text = ANY($1::text[])
+        AND lang IN ($2, 'en')
+    `,
+    [Array.from(uuids), lang],
+  );
+
+  for (const row of i18nResult.rows) {
+    if (!i18nTextsMap.has(row.id)) {
+      i18nTextsMap.set(row.id, new Map());
+    }
+    i18nTextsMap.get(row.id)!.set(row.lang, row.text);
+  }
+
+  return i18nTextsMap;
 }
 
 /**
@@ -599,42 +654,6 @@ async function loadStateData(
       )
     : { rows: [] };
 
-  // Collect UUIDs for i18n from effects (may be needed for jsonlogic computation)
-
-  const i18nUuids = new Set<string>();
-  for (const row of effectsResult.rows) {
-    collectI18nUuids(row.body, i18nUuids);
-  }
-  for (const row of questionEffectsResult.rows) {
-    collectI18nUuids(row.body, i18nUuids);
-  }
-  for (const row of answerMetadataResult.rows) {
-    if (row.metadata) {
-      collectI18nUuids(row.metadata, i18nUuids);
-    }
-  }
-
-  // Load i18n texts only for effects (if needed)
-  const i18nTextsMap = new Map<string, Map<string, string>>();
-  if (i18nUuids.size > 0) {
-    const i18nResult = await db.query<I18nRow>(
-      `
-        SELECT id::text AS "id", lang AS "lang", text AS "text"
-        FROM i18n_text
-        WHERE id::text = ANY($1::text[])
-          AND lang IN ('en', 'ru')
-      `,
-      [Array.from(i18nUuids)],
-    );
-
-    for (const row of i18nResult.rows) {
-      if (!i18nTextsMap.has(row.id)) {
-        i18nTextsMap.set(row.id, new Map());
-      }
-      i18nTextsMap.get(row.id)!.set(row.lang, row.text);
-    }
-  }
-
   // Build data structures
   const questionMetadata = new Map<string, Record<string, unknown>>();
   for (const row of questionsResult.rows) {
@@ -861,81 +880,8 @@ async function loadMinimalSurveyData(
     [uniqueTransitionFromQuestions],
   );
 
-  // 5. Collect UUIDs for i18n texts
-
-  const i18nUuids = new Set<string>();
-  
-  // Collect UUIDs from question metadata.path and metadata.columns
-  for (const row of questionsResult.rows) {
-    const metadata = row.metadata as { path?: unknown[]; columns?: unknown[] } | undefined;
-    
-    if (metadata?.path && Array.isArray(metadata.path)) {
-      for (const segment of metadata.path) {
-        if (typeof segment === 'string') {
-          i18nUuids.add(segment);
-        } else if (segment && typeof segment === 'object' && 'jsonlogic_expression' in segment) {
-          extractStringsFromJsonLogic(segment.jsonlogic_expression, i18nUuids);
-        }
-      }
-    }
-    
-    if (metadata?.columns && Array.isArray(metadata.columns)) {
-      for (const col of metadata.columns) {
-        if (typeof col === 'string') {
-          i18nUuids.add(col);
-        }
-      }
-    }
-    
-    // Collect i18n UUIDs from entire metadata (for shop, drop_down_detailed, etc.)
-    if (row.metadata) {
-      collectI18nUuids(row.metadata, i18nUuids);
-    }
-  }
-
-  // Collect UUIDs from effects
-  for (const row of effectsResult.rows) {
-    collectI18nUuids(row.body, i18nUuids);
-  }
-
-  for (const row of questionEffectsResult.rows) {
-    collectI18nUuids(row.body, i18nUuids);
-  }
-
-  for (const row of answerOptionsResult.rows) {
-    if (row.metadata) {
-      collectI18nUuids(row.metadata, i18nUuids);
-    }
-  }
-
-  // Add UUIDs from question and answer body and label
-  for (const row of questionsResult.rows) {
-    if (row.body) {
-      // body already loaded via JOIN, but UUID may be needed for other languages
-      // Skip for now, as already loaded via JOIN
-    }
-  }
-
-  // 6. Load i18n texts
+  // 5-6. i18n texts resolving disabled (kept for future unified resolving)
   const i18nTextsMap = new Map<string, Map<string, string>>();
-  if (i18nUuids.size > 0) {
-    const i18nResult = await db.query<I18nRow>(
-      `
-        SELECT id::text AS "id", lang AS "lang", text AS "text"
-        FROM i18n_text
-        WHERE id::text = ANY($1::text[])
-          AND lang IN ($2, 'en')
-      `,
-      [Array.from(i18nUuids), lang],
-    );
-
-    for (const row of i18nResult.rows) {
-      if (!i18nTextsMap.has(row.id)) {
-        i18nTextsMap.set(row.id, new Map());
-      }
-      i18nTextsMap.get(row.id)!.set(row.lang, row.text);
-    }
-  }
 
   // 7. Find entry question (if needed)
   let entryQuestionId: string | undefined;
@@ -973,28 +919,7 @@ async function loadMinimalSurveyData(
       metadata: row.metadata,
     };
     
-    if (question.qtype === 'single_table') {
-      const metadata = question.metadata as { columns?: unknown[] } | undefined;
-      const columnIds = extractColumnIds(metadata?.columns);
-      if (columnIds.length) {
-        const resolvedColumns = columnIds.map((columnId) => {
-          const texts = i18nTextsMap.get(columnId);
-          return texts?.get(lang) ?? texts?.get('en') ?? columnId;
-        });
-        question.metadata = {
-          ...question.metadata,
-          columns: resolvedColumns,
-        };
-      }
-    }
-    
-    // Resolve i18n UUIDs in metadata for shop renderer
-    if (question.metadata && typeof question.metadata === 'object') {
-      const metadata = question.metadata as Record<string, unknown>;
-      if (metadata.renderer === 'shop') {
-        question.metadata = resolveI18nValue(question.metadata, i18nTextsMap, lang) as Record<string, unknown>;
-      }
-    }
+    // i18n resolving for metadata disabled
     
     questions.set(row.qu_id, question);
   }
@@ -1008,12 +933,8 @@ async function loadMinimalSurveyData(
       answerOptions.set(row.qu_qu_id, []);
     }
     
-      // Resolve i18n UUIDs in metadata for drop_down_detailed
-      let resolvedMetadata = row.metadata ?? {};
-      const question = questions.get(row.qu_qu_id);
-      if (question?.qtype === 'drop_down_detailed' && resolvedMetadata) {
-        resolvedMetadata = resolveI18nValue(resolvedMetadata, i18nTextsMap, lang) as Record<string, unknown>;
-      }
+      // i18n resolving for answer option metadata disabled
+      const resolvedMetadata = row.metadata ?? {};
     
     const option: AnswerOptionRow = {
       id: row.an_id,
@@ -1188,74 +1109,8 @@ async function loadSurveyData(surveyId: string, lang: string): Promise<SurveyDat
     [questionIds],
   );
 
-  // 5. Collect all UUIDs for i18n texts from metadata.path, metadata.columns and effects
-
-  const i18nUuids = new Set<string>();
-  
-  // Collect UUIDs from question metadata.path and metadata.columns
-  for (const row of questionsResult.rows) {
-    const metadata = row.metadata as { path?: unknown[]; columns?: unknown[] } | undefined;
-    
-    // Collect UUIDs from path
-    if (metadata?.path && Array.isArray(metadata.path)) {
-      for (const segment of metadata.path) {
-        if (typeof segment === 'string') {
-          i18nUuids.add(segment);
-        } else if (segment && typeof segment === 'object' && 'jsonlogic_expression' in segment) {
-          // Extract all string values from jsonlogic_expression
-          // that may be UUIDs (static values, not variables)
-          extractStringsFromJsonLogic(segment.jsonlogic_expression, i18nUuids);
-        }
-      }
-    }
-    
-    // Collect UUIDs from columns
-    if (metadata?.columns && Array.isArray(metadata.columns)) {
-      for (const col of metadata.columns) {
-        if (typeof col === 'string') {
-          i18nUuids.add(col);
-        }
-      }
-    }
-  }
-
-  // Collect UUIDs from answer effects
-  for (const row of effectsResult.rows) {
-    collectI18nUuids(row.body, i18nUuids);
-  }
-
-  // Collect UUIDs from question effects
-  for (const row of questionEffectsResult.rows) {
-    collectI18nUuids(row.body, i18nUuids);
-  }
-
-  // Collect UUIDs from answer metadata (in case there are i18n_uuid there)
-  for (const row of answerOptionsResult.rows) {
-    if (row.metadata) {
-      collectI18nUuids(row.metadata, i18nUuids);
-    }
-  }
-
-  // 6. Load all i18n texts in one query
+  // 5-6. i18n texts resolving disabled (kept for future unified resolving)
   const i18nTextsMap = new Map<string, Map<string, string>>();
-  if (i18nUuids.size > 0) {
-    const i18nResult = await db.query<I18nRow>(
-      `
-        SELECT id::text AS "id", lang AS "lang", text AS "text"
-        FROM i18n_text
-        WHERE id::text = ANY($1::text[])
-          AND lang IN ($2, 'en')
-      `,
-      [Array.from(i18nUuids), lang],
-    );
-
-    for (const row of i18nResult.rows) {
-      if (!i18nTextsMap.has(row.id)) {
-        i18nTextsMap.set(row.id, new Map());
-      }
-      i18nTextsMap.get(row.id)!.set(row.lang, row.text);
-    }
-  }
 
   // 7. Find entry question
   const entryQuestionResult = await db.query<{ qu_id: string }>(
@@ -1287,21 +1142,7 @@ async function loadSurveyData(surveyId: string, lang: string): Promise<SurveyDat
       metadata: row.metadata,
     };
     
-    // Process single_table questions
-    if (question.qtype === 'single_table') {
-      const metadata = question.metadata as { columns?: unknown[] } | undefined;
-      const columnIds = extractColumnIds(metadata?.columns);
-      if (columnIds.length) {
-        const resolvedColumns = columnIds.map((columnId) => {
-          const texts = i18nTextsMap.get(columnId);
-          return texts?.get(lang) ?? texts?.get('en') ?? columnId;
-        });
-        question.metadata = {
-          ...question.metadata,
-          columns: resolvedColumns,
-        };
-      }
-    }
+    // i18n resolving for metadata disabled
     
     questions.set(row.qu_id, question);
   }
@@ -1500,83 +1341,12 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
         [surveyId, lang, nextQuestionId],
       );
       
-      // Collect UUIDs from answer option metadata for drop_down_detailed
-      // and column headers for single_table, and shop metadata
-      const metadataI18nUuids = new Set<string>();
-      if (question.qtype === 'drop_down_detailed') {
-        for (const row of answerOptionsResult.rows) {
-          if (row.metadata) {
-            collectI18nUuids(row.metadata, metadataI18nUuids);
-          }
-        }
-      }
-      if (question.qtype === 'single_table') {
-        const qMeta = question.metadata as { columns?: unknown[] } | undefined;
-        const columnIds = extractColumnIds(qMeta?.columns);
-        for (const id of columnIds) {
-          metadataI18nUuids.add(id);
-        }
-      }
-      // Collect UUIDs from shop metadata
-      if (question.metadata && typeof question.metadata === 'object') {
-        const qMeta = question.metadata as Record<string, unknown>;
-        if (qMeta.renderer === 'shop') {
-          collectI18nUuids(question.metadata, metadataI18nUuids);
-        }
-      }
-      
-      // Load i18n texts for answer option metadata
-      const metadataI18nTextsMap = new Map<string, Map<string, string>>();
-      if (metadataI18nUuids.size > 0) {
-        const metadataI18nResult = await db.query<I18nRow>(
-          `
-            SELECT id::text AS "id", lang AS "lang", text AS "text"
-            FROM i18n_text
-            WHERE id::text = ANY($1::text[])
-              AND lang IN ($2, 'en')
-          `,
-          [Array.from(metadataI18nUuids), lang],
-        );
-        
-        for (const i18nRow of metadataI18nResult.rows) {
-          if (!metadataI18nTextsMap.has(i18nRow.id)) {
-            metadataI18nTextsMap.set(i18nRow.id, new Map());
-          }
-          metadataI18nTextsMap.get(i18nRow.id)!.set(i18nRow.lang, i18nRow.text);
-        }
-      }
-
-      // Resolve single_table column headers from the same batch
-      if (question.qtype === 'single_table') {
-        const qMeta = question.metadata as { columns?: unknown[] } | undefined;
-        const columnIds = extractColumnIds(qMeta?.columns);
-        if (columnIds.length > 0) {
-          const resolvedColumns = columnIds.map((columnId) => {
-            const texts = metadataI18nTextsMap.get(columnId);
-            return texts?.get(lang) ?? texts?.get('en') ?? columnId;
-          });
-          question.metadata = {
-            ...question.metadata,
-            columns: resolvedColumns,
-          };
-        }
-      }
-      
-      // Resolve i18n UUIDs in metadata for shop renderer
-      if (question.metadata && typeof question.metadata === 'object') {
-        const qMeta = question.metadata as Record<string, unknown>;
-        if (qMeta.renderer === 'shop') {
-          question.metadata = resolveI18nValue(question.metadata, metadataI18nTextsMap, lang) as Record<string, unknown>;
-        }
-      }
+      // i18n resolving for metadata disabled
       
       const visibleRules = new Map<string, Record<string, unknown>>();
       for (const row of answerOptionsResult.rows) {
-        // Resolve i18n UUIDs in metadata for drop_down_detailed
-        let resolvedMetadata = row.metadata ?? {};
-        if (question.qtype === 'drop_down_detailed' && resolvedMetadata) {
-          resolvedMetadata = resolveI18nValue(resolvedMetadata, metadataI18nTextsMap, lang) as Record<string, unknown>;
-        }
+        // i18n resolving for answer option metadata disabled
+        const resolvedMetadata = row.metadata ?? {};
         
         const option: AnswerOptionRow = {
           id: row.an_id,
@@ -1629,42 +1399,8 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
       historyQuestionsMap.set(row.qu_id, row.metadata ?? {});
     }
     
-    // Collect UUIDs from path for i18n (including jsonlogic expressions)
-    
-    const pathI18nUuids = new Set<string>();
-    for (const answer of historyAnswers) {
-      const metadata = historyQuestionsMap.get(answer.questionId);
-      if (metadata?.path && Array.isArray(metadata.path)) {
-        for (const segment of metadata.path) {
-          if (typeof segment === 'string') {
-            pathI18nUuids.add(segment);
-          } else if (segment && typeof segment === 'object' && 'jsonlogic_expression' in segment) {
-            extractStringsFromJsonLogic(segment.jsonlogic_expression, pathI18nUuids);
-          }
-        }
-      }
-    }
-    
-    // Load i18n texts for path
+    // i18n resolving for path disabled
     const i18nTextsMap = new Map<string, Map<string, string>>();
-    if (pathI18nUuids.size > 0) {
-      const i18nResult = await db.query<I18nRow>(
-        `
-          SELECT id::text AS "id", lang AS "lang", text AS "text"
-          FROM i18n_text
-          WHERE id::text = ANY($1::text[])
-            AND lang IN ($2, 'en')
-        `,
-        [Array.from(pathI18nUuids), lang],
-      );
-      
-      for (const row of i18nResult.rows) {
-        if (!i18nTextsMap.has(row.id)) {
-          i18nTextsMap.set(row.id, new Map());
-        }
-        i18nTextsMap.get(row.id)!.set(row.lang, row.text);
-      }
-    }
     
     // Build question history with proper jsonlogic expression handling
     // Compute state incrementally for each question
@@ -1690,46 +1426,9 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
       const path = (metadata?.path as unknown[] | undefined) || [];
       
       // Use state BEFORE applying current answer to compute path
-      const pathTexts = path.map((segment) => {
-        if (typeof segment === 'string') {
-          const texts = i18nTextsMap.get(segment);
-          return texts?.get(lang) ?? texts?.get('en') ?? segment;
-        } else if (segment && typeof segment === 'object') {
-          if ('var' in segment) {
-            const value = evaluate(segment, currentState);
-            if (value !== undefined && value !== null) {
-              const valueStr = String(value);
-              const texts = i18nTextsMap.get(valueStr);
-              return texts?.get(lang) ?? texts?.get('en') ?? valueStr;
-            }
-            return '';
-          } else if ('jsonlogic_expression' in segment) {
-            const value = evaluateJsonLogicExpression(segment.jsonlogic_expression, currentState);
-            if (value !== undefined && value !== null) {
-              const valueStr = String(value);
-              const texts = i18nTextsMap.get(valueStr);
-              return texts?.get(lang) ?? texts?.get('en') ?? valueStr;
-            }
-            return '';
-          }
-        }
-        return String(segment);
-      });
+      const pathTexts = path.map((segment) => resolvePathSegmentText(segment, currentState, i18nTextsMap, lang));
       
-      const resolvedPath = path.map((segment) => {
-        if (typeof segment === 'string') {
-          return segment;
-        } else if (segment && typeof segment === 'object') {
-          if ('var' in segment) {
-            const value = evaluate(segment, currentState);
-            return value !== undefined && value !== null ? String(value) : '';
-          } else if ('jsonlogic_expression' in segment) {
-            const value = evaluateJsonLogicExpression(segment.jsonlogic_expression, currentState);
-            return value !== undefined && value !== null ? String(value) : '';
-          }
-        }
-        return String(segment);
-      });
+      const resolvedPath = path.map((segment) => evaluatePathSegment(segment, currentState));
       
       historyQuestions.push({
         questionId: answer.questionId,
@@ -1794,41 +1493,32 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
   }
 
   if (!nextQuestionId || !question) {
-    // Create debug_info for completed survey
-    const debugInfo: NextQuestionResponse['debug_info'] = {};
-    
-    if ('lang' in state) {
-      debugInfo.state_lang = state.lang as string;
-    }
-    if ('answers' in state) {
-      debugInfo.state_answers = state.answers as SurveyState['answers'];
-    }
-    if ('values' in state) {
-      debugInfo.state_values = state.values as SurveyState['values'];
-    }
-    if ('counters' in state) {
-      debugInfo.state_counters = state.counters as SurveyState['counters'];
-    }
+    // Compute jsonlogic_expression in state before sending (in-place)
+    evaluateJsonLogicExpressions(state, state);
 
-    // Create cleaned state without debug fields
-    const cleanedState = { ...state };
-    delete cleanedState.lang;
-    delete cleanedState.answers;
-    delete cleanedState.values;
-    delete cleanedState.counters;
-
-    // Compute jsonlogic_expression in state before sending
-    evaluateJsonLogicExpressions(cleanedState, state);
-    
-    // Resolve i18n_uuid and UUID strings in computed state
-    await resolveI18nInState(cleanedState, lang, surveyId);
+    // Resolve i18n needed for frontend display (history path texts)
+    const i18nUuids = new Set<string>();
+    for (const historyItem of historyQuestions) {
+      for (const segment of historyItem.pathTexts) {
+        if (typeof segment === 'string' && UUID_PATTERN.test(segment)) {
+          i18nUuids.add(segment);
+        }
+      }
+    }
+    const i18nTextsMap = await loadI18nTexts(i18nUuids, lang);
+    const resolvedHistoryQuestions = historyQuestions.map((item) => ({
+      ...item,
+      pathTexts: item.pathTexts.map((segment) => {
+        const texts = i18nTextsMap.get(segment);
+        return texts?.get(lang) ?? texts?.get('en') ?? segment;
+      }),
+    }));
 
     return {
       done: true,
-      state: cleanedState,
+      state,
       historyAnswers,
-      historyQuestions,
-      debug_info: Object.keys(debugInfo).length > 0 ? debugInfo : undefined,
+      historyQuestions: resolvedHistoryQuestions,
     };
   }
 
@@ -1836,40 +1526,9 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
   const metadata = question.metadata as { path?: unknown[] } | undefined;
   const path = metadata?.path || [];
   
-  // Collect UUIDs from current question path (including jsonlogic expressions)
-  
-  const pathI18nUuids = new Set<string>();
-  for (const segment of path) {
-    if (typeof segment === 'string') {
-      pathI18nUuids.add(segment);
-    } else if (segment && typeof segment === 'object' && 'jsonlogic_expression' in segment) {
-      extractStringsFromJsonLogic(segment.jsonlogic_expression, pathI18nUuids);
-    }
-  }
-  
-  // Load i18n texts for current question path
-  const currentQuestionI18nTexts = new Map<string, Map<string, string>>();
-  if (pathI18nUuids.size > 0) {
-    const i18nResult = await db.query<I18nRow>(
-      `
-        SELECT id::text AS "id", lang AS "lang", text AS "text"
-        FROM i18n_text
-        WHERE id::text = ANY($1::text[])
-          AND lang IN ($2, 'en')
-      `,
-      [Array.from(pathI18nUuids), lang],
-    );
-    
-    for (const row of i18nResult.rows) {
-      if (!currentQuestionI18nTexts.has(row.id)) {
-        currentQuestionI18nTexts.set(row.id, new Map());
-      }
-      currentQuestionI18nTexts.get(row.id)!.set(row.lang, row.text);
-    }
-  }
-  
-  // Build pathTexts with proper jsonlogic expression handling
-  const pathTexts = path.map((segment) => resolvePathSegmentText(segment, state, currentQuestionI18nTexts, lang));
+  // Build pathTexts without i18n resolving (keep UUIDs as-is, still evaluate var/jsonlogic segments)
+  const emptyI18nTexts = new Map<string, Map<string, string>>();
+  const pathTexts = path.map((segment) => resolvePathSegmentText(segment, state, emptyI18nTexts, lang));
   const resolvedPath = path.map((segment) => evaluatePathSegment(segment, state));
   
   const currentQuestionHistory: HistoryQuestion = {
@@ -1879,61 +1538,46 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
   };
   const allHistoryQuestions = [...historyQuestions, currentQuestionHistory];
 
-  // Create debug_info and move needed fields there
-  const debugInfo: NextQuestionResponse['debug_info'] = {};
-  
-  // Move fields from state
-  if ('lang' in state) {
-    debugInfo.state_lang = state.lang as string;
+  // Compute jsonlogic_expression in state and question metadata before sending (in-place)
+  evaluateJsonLogicExpressions(state, state);
+  evaluateJsonLogicExpressions(question.metadata, state);
+
+  // Resolve i18n needed for frontend display (question/answers metadata + history path texts)
+  const i18nUuids = new Set<string>();
+  collectI18nUuids(question.metadata, i18nUuids);
+  for (const option of answerOptions) {
+    collectI18nUuids(option.metadata, i18nUuids);
   }
-  if ('answers' in state) {
-    debugInfo.state_answers = state.answers as SurveyState['answers'];
-  }
-  if ('values' in state) {
-    debugInfo.state_values = state.values as SurveyState['values'];
-  }
-  if ('counters' in state) {
-    debugInfo.state_counters = state.counters as SurveyState['counters'];
+  for (const historyItem of allHistoryQuestions) {
+    for (const segment of historyItem.pathTexts) {
+      if (typeof segment === 'string' && UUID_PATTERN.test(segment)) {
+        i18nUuids.add(segment);
+      }
+    }
   }
 
-  // IMPORTANT: do not remove metadata — it's needed by frontend for custom renderers (shop, etc.)
-  // If you need to debug metadata — just put its copy in debug_info.
-  const questionMetadata = { ...question.metadata } as Record<string, unknown>;
-  if (Object.keys(questionMetadata).length > 0) {
-    debugInfo.question_metadata = { ...questionMetadata };
-  }
+  const i18nTextsMap = await loadI18nTexts(i18nUuids, lang);
 
-  // Create cleaned state without debug fields
-  const cleanedState = { ...state };
-  delete cleanedState.lang;
-  delete cleanedState.answers;
-  delete cleanedState.values;
-  delete cleanedState.counters;
-
-    // Compute jsonlogic_expression in state before sending
-    evaluateJsonLogicExpressions(cleanedState, state);
-    
-    // Compute jsonlogic_expression in questionMetadata before sending
-    // (needed for diceModifier and other fields that use jsonlogic)
-    evaluateJsonLogicExpressions(questionMetadata, state);
-    
-    // Resolve i18n_uuid and UUID strings in computed state
-    await resolveI18nInState(cleanedState, lang, surveyId);
-
-  // Create cleaned question with filtered metadata
-  const cleanedQuestion = {
-    ...question,
-    metadata: questionMetadata,
-  };
+  question.metadata = resolveI18nValue(question.metadata, i18nTextsMap, lang) as Record<string, unknown>;
+  const resolvedAnswerOptions = answerOptions.map((option) => ({
+    ...option,
+    metadata: resolveI18nValue(option.metadata, i18nTextsMap, lang) as Record<string, unknown>,
+  }));
+  const resolvedHistoryQuestions = allHistoryQuestions.map((item) => ({
+    ...item,
+    pathTexts: item.pathTexts.map((segment) => {
+      const texts = i18nTextsMap.get(segment);
+      return texts?.get(lang) ?? texts?.get('en') ?? segment;
+    }),
+  }));
 
   return {
     done: false,
-    question: cleanedQuestion,
-    answerOptions,
-    state: cleanedState,
+    question,
+    answerOptions: resolvedAnswerOptions,
+    state,
     historyAnswers,
-    historyQuestions: allHistoryQuestions,
-    debug_info: Object.keys(debugInfo).length > 0 ? debugInfo : undefined,
+    historyQuestions: resolvedHistoryQuestions,
   };
 }
 function normaliseAnswers(entries?: AnswerInput[]): AnswerInput[] {
@@ -3340,8 +2984,6 @@ function fetchHistoryQuestions(
   }
 
 
-  // 1. Collect all UUIDs from path using preloaded metadata
-  const allPathUuids = new Set<string>();
   const questionPaths = new Map<string, unknown[]>();
 
   for (const answer of answers) {
@@ -3351,28 +2993,9 @@ function fetchHistoryQuestions(
     const metadata = question.metadata as { path?: unknown[] } | undefined;
     const path = metadata?.path || [];
     questionPaths.set(answer.questionId, path);
-    path.forEach((segment) => {
-      if (typeof segment === 'string') {
-        allPathUuids.add(segment);
-      } else if (segment && typeof segment === 'object' && 'jsonlogic_expression' in segment) {
-        // Extract all string values from jsonlogic_expression
-        // that may be UUIDs (static values, not variables)
-        extractStringsFromJsonLogic(segment.jsonlogic_expression, allPathUuids);
-      }
-      // Objects with var are not added to allPathUuids, they will be evaluated dynamically
-    });
   }
 
-  // 2. Get i18n texts from preloaded data
-  const pathTextsMap: Record<string, string> = {};
-  for (const uuid of allPathUuids) {
-    const texts = surveyData.i18nTexts.get(uuid);
-    if (texts) {
-      pathTextsMap[uuid] = texts.get(lang) ?? texts.get('en') ?? uuid;
-    }
-  }
-
-  // 3. Compute state incrementally (O(n) instead of O(n²))
+  // Compute state incrementally (O(n) instead of O(n²))
   // For each question use state BEFORE its processing to compute path
   const result: HistoryQuestion[] = [];
   let currentState: SurveyState = {
@@ -3396,20 +3019,8 @@ function fetchHistoryQuestions(
     // Используем состояние ДО применения текущего ответа для вычисления path
     // (состояние уже содержит все предыдущие ответы)
     const path = questionPaths.get(answer.questionId) || [];
-    // Создаем Map из pathTextsMap для использования в resolvePathSegmentText
-    const i18nTextsMapForPath = new Map<string, Map<string, string>>();
-    for (const [uuid, text] of Object.entries(pathTextsMap)) {
-      const langMap = new Map<string, string>();
-      langMap.set(lang, text);
-      i18nTextsMapForPath.set(uuid, langMap);
-    }
-    
-    const pathTexts = path.map((segment) => {
-      if (typeof segment === 'string') {
-        return pathTextsMap[segment] || segment;
-      }
-      return resolvePathSegmentText(segment, currentState, surveyData.i18nTexts, lang);
-    });
+    const emptyI18nTexts = new Map<string, Map<string, string>>();
+    const pathTexts = path.map((segment) => resolvePathSegmentText(segment, currentState, emptyI18nTexts, lang));
     const resolvedPath = path.map((segment) => evaluatePathSegment(segment, currentState));
     
     result.push({
@@ -3501,9 +3112,9 @@ function fetchCurrentQuestionHistory(
     };
   }
 
-  // Формируем pathTexts, обрабатывая как UUID, так и объекты с var или jsonlogic_expression
-  // Используем предзагруженные i18n тексты
-  const pathTexts = path.map((segment) => resolvePathSegmentText(segment, state, surveyData.i18nTexts, lang));
+  // Формируем pathTexts без i18n-resolve (UUID остаются UUID)
+  const emptyI18nTexts = new Map<string, Map<string, string>>();
+  const pathTexts = path.map((segment) => resolvePathSegmentText(segment, state, emptyI18nTexts, lang));
   const resolvedPath = path.map((segment) => evaluatePathSegment(segment, state));
 
   return {

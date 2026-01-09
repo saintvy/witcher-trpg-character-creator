@@ -13,8 +13,16 @@ paths:
   /generate-character:
     post:
       summary: "Генерация персонажа"
-      description: "Генерирует персонажа на основе characterRaw. Заменяет i18n объекты на строки из БД и удаляет logicFields."
+      description: "Генерирует персонажа на основе characterRaw. Резолвит i18n (как объекты {i18n_uuid}/{i18n_uuid_array}, так и UUID-строки), удаляет logicFields."
       operationId: generateCharacter
+      parameters:
+        - in: query
+          name: lang
+          required: false
+          schema:
+            type: string
+            example: "ru"
+          description: "Язык для i18n-resolve (fallback: en)."
       requestBody:
         description: "characterRaw - персонаж с i18n объектами и logicFields"
         required: true
@@ -26,8 +34,7 @@ paths:
               name:
                 i18n_uuid: "550e8400-e29b-41d4-a716-446655440000"
               age: 132
-              gender:
-                i18n_uuid: "550e8400-e29b-41d4-a716-446655440001"
+              gender: "550e8400-e29b-41d4-a716-446655440001"
               logicFields:
                 someLogicKey: 42
                 anotherLogicKey: "value"
@@ -643,11 +650,28 @@ components:
         - i18n_uuid
       additionalProperties: false
 
+    I18nArrayValue:
+      type: object
+      description: "i18n-массив: [разделитель, ...UUID]. Сервер резолвит UUID и склеивает строки через разделитель."
+      properties:
+        i18n_uuid_array:
+          type: array
+          items:
+            type: string
+          example:
+            - " "
+            - "550e8400-e29b-41d4-a716-446655440000"
+            - "550e8400-e29b-41d4-a716-446655440001"
+      required:
+        - i18n_uuid_array
+      additionalProperties: false
+
     StringOrI18n:
       oneOf:
         - type: string
         - $ref: '#/components/schemas/I18nValue'
-      description: "Может быть строкой или объектом i18n с ключом i18n_uuid"
+        - $ref: '#/components/schemas/I18nArrayValue'
+      description: "Может быть строкой, объектом i18n ({i18n_uuid}) или i18n-массивом ({i18n_uuid_array})"
 
     CharacterRaw:
       type: object
