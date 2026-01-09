@@ -32,6 +32,11 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
          )
      FROM meta;
 
+-- Связи
+-- Нода расы должна идти после выбора DLC
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
+  SELECT 'wcc_dlcs', 'wcc_race';
+
 -- Опции: Выбор расы
 -- Опция - человек
 WITH

@@ -48,7 +48,7 @@ type ShopSourceConfig = {
 type ShopConfig = {
   budgets?: ShopBudgetConfig[];
   warningPriceZero?: string; // resolved i18n text
-  allowedDlcs: string[];
+  allowedDlcs?: string[];
   sources: ShopSourceConfig[];
 };
 
@@ -402,6 +402,16 @@ export function ShopRenderer(props: {
     setExpanded((prev) => ({ ...prev, [sourceId]: !prev[sourceId] }));
   }, []);
 
+  const resolvedAllowedDlcs = useMemo(() => {
+    const fromMeta = (Array.isArray((shop as any)?.allowedDlcs) ? ((shop as any).allowedDlcs as unknown[]) : [])
+      .filter((v) => typeof v === "string" && v.length > 0) as string[];
+    const fromState = (Array.isArray((state as any)?.dlcs) ? ((state as any).dlcs as unknown[]) : [])
+      .filter((v) => typeof v === "string" && v.length > 0) as string[];
+    const base = fromMeta.length > 0 ? fromMeta : fromState;
+    // core всегда разрешён
+    return Array.from(new Set(["core", ...base]));
+  }, [shop, state]);
+
   async function fetchJsonOrThrow(response: Response): Promise<any> {
     if (response.ok) return response.json();
     const bodyText = await response.text();
@@ -426,7 +436,7 @@ export function ShopRenderer(props: {
         const response = await fetch(`${API_URL}/shop/sourceRows`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ questionId, sourceId, lang }),
+          body: JSON.stringify({ questionId, sourceId, lang, allowedDlcs: resolvedAllowedDlcs }),
         });
         const payload = (await fetchJsonOrThrow(response)) as
           | { rows?: Record<string, unknown>[]; groups?: { value: string; count: number }[] }
@@ -446,7 +456,7 @@ export function ShopRenderer(props: {
         setLoadingSource((prev) => ({ ...prev, [sourceId]: false }));
       }
     },
-    [questionId, rowsBySource, groupsBySource, lang],
+    [questionId, rowsBySource, groupsBySource, lang, state],
   );
 
   const ensureLoadedGroupRows = useCallback(
@@ -460,7 +470,7 @@ export function ShopRenderer(props: {
         const response = await fetch(`${API_URL}/shop/sourceRows`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ questionId, sourceId, lang, groupValue }),
+          body: JSON.stringify({ questionId, sourceId, lang, groupValue, allowedDlcs: resolvedAllowedDlcs }),
         });
         const payload = (await fetchJsonOrThrow(response)) as { rows?: Record<string, unknown>[] };
         const rows = payload.rows ?? [];
@@ -477,7 +487,7 @@ export function ShopRenderer(props: {
         setLoadingGroup((prev) => ({ ...prev, [key]: false }));
       }
     },
-    [questionId, rowsBySourceGroup, lang],
+    [questionId, rowsBySourceGroup, lang, resolvedAllowedDlcs],
   );
 
   const renderCell = useCallback((value: unknown) => {

@@ -5,7 +5,7 @@
 -- TRUNCATE TABLE questions;
 -- TRUNCATE TABLE i18n_text;
 -- TRUNCATE TABLE i18n_keys;
--- TRUNCATE TABLE content_packs;
+-- TRUNCATE TABLE wcc_dlcs;
 -- TRUNCATE TABLE survey_versions;
 -- TRUNCATE TABLE surveys;
 -- TRUNCATE TABLE rules;
@@ -13,7 +13,24 @@
 INSERT INTO surveys(su_id, title) VALUES ('witcher_cc', 'Witcher TRPG Character Creator');
 INSERT INTO survey_versions(sv_id, su_su_id, is_active, valid_from)
   SELECT 100, su_id, TRUE, now() FROM surveys WHERE su_id='witcher_cc';
-INSERT INTO content_packs(su_su_id, title, semver) VALUES ('witcher_cc', 'The Witcher TRPG', '1.0.0');
+-- core DLC/source is mandatory and always available
+INSERT INTO wcc_dlcs(dlc_id, su_su_id, title, semver, priority, is_official, name_id)
+VALUES (
+  'core',
+  'witcher_cc',
+  'The Witcher TRPG',
+  '1.0.0',
+  0,
+  TRUE,
+  ck_id('witcher_cc.items.dlc.name.core')
+)
+ON CONFLICT (dlc_id) DO UPDATE
+SET su_su_id = EXCLUDED.su_su_id,
+    title = EXCLUDED.title,
+    semver = EXCLUDED.semver,
+    priority = EXCLUDED.priority,
+    is_official = EXCLUDED.is_official,
+    name_id = EXCLUDED.name_id;
 
 -- Иерархия путей (hierarchy paths)
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -25,6 +42,8 @@ SELECT ck_id('witcher_cc.hierarchy.' || v.path) AS id
   FROM (VALUES
           ('identity', 'ru', 'Идентичность'),
           ('identity', 'en', 'Identity'),
+          ('dlcs', 'ru', 'DLC / Источники'),
+          ('dlcs', 'en', 'DLCs / Sources'),
           ('race', 'ru', 'Раса'),
           ('race', 'en', 'Race'),
           ('character_age', 'ru', 'Возраст персонажа'),

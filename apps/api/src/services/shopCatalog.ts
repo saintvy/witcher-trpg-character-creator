@@ -9,6 +9,7 @@ export type ShopSourceRowsRequest = {
   questionId: string;
   sourceId: string;
   groupValue?: string;
+  allowedDlcs?: string[];
 };
 
 function isSafeIdentifier(value: string): boolean {
@@ -101,8 +102,11 @@ export async function getShopSourceRows(
     throw new Error('Unsafe tooltip field identifier');
   }
 
-  const allowedDlcs = asStringArray(shop?.allowedDlcs);
-  const dlcs = allowedDlcs.length > 0 ? allowedDlcs : ['core'];
+  const allowedFromRequest = asStringArray(payload.allowedDlcs);
+  const allowedFromMeta = asStringArray(shop?.allowedDlcs);
+  const base = allowedFromRequest.length > 0 ? allowedFromRequest : allowedFromMeta;
+  // core всегда разрешён
+  const dlcs = Array.from(new Set(['core', ...base]));
 
   const filters = (source.filters && typeof source.filters === 'object')
     ? (source.filters as Record<string, unknown>)

@@ -77,15 +77,17 @@ CREATE TABLE survey_versions (
   UNIQUE (su_su_id, sv_id)
 );
 
-CREATE TABLE content_packs (
-  cp_id       TEXT PRIMARY KEY DEFAULT 'core',
+-- DLC/источники (замена content_packs; используется как FK из questions/answer_options и из items-таблиц)
+CREATE TABLE wcc_dlcs (
+  dlc_id      varchar(64) PRIMARY KEY,  -- source_id (core, hb, dlc_*, exp_*)
   su_su_id    TEXT NOT NULL REFERENCES surveys(su_id) ON DELETE CASCADE,
   title       TEXT NOT NULL,
   semver      TEXT NOT NULL,             -- '1.2.0'
   priority    INTEGER NOT NULL DEFAULT 0, -- порядок применения патчей (выше — позже применяется)
   created_at  timestamptz NOT NULL DEFAULT now(),
   is_official BOOLEAN NOT NULL DEFAULT TRUE,
-  UNIQUE (su_su_id, cp_id)
+  name_id     uuid NOT NULL,            -- ck_id('witcher_cc.items.dlc.name.'||dlc_id)
+  UNIQUE (su_su_id, dlc_id)
 );
 
 -- Локализация (опционально)
@@ -106,19 +108,19 @@ CREATE TABLE i18n_text (
 CREATE TABLE questions (
   qu_id            TEXT PRIMARY KEY,
   su_su_id         TEXT NOT NULL REFERENCES surveys(su_id) ON DELETE CASCADE,
-  cp_cp_id         TEXT NOT NULL DEFAULT 'core' REFERENCES content_packs(cp_id) ON DELETE CASCADE,
+  dlc_dlc_id       TEXT NOT NULL DEFAULT 'core' REFERENCES wcc_dlcs(dlc_id) ON DELETE CASCADE,
   title            UUID, -- краткая формулировка
   body             UUID, -- подробный текст/описание
   qtype            question_type NOT NULL,
   metadata         JSONB NOT NULL DEFAULT '{}'::jsonb, -- произвольные настройки рендера/валидации
-  UNIQUE (su_su_id, cp_cp_id, qu_id)
+  UNIQUE (su_su_id, dlc_dlc_id, qu_id)
 );
 
 -- Варианты ответов
 CREATE TABLE answer_options (
   an_id            TEXT PRIMARY KEY,
   su_su_id         TEXT NOT NULL REFERENCES surveys(su_id) ON DELETE CASCADE,
-  cp_cp_id         TEXT NOT NULL DEFAULT 'core' REFERENCES content_packs(cp_id) ON DELETE CASCADE,
+  dlc_dlc_id       TEXT NOT NULL DEFAULT 'core' REFERENCES wcc_dlcs(dlc_id) ON DELETE CASCADE,
   qu_qu_id         TEXT NOT NULL REFERENCES questions(qu_id) ON DELETE CASCADE,
   label            TEXT NOT NULL,
   sort_order       INTEGER NOT NULL DEFAULT 0,

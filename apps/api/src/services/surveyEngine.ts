@@ -126,6 +126,11 @@ type I18nRow = {
 
 type SurveyState = Record<string, unknown>;
 
+function getAllowedDlcs(state: SurveyState): string[] {
+  // core is always allowed and не обязан присутствовать в state.dlcs
+  return toStringArray((state as Record<string, unknown>).dlcs);
+}
+
 type HistoryQuestion = {
   questionId: string;
   path: string[];
@@ -578,6 +583,7 @@ async function loadStateData(
         SELECT q.qu_id
         FROM questions q
         WHERE q.su_su_id = $1
+          AND q.dlc_dlc_id = 'core'
           AND NOT EXISTS (
             SELECT 1 FROM transitions t WHERE t.to_qu_qu_id = q.qu_id
           )
@@ -891,6 +897,7 @@ async function loadMinimalSurveyData(
         SELECT q.qu_id
         FROM questions q
         WHERE q.su_su_id = $1
+          AND q.dlc_dlc_id = 'core'
           AND NOT EXISTS (
             SELECT 1 FROM transitions t WHERE t.to_qu_qu_id = q.qu_id
           )
@@ -1118,6 +1125,7 @@ async function loadSurveyData(surveyId: string, lang: string): Promise<SurveyDat
       SELECT q.qu_id
       FROM questions q
       WHERE q.su_su_id = $1
+        AND q.dlc_dlc_id = 'core'
         AND NOT EXISTS (
           SELECT 1 FROM transitions t WHERE t.to_qu_qu_id = q.qu_id
         )
@@ -1231,6 +1239,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
 
   // Step 2: Compute state using minimal data
   const { state } = deriveStateFromStateData(historyAnswers, lang, stateData);
+  const allowedDlcs = getAllowedDlcs(state);
 
   // Step 2a: Apply "smart" nodes requiring DB access (e.g., shop renderer)
   // This is done after basic deriveState to avoid complicating the synchronous pipeline.
@@ -1258,11 +1267,13 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
           t.priority,
           r.body AS "rule"
         FROM transitions t
+        JOIN questions q_to ON q_to.qu_id = t.to_qu_qu_id AND q_to.su_su_id = $2
         LEFT JOIN rules r ON r.ru_id = t.ru_ru_id
         WHERE t.from_qu_qu_id = $1
+          AND (q_to.dlc_dlc_id = 'core' OR q_to.dlc_dlc_id = ANY($3::text[]))
         ORDER BY t.priority DESC, t.tr_id
       `,
-      [lastAnswer.questionId],
+      [lastAnswer.questionId, surveyId, allowedDlcs],
     );
     
     const selected = new Set(lastAnswer.answerIds);
@@ -1300,9 +1311,11 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
         FROM questions q
         LEFT JOIN i18n_text b_lang ON b_lang.id = q.body AND b_lang.lang = $2
         LEFT JOIN i18n_text b_en ON b_en.id = q.body AND b_en.lang = 'en'
-        WHERE q.su_su_id = $1 AND q.qu_id = $3
+        WHERE q.su_su_id = $1
+          AND q.qu_id = $3
+          AND (q.dlc_dlc_id = 'core' OR q.dlc_dlc_id = ANY($4::text[]))
       `,
-      [surveyId, lang, nextQuestionId],
+      [surveyId, lang, nextQuestionId, allowedDlcs],
     );
     
     if (questionResult.rows.length > 0) {
@@ -1335,10 +1348,12 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
           LEFT JOIN i18n_text l_lang ON l_lang.id::text = a.label AND l_lang.lang = $2
           LEFT JOIN i18n_text l_en ON l_en.id::text = a.label AND l_en.lang = 'en'
           LEFT JOIN rules r ON r.ru_id = a.visible_ru_ru_id
-          WHERE a.su_su_id = $1 AND a.qu_qu_id = $3
+          WHERE a.su_su_id = $1
+            AND a.qu_qu_id = $3
+            AND (a.dlc_dlc_id = 'core' OR a.dlc_dlc_id = ANY($4::text[]))
           ORDER BY a.sort_order, a.an_id
         `,
-        [surveyId, lang, nextQuestionId],
+        [surveyId, lang, nextQuestionId, allowedDlcs],
       );
       
       // i18n resolving for metadata disabled
@@ -2010,9 +2025,11 @@ async function applyShopNode(
     return; // No budgets configured
   }
 
+  // DLC фильтр для магазина берём из state.dlcs (core всегда доступен)
   const dlcs = (() => {
-    const allowedDlcs = toStringArray(shop?.allowedDlcs);
-    return allowedDlcs.length > 0 ? allowedDlcs : ['core'];
+    const allowed = getAllowedDlcs(state);
+    const set = new Set<string>(['core', ...allowed]);
+    return Array.from(set);
   })();
 
   const parsed = parseShopAnswerValue(rawValue);

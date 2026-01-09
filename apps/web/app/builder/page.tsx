@@ -1271,6 +1271,40 @@ export default function BuilderPage() {
 
                 {!shopConfig && question.qtype === "multiple" && (
                   <>
+                    <div className="survey-multiple-toolbar">
+                      <button
+                        type="button"
+                        onClick={() => submitAnswer(pendingMultiple)}
+                        disabled={loading || pendingMultiple.length === 0}
+                        className="btn btn-primary"
+                      >
+                        {displayLang === "ru" ? "Продолжить" : "Continue"}
+                      </button>
+
+                      <div className="survey-multiple-toolbar-right">
+                        <button
+                          type="button"
+                          onClick={() => setPendingMultiple(options.map((o) => o.id))}
+                          disabled={loading || options.length === 0 || pendingMultiple.length === options.length}
+                          className="btn btn-ghost"
+                          title={displayLang === "ru" ? "Выбрать всё" : "Select all"}
+                          aria-label={displayLang === "ru" ? "Выбрать всё" : "Select all"}
+                        >
+                          {displayLang === "ru" ? "Выбрать всё" : "Select all"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingMultiple([])}
+                          disabled={loading || pendingMultiple.length === 0}
+                          className="btn btn-ghost"
+                          title={displayLang === "ru" ? "Снять всё" : "Clear"}
+                          aria-label={displayLang === "ru" ? "Снять всё" : "Clear"}
+                        >
+                          {displayLang === "ru" ? "Снять всё" : "Clear"}
+                        </button>
+                      </div>
+                    </div>
+
                     <ul className="survey-options-list">
                       {options.map((option) => {
                         const active = pendingMultiple.includes(option.id);
@@ -1288,16 +1322,6 @@ export default function BuilderPage() {
                         );
                       })}
                     </ul>
-                    <div className="survey-actions">
-                      <button
-                        type="button"
-                        onClick={() => submitAnswer(pendingMultiple)}
-                        disabled={loading || pendingMultiple.length === 0}
-                        className="btn btn-primary"
-                      >
-                        {displayLang === "ru" ? "Продолжить" : "Continue"}
-                      </button>
-                    </div>
                   </>
                 )}
 

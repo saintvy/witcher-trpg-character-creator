@@ -162,6 +162,8 @@ SELECT meta.qu_id
          'shop', jsonb_build_object(
            -- Предупреждение про товары со стоимостью 0
            'warningPriceZero', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.warning.price_zero')::text),
+           -- Allowed DLCs: берём из state.dlcs (core всегда доступен и добавляется на стороне API)
+           'allowedDlcs', jsonb_build_object('jsonlogic_expression', jsonb_build_object('var','dlcs')),
            -- Бюджеты
            'budgets', jsonb_build_array(
              jsonb_build_object(
@@ -181,8 +183,6 @@ SELECT meta.qu_id
                'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.alchemy_ingredients_crowns.name')::text)
              )
            ),
-           -- Разрешенные DLC (можно расширить список)
-           'allowedDlcs', jsonb_build_array('core', 'hb', 'dlc_wt', 'exp_bot', 'exp_lal', 'exp_toc', 'exp_wj', 'dlc_prof_peasant', 'dlc_rw1', 'dlc_rw2', 'dlc_rw3', 'dlc_rw4', 'dlc_rw5', 'dlc_sch_manticore', 'dlc_sch_snail', 'dlc_sh_mothr', 'dlc_sh_tai', 'dlc_sh_tothr', 'dlc_sh_wat', 'dlc_wpaw', 'dlc_rw_rudolf'),
            'sources', jsonb_build_array(
              jsonb_build_object(
                'id', 'weapons',

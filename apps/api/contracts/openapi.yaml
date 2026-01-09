@@ -1434,6 +1434,11 @@ components:
         groupValue:
           type: string
           description: "Если источник поддерживает подгруппы (metadata.shop.sources[].groupColumn), то при передаче groupValue вернутся строки только этой подгруппы. Если не передавать — вернутся группы."
+        allowedDlcs:
+          type: array
+          description: "Список разрешённых DLC для фильтрации товаров. Если не передан — используется metadata.shop.allowedDlcs, а если он пуст — ['core']."
+          items:
+            type: string
       required: [questionId, sourceId]
 
     ShopSourceRowsResponse:
