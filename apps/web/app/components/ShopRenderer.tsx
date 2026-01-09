@@ -1,8 +1,30 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useRef, useEffect } from "react";
+
+type ShopBudgetCoverageMoney = {
+  sources?: string[];
+  items?: string[];
+};
+
+type ShopBudgetCoverageTokensItem = {
+  cost?: number;
+  ids: string[];
+};
+
+type ShopBudgetCoverageTokens = {
+  sources?: ShopBudgetCoverageTokensItem[];
+  items?: ShopBudgetCoverageTokensItem[];
+};
 
 type ShopBudgetConfig = {
-  currency: string;
-  path: string;
+  id: string;
+  type: 'money' | 'tokens';
+  source: string;
+  coverage?: ShopBudgetCoverageMoney | ShopBudgetCoverageTokens;
+  priority: number;
+  is_default?: boolean;
+  is_with_default?: boolean; // only for money
+  is_with_money?: boolean; // only for tokens
+  name: string; // resolved i18n text
 };
 
 type ShopSourceColumn = {
@@ -24,7 +46,8 @@ type ShopSourceConfig = {
 };
 
 type ShopConfig = {
-  budget: ShopBudgetConfig;
+  budgets?: ShopBudgetConfig[];
+  warningPriceZero?: string; // resolved i18n text
   allowedDlcs: string[];
   sources: ShopSourceConfig[];
 };
@@ -162,10 +185,218 @@ export function ShopRenderer(props: {
   const [loadErrorGroup, setLoadErrorGroup] = useState<Record<string, string | null>>({});
   const [qtyBySource, setQtyBySource] = useState<Record<string, Record<string, number>>>({});
   const [sortBySource, setSortBySource] = useState<Record<string, { column: string | null; direction: 'asc' | 'desc' }>>({});
+  const [ignoreWarnings, setIgnoreWarnings] = useState(false);
+  const budgetSummaryRef = useRef<HTMLDivElement>(null);
 
-  const budgetValue = useMemo(() => {
-    return clampInt(toNumber(getAtPath(state, shop.budget.path), 0));
-  }, [shop.budget.path, state]);
+  // Get all budgets, defaulting to old format for backward compatibility
+  const budgets = useMemo(() => {
+    if (shop.budgets && Array.isArray(shop.budgets) && shop.budgets.length > 0) {
+      return shop.budgets;
+    }
+    // Fallback to old format
+    return [{
+      id: 'crowns',
+      type: 'money' as const,
+      source: 'characterRaw.money.crowns',
+      priority: 0,
+      is_default: true,
+      name: 'Crowns',
+    }];
+  }, [shop.budgets]);
+
+  // Check if item is covered by budget
+  const isItemCoveredByBudget = useCallback((budget: ShopBudgetConfig, sourceId: string, itemId: string): boolean => {
+    if (!budget.coverage) return true; // No coverage = covers everything
+    
+    if (budget.type === 'money') {
+      const coverage = budget.coverage as ShopBudgetCoverageMoney;
+      // Check sources
+      if (coverage.sources && Array.isArray(coverage.sources)) {
+        if (coverage.sources.includes(sourceId)) return true;
+      }
+      // Check items
+      if (coverage.items && Array.isArray(coverage.items)) {
+        if (coverage.items.includes(itemId)) return true;
+      }
+      // If coverage exists but item not found, not covered
+      if (coverage.sources || coverage.items) return false;
+      return true; // Empty coverage = covers everything
+    } else {
+      // tokens
+      const coverage = budget.coverage as ShopBudgetCoverageTokens;
+      // Check sources
+      if (coverage.sources && Array.isArray(coverage.sources)) {
+        for (const sourceItem of coverage.sources) {
+          if (sourceItem.ids && sourceItem.ids.includes(sourceId)) return true;
+        }
+      }
+      // Check items
+      if (coverage.items && Array.isArray(coverage.items)) {
+        for (const item of coverage.items) {
+          if (item.ids && item.ids.includes(itemId)) return true;
+        }
+      }
+      // If coverage exists but item not found, not covered
+      if (coverage.sources || coverage.items) return false;
+      return true; // Empty coverage = covers everything
+    }
+  }, []);
+
+  // Calculate budget usage
+  const budgetUsage = useMemo(() => {
+    const usage: Record<string, { initial: number; spent: number; remaining: number }> = {};
+    
+    // Initialize budgets - always include default budgets, even if initial is 0
+    // For non-default budgets, only initialize if source exists in state
+    for (const budget of budgets) {
+      // Check if source exists in state (for non-default budgets)
+      if (!budget.is_default) {
+        const sourceValue = getAtPath(state, budget.source);
+        // If source doesn't exist (undefined), skip this budget
+        if (sourceValue === undefined) {
+          continue;
+        }
+      }
+      
+      const initial = clampInt(toNumber(getAtPath(state, budget.source), 0));
+      if (initial > 0 || budget.is_default) {
+        usage[budget.id] = { initial, spent: 0, remaining: initial };
+      }
+    }
+
+    // Calculate spent amounts
+    for (const source of shop.sources) {
+      const flatRows = (() => {
+        if (rowsBySource[source.id]) return rowsBySource[source.id] ?? [];
+        const groups = rowsBySourceGroup[source.id] ?? {};
+        return Object.values(groups).flat();
+      })();
+      const byId = new Map<string, Record<string, unknown>>();
+      for (const r of flatRows) {
+        const key = r[source.keyColumn];
+        if (typeof key === "string") byId.set(key, r);
+      }
+      
+      const selected = qtyBySource[source.id] ?? {};
+      for (const [itemId, qty] of Object.entries(selected)) {
+        if (qty <= 0) continue;
+        const row = byId.get(itemId);
+        const price = row ? toNumber(row.price, 0) : 0;
+        
+        // Find applicable budgets for this item, sorted by priority
+        const applicableBudgets = budgets
+          .filter(b => isItemCoveredByBudget(b, source.id, itemId))
+          .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+        
+        if (applicableBudgets.length === 0) continue;
+        
+        // For money budgets: distribute cost across budgets by priority
+        // For tokens: spend tokens per unit
+        let remainingCost = price * qty;
+        let remainingQty = qty;
+        
+        for (const budget of applicableBudgets) {
+          // Ensure budget is initialized in usage
+          if (!usage[budget.id]) {
+            const initial = clampInt(toNumber(getAtPath(state, budget.source), 0));
+            usage[budget.id] = { initial, spent: 0, remaining: initial };
+          }
+          
+          if (budget.type === 'money') {
+            if (remainingCost <= 0) break;
+            
+            // Calculate how much we can spend from this budget
+            // Distribute cost across budgets by priority: spend from this budget what we can, rest goes to next
+            const budgetRemaining = usage[budget.id].remaining;
+            // Spend as much as possible from this budget (can be all if budget is large enough)
+            // If budget is exhausted (0 or negative), we still assign cost to show negative value
+            const toSpend = budgetRemaining > 0 
+              ? Math.min(remainingCost, budgetRemaining) 
+              : remainingCost; // If exhausted or negative, assign all remaining cost to show negative
+            
+            // Spend from this budget (allows going negative)
+            usage[budget.id].spent += toSpend;
+            usage[budget.id].remaining -= toSpend;
+            remainingCost -= toSpend; // Reduce remaining cost
+            
+            // If is_with_default and not default budget, also spend from default
+            if (budget.is_with_default && !budget.is_default) {
+              const defaultBudget = budgets.find(b => b.is_default);
+              if (defaultBudget) {
+                if (!usage[defaultBudget.id]) {
+                  const initial = clampInt(toNumber(getAtPath(state, defaultBudget.source), 0));
+                  usage[defaultBudget.id] = { initial, spent: 0, remaining: initial };
+                }
+                // Also spend from default budget (same amount as from this budget)
+                const defaultRemaining = usage[defaultBudget.id].remaining;
+                const defaultSpend = defaultRemaining >= 0 
+                  ? Math.min(toSpend, defaultRemaining)
+                  : toSpend;
+                usage[defaultBudget.id].spent += defaultSpend;
+                usage[defaultBudget.id].remaining -= defaultSpend;
+              }
+            }
+          } else {
+            // tokens
+            if (remainingQty <= 0) break;
+            
+            const coverage = budget.coverage as ShopBudgetCoverageTokens | undefined;
+            let costPerUnit = 1;
+            
+            // Find cost for this item
+            if (coverage?.items) {
+              for (const item of coverage.items) {
+                if (item.ids && item.ids.includes(itemId)) {
+                  costPerUnit = item.cost ?? 1;
+                  break;
+                }
+              }
+            }
+            if (coverage?.sources && costPerUnit === 1) {
+              for (const sourceItem of coverage.sources) {
+                if (sourceItem.ids && sourceItem.ids.includes(source.id)) {
+                  costPerUnit = sourceItem.cost ?? 1;
+                  break;
+                }
+              }
+            }
+            
+            const tokensNeeded = costPerUnit * remainingQty;
+            // Always add to spent and subtract from remaining (allows negative)
+            usage[budget.id].spent += tokensNeeded;
+            usage[budget.id].remaining -= tokensNeeded;
+            remainingQty = 0;
+            
+            // If is_with_money, also spend money
+            if (budget.is_with_money && remainingCost > 0) {
+              const moneyBudgets = budgets
+                .filter(b => b.type === 'money' && isItemCoveredByBudget(b, source.id, itemId))
+                .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+              for (const moneyBudget of moneyBudgets) {
+                if (remainingCost <= 0) break;
+                if (!usage[moneyBudget.id]) {
+                  const initial = clampInt(toNumber(getAtPath(state, moneyBudget.source), 0));
+                  usage[moneyBudget.id] = { initial, spent: 0, remaining: initial };
+                }
+                usage[moneyBudget.id].spent += remainingCost;
+                usage[moneyBudget.id].remaining -= remainingCost;
+                remainingCost = 0;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return usage;
+  }, [budgets, shop.sources, qtyBySource, rowsBySource, rowsBySourceGroup, state, isItemCoveredByBudget]);
+
+  // Check if any budget is exceeded
+  const hasExceededBudgets = useMemo(() => {
+    return Object.values(budgetUsage).some(b => b.remaining < 0);
+  }, [budgetUsage]);
+
+  const canSubmit = (!hasExceededBudgets || ignoreWarnings) && !disabled;
 
   const toggleExpanded = useCallback((sourceId: string) => {
     setExpanded((prev) => ({ ...prev, [sourceId]: !prev[sourceId] }));
@@ -317,8 +548,8 @@ export function ShopRenderer(props: {
     return out;
   }, [qtyBySource, shop.sources]);
 
-  const totalCost = useMemo(() => {
-    let sum = 0;
+  // Check for items with price 0
+  const hasPriceZeroItems = useMemo(() => {
     for (const source of shop.sources) {
       const flatRows = (() => {
         if (rowsBySource[source.id]) return rowsBySource[source.id] ?? [];
@@ -332,15 +563,23 @@ export function ShopRenderer(props: {
       }
       const selected = qtyBySource[source.id] ?? {};
       for (const [id, qty] of Object.entries(selected)) {
+        if (qty <= 0) continue;
         const row = byId.get(id);
         const price = row ? toNumber(row.price, 0) : 0;
-        sum += price * qty;
+        if (price === 0) return true;
       }
     }
-    return clampInt(sum);
-  }, [qtyBySource, rowsBySource, shop.sources]);
+    return false;
+  }, [qtyBySource, rowsBySource, rowsBySourceGroup, shop.sources]);
 
-  const canSubmit = totalCost <= budgetValue && !disabled;
+  const handleSubmit = useCallback(() => {
+    if (hasExceededBudgets && !ignoreWarnings) {
+      // Scroll to top to show warning
+      budgetSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    onSubmit({ v: 1, purchases, ignoreWarnings: ignoreWarnings || undefined });
+  }, [hasExceededBudgets, ignoreWarnings, purchases, onSubmit]);
 
   // Helper to get sorted rows for a source
   const getSortedRows = useCallback(
@@ -367,32 +606,101 @@ export function ShopRenderer(props: {
     [sortBySource, qtyBySource],
   );
 
+  // Get visible budgets (non-zero or default, or if they have any usage)
+  // Also filter out budgets whose source doesn't exist in state (except default)
+  const visibleBudgets = useMemo(() => {
+    return budgets.filter(b => {
+      // Check if source exists in state (for non-default budgets)
+      if (!b.is_default) {
+        const sourceValue = getAtPath(state, b.source);
+        // If source doesn't exist (undefined), don't show this budget
+        if (sourceValue === undefined) {
+          return false;
+        }
+      }
+      
+      const usage = budgetUsage[b.id];
+      // Show if: has usage and (initial > 0 OR is_default OR has spent > 0)
+      return usage && (usage.initial > 0 || b.is_default || usage.spent > 0);
+    }).sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+  }, [budgets, budgetUsage, state]);
+
   return (
     <div className="shop-node">
-      <div className="shop-summary">
-        <div className="shop-summary-row">
-          <div className="shop-summary-item">
-            <span className="shop-summary-label">Budget</span>
-            <span className="shop-summary-value">
-              {budgetValue} {shop.budget.currency}
-            </span>
+      <div className="survey-actions" style={{ marginBottom: '16px' }}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={!canSubmit}
+          onClick={handleSubmit}
+        >
+          Continue
+        </button>
+        {hasExceededBudgets && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px' }}>
+            <input
+              type="checkbox"
+              id="ignore-warnings"
+              checked={ignoreWarnings}
+              onChange={(e) => setIgnoreWarnings(e.target.checked)}
+            />
+            <label htmlFor="ignore-warnings" style={{ cursor: 'pointer' }}>
+              {lang === 'ru' ? 'Игнорировать предупреждения' : 'Ignore warnings'}
+            </label>
           </div>
-          <div className="shop-summary-item">
-            <span className="shop-summary-label">Total</span>
-            <span className={`shop-summary-value ${totalCost > budgetValue ? "shop-bad" : ""}`}>
-              {totalCost} {shop.budget.currency}
-            </span>
-          </div>
-          <div className="shop-summary-item">
-            <span className="shop-summary-label">Remaining</span>
-            <span className={`shop-summary-value ${totalCost > budgetValue ? "shop-bad" : ""}`}>
-              {Math.max(0, budgetValue - totalCost)} {shop.budget.currency}
-            </span>
-          </div>
-        </div>
+        )}
+      </div>
 
-        {totalCost > budgetValue && (
-          <div className="shop-error">Not enough funds. Remove items or reduce quantity.</div>
+      <div className="shop-summary" ref={budgetSummaryRef}>
+        {shop.warningPriceZero && hasPriceZeroItems && (
+          <div className="shop-warning" style={{ 
+            marginBottom: '12px', 
+            padding: '8px 10px', 
+            fontSize: '12px',
+            color: '#ffdd63',
+            background: 'rgba(242,199,68,0.12)',
+            border: '1px solid rgba(242,199,68,0.35)',
+            borderRadius: '10px'
+          }}>
+            {shop.warningPriceZero}
+          </div>
+        )}
+        
+        {visibleBudgets.map((budget) => {
+          const usage = budgetUsage[budget.id];
+          if (!usage) return null;
+          const isExceeded = usage.remaining < 0;
+          return (
+            <div key={budget.id} style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: '4px', fontWeight: 'bold' }}>
+                {budget.name}
+              </div>
+              <div className="shop-summary-row">
+                <div className="shop-summary-item">
+                  <span className="shop-summary-label">INITIAL</span>
+                  <span className="shop-summary-value">{usage.initial}</span>
+                </div>
+                <div className="shop-summary-item">
+                  <span className="shop-summary-label">SPENT</span>
+                  <span className={`shop-summary-value ${isExceeded ? "shop-bad" : ""}`}>
+                    {usage.spent}
+                  </span>
+                </div>
+                <div className="shop-summary-item">
+                  <span className="shop-summary-label">REMAINING</span>
+                  <span className={`shop-summary-value ${isExceeded ? "shop-bad" : ""}`}>
+                    {usage.remaining}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        {hasExceededBudgets && (
+          <div className="shop-error" style={{ marginTop: '12px' }}>
+            {lang === 'ru' ? 'Один или несколько бюджетов перевыполнены' : 'One or more budgets are exceeded'}
+          </div>
         )}
       </div>
 
@@ -653,17 +961,6 @@ export function ShopRenderer(props: {
             </div>
           );
         })}
-      </div>
-
-      <div className="survey-actions">
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={!canSubmit}
-          onClick={() => onSubmit({ v: 1, purchases })}
-        >
-          Continue
-        </button>
       </div>
     </div>
   );

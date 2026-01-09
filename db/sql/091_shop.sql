@@ -127,7 +127,19 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('column.minor_mutation', 'en', 'Minor Mutation'),
           -- Названия столбцов (специфичные для трофеев)
           ('column.monster_type', 'ru', 'Тип монстра'),
-          ('column.monster_type', 'en', 'Monster Type')
+          ('column.monster_type', 'en', 'Monster Type'),
+          -- Бюджеты
+          ('budget.crowns.name', 'ru', 'Кроны'),
+          ('budget.crowns.name', 'en', 'Crowns'),
+          ('budget.alchemy_ingredients_crowns.name', 'ru', 'Кроны на алхимические ингредиенты'),
+          ('budget.alchemy_ingredients_crowns.name', 'en', 'Crowns for Alchemy Ingredients'),
+          -- Предупреждения
+          ('warning.price_zero', 'ru', 'Внимание: товары со стоимостью 0 лучше согласовать с мастером, т.к. это товары, которые не купить в магазине, но которые могут достаться другим способом (наследство, досталось во время обучения и т.д.)'),
+          ('warning.price_zero', 'en', 'Warning: items with price 0 should be coordinated with the master, as these are items that cannot be bought in the shop, but may be obtained in other ways (inheritance, received during training, etc.)'),
+          ('warning.budget_exceeded', 'ru', 'Один или несколько бюджетов перевыполнены'),
+          ('warning.budget_exceeded', 'en', 'One or more budgets are exceeded'),
+          ('warning.ignore_warnings', 'ru', 'Игнорировать предупреждения'),
+          ('warning.ignore_warnings', 'en', 'Ignore warnings')
        ) AS v(key, lang, text)
 ON CONFLICT (id, lang) DO NOTHING;
 
@@ -148,10 +160,26 @@ SELECT meta.qu_id
          ),
          'renderer', 'shop',
          'shop', jsonb_build_object(
-           -- Ограничитель: только money.crowns
-           'budget', jsonb_build_object(
-             'currency', 'crowns',
-             'path', 'characterRaw.money.crowns'
+           -- Предупреждение про товары со стоимостью 0
+           'warningPriceZero', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.warning.price_zero')::text),
+           -- Бюджеты
+           'budgets', jsonb_build_array(
+             jsonb_build_object(
+               'id', 'crowns',
+               'type', 'money',
+               'source', 'characterRaw.money.crowns',
+               'priority', 0,
+               'is_default', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.crowns.name')::text)
+             ),
+             jsonb_build_object(
+               'id', 'alchemy_ingredients_crowns',
+               'type', 'money',
+               'source', 'characterRaw.money.alchemyIngredientsCrowns',
+               'priority', 1,
+               'is_default', false,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.alchemy_ingredients_crowns.name')::text)
+             )
            ),
            -- Разрешенные DLC (можно расширить список)
            'allowedDlcs', jsonb_build_array('core', 'hb', 'dlc_wt', 'exp_bot', 'exp_lal', 'exp_toc', 'exp_wj', 'dlc_prof_peasant', 'dlc_rw1', 'dlc_rw2', 'dlc_rw3', 'dlc_rw4', 'dlc_rw5', 'dlc_sch_manticore', 'dlc_sch_snail', 'dlc_sh_mothr', 'dlc_sh_tai', 'dlc_sh_tothr', 'dlc_sh_wat', 'dlc_wpaw', 'dlc_rw_rudolf'),

@@ -29,6 +29,7 @@ type ShopPurchase = {
 type ShopAnswerValue = {
   v?: number;
   purchases?: ShopPurchase[];
+  ignoreWarnings?: boolean;
 };
 
 type QuestionRow = {
@@ -2187,8 +2188,36 @@ type ShopSourceConfig = {
   filters?: Record<string, unknown>;
 };
 
+type ShopBudgetCoverageMoney = {
+  sources?: string[];
+  items?: string[];
+};
+
+type ShopBudgetCoverageTokensItem = {
+  cost?: number;
+  ids: string[];
+};
+
+type ShopBudgetCoverageTokens = {
+  sources?: ShopBudgetCoverageTokensItem[];
+  items?: ShopBudgetCoverageTokensItem[];
+};
+
+type ShopBudgetConfig = {
+  id: string;
+  type: 'money' | 'tokens';
+  source: string;
+  coverage?: ShopBudgetCoverageMoney | ShopBudgetCoverageTokens;
+  priority: number;
+  is_default?: boolean;
+  is_with_default?: boolean; // only for money
+  is_with_money?: boolean; // only for tokens
+  name?: unknown; // i18n resolved
+};
+
 type ShopQuestionConfig = {
-  budget?: { currency?: unknown; path?: unknown };
+  budget?: { currency?: unknown; path?: unknown }; // legacy
+  budgets?: ShopBudgetConfig[];
   allowedDlcs?: unknown;
   sources?: unknown;
 };
@@ -2224,6 +2253,85 @@ function addToArrayAtPath(state: SurveyState, path: string, value: unknown) {
   setAtPath(state, path, [existing, value]);
 }
 
+function normaliseShopBudgets(value: unknown): ShopBudgetConfig[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => (item && typeof item === 'object' && !Array.isArray(item) ? (item as Record<string, unknown>) : null))
+    .filter((item): item is Record<string, unknown> => !!item)
+    .filter((item) => typeof item.id === 'string' && typeof item.source === 'string')
+    .map((item) => ({
+      id: String(item.id),
+      type: (item.type === 'tokens' ? 'tokens' : 'money') as 'money' | 'tokens',
+      source: String(item.source),
+      coverage: item.coverage && typeof item.coverage === 'object' && !Array.isArray(item.coverage) ? (item.coverage as ShopBudgetCoverageMoney | ShopBudgetCoverageTokens) : undefined,
+      priority: toFiniteNumber(item.priority, 999),
+      is_default: Boolean(item.is_default),
+      is_with_default: item.is_with_default === true,
+      is_with_money: item.is_with_money === true,
+      name: item.name,
+    }));
+}
+
+function isItemCoveredByBudget(budget: ShopBudgetConfig, sourceId: string, itemId: string): boolean {
+  if (!budget.coverage) return true; // No coverage = covers everything
+  
+  if (budget.type === 'money') {
+    const coverage = budget.coverage as ShopBudgetCoverageMoney;
+    // Check sources
+    if (coverage.sources && Array.isArray(coverage.sources)) {
+      if (coverage.sources.includes(sourceId)) return true;
+    }
+    // Check items
+    if (coverage.items && Array.isArray(coverage.items)) {
+      if (coverage.items.includes(itemId)) return true;
+    }
+    // If coverage exists but item not found, not covered
+    if (coverage.sources || coverage.items) return false;
+    return true; // Empty coverage = covers everything
+  } else {
+    // tokens
+    const coverage = budget.coverage as ShopBudgetCoverageTokens;
+    // Check sources
+    if (coverage.sources && Array.isArray(coverage.sources)) {
+      for (const sourceItem of coverage.sources) {
+        if (sourceItem.ids && sourceItem.ids.includes(sourceId)) return true;
+      }
+    }
+    // Check items
+    if (coverage.items && Array.isArray(coverage.items)) {
+      for (const item of coverage.items) {
+        if (item.ids && item.ids.includes(itemId)) return true;
+      }
+    }
+    // If coverage exists but item not found, not covered
+    if (coverage.sources || coverage.items) return false;
+    return true; // Empty coverage = covers everything
+  }
+}
+
+function getTokenCostForItem(budget: ShopBudgetConfig, sourceId: string, itemId: string): number {
+  if (budget.type !== 'tokens' || !budget.coverage) return 1;
+  const coverage = budget.coverage as ShopBudgetCoverageTokens;
+  
+  // Check items first
+  if (coverage.items && Array.isArray(coverage.items)) {
+    for (const item of coverage.items) {
+      if (item.ids && item.ids.includes(itemId)) {
+        return item.cost ?? 1;
+      }
+    }
+  }
+  // Check sources
+  if (coverage.sources && Array.isArray(coverage.sources)) {
+    for (const sourceItem of coverage.sources) {
+      if (sourceItem.ids && sourceItem.ids.includes(sourceId)) {
+        return sourceItem.cost ?? 1;
+      }
+    }
+  }
+  return 1; // default cost
+}
+
 async function applyShopNode(
   rawValue: string,
   questionMeta: Record<string, unknown>,
@@ -2235,11 +2343,27 @@ async function applyShopNode(
     return;
   }
 
-  const budgetPath = typeof shop?.budget?.path === 'string' ? shop?.budget?.path : 'characterRaw.money.crowns';
-  const budgetCurrency = typeof shop?.budget?.currency === 'string' ? shop?.budget?.currency : 'crowns';
-  if (budgetCurrency !== 'crowns') {
-    // For this implementation we only support crowns budget (as requested).
-    return;
+  // Get budgets - support both old and new format
+  let budgets: ShopBudgetConfig[] = [];
+  if (shop?.budgets && Array.isArray(shop.budgets)) {
+    budgets = normaliseShopBudgets(shop.budgets);
+  } else if (shop?.budget) {
+    // Legacy format: single budget
+    const budgetPath = typeof shop.budget.path === 'string' ? shop.budget.path : 'characterRaw.money.crowns';
+    const budgetCurrency = typeof shop.budget.currency === 'string' ? shop.budget.currency : 'crowns';
+    if (budgetCurrency === 'crowns') {
+      budgets = [{
+        id: 'crowns',
+        type: 'money',
+        source: budgetPath,
+        priority: 0,
+        is_default: true,
+      }];
+    }
+  }
+  
+  if (budgets.length === 0) {
+    return; // No budgets configured
   }
 
   const dlcs = (() => {
@@ -2277,8 +2401,12 @@ async function applyShopNode(
     bySource.set(p.sourceId, list);
   }
 
-  const currentBudget = toFiniteNumber(getAtPath(state, budgetPath), 0);
-  let totalCost = 0;
+  // Initialize budget states
+  const budgetStates = new Map<string, number>();
+  for (const budget of budgets) {
+    const value = toFiniteNumber(getAtPath(state, budget.source), 0);
+    budgetStates.set(budget.id, value);
+  }
 
   // First pass: compute cost and validate items exist
   const lookedUp = new Map<string, Array<{ purchase: ShopPurchase; row: Record<string, unknown>; targetPath: string }>>();
@@ -2345,22 +2473,118 @@ async function applyShopNode(
       if (!row) {
         throw new Error(`Shop item not found or not allowed by filters: ${sourceId}:${purchase.id}`);
       }
-      const price = toFiniteNumber(row.price, 0);
-      totalCost += price * purchase.qty;
       const list = lookedUp.get(sourceId) ?? [];
       list.push({ purchase, row, targetPath: source.targetPath });
       lookedUp.set(sourceId, list);
     }
   }
 
-  if (totalCost > currentBudget) {
-    throw new Error(`Not enough crowns. Need ${totalCost}, have ${currentBudget}`);
+  // Second pass: calculate budget spending
+  for (const [sourceId, entries] of lookedUp.entries()) {
+    for (const entry of entries) {
+      const price = toFiniteNumber(entry.row.price, 0);
+      const qty = entry.purchase.qty;
+      
+      // Find applicable budgets for this item, sorted by priority
+      const applicableBudgets = budgets
+        .filter(b => isItemCoveredByBudget(b, sourceId, entry.purchase.id))
+        .sort((a, b) => a.priority - b.priority);
+      
+      if (applicableBudgets.length === 0) continue;
+      
+      let remainingCost = price * qty;
+      let remainingQty = qty;
+      
+      for (const budget of applicableBudgets) {
+        if (budget.type === 'money') {
+          if (remainingCost <= 0) break;
+          const budgetRemaining = budgetStates.get(budget.id) ?? 0;
+          const toSpend = Math.min(remainingCost, budgetRemaining);
+          if (toSpend > 0) {
+            budgetStates.set(budget.id, budgetRemaining - toSpend);
+            remainingCost -= toSpend;
+          }
+          
+          // If is_with_default and not default budget, also spend from default
+          if (budget.is_with_default && !budget.is_default) {
+            const defaultBudget = budgets.find(b => b.is_default);
+            if (defaultBudget && remainingCost > 0) {
+              const defaultRemaining = budgetStates.get(defaultBudget.id) ?? 0;
+              const toSpendDefault = Math.min(remainingCost, defaultRemaining);
+              if (toSpendDefault > 0) {
+                budgetStates.set(defaultBudget.id, defaultRemaining - toSpendDefault);
+                remainingCost -= toSpendDefault;
+              }
+            }
+          }
+        } else {
+          // tokens
+          if (remainingQty <= 0) break;
+          const costPerUnit = getTokenCostForItem(budget, sourceId, entry.purchase.id);
+          const tokensNeeded = costPerUnit * remainingQty;
+          const budgetRemaining = budgetStates.get(budget.id) ?? 0;
+          const toSpend = Math.min(tokensNeeded, budgetRemaining);
+          if (toSpend > 0) {
+            budgetStates.set(budget.id, budgetRemaining - toSpend);
+            remainingQty -= Math.floor(toSpend / costPerUnit);
+          }
+          
+          // If is_with_money, also spend money
+          if (budget.is_with_money && remainingCost > 0) {
+            const moneyBudgets = budgets
+              .filter(b => b.type === 'money' && isItemCoveredByBudget(b, sourceId, entry.purchase.id))
+              .sort((a, b) => a.priority - b.priority);
+            for (const moneyBudget of moneyBudgets) {
+              if (remainingCost <= 0) break;
+              const moneyRemaining = budgetStates.get(moneyBudget.id) ?? 0;
+              const toSpendMoney = Math.min(remainingCost, moneyRemaining);
+              if (toSpendMoney > 0) {
+                budgetStates.set(moneyBudget.id, moneyRemaining - toSpendMoney);
+                remainingCost -= toSpendMoney;
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
-  // Deduct budget
-  setAtPath(state, budgetPath, currentBudget - totalCost);
+  // Check for exceeded budgets (but allow if user ignored warnings - save as 0)
+  const ignoreWarnings = parsed?.ignoreWarnings === true;
+  for (const [budgetId, remaining] of budgetStates.entries()) {
+    const budget = budgets.find(b => b.id === budgetId);
+    if (!budget) continue;
+    
+    if (remaining < 0 && !ignoreWarnings) {
+      throw new Error(`Budget ${budget.id} exceeded. Remaining: ${remaining}`);
+    }
+    
+    // Save budget (0 if negative and warnings ignored)
+    const finalValue = remaining < 0 ? 0 : remaining;
+    setAtPath(state, budget.source, finalValue);
+  }
 
-  // Second pass: add items to targets
+  // Remove non-default budgets after purchase
+  for (const budget of budgets) {
+    if (!budget.is_default) {
+      // Remove the budget from state by setting to undefined
+      // setAtPath will handle the deletion properly
+      const pathParts = budget.source.split('.');
+      if (pathParts.length > 0) {
+        let cursor: any = state;
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          if (cursor == null || typeof cursor !== 'object') break;
+          cursor = cursor[pathParts[i]];
+        }
+        if (cursor != null && typeof cursor === 'object') {
+          const lastKey = pathParts[pathParts.length - 1];
+          delete cursor[lastKey];
+        }
+      }
+    }
+  }
+
+  // Third pass: add items to targets
   for (const [sourceId, entries] of lookedUp.entries()) {
     for (const entry of entries) {
       const item = {
