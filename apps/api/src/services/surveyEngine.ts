@@ -70,7 +70,7 @@ type CounterIncrementConfig = {
   step?: unknown;
 };
 
-const SHOP_ALLOWED_TABLES = new Set(['wcc_items_weapons', 'wcc_items_armor', 'wcc_item_weapons_v', 'wcc_item_armors_v']);
+const SHOP_ALLOWED_TABLES = new Set(['wcc_item_weapons_v', 'wcc_item_armors_v', 'wcc_item_ingredients_v', 'wcc_item_upgrades_v', 'wcc_item_general_gear_v', 'wcc_item_vehicles_v', 'wcc_item_recipes_v', 'wcc_item_mutagens_v', 'wcc_item_trophies_v', 'wcc_item_blueprints_v']);
 
 function isSafeIdentifier(value: string): boolean {
   return /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value);
