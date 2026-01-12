@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS wcc_item_weapons (
     w_id            varchar(10) PRIMARY KEY,          -- e.g. 'W001'
     dlc_dlc_id      varchar(64) NOT NULL REFERENCES wcc_dlcs(dlc_id), -- source_id (core, hb, dlc_*, exp_*)
-    ic_ic_id        varchar(64) NOT NULL REFERENCES wcc_item_classes(ic_id), -- class_id (wt_crossbow, wt_sword, ...)
+    weapon_class_id uuid NOT NULL,                    -- ck_id('weapons.'||class_id) where class_id is wt_crossbow, wt_sword, etc.
 
     name_id         uuid NOT NULL,                    -- ck_id('witcher_cc.items.weapon.name.'||w_id)
 
@@ -32,13 +32,13 @@ CREATE TABLE IF NOT EXISTS wcc_item_weapons (
 );
 
 COMMENT ON TABLE wcc_item_weapons IS
-  'Оружие/боеприпасы/бомбы и т.п. Ссылается на типы оружия (wcc_item_classes) и хранит локализуемые поля как i18n UUID.';
+  'Оружие/боеприпасы/бомбы и т.п. Хранит локализуемые поля как i18n UUID.';
 
 COMMENT ON COLUMN wcc_item_weapons.dlc_dlc_id IS
   'FK на wcc_dlcs.dlc_id (источник/пакет: core/hb/dlc_*/exp_*).';
 
-COMMENT ON COLUMN wcc_item_weapons.ic_ic_id IS
-  'FK на wcc_item_classes.ic_id (тип оружия: wt_*).';
+COMMENT ON COLUMN wcc_item_weapons.weapon_class_id IS
+  'i18n UUID для класса оружия. Генерируется детерминированно: ck_id(''weapons.''||class_id) где class_id это wt_crossbow, wt_sword и т.д.';
 
 COMMENT ON COLUMN wcc_item_weapons.name_id IS
   'i18n UUID для названия оружия. Генерируется детерминированно: ck_id(''witcher_cc.items.weapon.name.''||w_id).';
@@ -269,7 +269,7 @@ ins_i18n AS (
 INSERT INTO wcc_item_weapons
   SELECT w_id
        , source_id AS dlc_dlc_id
-	   , class_id AS ic_ic_id
+	   , ck_id('weapons.'||rd.class_id) AS weapon_class_id
 	   , ck_id('witcher_cc.items.weapon.name.'||rd.w_id) AS name_id
 	   , CASE WHEN rd.is_piercing = 'TRUE' THEN ck_id('damage_type.P') ELSE NULL END is_piercing
 	   , CASE WHEN rd.is_slashing = 'TRUE' THEN ck_id('damage_type.S') ELSE NULL END is_slashing

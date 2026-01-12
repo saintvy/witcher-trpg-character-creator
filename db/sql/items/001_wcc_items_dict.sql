@@ -99,6 +99,8 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('reciples.group.oil', 'Масло', 'Oil'),
   ('reciples.group.decoction', 'Отвар', 'Decoction'),
   ('reciples.group.alchemical_item', 'Химсостав', 'Alchemical item'),
+  ('craft.level.mage', 'Маг', 'Mage'),
+  ('craft.level.grand_master', 'Великий мастер', 'Grand Master'),
   ('craft.level.master', 'Мастер', 'Master'),
   ('craft.level.journeyman', 'Подмастерье', 'Journeyman'),
   ('craft.level.novice', 'Новичок', 'Novice'),
@@ -109,7 +111,22 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   -- Mutagen types
   ('mutagen.color.red', 'Красный', 'Red'),
   ('mutagen.color.green', 'Зелёный', 'Green'),
-  ('mutagen.color.blue', 'Синий', 'Blue')
+  ('mutagen.color.blue', 'Синий', 'Blue'),
+
+  -- Weapon classes
+  ('weapons.wt_crossbow', 'Арбалеты',      'Crossbow'),
+  ('weapons.wt_ammo',     'Боеприпасы',    'Ammunition'),
+  ('weapons.wt_bomb',     'Бомба',         'Bomb'),
+  ('weapons.wt_pole',     'Древковое',     'Pole Arms'),
+  ('weapons.wt_bludgeon', 'Дробящее',      'Bludgeon'),
+  ('weapons.wt_tool',     'Инструменты',   'Tool'),
+  ('weapons.wt_sblade',   'Легкие клинки', 'Small Blade'),
+  ('weapons.wt_trap',     'Ловушки',       'Trap'),
+  ('weapons.wt_bow',      'Лук',           'Bow'),
+  ('weapons.wt_thrown',   'Метательное',   'Thrown Weapon'),
+  ('weapons.wt_sword',    'Меч',           'Sword'),
+  ('weapons.wt_staff',    'Посох',         'Staff'),
+  ('weapons.wt_axe',      'Топор',         'Axe')
 ),
 ins_dict AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

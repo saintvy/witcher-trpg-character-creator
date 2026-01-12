@@ -27,8 +27,7 @@ SELECT wiw.w_id
      , i.lang
   FROM wcc_item_weapons wiw
   JOIN i18n_text i ON i.id = wiw.name_id
-  JOIN wcc_item_classes ic ON ic.ic_id = wiw.ic_ic_id
-  JOIN i18n_text iic ON iic.id = ic.name_id AND iic.lang = i.lang
+  JOIN i18n_text iic ON iic.id = wiw.weapon_class_id AND iic.lang = i.lang
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = wiw.dlc_dlc_id
   JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = i.lang
   LEFT JOIN i18n_text iav ON iav.id = wiw.availability_id AND iav.lang = i.lang
