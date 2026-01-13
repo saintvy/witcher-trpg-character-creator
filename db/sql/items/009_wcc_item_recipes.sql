@@ -139,7 +139,7 @@ WITH raw_data (
     '2d6','time.unit.round',
     '50%',
     'Купорос, Фульгор, Фульгор, Гидраген, Ребис, Ребис',
-    'Можно игнорировать штрафы сосотяния ранения.','You can ignore penalties from wound condition.'),
+    'Можно игнорировать штрафы состояния ранения.','You can ignore penalties from wound condition.'),
   ('R005','core','reciples.group.potion','availability.U',
     'Зелье Петри','Petri''s Filter',
     '0,5',15,NULL,NULL,

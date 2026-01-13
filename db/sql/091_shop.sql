@@ -31,6 +31,8 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('source.general_gear.title', 'en', 'General Gear'),
           ('source.vehicles.title', 'ru', 'Скакуны и транспорт'),
           ('source.vehicles.title', 'en', 'Mounts & Vehicles'),
+          ('source.potions.title', 'ru', 'Алхимические продукты'),
+          ('source.potions.title', 'en', 'Alchemical Products'),
           ('source.ingredients_alchemy.title', 'ru', 'Алхимические субстанции'),
           ('source.ingredients_alchemy.title', 'en', 'Alchemical Substances'),
           ('source.ingredients_craft.title', 'ru', 'Ремесленные компоненты'),
@@ -318,6 +320,28 @@ SELECT meta.qu_id
                 jsonb_build_object('field', 'time_effect', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.time_effect')::text)),
                 jsonb_build_object('field', 'weight_potion', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.weight_potion')::text)),
                 jsonb_build_object('field', 'price_potion', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price_potion')::text)),
+                jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
+              )
+            ),
+            jsonb_build_object(
+              'id', 'potions',
+              'title', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.source.potions.title')::text),
+              'table', 'wcc_item_potions_v',
+              'dlcColumn', 'dlc_id',
+              'keyColumn', 'p_id',
+              'langColumn', 'lang',
+              'langPath', 'characterRaw.lang',
+              'groupColumn', 'potion_group',
+              'tooltipField', 'effect',
+              'targetPath', 'characterRaw.gear',
+              'columns', jsonb_build_array(
+                jsonb_build_object('field', 'potion_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
+                jsonb_build_object('field', 'potion_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
+                jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
+                jsonb_build_object('field', 'availability', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.availability')::text)),
+                jsonb_build_object('field', 'time_effect', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.time_effect')::text)),
+                jsonb_build_object('field', 'toxicity', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.toxicity')::text)),
+                jsonb_build_object('field', 'weight', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.weight')::text)),
                 jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
               )
             ),
