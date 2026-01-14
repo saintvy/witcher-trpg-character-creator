@@ -407,3 +407,20 @@ ON CONFLICT (an_id) DO NOTHING;
 -- Belt pouch - T012
 -- Garter sheath - T020
 -- A journal with a lock - Customized T060
+
+-- Эффекты: заполнение professional_gear_options
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o01' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options'),
+      jsonb_build_object(
+        'tokens', 5,
+        'items', jsonb_build_array('T065', 'T066', 'T048', 'T101', 'W082', 'T050', 'T012', 'T020', 'T060'),
+        'bundles', jsonb_build_array()
+      )
+    )
+  ) AS body;

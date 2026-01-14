@@ -500,9 +500,55 @@ ON CONFLICT (an_id) DO NOTHING;
 -- Dagger - W082
 -- Journal - T060
 -- Large tent - T071
--- Merchant’s tools - T102
+-- Merchant's tools - T102
 -- Writing kit - T115
 
 -- Mule - WT005
 -- Cart - WT002
 -- Common or everyday items worth 1000 crowns - custom
+
+-- Эффекты: заполнение professional_gear_options
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.crossbow_bolts') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Арбалет и болты ×20'),
+          ('en', 'Crossbow & bolts ×20')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o09' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options'),
+      jsonb_build_object(
+        'tokens', 3,
+        'items', jsonb_build_array('W082', 'T060', 'T071', 'T102', 'T115', 'WT005', 'WT002'),
+        'bundles', jsonb_build_array(
+          jsonb_build_object(
+            'bundleId', 'crossbow_bolts_set',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.crossbow_bolts')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object(
+                'sourceId', 'weapons',
+                'itemId', 'W001',
+                'quantity', 1
+              ),
+              jsonb_build_object(
+                'sourceId', 'weapons',
+                'itemId', 'B131',
+                'quantity', 2
+              )
+            )
+          )
+        )
+      )
+    )
+  ) AS body;

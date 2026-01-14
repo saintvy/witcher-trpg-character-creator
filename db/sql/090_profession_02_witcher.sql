@@ -439,5 +439,46 @@ ON CONFLICT (an_id) DO NOTHING;
 -- Oil formulae ×2 - budget(2) - R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027
 -- Potion formulae ×2 - budget(2) - R001, R002, R005, R007, R008, R009, R010, R011, R012, R013, R014, R015
 -- Witcher medallion - T041
--- Witcher’s steel sword - budget(1) - W135, W136, W137, W138, W139, W140, W141
--- Witcher’s silver sword - budget(1) - W128, W129, W130, W131, W132, W133, W134
+-- Witcher's steel sword - budget(1) - W135, W136, W137, W138, W139, W140, W141
+-- Witcher's silver sword - budget(1) - W128, W129, W130, W131, W132, W133, W134
+
+-- Эффекты: заполнение professional_gear_options
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.witcher_throwing_knives') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Метательные ножи ×5'),
+          ('en', 'Throwing knives ×5')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o02' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options'),
+      jsonb_build_object(
+        'tokens', 2,
+        'items', jsonb_build_array('T105', 'A014', 'W012', 'WT004'),
+        'bundles', jsonb_build_array(
+          jsonb_build_object(
+            'bundleId', 'witcher_throwing_knives',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.witcher_throwing_knives')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object(
+                'sourceId', 'weapons',
+                'itemId', 'W107',
+                'quantity', 5
+              )
+            )
+          )
+        )
+      )
+    )
+  ) AS body;

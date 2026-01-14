@@ -405,6 +405,23 @@ ON CONFLICT (an_id) DO NOTHING;
 -- Iron long sword - W116
 -- Lock - T053
 -- Mace - W069
--- Merchant’s tools - T102
+-- Merchant's tools - T102
 -- Small chest - T023
--- Tinker’s forge - T114
+-- Tinker's forge - T114
+
+-- Эффекты: заполнение professional_gear_options
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o08' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options'),
+      jsonb_build_object(
+        'tokens', 5,
+        'items', jsonb_build_array('T105', 'T107', 'T091', 'W116', 'T053', 'W069', 'T102', 'T023', 'T114'),
+        'bundles', jsonb_build_array()
+      )
+    )
+  ) AS body;

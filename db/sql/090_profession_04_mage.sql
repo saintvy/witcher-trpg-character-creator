@@ -430,3 +430,20 @@ ON CONFLICT (an_id) DO NOTHING;
 -- Makeup kit - T049
 -- Staff - W157
 -- Writing kit - T115
+
+-- Эффекты: заполнение professional_gear_options
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o04' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options'),
+      jsonb_build_object(
+        'tokens', 5,
+        'items', jsonb_build_array('T012', 'W082', 'T020', 'T048', 'T091', 'T060', 'T049', 'W157', 'T115'),
+        'bundles', jsonb_build_array()
+      )
+    )
+  ) AS body;

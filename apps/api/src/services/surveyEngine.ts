@@ -550,6 +550,141 @@ jsonLogic.add_operation('ck_id', (src: unknown): string => {
   return ck_id(strArg);
 });
 
+// Register cat_array operation in jsonLogic
+// Extracts values from nested arrays using a path with [] syntax
+// Example: "characterRaw.professional_gear_options.bundles[].items[].itemId"
+// Returns an array of all values at the specified path across all array elements
+// In JSONLogic, operations receive arguments, and data (state) is passed as the last argument
+// when called via jsonLogic.apply(rule, data). However, the exact mechanism varies.
+// We'll use a closure to store the current state when the operation is called.
+// Actually, JSONLogic stores data in a closure when calling operations.
+// Let's check the actual implementation: JSONLogic operations receive (value, ...args, data)
+// where data is the last argument passed to jsonLogic.apply
+jsonLogic.add_operation('cat_array', function(pathArg: unknown): unknown[] {
+  if (typeof pathArg !== 'string') {
+    return [];
+  }
+  
+  const path = pathArg;
+  
+  // Get state from closure variable set by evaluateJsonLogicExpression
+  if (!currentJsonLogicState) {
+    return [];
+  }
+  
+  const state = currentJsonLogicState as Record<string, unknown>;
+  
+  // Helper function to get value at path
+  const getValueAtPath = (obj: unknown, pathParts: string[]): unknown => {
+    if (pathParts.length === 0) {
+      return obj;
+    }
+    if (obj === null || obj === undefined || typeof obj !== 'object') {
+      return undefined;
+    }
+    const [first, ...rest] = pathParts;
+    const objRecord = obj as Record<string, unknown>;
+    if (first in objRecord) {
+      return getValueAtPath(objRecord[first], rest);
+    }
+    return undefined;
+  };
+  
+  // Parse path: "characterRaw.professional_gear_options.bundles[].items[].itemId"
+  // Recursively extract values from nested arrays
+  const extractFromNestedArrays = (currentValue: unknown, remainingPath: string): unknown[] => {
+    if (remainingPath === '') {
+      // End of path, return the value as array
+      if (currentValue === undefined || currentValue === null) {
+        return [];
+      }
+      return Array.isArray(currentValue) ? currentValue : [currentValue];
+    }
+    
+    // Find next [] in path
+    const nextArrayIndex = remainingPath.indexOf('[]');
+    
+    if (nextArrayIndex === -1) {
+      // No more [] in path, just follow the path
+      const parts = remainingPath.split('.').filter(p => p);
+      const value = getValueAtPath(currentValue, parts);
+      if (value === undefined || value === null) {
+        return [];
+      }
+      return Array.isArray(value) ? value : [value];
+    }
+    
+    // Process path before []
+    const pathBeforeArray = remainingPath.substring(0, nextArrayIndex);
+    const pathAfterArray = remainingPath.substring(nextArrayIndex + 2); // Skip '[]'
+    
+    // Get the array
+    const pathParts = pathBeforeArray.split('.').filter(p => p);
+    const arrayValue = getValueAtPath(currentValue, pathParts);
+    
+    if (!Array.isArray(arrayValue)) {
+      return [];
+    }
+    
+    // For each item in array, recursively process remaining path
+    const results: unknown[] = [];
+    for (const item of arrayValue) {
+      results.push(...extractFromNestedArrays(item, pathAfterArray));
+    }
+    
+    return results;
+  };
+  
+  // Find first [] in path
+  const firstArrayIndex = path.indexOf('[]');
+  
+  if (firstArrayIndex === -1) {
+    // No [] in path, treat as simple path
+    const parts = path.split('.').filter(p => p);
+    const value = getValueAtPath(state, parts);
+    return Array.isArray(value) ? value : (value !== undefined ? [value] : []);
+  }
+  
+  // Get base path (before first [])
+  const basePath = path.substring(0, firstArrayIndex);
+  const remainingPath = path.substring(firstArrayIndex + 2); // Skip '[]'
+  
+  // Get the base array
+  const basePathParts = basePath.split('.').filter(p => p);
+  const baseValue = getValueAtPath(state, basePathParts);
+  
+  if (!Array.isArray(baseValue)) {
+    return [];
+  }
+  
+  // Extract values from nested arrays recursively
+  const results: unknown[] = [];
+  for (const item of baseValue) {
+    results.push(...extractFromNestedArrays(item, remainingPath));
+  }
+  
+  return results;
+});
+
+// Register concat_arrays operation in jsonLogic
+// Concatenates multiple arrays into a single array
+// Example: {"concat_arrays": [{"var": "arr1"}, {"var": "arr2"}]}
+// Returns a single array containing all elements from all input arrays
+jsonLogic.add_operation('concat_arrays', function(...args: unknown[]): unknown[] {
+  const result: unknown[] = [];
+  
+  for (const arg of args) {
+    if (Array.isArray(arg)) {
+      result.push(...arg);
+    } else if (arg !== undefined && arg !== null) {
+      // If argument is not an array, wrap it in an array
+      result.push(arg);
+    }
+  }
+  
+  return result;
+});
+
 /**
  * Loads minimal data only for state computation
  * (only metadata and effects, without body/label of questions and answers)
@@ -2799,6 +2934,9 @@ function setAtPath(target: Record<string, unknown>, path: string, value: unknown
   cursor[last] = value;
 }
 
+// Store current state for cat_array operation to access
+let currentJsonLogicState: SurveyState | null = null;
+
 /**
  * Вычисляет jsonLogic выражение, обрабатывая специальные случаи (например, i18n_uuid)
  */
@@ -2812,7 +2950,13 @@ function evaluateJsonLogicExpression(
 
   try {
     const evaluationState = createEvaluationState();
-    return jsonLogic.apply(expression, evaluationState);
+    // Store state for cat_array operation
+    currentJsonLogicState = state;
+    try {
+      return jsonLogic.apply(expression, evaluationState);
+    } finally {
+      currentJsonLogicState = null;
+    }
   } catch (error) {
     // Если jsonLogic не может обработать выражение (например, из-за i18n_uuid в результате),
     // попробуем обработать его вручную для операций if

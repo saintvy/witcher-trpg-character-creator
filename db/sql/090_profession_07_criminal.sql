@@ -443,5 +443,46 @@ ON CONFLICT (an_id) DO NOTHING;
 -- Secret pocket - T018
 -- Sleeve sheath - T021
 -- Stiletto - W089
--- Thieves’ tools - T113
+-- Thieves' tools - T113
 -- Throwing knives ×5 - W107 x5
+
+-- Эффекты: заполнение professional_gear_options
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.criminal_throwing_knives') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Метательные ножи ×5'),
+          ('en', 'Throwing knives ×5')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o07' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options'),
+      jsonb_build_object(
+        'tokens', 5,
+        'items', jsonb_build_array('W072', 'T084', 'P062', 'T067', 'T016', 'T018', 'T021', 'W089', 'T113'),
+        'bundles', jsonb_build_array(
+          jsonb_build_object(
+            'bundleId', 'criminal_throwing_knives',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.criminal_throwing_knives')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object(
+                'sourceId', 'weapons',
+                'itemId', 'W107',
+                'quantity', 5
+              )
+            )
+          )
+        )
+      )
+    )
+  ) AS body;

@@ -447,3 +447,113 @@ ON CONFLICT (an_id) DO NOTHING;
 -- Sterilizing fluid x10 - P054
 -- Surgeon''s kit - T111
 -- Writing kit - T115
+
+-- Эффекты: заполнение professional_gear_options
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.doctor_candles') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Свечи ×10'),
+          ('en', 'Candles ×10')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.doctor_clotting_powder') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Порошок для остановки крови ×10'),
+          ('en', 'Clotting powder ×10')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.doctor_numbing_herbs') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Обезболивающие травы ×10'),
+          ('en', 'Numbing herbs ×10')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.doctor_sterilizing_fluid') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Обеззараживающая жидкость ×10'),
+          ('en', 'Sterilizing fluid ×10')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o03' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options'),
+      jsonb_build_object(
+        'tokens', 5,
+        'items', jsonb_build_array('W082', 'T091', 'T071', 'T111', 'T115'),
+        'bundles', jsonb_build_array(
+          jsonb_build_object(
+            'bundleId', 'doctor_candles',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.doctor_candles')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object(
+                'sourceId', 'general_gear',
+                'itemId', 'T081',
+                'quantity', 10
+              )
+            )
+          ),
+          jsonb_build_object(
+            'bundleId', 'doctor_clotting_powder',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.doctor_clotting_powder')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object(
+                'sourceId', 'potions',
+                'itemId', 'P048',
+                'quantity', 10
+              )
+            )
+          ),
+          jsonb_build_object(
+            'bundleId', 'doctor_numbing_herbs',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.doctor_numbing_herbs')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object(
+                'sourceId', 'potions',
+                'itemId', 'P053',
+                'quantity', 10
+              )
+            )
+          ),
+          jsonb_build_object(
+            'bundleId', 'doctor_sterilizing_fluid',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.doctor_sterilizing_fluid')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object(
+                'sourceId', 'potions',
+                'itemId', 'P054',
+                'quantity', 10
+              )
+            )
+          )
+        )
+      )
+    )
+  ) AS body;
