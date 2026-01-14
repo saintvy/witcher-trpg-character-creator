@@ -434,3 +434,14 @@ FROM raw_data
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
+-- Criminal (pick 5)
+-- Brass knuckles - W072
+-- Bullseye lantern - T084
+-- Chloroform - P062
+-- Loaded dice - T067
+-- Satchel - T016
+-- Secret pocket - T018
+-- Sleeve sheath - T021
+-- Stiletto - W089
+-- Thieves’ tools - T113
+-- Throwing knives ×5 - W107 x5

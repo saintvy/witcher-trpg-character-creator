@@ -456,3 +456,14 @@ FROM raw_data
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
+-- Man At Arms (pick 5)
+-- Armored trousers - A033
+-- Battle axe - W163
+-- Brigandine - A017
+-- Chain coif - A005
+-- Crossbow & bolts ×20 - W001 & B131 x 2
+-- Kord - W121
+-- Satchel - T016
+-- Spear - W055
+-- Steel buckler - A053
+-- Throwing knives ×5 - W107 x5

@@ -60,7 +60,7 @@ WITH raw_data (
   ('T021','general_gear.group.containers','','','Наручные ножны [СЛ15]','Sheath, Sleeve','Скрытые ножны для лёгких клинков на внутренней стороне руки. Обнаружение: проверка Внимания СЛ15.','Hidden sheath for small blades on the inside of the forearm. Detection: Awareness check DC 15.','core','',0.1,13,''),
   ('T022','general_gear.group.containers','','','Бурдюк','Waterskin','Емкость для хранения питьевой воды.','Container for storing drinking water.','core','',1,8,''),
   ('T023','general_gear.group.containers','','','Деревянный сундук [30][Н]','Wooden Chest','Вмещает 30 кг небольших предметов.','Holds 30 kg of Small items.','core','concealment.T',1,18,''),
-  ('T024','general_gear.group.containers','','','Деревянный сундук [50][К]','Wooden Chest, Large','Вмещает 50 кг крупных предметов.','Holds 50 kg of Large items.','core','concealment.L',10,30,''),
+  ('T024','general_gear.group.containers','','','Большой деревянный сундук [50][К]','Wooden Chest, Large','Вмещает 50 кг крупных предметов.','Holds 50 kg of Large items.','core','concealment.L',10,30,''),
   ('T025','general_gear.group.food','Напитки','Drinks','Алкагест','Alcohest','Чистый спирт для алхимии. При питье: опьянение на (12 - Тел) часов. При провале Стойкости (СЛ16) еще и отравление. Снимается "Слёзами жён".','Pure alcohol for alchemy. When drunk: intoxication for (12 - BODY) hours. On a failed Endurance check (DC 16) you also get poisoned. Removed with "Women''s Tears".','core','',1,8,''),
   ('T026','general_gear.group.food','Напитки','Drinks','Пиво','Beer','','','core','',1,5,''),
   ('T027','general_gear.group.food','Напитки','Drinks','Крепкий алкоголь','Spirits','','','core','',1,10,''),

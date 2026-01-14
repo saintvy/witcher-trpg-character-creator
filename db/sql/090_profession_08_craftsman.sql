@@ -397,3 +397,14 @@ FROM raw_data
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
+-- Craftsman (pick 5)
+-- 50 crowns of components - budget(50) - source_id = 'ingredients_craft', 'ingredients_alchemy'
+-- Alchemy set - T105
+-- Crafting tools - T107
+-- Hourglass - T091
+-- Iron long sword - W116
+-- Lock - T053
+-- Mace - W069
+-- Merchant’s tools - T102
+-- Small chest - T023
+-- Tinker’s forge - T114

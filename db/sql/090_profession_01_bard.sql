@@ -39,11 +39,11 @@ WITH
                 <li>Колода для гвинта</li>
                 <li>Ручное зеркальце</li>
                 <li>Музыкальный инструмент</li>
-                <li>Фляга с вышивкой</li>
-                <li>Клинок</li>
+                <li>Фляга с выпивкой</li>
+                <li>Кинжал</li>
                 <li>Духи / одеколон</li>
-                <li>Походная сумка</li>
-                <li>Набережный блокнот</li>
+                <li>Поясная сумка</li>
+                <li>Набедренные ножны</li>
                 <li>Дневник с замком</li>
             </ul>
         </td>
@@ -396,3 +396,14 @@ FROM raw_data
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
+-- Bard (pick 5)
+-- Dice poker board - T065
+-- Gwent deck - T066
+-- Hand mirror - T048
+-- An instrument - T101
+-- Flask of spirits - custom
+-- Dagger - W082
+-- Perfume/cologne - T050
+-- Belt pouch - T012
+-- Garter sheath - T020
+-- A journal with a lock - Customized T060

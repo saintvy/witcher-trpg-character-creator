@@ -386,3 +386,15 @@ SELECT 'wcc_profession_o' || to_char(raw_data.num, 'FM00') AS an_id,
 FROM raw_data
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
+
+-- Priest (pick 5)
+-- 100 crowns of components - budget(100) - source_id = 'ingredients_craft', 'ingredients_alchemy'
+-- Alchemy set - T105
+-- Clotting powder ×5 - P048 x5
+-- Dagger - W082
+-- Holy symbol - T080
+-- Hourglass - T091
+-- Numbing herbs ×5 - P053 x5
+-- Staff - W157
+-- Sterilizing fluid ×5 - P054 x5
+-- Surgeon''s kit - T111

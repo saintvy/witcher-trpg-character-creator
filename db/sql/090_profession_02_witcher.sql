@@ -428,3 +428,16 @@ FROM raw_data
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
+-- Witcher (pick 2)
+-- Alchemy set - T105
+-- Double woven gambeson - A014
+-- Hand crossbow - W012
+-- Horse - WT004
+-- Throwing knives ×5 - W107 x5
+
+-- Decoction formulae - budget(1) - R028, R029, R030, R031, R032, R033, R034, R035, R036, R037
+-- Oil formulae ×2 - budget(2) - R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027
+-- Potion formulae ×2 - budget(2) - R001, R002, R005, R007, R008, R009, R010, R011, R012, R013, R014, R015
+-- Witcher medallion - T041
+-- Witcher’s steel sword - budget(1) - W135, W136, W137, W138, W139, W140, W141
+-- Witcher’s silver sword - budget(1) - W128, W129, W130, W131, W132, W133, W134

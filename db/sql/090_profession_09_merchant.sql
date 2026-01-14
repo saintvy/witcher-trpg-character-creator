@@ -495,3 +495,14 @@ FROM raw_data
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
+-- Merchant (pick 3)
+-- Crossbow & bolts ×20 - W001 & B131 x 2
+-- Dagger - W082
+-- Journal - T060
+-- Large tent - T071
+-- Merchant’s tools - T102
+-- Writing kit - T115
+
+-- Mule - WT005
+-- Cart - WT002
+-- Common or everyday items worth 1000 crowns - custom

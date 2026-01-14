@@ -436,3 +436,14 @@ FROM raw_data
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
+-- Doctor (pick 5)
+-- Blanket - custom T068
+-- Candles x10 - T081
+-- Clotting powder x10 - P048
+-- Dagger - W082
+-- Hourglass - T091
+-- Large tent - T071
+-- Numbing herbs x10 - P053
+-- Sterilizing fluid x10 - P054
+-- Surgeon''s kit - T111
+-- Writing kit - T115

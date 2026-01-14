@@ -419,3 +419,14 @@ FROM raw_data
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
+-- Mage (pick 5)
+-- 100 crowns of components - budget(100) - source_id = 'ingredients_craft', 'ingredients_alchemy'
+-- Belt pouch - T012
+-- Dagger - W082
+-- Garter sheath - T020
+-- Hand mirror - T048
+-- Hourglass - T091
+-- Journal - T060
+-- Makeup kit - T049
+-- Staff - W157
+-- Writing kit - T115
