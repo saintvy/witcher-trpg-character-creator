@@ -482,3 +482,41 @@ SELECT
       )
     )
   ) AS body;
+
+-- Эффекты: жетоны ведьмака для токеновых бюджетов магазина (092_shop.sql)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o02',
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_decoction_formulae_tokens'), 1));
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o02',
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_oil_formulae_tokens'), 2));
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o02',
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_potion_formulae_tokens'), 2));
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o02',
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_steel_sword_tokens'), 1));
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o02',
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_silver_sword_tokens'), 1));
+
+-- Эффекты: ведьмачий медальон (T041) сразу в инвентарь (достаточно key + sourceId)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o02' AS an_an_id,
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object(
+        't_id', 'T041',
+        'sourceId', 'general_gear',
+        'amount', 1
+      )
+    )
+  ) AS body;

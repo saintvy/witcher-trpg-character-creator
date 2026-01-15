@@ -29,6 +29,7 @@ type ShopPurchase = {
 type ShopAnswerValue = {
   v?: number;
   purchases?: ShopPurchase[];
+  bundles?: string[];
   ignoreWarnings?: boolean;
 };
 
@@ -1664,6 +1665,9 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
       }),
     }));
 
+    // Resolve i18n in state itself (needed for values stored in state, e.g. professional bundle displayName)
+    await resolveI18nInState(state, lang, surveyId);
+
     return {
       done: true,
       state,
@@ -1720,6 +1724,9 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
       return texts?.get(lang) ?? texts?.get('en') ?? segment;
     }),
   }));
+
+  // Resolve i18n in state itself (needed for values stored in state, e.g. professional bundle displayName)
+  await resolveI18nInState(state, lang, surveyId);
 
   return {
     done: false,
@@ -1993,8 +2000,8 @@ type ShopBudgetCoverageTokensItem = {
 };
 
 type ShopBudgetCoverageTokens = {
-  sources?: ShopBudgetCoverageTokensItem[];
-  items?: ShopBudgetCoverageTokensItem[];
+  sources?: Array<ShopBudgetCoverageTokensItem | string>;
+  items?: Array<ShopBudgetCoverageTokensItem | string>;
 };
 
 type ShopBudgetConfig = {
@@ -2085,16 +2092,24 @@ function isItemCoveredByBudget(budget: ShopBudgetConfig, sourceId: string, itemI
   } else {
     // tokens
     const coverage = budget.coverage as ShopBudgetCoverageTokens;
-    // Check sources
+    // Check sources (support both string[] and {ids,cost}[] formats)
     if (coverage.sources && Array.isArray(coverage.sources)) {
       for (const sourceItem of coverage.sources) {
-        if (sourceItem.ids && sourceItem.ids.includes(sourceId)) return true;
+        if (typeof sourceItem === 'string') {
+          if (sourceItem === sourceId) return true;
+        } else if (sourceItem?.ids && Array.isArray(sourceItem.ids) && sourceItem.ids.includes(sourceId)) {
+          return true;
+        }
       }
     }
-    // Check items
+    // Check items (support both string[] and {ids,cost}[] formats)
     if (coverage.items && Array.isArray(coverage.items)) {
       for (const item of coverage.items) {
-        if (item.ids && item.ids.includes(itemId)) return true;
+        if (typeof item === 'string') {
+          if (item === itemId) return true;
+        } else if (item?.ids && Array.isArray(item.ids) && item.ids.includes(itemId)) {
+          return true;
+        }
       }
     }
     // If coverage exists but item not found, not covered
@@ -2110,6 +2125,7 @@ function getTokenCostForItem(budget: ShopBudgetConfig, sourceId: string, itemId:
   // Check items first
   if (coverage.items && Array.isArray(coverage.items)) {
     for (const item of coverage.items) {
+      if (typeof item === 'string') continue;
       if (item.ids && item.ids.includes(itemId)) {
         return item.cost ?? 1;
       }
@@ -2118,6 +2134,7 @@ function getTokenCostForItem(budget: ShopBudgetConfig, sourceId: string, itemId:
   // Check sources
   if (coverage.sources && Array.isArray(coverage.sources)) {
     for (const sourceItem of coverage.sources) {
+      if (typeof sourceItem === 'string') continue;
       if (sourceItem.ids && sourceItem.ids.includes(sourceId)) {
         return sourceItem.cost ?? 1;
       }
@@ -2132,6 +2149,7 @@ async function applyShopNode(
   state: SurveyState,
 ) {
   const shop = questionMeta.shop as ShopQuestionConfig | undefined;
+  const isProfessionalShop = Boolean((shop as any)?.isProfessional);
   const sources = normaliseShopSources(shop?.sources);
   if (sources.length === 0) {
     return;
@@ -2169,9 +2187,13 @@ async function applyShopNode(
 
   const parsed = parseShopAnswerValue(rawValue);
   const purchases = Array.isArray(parsed?.purchases) ? parsed!.purchases! : [];
-  if (purchases.length === 0) {
-    return;
-  }
+  const selectedBundleIds = (() => {
+    const bundlesRaw = (parsed as any)?.bundles;
+    if (!Array.isArray(bundlesRaw)) return [];
+    return Array.from(new Set(
+      bundlesRaw.filter((v: unknown) => typeof v === 'string' && v.length > 0) as string[],
+    ));
+  })();
 
   // Validate + normalise purchases
   const validPurchases: ShopPurchase[] = purchases
@@ -2185,7 +2207,7 @@ async function applyShopNode(
     }))
     .filter((p) => p.qty > 0);
 
-  if (validPurchases.length === 0) {
+  if (validPurchases.length === 0 && (!isProfessionalShop || selectedBundleIds.length === 0)) {
     return;
   }
 
@@ -2206,6 +2228,7 @@ async function applyShopNode(
 
   // First pass: compute cost and validate items exist
   const lookedUp = new Map<string, Array<{ purchase: ShopPurchase; row: Record<string, unknown>; targetPath: string }>>();
+  const bundleLookedUp: Array<{ sourceId: string; qty: number; row: Record<string, unknown>; targetPath: string }> = [];
 
   for (const [sourceId, sourcePurchases] of bySource.entries()) {
     const source = sources.find((s) => s.id === sourceId);
@@ -2225,7 +2248,9 @@ async function applyShopNode(
     }
 
     const ids = Array.from(new Set(sourcePurchases.map((p) => p.id)));
-    const filterType = source.filters?.type;
+    const filters = source.filters && typeof source.filters === 'object' && !Array.isArray(source.filters)
+      ? (source.filters as Record<string, unknown>)
+      : {};
 
     const whereParts: string[] = [
       `"${keyColumn}" = ANY($1::text[])`,
@@ -2241,11 +2266,58 @@ async function applyShopNode(
       paramIndex++;
     }
 
-    if (typeof filterType === 'string' && filterType.length > 0) {
-      whereParts.push(`"type" = $${paramIndex}`);
-      params.push(filterType);
-      paramIndex++;
-    }
+    const evalJsonLogicExpressionWrapper = (value: unknown): unknown => {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const obj = value as Record<string, unknown>;
+        if ('jsonlogic_expression' in obj && Object.keys(obj).length === 1) {
+          return evaluateJsonLogicExpression(obj.jsonlogic_expression, state);
+        }
+      }
+      return value;
+    };
+
+    const applyFilters = (node: unknown) => {
+      if (!node || typeof node !== 'object' || Array.isArray(node)) return;
+      const f = node as Record<string, unknown>;
+
+      if ('all' in f && Array.isArray(f.all)) {
+        for (const child of f.all) applyFilters(child);
+      }
+
+      if (typeof f.type === 'string' && f.type.length > 0) {
+        whereParts.push(`"type" = $${paramIndex}`);
+        params.push(f.type);
+        paramIndex++;
+      }
+
+      if (typeof f.isNull === 'string' && isSafeIdentifier(f.isNull)) {
+        whereParts.push(`"${f.isNull}" IS NULL`);
+      }
+
+      if (typeof f.isNotNull === 'string' && isSafeIdentifier(f.isNotNull)) {
+        whereParts.push(`"${f.isNotNull}" IS NOT NULL`);
+      }
+
+      if ('in' in f && f.in && typeof f.in === 'object' && !Array.isArray(f.in)) {
+        const inFilter = f.in as Record<string, unknown>;
+        const columnRaw = typeof inFilter.column === 'string' && inFilter.column.length > 0
+          ? inFilter.column
+          : keyColumn;
+        if (!isSafeIdentifier(columnRaw)) return;
+
+        const evaluated = evalJsonLogicExpressionWrapper(inFilter.values);
+        const values = toStringArray(evaluated);
+        if (values.length === 0) {
+          whereParts.push('FALSE');
+        } else {
+          whereParts.push(`"${columnRaw}" = ANY($${paramIndex}::text[])`);
+          params.push(values);
+          paramIndex++;
+        }
+      }
+    };
+
+    applyFilters(filters);
 
     const { rows } = await db.query<Record<string, unknown>>(
       `
@@ -2275,6 +2347,152 @@ async function applyShopNode(
     }
   }
 
+  // Professional bundles: validate bundle items and prepare them for adding to inventory
+  if (isProfessionalShop && selectedBundleIds.length > 0) {
+    const prof = (state as any)?.characterRaw?.professional_gear_options;
+    const bundlesRaw = Array.isArray(prof?.bundles) ? (prof.bundles as unknown[]) : [];
+    const bundleById = new Map<string, any>();
+    for (const b of bundlesRaw) {
+      if (!b || typeof b !== 'object' || Array.isArray(b)) continue;
+      const bb = b as any;
+      if (typeof bb.bundleId === 'string' && bb.bundleId.length > 0) {
+        bundleById.set(bb.bundleId, bb);
+      }
+    }
+
+    // Aggregate items across selected bundles: Map<sourceId, Map<itemId, qty>>
+    const bundleItemsBySource = new Map<string, Map<string, number>>();
+    for (const bundleId of selectedBundleIds) {
+      const bundle = bundleById.get(bundleId);
+      if (!bundle) {
+        throw new Error(`Unknown professional bundle: ${bundleId}`);
+      }
+      const itemsRaw = Array.isArray(bundle.items) ? (bundle.items as unknown[]) : [];
+      for (const it of itemsRaw) {
+        if (!it || typeof it !== 'object' || Array.isArray(it)) continue;
+        const ii = it as any;
+        const sourceId = typeof ii.sourceId === 'string' ? ii.sourceId : '';
+        const itemId = typeof ii.itemId === 'string' ? ii.itemId : '';
+        const qty = Math.max(0, Math.floor(toFiniteNumber(ii.quantity, 0)));
+        if (!sourceId || !itemId || qty <= 0) continue;
+        const byItem = bundleItemsBySource.get(sourceId) ?? new Map<string, number>();
+        byItem.set(itemId, (byItem.get(itemId) ?? 0) + qty);
+        bundleItemsBySource.set(sourceId, byItem);
+      }
+    }
+
+    for (const [sourceId, byItem] of bundleItemsBySource.entries()) {
+      const source = sources.find((s) => s.id === sourceId);
+      if (!source) {
+        throw new Error(`Unknown shop source for bundle: ${sourceId}`);
+      }
+      const { table, keyColumn, dlcColumn, langColumn } = source;
+      if (!SHOP_ALLOWED_TABLES.has(table)) {
+        throw new Error(`Shop table not allowed: ${table}`);
+      }
+      if (!isSafeIdentifier(keyColumn) || !isSafeIdentifier(dlcColumn)) {
+        throw new Error('Unsafe shop column identifier');
+      }
+      if (langColumn && !isSafeIdentifier(langColumn)) {
+        throw new Error('Unsafe shop lang column identifier');
+      }
+
+      const ids = Array.from(byItem.keys());
+      const filters = source.filters && typeof source.filters === 'object' && !Array.isArray(source.filters)
+        ? (source.filters as Record<string, unknown>)
+        : {};
+
+      const whereParts: string[] = [
+        `"${keyColumn}" = ANY($1::text[])`,
+        `"${dlcColumn}" = ANY($2::text[])`,
+      ];
+      const params: unknown[] = [ids, dlcs];
+      let paramIndex = 3;
+
+      if (langColumn && typeof (state as any).lang === 'string' && (state as any).lang.length > 0) {
+        whereParts.push(`"${langColumn}" = $${paramIndex}`);
+        params.push(String((state as any).lang));
+        paramIndex++;
+      }
+
+      const evalJsonLogicExpressionWrapper = (value: unknown): unknown => {
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          const obj = value as Record<string, unknown>;
+          if ('jsonlogic_expression' in obj && Object.keys(obj).length === 1) {
+            return evaluateJsonLogicExpression(obj.jsonlogic_expression, state);
+          }
+        }
+        return value;
+      };
+
+      const applyFilters = (node: unknown) => {
+        if (!node || typeof node !== 'object' || Array.isArray(node)) return;
+        const f = node as Record<string, unknown>;
+
+        if ('all' in f && Array.isArray(f.all)) {
+          for (const child of f.all) applyFilters(child);
+        }
+
+        if (typeof f.type === 'string' && f.type.length > 0) {
+          whereParts.push(`"type" = $${paramIndex}`);
+          params.push(f.type);
+          paramIndex++;
+        }
+
+        if (typeof f.isNull === 'string' && isSafeIdentifier(f.isNull)) {
+          whereParts.push(`"${f.isNull}" IS NULL`);
+        }
+
+        if (typeof f.isNotNull === 'string' && isSafeIdentifier(f.isNotNull)) {
+          whereParts.push(`"${f.isNotNull}" IS NOT NULL`);
+        }
+
+        if ('in' in f && f.in && typeof f.in === 'object' && !Array.isArray(f.in)) {
+          const inFilter = f.in as Record<string, unknown>;
+          const columnRaw = typeof inFilter.column === 'string' && inFilter.column.length > 0
+            ? inFilter.column
+            : keyColumn;
+          if (!isSafeIdentifier(columnRaw)) return;
+
+          const evaluated = evalJsonLogicExpressionWrapper(inFilter.values);
+          const values = toStringArray(evaluated);
+          if (values.length === 0) {
+            whereParts.push('FALSE');
+          } else {
+            whereParts.push(`"${columnRaw}" = ANY($${paramIndex}::text[])`);
+            params.push(values);
+            paramIndex++;
+          }
+        }
+      };
+
+      applyFilters(filters);
+
+      const { rows } = await db.query<Record<string, unknown>>(
+        `
+          SELECT *
+          FROM "${table}"
+          WHERE ${whereParts.join(' AND ')}
+        `,
+        params,
+      );
+
+      const byId = new Map<string, Record<string, unknown>>();
+      for (const row of rows) {
+        const rowId = row[keyColumn];
+        if (typeof rowId === 'string') byId.set(rowId, row);
+      }
+
+      for (const [itemId, qty] of byItem.entries()) {
+        const row = byId.get(itemId);
+        if (!row) {
+          throw new Error(`Shop item not found or not allowed by filters: ${sourceId}:${itemId}`);
+        }
+        bundleLookedUp.push({ sourceId, qty, row, targetPath: source.targetPath });
+      }
+    }
+  }
+
   // Second pass: calculate budget spending
   for (const [sourceId, entries] of lookedUp.entries()) {
     for (const entry of entries) {
@@ -2284,33 +2502,35 @@ async function applyShopNode(
       // Find applicable budgets for this item, sorted by priority
       const applicableBudgets = budgets
         .filter(b => isItemCoveredByBudget(b, sourceId, entry.purchase.id))
-        .sort((a, b) => a.priority - b.priority);
+        // higher priority first
+        .sort((a, b) => b.priority - a.priority);
       
       if (applicableBudgets.length === 0) continue;
       
       let remainingCost = price * qty;
       let remainingQty = qty;
+
+      const moneyBudgets = applicableBudgets.filter((b) => b.type === 'money');
+      const lastMoneyBudgetId = moneyBudgets.length > 0 ? moneyBudgets[moneyBudgets.length - 1]!.id : null;
       
       for (const budget of applicableBudgets) {
         if (budget.type === 'money') {
           if (remainingCost <= 0) break;
           const budgetRemaining = budgetStates.get(budget.id) ?? 0;
-          const toSpend = Math.min(remainingCost, budgetRemaining);
-          if (toSpend > 0) {
-            budgetStates.set(budget.id, budgetRemaining - toSpend);
-            remainingCost -= toSpend;
-          }
+          const isLastMoney = lastMoneyBudgetId === budget.id;
+          const available = isLastMoney ? budgetRemaining : Math.max(0, budgetRemaining);
+          const toSpend = isLastMoney ? remainingCost : Math.min(remainingCost, available);
+          budgetStates.set(budget.id, budgetRemaining - toSpend);
+          remainingCost -= toSpend;
           
           // If is_with_default and not default budget, also spend from default
           if (budget.is_with_default && !budget.is_default) {
             const defaultBudget = budgets.find(b => b.is_default);
             if (defaultBudget && remainingCost > 0) {
               const defaultRemaining = budgetStates.get(defaultBudget.id) ?? 0;
-              const toSpendDefault = Math.min(remainingCost, defaultRemaining);
-              if (toSpendDefault > 0) {
-                budgetStates.set(defaultBudget.id, defaultRemaining - toSpendDefault);
-                remainingCost -= toSpendDefault;
-              }
+              const toSpendDefault = Math.min(remainingCost, Math.max(0, defaultRemaining));
+              budgetStates.set(defaultBudget.id, defaultRemaining - toSpendDefault);
+              remainingCost -= toSpendDefault;
             }
           }
         } else {
@@ -2329,18 +2549,38 @@ async function applyShopNode(
           if (budget.is_with_money && remainingCost > 0) {
             const moneyBudgets = budgets
               .filter(b => b.type === 'money' && isItemCoveredByBudget(b, sourceId, entry.purchase.id))
-              .sort((a, b) => a.priority - b.priority);
+              .sort((a, b) => b.priority - a.priority);
             for (const moneyBudget of moneyBudgets) {
               if (remainingCost <= 0) break;
               const moneyRemaining = budgetStates.get(moneyBudget.id) ?? 0;
-              const toSpendMoney = Math.min(remainingCost, moneyRemaining);
-              if (toSpendMoney > 0) {
-                budgetStates.set(moneyBudget.id, moneyRemaining - toSpendMoney);
-                remainingCost -= toSpendMoney;
-              }
+              const toSpendMoney = Math.min(remainingCost, Math.max(0, moneyRemaining));
+              budgetStates.set(moneyBudget.id, moneyRemaining - toSpendMoney);
+              remainingCost -= toSpendMoney;
             }
           }
         }
+      }
+    }
+  }
+
+  // Professional bundles: 1 token per bundle (not per item/quantity)
+  if (isProfessionalShop && selectedBundleIds.length > 0) {
+    const ignoreWarnings = parsed?.ignoreWarnings === true;
+    const tokenBudgets = budgets
+      .filter((b) => b.type === 'tokens')
+      .sort((a, b) => b.priority - a.priority);
+    if (tokenBudgets.length > 0) {
+      const availableBefore = tokenBudgets.reduce((acc, b) => acc + (budgetStates.get(b.id) ?? 0), 0);
+      let remainingBundles = selectedBundleIds.length;
+      for (const b of tokenBudgets) {
+        const remaining = budgetStates.get(b.id) ?? 0;
+        const toSpend = Math.min(remainingBundles, remaining);
+        budgetStates.set(b.id, remaining - toSpend);
+        remainingBundles -= toSpend;
+        if (remainingBundles <= 0) break;
+      }
+      if (remainingBundles > 0 && !ignoreWarnings) {
+        throw new Error(`Budget tokens exceeded. Need ${selectedBundleIds.length}, available ${availableBefore}`);
       }
     }
   }
@@ -2390,6 +2630,16 @@ async function applyShopNode(
       };
       addToArrayAtPath(state, entry.targetPath, item);
     }
+  }
+
+  // Add professional bundle items to targets
+  for (const entry of bundleLookedUp) {
+    const item = {
+      ...entry.row,
+      amount: entry.qty,
+      sourceId: entry.sourceId,
+    };
+    addToArrayAtPath(state, entry.targetPath, item);
   }
 }
 

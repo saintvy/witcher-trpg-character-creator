@@ -461,7 +461,7 @@ ON CONFLICT (an_id) DO NOTHING;
 -- Battle axe - W163
 -- Brigandine - A017
 -- Chain coif - A005
--- Crossbow & bolts ×20 - W001 & B131 x 2
+-- Crossbow & bolts ×20 - W001 & W024 x 2
 -- Kord - W121
 -- Satchel - T016
 -- Spear - W055
@@ -516,7 +516,7 @@ SELECT
               ),
               jsonb_build_object(
                 'sourceId', 'weapons',
-                'itemId', 'B131',
+                'itemId', 'W024',
                 'quantity', 2
               )
             )

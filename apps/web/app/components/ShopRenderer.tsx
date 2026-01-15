@@ -11,8 +11,8 @@ type ShopBudgetCoverageTokensItem = {
 };
 
 type ShopBudgetCoverageTokens = {
-  sources?: ShopBudgetCoverageTokensItem[];
-  items?: ShopBudgetCoverageTokensItem[];
+  sources?: Array<ShopBudgetCoverageTokensItem | string>;
+  items?: Array<ShopBudgetCoverageTokensItem | string>;
 };
 
 type ShopBudgetConfig = {
@@ -22,6 +22,7 @@ type ShopBudgetConfig = {
   coverage?: ShopBudgetCoverageMoney | ShopBudgetCoverageTokens;
   priority: number;
   is_default?: boolean;
+  is_required?: boolean;
   is_with_default?: boolean; // only for money
   is_with_money?: boolean; // only for tokens
   name: string; // resolved i18n text
@@ -46,6 +47,7 @@ type ShopSourceConfig = {
 };
 
 type ShopConfig = {
+  isProfessional?: boolean;
   budgets?: ShopBudgetConfig[];
   warningPriceZero?: string; // resolved i18n text
   allowedDlcs?: string[];
@@ -53,6 +55,18 @@ type ShopConfig = {
 };
 
 type ShopPurchase = { sourceId: string; id: string; qty: number };
+
+type ProfessionalBundleItem = {
+  itemId: string;
+  quantity?: number;
+  sourceId: string;
+};
+
+type ProfessionalBundle = {
+  bundleId: string;
+  displayName?: unknown;
+  items: ProfessionalBundleItem[];
+};
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -170,9 +184,67 @@ export function ShopRenderer(props: {
   lang: string;
   state: Record<string, unknown>;
   disabled?: boolean;
-  onSubmit: (payload: { v: 1; purchases: ShopPurchase[]; ignoreWarnings?: boolean }) => void;
+  onSubmit: (payload: { v: 1; purchases: ShopPurchase[]; bundles?: string[]; ignoreWarnings?: boolean }) => void;
 }) {
   const { questionId, shop, lang, state, disabled, onSubmit } = props;
+
+  const isProfessionalShop = Boolean((shop as any)?.isProfessional);
+
+  const professionalOptions = useMemo(() => {
+    const root = (state as any)?.characterRaw?.professional_gear_options;
+    const items = (Array.isArray(root?.items) ? root.items : [])
+      .filter((v: unknown) => typeof v === 'string' && v.length > 0) as string[];
+    const bundlesRaw = Array.isArray(root?.bundles) ? (root.bundles as unknown[]) : [];
+    const bundles: ProfessionalBundle[] = bundlesRaw
+      .filter((b) => b && typeof b === 'object' && !Array.isArray(b))
+      .map((b) => {
+        const bb = b as any;
+        const itemsRaw = Array.isArray(bb.items) ? (bb.items as unknown[]) : [];
+        const bundleItems: ProfessionalBundleItem[] = itemsRaw
+          .filter((it) => it && typeof it === 'object' && !Array.isArray(it))
+          .map((it) => {
+            const ii = it as any;
+            return {
+              itemId: typeof ii.itemId === 'string' ? ii.itemId : String(ii.itemId ?? ''),
+              quantity: typeof ii.quantity === 'number' ? ii.quantity : Number(ii.quantity),
+              sourceId: typeof ii.sourceId === 'string' ? ii.sourceId : String(ii.sourceId ?? ''),
+            };
+          })
+          .filter((it) => it.itemId.length > 0 && it.sourceId.length > 0);
+
+        return {
+          bundleId: typeof bb.bundleId === 'string' ? bb.bundleId : String(bb.bundleId ?? ''),
+          displayName: bb.displayName,
+          items: bundleItems,
+        };
+      })
+      .filter((b) => b.bundleId.length > 0 && b.items.length > 0);
+
+    return { items, bundles };
+  }, [state]);
+
+  const professionalFreeItemIds = useMemo(() => new Set(professionalOptions.items), [professionalOptions.items]);
+
+  const [bundleCheckedById, setBundleCheckedById] = useState<Record<string, boolean>>({});
+  const selectedBundleIds = useMemo(() => {
+    if (!isProfessionalShop) return [];
+    return Object.entries(bundleCheckedById)
+      .filter(([, v]) => v)
+      .map(([k]) => k);
+  }, [bundleCheckedById, isProfessionalShop]);
+
+  // Prune removed bundles to avoid stale selections
+  useEffect(() => {
+    if (!isProfessionalShop) return;
+    const allowed = new Set(professionalOptions.bundles.map((b) => b.bundleId));
+    setBundleCheckedById((prev) => {
+      const next: Record<string, boolean> = {};
+      for (const [k, v] of Object.entries(prev)) {
+        if (allowed.has(k)) next[k] = v;
+      }
+      return next;
+    });
+  }, [isProfessionalShop, professionalOptions.bundles]);
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [expandedGroup, setExpandedGroup] = useState<Record<string, boolean>>({});
@@ -213,6 +285,7 @@ export function ShopRenderer(props: {
     return result;
   }, [allItemsBySource]);
   const [qtyBySource, setQtyBySource] = useState<Record<string, Record<string, number>>>({});
+  const qtyBySourceForCalculations = qtyBySource;
   const [sortBySource, setSortBySource] = useState<Record<string, { column: string | null; direction: 'asc' | 'desc' }>>({});
   const [ignoreWarnings, setIgnoreWarnings] = useState(false);
   const budgetSummaryRef = useRef<HTMLDivElement>(null);
@@ -253,16 +326,24 @@ export function ShopRenderer(props: {
     } else {
       // tokens
       const coverage = budget.coverage as ShopBudgetCoverageTokens;
-      // Check sources
+      // Check sources (support both string[] and {ids,cost}[] formats)
       if (coverage.sources && Array.isArray(coverage.sources)) {
         for (const sourceItem of coverage.sources) {
-          if (sourceItem.ids && sourceItem.ids.includes(sourceId)) return true;
+          if (typeof sourceItem === 'string') {
+            if (sourceItem === sourceId) return true;
+          } else if (sourceItem?.ids && Array.isArray(sourceItem.ids) && sourceItem.ids.includes(sourceId)) {
+            return true;
+          }
         }
       }
-      // Check items
+      // Check items (support both string[] and {ids,cost}[] formats)
       if (coverage.items && Array.isArray(coverage.items)) {
         for (const item of coverage.items) {
-          if (item.ids && item.ids.includes(itemId)) return true;
+          if (typeof item === 'string') {
+            if (item === itemId) return true;
+          } else if (item?.ids && Array.isArray(item.ids) && item.ids.includes(itemId)) {
+            return true;
+          }
         }
       }
       // If coverage exists but item not found, not covered
@@ -306,16 +387,16 @@ export function ShopRenderer(props: {
         if (typeof key === "string") byId.set(key, r);
       }
       
-      const selected = qtyBySource[source.id] ?? {};
+      const selected = qtyBySourceForCalculations[source.id] ?? {};
       for (const [itemId, qty] of Object.entries(selected)) {
         if (qty <= 0) continue;
         const row = byId.get(itemId);
         const price = row ? toNumber(row.price, 0) : 0;
         
-        // Find applicable budgets for this item, sorted by priority
+        // Find applicable budgets for this item, sorted by priority (higher first)
         const applicableBudgets = budgets
           .filter(b => isItemCoveredByBudget(b, source.id, itemId))
-          .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+          .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
         
         if (applicableBudgets.length === 0) continue;
         
@@ -324,6 +405,9 @@ export function ShopRenderer(props: {
         let remainingCost = price * qty;
         let remainingQty = qty;
         
+        const moneyBudgets = applicableBudgets.filter((b) => b.type === 'money');
+        const lastMoneyBudgetId = moneyBudgets.length > 0 ? moneyBudgets[moneyBudgets.length - 1]!.id : null;
+
         for (const budget of applicableBudgets) {
           // Ensure budget is initialized in usage
           if (!usage[budget.id]) {
@@ -334,14 +418,13 @@ export function ShopRenderer(props: {
           if (budget.type === 'money') {
             if (remainingCost <= 0) break;
             
-            // Calculate how much we can spend from this budget
-            // Distribute cost across budgets by priority: spend from this budget what we can, rest goes to next
             const budgetRemaining = usage[budget.id].remaining;
-            // Spend as much as possible from this budget (can be all if budget is large enough)
-            // If budget is exhausted (0 or negative), we still assign cost to show negative value
-            const toSpend = budgetRemaining > 0 
-              ? Math.min(remainingCost, budgetRemaining) 
-              : remainingCost; // If exhausted or negative, assign all remaining cost to show negative
+            const isLastMoney = lastMoneyBudgetId === budget.id;
+            // If this is not the last money budget, do not go negative here: spill to less priority budgets instead
+            const available = isLastMoney ? budgetRemaining : Math.max(0, budgetRemaining);
+            const toSpend = isLastMoney
+              ? remainingCost // last budget may go negative
+              : Math.min(remainingCost, available);
             
             // Spend from this budget (allows going negative)
             usage[budget.id].spent += toSpend;
@@ -375,7 +458,8 @@ export function ShopRenderer(props: {
             // Find cost for this item
             if (coverage?.items) {
               for (const item of coverage.items) {
-                if (item.ids && item.ids.includes(itemId)) {
+                if (typeof item === 'string') continue;
+                if (item?.ids && item.ids.includes(itemId)) {
                   costPerUnit = item.cost ?? 1;
                   break;
                 }
@@ -383,7 +467,8 @@ export function ShopRenderer(props: {
             }
             if (coverage?.sources && costPerUnit === 1) {
               for (const sourceItem of coverage.sources) {
-                if (sourceItem.ids && sourceItem.ids.includes(source.id)) {
+                if (typeof sourceItem === 'string') continue;
+                if (sourceItem?.ids && sourceItem.ids.includes(source.id)) {
                   costPerUnit = sourceItem.cost ?? 1;
                   break;
                 }
@@ -400,7 +485,7 @@ export function ShopRenderer(props: {
             if (budget.is_with_money && remainingCost > 0) {
               const moneyBudgets = budgets
                 .filter(b => b.type === 'money' && isItemCoveredByBudget(b, source.id, itemId))
-                .sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+                .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
               for (const moneyBudget of moneyBudgets) {
                 if (remainingCost <= 0) break;
                 if (!usage[moneyBudget.id]) {
@@ -417,15 +502,44 @@ export function ShopRenderer(props: {
       }
     }
     
+    // Professional bundles: 1 token per selected bundle (not per item/quantity)
+    if (isProfessionalShop && selectedBundleIds.length > 0) {
+      const tokenBudgets = budgets
+        .filter((b) => b.type === 'tokens')
+        .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+      if (tokenBudgets.length > 0) {
+        const b = tokenBudgets[0]!;
+        if (!usage[b.id]) {
+          const initial = clampInt(toNumber(getAtPath(state, b.source), 0));
+          usage[b.id] = { initial, spent: 0, remaining: initial };
+        }
+        usage[b.id].spent += selectedBundleIds.length;
+        usage[b.id].remaining -= selectedBundleIds.length;
+      }
+    }
+
     return usage;
-  }, [budgets, shop.sources, qtyBySource, rowsBySource, rowsBySourceGroup, state, isItemCoveredByBudget]);
+  }, [budgets, shop.sources, qtyBySourceForCalculations, rowsBySource, rowsBySourceGroup, state, isItemCoveredByBudget, isProfessionalShop, selectedBundleIds]);
 
   // Check if any budget is exceeded
   const hasExceededBudgets = useMemo(() => {
     return Object.values(budgetUsage).some(b => b.remaining < 0);
   }, [budgetUsage]);
 
-  const canSubmit = (!hasExceededBudgets || ignoreWarnings) && !disabled;
+  const hasUnmetRequiredBudgets = useMemo(() => {
+    const required = budgets.filter((b) => b.is_required);
+    if (required.length === 0) return false;
+    return required.some((b) => {
+      const u = budgetUsage[b.id];
+      // Missing budget in usage: treat as unmet
+      if (!u) return true;
+      // Under-spent: remaining > 0
+      return u.remaining > 0;
+    });
+  }, [budgets, budgetUsage]);
+
+  const hasWarnings = hasExceededBudgets || hasUnmetRequiredBudgets;
+  const canSubmit = (!hasWarnings || ignoreWarnings) && !disabled;
 
   const toggleExpanded = useCallback((sourceId: string) => {
     setExpanded((prev) => ({ ...prev, [sourceId]: !prev[sourceId] }));
@@ -457,8 +571,37 @@ export function ShopRenderer(props: {
   }
 
   // Загружаем все товары сразу при монтировании компонента
-  const prefetchKey = useMemo(() => `${lang}::${resolvedAllowedDlcs.join(",")}`, [lang, resolvedAllowedDlcs]);
+  const professionalItemsKey = useMemo(() => {
+    if (!isProfessionalShop) return '';
+    const bundleSignature = professionalOptions.bundles.map((b) => ({
+      bundleId: b.bundleId,
+      items: b.items.map((it) => ({ sourceId: it.sourceId, itemId: it.itemId, quantity: it.quantity })),
+    }));
+    return JSON.stringify({ items: professionalOptions.items, bundles: bundleSignature });
+  }, [isProfessionalShop, professionalOptions]);
+
+  const prefetchKey = useMemo(
+    () => `${questionId}::${lang}::${resolvedAllowedDlcs.join(",")}::${professionalItemsKey}`,
+    [questionId, lang, resolvedAllowedDlcs, professionalItemsKey],
+  );
   const prefetchRef = useRef<string | null>(null);
+
+  // Reset local UI state when shop node changes (prevents leaking selections between 091 and 092)
+  useEffect(() => {
+    setExpanded(isProfessionalShop
+      ? Object.fromEntries(shop.sources.map((s) => [s.id, true]))
+      : {});
+    setExpandedGroup({});
+    setQtyBySource({});
+    setSortBySource({});
+    setIgnoreWarnings(false);
+    setBundleCheckedById({});
+    setAllItemsBySource({});
+    setLoadingAllItems(true);
+    setLoadErrorAllItems(null);
+    prefetchRef.current = null;
+  }, [questionId, isProfessionalShop, shop.sources]);
+
   useEffect(() => {
     if (prefetchRef.current === prefetchKey) return;
     prefetchRef.current = prefetchKey;
@@ -469,7 +612,7 @@ export function ShopRenderer(props: {
     fetch(`${API_URL}/shop/allItems`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ questionId, lang, allowedDlcs: resolvedAllowedDlcs }),
+      body: JSON.stringify({ questionId, lang, allowedDlcs: resolvedAllowedDlcs, state }),
     })
       .then(fetchJsonOrThrow)
       .then((data) => {
@@ -480,7 +623,7 @@ export function ShopRenderer(props: {
         setLoadErrorAllItems(e instanceof Error ? e.message : String(e));
         setLoadingAllItems(false);
       });
-  }, [prefetchKey, questionId, lang, resolvedAllowedDlcs]);
+  }, [prefetchKey, questionId, lang, resolvedAllowedDlcs, state]);
 
   const visibleSources = useMemo(() => {
     return shop.sources.filter((source) => {
@@ -496,6 +639,16 @@ export function ShopRenderer(props: {
         return true;
       }
 
+      if (isProfessionalShop) {
+        const flatRows = sourceData.rows
+          ?? (sourceData.rowsByGroup ? Object.values(sourceData.rowsByGroup).flat() : []);
+        return flatRows.some((row) => {
+          const key = (row as any)?.[source.keyColumn];
+          const itemId = typeof key === 'string' ? key : String(key ?? '');
+          return professionalFreeItemIds.has(itemId);
+        });
+      }
+
       if (sourceData.groups) {
         return (sourceData.groups.length ?? 0) > 0;
       }
@@ -505,7 +658,7 @@ export function ShopRenderer(props: {
 
       return false;
     });
-  }, [shop.sources, qtyBySource, allItemsBySource]);
+  }, [shop.sources, qtyBySource, allItemsBySource, isProfessionalShop, professionalFreeItemIds]);
 
   // Товары уже загружены, эта функция больше не нужна, но оставляем для совместимости
   const ensureLoadedGroupRows = useCallback(
@@ -530,7 +683,7 @@ export function ShopRenderer(props: {
   }, []);
 
   const setQty = useCallback((sourceId: string, itemId: string, qty: number) => {
-    const clean = clampInt(qty);
+    const clean = isProfessionalShop ? (qty > 0 ? 1 : 0) : clampInt(qty);
     setQtyBySource((prev) => {
       const prevSource = prev[sourceId] ?? {};
       const nextSource = { ...prevSource };
@@ -541,7 +694,7 @@ export function ShopRenderer(props: {
       }
       return { ...prev, [sourceId]: nextSource };
     });
-  }, []);
+  }, [isProfessionalShop]);
 
   const toggleChecked = useCallback(
     (sourceId: string, itemId: string) => {
@@ -576,13 +729,13 @@ export function ShopRenderer(props: {
   const purchases = useMemo(() => {
     const out: ShopPurchase[] = [];
     for (const source of shop.sources) {
-      const map = qtyBySource[source.id] ?? {};
+      const map = qtyBySourceForCalculations[source.id] ?? {};
       for (const [id, qty] of Object.entries(map)) {
         if (qty > 0) out.push({ sourceId: source.id, id, qty });
       }
     }
     return out;
-  }, [qtyBySource, shop.sources]);
+  }, [qtyBySourceForCalculations, shop.sources]);
 
   // Check for items with price 0
   const hasPriceZeroItems = useMemo(() => {
@@ -597,7 +750,7 @@ export function ShopRenderer(props: {
         const key = r[source.keyColumn];
         if (typeof key === "string") byId.set(key, r);
       }
-      const selected = qtyBySource[source.id] ?? {};
+      const selected = qtyBySourceForCalculations[source.id] ?? {};
       for (const [id, qty] of Object.entries(selected)) {
         if (qty <= 0) continue;
         const row = byId.get(id);
@@ -606,16 +759,22 @@ export function ShopRenderer(props: {
       }
     }
     return false;
-  }, [qtyBySource, rowsBySource, rowsBySourceGroup, shop.sources]);
+  }, [qtyBySourceForCalculations, rowsBySource, rowsBySourceGroup, shop.sources]);
 
   const handleSubmit = useCallback(() => {
-    if (hasExceededBudgets && !ignoreWarnings) {
+    if (hasWarnings && !ignoreWarnings) {
       // Scroll to top to show warning
       budgetSummaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
-    onSubmit({ v: 1, purchases, ignoreWarnings: ignoreWarnings || undefined });
-  }, [hasExceededBudgets, ignoreWarnings, purchases, onSubmit]);
+    const bundles = isProfessionalShop ? selectedBundleIds : [];
+    onSubmit({
+      v: 1,
+      purchases,
+      bundles: bundles.length > 0 ? bundles : undefined,
+      ignoreWarnings: ignoreWarnings || undefined,
+    });
+  }, [hasWarnings, ignoreWarnings, purchases, onSubmit, isProfessionalShop, selectedBundleIds]);
 
   // Helper to get sorted rows for a source
   const getSortedRows = useCallback(
@@ -629,17 +788,20 @@ export function ShopRenderer(props: {
       if (!sortConfig || !sortConfig.column) {
         return rows;
       }
+      const column: SortColumn = (isProfessionalShop && sortConfig.column === 'qty')
+        ? 'checkbox'
+        : sortConfig.column;
       return sortRows(
         rows,
-        sortConfig.column,
+        column,
         sortConfig.direction,
         sourceId,
         keyColumn,
-        qtyBySource,
+        qtyBySourceForCalculations,
         columns,
       );
     },
-    [sortBySource, qtyBySource],
+    [sortBySource, qtyBySourceForCalculations, isProfessionalShop],
   );
 
   // Get visible budgets (non-zero or default, or if they have any usage)
@@ -658,8 +820,33 @@ export function ShopRenderer(props: {
       const usage = budgetUsage[b.id];
       // Show if: has usage and (initial > 0 OR is_default OR has spent > 0)
       return usage && (usage.initial > 0 || b.is_default || usage.spent > 0);
-    }).sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999));
+    }).sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
   }, [budgets, budgetUsage, state]);
+
+  const sourcesById = useMemo(() => {
+    const out: Record<string, ShopSourceConfig> = {};
+    for (const s of shop.sources) out[s.id] = s;
+    return out;
+  }, [shop.sources]);
+
+  const rowsIndexBySourceId = useMemo(() => {
+    const out: Record<string, Map<string, Record<string, unknown>>> = {};
+    for (const source of shop.sources) {
+      const flatRows = (() => {
+        if (rowsBySource[source.id]) return rowsBySource[source.id] ?? [];
+        const groups = rowsBySourceGroup[source.id] ?? {};
+        return Object.values(groups).flat();
+      })();
+      const byId = new Map<string, Record<string, unknown>>();
+      for (const r of flatRows) {
+        const key = (r as any)[source.keyColumn];
+        const itemId = typeof key === 'string' ? key : String(key ?? '');
+        if (itemId) byId.set(itemId, r);
+      }
+      out[source.id] = byId;
+    }
+    return out;
+  }, [shop.sources, rowsBySource, rowsBySourceGroup]);
 
   return (
     <div className="shop-node">
@@ -672,7 +859,7 @@ export function ShopRenderer(props: {
         >
           Continue
         </button>
-        {hasExceededBudgets && (
+        {hasWarnings && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px' }}>
             <input
               type="checkbox"
@@ -688,7 +875,7 @@ export function ShopRenderer(props: {
       </div>
 
       <div className="shop-summary" ref={budgetSummaryRef}>
-        {shop.warningPriceZero && hasPriceZeroItems && (
+        {(shop.warningPriceZero && hasPriceZeroItems) && (
           <div className="shop-warning" style={{ 
             marginBottom: '12px', 
             padding: '8px 10px', 
@@ -701,11 +888,27 @@ export function ShopRenderer(props: {
             {shop.warningPriceZero}
           </div>
         )}
+
+        {hasExceededBudgets && (
+          <div className="shop-error" style={{ marginBottom: '12px' }}>
+            {lang === 'ru' ? 'Один или несколько бюджетов перевыполнены' : 'One or more budgets are exceeded'}
+          </div>
+        )}
+
+        {hasUnmetRequiredBudgets && (
+          <div className="shop-error" style={{ marginBottom: '12px' }}>
+            {lang === 'ru'
+              ? 'Один или несколько бюджетов, обязательных к выполнению, недовыполнены'
+              : 'One or more required budgets are not fully spent'}
+          </div>
+        )}
         
         {visibleBudgets.map((budget) => {
           const usage = budgetUsage[budget.id];
           if (!usage) return null;
           const isExceeded = usage.remaining < 0;
+          const isRequiredUnmet = Boolean(budget.is_required) && usage.remaining > 0;
+          const isBad = isExceeded || isRequiredUnmet;
           return (
             <div key={budget.id} style={{ marginBottom: '12px' }}>
               <div style={{ marginBottom: '4px', fontWeight: 'bold' }}>
@@ -718,13 +921,13 @@ export function ShopRenderer(props: {
                 </div>
                 <div className="shop-summary-item">
                   <span className="shop-summary-label">SPENT</span>
-                  <span className={`shop-summary-value ${isExceeded ? "shop-bad" : ""}`}>
+                  <span className={`shop-summary-value ${isBad ? "shop-bad" : ""}`}>
                     {usage.spent}
                   </span>
                 </div>
                 <div className="shop-summary-item">
                   <span className="shop-summary-label">REMAINING</span>
-                  <span className={`shop-summary-value ${isExceeded ? "shop-bad" : ""}`}>
+                  <span className={`shop-summary-value ${isBad ? "shop-bad" : ""}`}>
                     {usage.remaining}
                   </span>
                 </div>
@@ -732,12 +935,6 @@ export function ShopRenderer(props: {
             </div>
           );
         })}
-
-        {hasExceededBudgets && (
-          <div className="shop-error" style={{ marginTop: '12px' }}>
-            {lang === 'ru' ? 'Один или несколько бюджетов перевыполнены' : 'One or more budgets are exceeded'}
-          </div>
-        )}
       </div>
 
       {loadingAllItems && (
@@ -755,14 +952,23 @@ export function ShopRenderer(props: {
         {visibleSources.map((source) => {
           const isOpen = Boolean(expanded[source.id]);
           const sourceData = allItemsBySource[source.id];
-          const rawRows = sourceData?.rows ?? [];
-          const groups = sourceData?.groups ?? null;
+          const allFlatRows = sourceData?.rows
+            ?? (sourceData?.rowsByGroup ? Object.values(sourceData.rowsByGroup).flat() : []);
+          const rawRows = isProfessionalShop
+            ? allFlatRows.filter((row) => {
+              const key = (row as any)?.[source.keyColumn];
+              const itemId = typeof key === 'string' ? key : String(key ?? '');
+              return professionalFreeItemIds.has(itemId);
+            })
+            : (sourceData?.rows ?? []);
+          const groups = isProfessionalShop ? null : (sourceData?.groups ?? null);
           const selected = qtyBySource[source.id] ?? {};
-          const visibleColumns = source.groupColumn
+          const visibleColumns = (groups && source.groupColumn)
             ? source.columns.filter((c) => c.field !== source.groupColumn)
             : source.columns;
           const sortConfig = sortBySource[source.id];
           const rows = getSortedRows(rawRows, source.id, source.keyColumn, source.columns);
+          const showQtyColumn = !isProfessionalShop;
 
           return (
             <div key={source.id} className="shop-source">
@@ -919,18 +1125,20 @@ export function ShopRenderer(props: {
                                 )}
                               </span>
                             </th>
-                            <th
-                              style={{ width: 110, cursor: 'pointer' }}
-                              onClick={() => handleSort(source.id, 'qty')}
-                              className="shop-sortable-header"
-                            >
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                Qty
-                                {sortConfig?.column === 'qty' && (
-                                  <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                                )}
-                              </span>
-                            </th>
+                            {showQtyColumn && (
+                              <th
+                                style={{ width: 110, cursor: 'pointer' }}
+                                onClick={() => handleSort(source.id, 'qty')}
+                                className="shop-sortable-header"
+                              >
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  Qty
+                                  {sortConfig?.column === 'qty' && (
+                                    <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                  )}
+                                </span>
+                              </th>
+                            )}
                             {source.columns.map((col) => {
                               const isSorted = sortConfig?.column === col.field;
                               return (
@@ -968,17 +1176,19 @@ export function ShopRenderer(props: {
                                     onChange={() => toggleChecked(source.id, itemId)}
                                   />
                                 </td>
-                                <td>
-                                  <input
-                                    type="number"
-                                    min={0}
-                                    step={1}
-                                    value={qty}
-                                    disabled={disabled || !checked}
-                                    onChange={(e) => setQty(source.id, itemId, Number(e.target.value))}
-                                    className="shop-qty-input"
-                                  />
-                                </td>
+                                {showQtyColumn && (
+                                  <td>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      step={1}
+                                      value={qty}
+                                      disabled={disabled || !checked}
+                                      onChange={(e) => setQty(source.id, itemId, Number(e.target.value))}
+                                      className="shop-qty-input"
+                                    />
+                                  </td>
+                                )}
                                 {source.columns.map((col) => (
                                   <td key={col.field}>{renderCell((row as any)[col.field])}</td>
                                 ))}
@@ -995,6 +1205,96 @@ export function ShopRenderer(props: {
           );
         })}
       </div>
+
+      {isProfessionalShop && professionalOptions.bundles.length > 0 && (
+        <div className="shop-sources" style={{ marginTop: '16px' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+            {lang === 'ru' ? 'Комплекты' : 'Bundles'}
+          </div>
+
+          {professionalOptions.bundles.map((bundle) => {
+            const checked = Boolean(bundleCheckedById[bundle.bundleId]);
+            const displayName = (() => {
+              if (typeof bundle.displayName === 'string') return bundle.displayName;
+              if (bundle.displayName && typeof bundle.displayName === 'object' && !Array.isArray(bundle.displayName)) {
+                const obj = bundle.displayName as any;
+                if (typeof obj.i18n_uuid === 'string') return obj.i18n_uuid;
+              }
+              return bundle.bundleId;
+            })();
+
+            const itemsBySource: Record<string, ProfessionalBundleItem[]> = {};
+            for (const it of bundle.items) {
+              const list = itemsBySource[it.sourceId] ?? [];
+              list.push(it);
+              itemsBySource[it.sourceId] = list;
+            }
+
+            return (
+              <div key={bundle.bundleId} className="shop-source">
+                <div className="shop-source-header" style={{ cursor: 'default' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={(e) =>
+                        setBundleCheckedById((prev) => ({ ...prev, [bundle.bundleId]: e.target.checked }))
+                      }
+                    />
+                    <span className="shop-source-title">{displayName}</span>
+                  </span>
+                </div>
+
+                <div className="shop-source-body">
+                  {Object.entries(itemsBySource).map(([sourceId, bundleItems]) => {
+                    const source = sourcesById[sourceId];
+                    const byId = rowsIndexBySourceId[sourceId];
+                    if (!source || !byId) return null;
+
+                    return (
+                      <div key={`${bundle.bundleId}::${sourceId}`} style={{ marginBottom: '12px' }}>
+                        <div style={{ marginBottom: '6px', fontWeight: 600 }}>
+                          {source.title}
+                        </div>
+                        <div style={{ overflowX: 'auto' }}>
+                          <table className="survey-table shop-table">
+                            <thead>
+                              <tr>
+                                <th style={{ width: 110 }}>
+                                  {lang === 'ru' ? 'Кол-во' : 'Qty'}
+                                </th>
+                                {source.columns.map((col) => (
+                                  <th key={col.field}>{col.label ?? col.field}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {bundleItems.map((it, idx) => {
+                                const qty = clampInt(toNumber(it.quantity, 0));
+                                const row = byId.get(it.itemId) ?? { [source.keyColumn]: it.itemId };
+                                const tooltip = source.tooltipField ? String((row as any)[source.tooltipField] ?? '') : '';
+                                return (
+                                  <tr key={`${it.itemId}::${idx}`} title={tooltip}>
+                                    <td>{qty}</td>
+                                    {source.columns.map((col) => (
+                                      <td key={col.field}>{renderCell((row as any)[col.field])}</td>
+                                    ))}
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

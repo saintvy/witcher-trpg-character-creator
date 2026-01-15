@@ -496,7 +496,7 @@ CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
 -- Merchant (pick 3)
--- Crossbow & bolts ×20 - W001 & B131 x 2
+-- Crossbow & bolts ×20 - W001 & W024 x 2
 -- Dagger - W082
 -- Journal - T060
 -- Large tent - T071
@@ -543,12 +543,45 @@ SELECT
               ),
               jsonb_build_object(
                 'sourceId', 'weapons',
-                'itemId', 'B131',
+                'itemId', 'W024',
                 'quantity', 2
               )
             )
           )
         )
+      )
+    )
+  ) AS body;
+
+-- Эффекты: торговцу сразу в инвентарь мул (WT005) и телега (WT002)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o09' AS an_an_id,
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object(
+        'wt_id', 'WT005',
+        'sourceId', 'vehicles',
+        'amount', 1
+      )
+    )
+  ) AS body;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o09' AS an_an_id,
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object(
+        'wt_id', 'WT002',
+        'sourceId', 'vehicles',
+        'amount', 1
       )
     )
   ) AS body;

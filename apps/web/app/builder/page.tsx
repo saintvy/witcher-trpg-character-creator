@@ -1356,6 +1356,20 @@ export default function BuilderPage() {
                         );
                       })}
                     </select>
+                    <div className="survey-actions">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedDropDownOptionId) {
+                            void submitAnswer([selectedDropDownOptionId]);
+                          }
+                        }}
+                        disabled={loading || !selectedDropDownOptionId}
+                        className="btn btn-primary"
+                      >
+                        {displayLang === "ru" ? "Продолжить" : "Continue"}
+                      </button>
+                    </div>
                     {selectedDropDownOptionId && (
                       <div
                         className="survey-dropdown-details"
@@ -1375,20 +1389,6 @@ export default function BuilderPage() {
                         })()}
                       </div>
                     )}
-                    <div className="survey-actions">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (selectedDropDownOptionId) {
-                            void submitAnswer([selectedDropDownOptionId]);
-                          }
-                        }}
-                        disabled={loading || !selectedDropDownOptionId}
-                        className="btn btn-primary"
-                      >
-                        {displayLang === "ru" ? "Продолжить" : "Continue"}
-                      </button>
-                    </div>
                   </div>
                 )}
 

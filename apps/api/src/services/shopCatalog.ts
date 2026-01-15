@@ -13,6 +13,135 @@ function asStringArray(value: unknown): string[] {
   return value.filter((v): v is string => typeof v === 'string' && v.length > 0);
 }
 
+function getAtPath(source: unknown, path: string): unknown {
+  if (!path) return undefined;
+  const parts = path.split('.').filter(Boolean);
+  let cursor: any = source;
+  for (const part of parts) {
+    if (cursor == null || typeof cursor !== 'object') return undefined;
+    cursor = cursor[part];
+  }
+  return cursor;
+}
+
+/**
+ * Extract values from nested arrays using a path with [] syntax.
+ * Example: "characterRaw.professional_gear_options.bundles[].items[].itemId"
+ */
+function catArray(state: Record<string, unknown>, path: string): unknown[] {
+  // Helper: simple get by path parts (no [] support)
+  const getValueAtPath = (obj: unknown, pathParts: string[]): unknown => {
+    if (pathParts.length === 0) return obj;
+    if (obj === null || obj === undefined || typeof obj !== 'object') return undefined;
+    const [first, ...rest] = pathParts;
+    const objRecord = obj as Record<string, unknown>;
+    if (first in objRecord) return getValueAtPath(objRecord[first], rest);
+    return undefined;
+  };
+
+  const extractFromNestedArrays = (currentValue: unknown, remainingPath: string): unknown[] => {
+    if (remainingPath === '') {
+      if (currentValue === undefined || currentValue === null) return [];
+      return Array.isArray(currentValue) ? currentValue : [currentValue];
+    }
+
+    const nextArrayIndex = remainingPath.indexOf('[]');
+    if (nextArrayIndex === -1) {
+      const parts = remainingPath.split('.').filter((p) => p);
+      const value = getValueAtPath(currentValue, parts);
+      if (value === undefined || value === null) return [];
+      return Array.isArray(value) ? value : [value];
+    }
+
+    const pathBeforeArray = remainingPath.substring(0, nextArrayIndex);
+    const pathAfterArray = remainingPath.substring(nextArrayIndex + 2); // skip []
+    const pathParts = pathBeforeArray.split('.').filter((p) => p);
+    const arrayValue = getValueAtPath(currentValue, pathParts);
+    if (!Array.isArray(arrayValue)) return [];
+
+    const results: unknown[] = [];
+    for (const item of arrayValue) {
+      results.push(...extractFromNestedArrays(item, pathAfterArray));
+    }
+    return results;
+  };
+
+  const firstArrayIndex = path.indexOf('[]');
+  if (firstArrayIndex === -1) {
+    const parts = path.split('.').filter((p) => p);
+    const value = getValueAtPath(state, parts);
+    return Array.isArray(value) ? value : (value !== undefined ? [value] : []);
+  }
+
+  const basePath = path.substring(0, firstArrayIndex);
+  const remainingPath = path.substring(firstArrayIndex + 2);
+  const basePathParts = basePath.split('.').filter((p) => p);
+  const baseValue = getValueAtPath(state, basePathParts);
+  if (!Array.isArray(baseValue)) return [];
+
+  const results: unknown[] = [];
+  for (const item of baseValue) {
+    results.push(...extractFromNestedArrays(item, remainingPath));
+  }
+  return results;
+}
+
+/**
+ * Minimal json-logic evaluator for shop filters.
+ * Supports: var, concat_arrays, cat_array.
+ */
+function evalJsonLogicLite(expr: unknown, state: Record<string, unknown>): unknown {
+  if (expr === null || expr === undefined) return expr;
+  if (typeof expr !== 'object' || Array.isArray(expr)) return expr;
+
+  const obj = expr as Record<string, unknown>;
+
+  if ('var' in obj) {
+    const v = obj.var;
+    if (typeof v === 'string') {
+      return getAtPath(state, v);
+    }
+    if (Array.isArray(v) && typeof v[0] === 'string') {
+      const value = getAtPath(state, v[0]);
+      return value === undefined ? v[1] : value;
+    }
+    return undefined;
+  }
+
+  if ('cat_array' in obj) {
+    const path = obj.cat_array;
+    if (typeof path !== 'string') return [];
+    return catArray(state, path);
+  }
+
+  if ('concat_arrays' in obj) {
+    const args = obj.concat_arrays;
+    const parts = Array.isArray(args) ? args : [args];
+    const result: unknown[] = [];
+    for (const part of parts) {
+      const evaluated = evalJsonLogicLite(part, state);
+      if (Array.isArray(evaluated)) {
+        result.push(...evaluated);
+      } else if (evaluated !== null && evaluated !== undefined) {
+        result.push(evaluated);
+      }
+    }
+    return result;
+  }
+
+  return expr;
+}
+
+function evalJsonLogicExpressionWrapper(value: unknown, state: Record<string, unknown>): unknown {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const obj = value as Record<string, unknown>;
+    if ('jsonlogic_expression' in obj && Object.keys(obj).length === 1) {
+      return evalJsonLogicLite(obj.jsonlogic_expression, state);
+    }
+  }
+  return value;
+}
+
 type ShopSourceConfig = {
   id: string;
   title?: unknown;
@@ -39,6 +168,11 @@ export type GetAllShopItemsRequest = {
   lang?: string;
   questionId: string;
   allowedDlcs?: string[];
+  /**
+   * Optional survey state to evaluate jsonlogic_expression inside shop filters.
+   * (Needed for professional shop filters based on professional_gear_options.)
+   */
+  state?: Record<string, unknown>;
 };
 
 export type GetAllShopItemsResponse = {
@@ -87,6 +221,10 @@ export async function getAllShopItems(
   // core всегда разрешён
   const dlcs = Array.from(new Set(['core', ...base]));
 
+  const evalState = payload.state && typeof payload.state === 'object' && !Array.isArray(payload.state)
+    ? (payload.state as Record<string, unknown>)
+    : {};
+
   const result: GetAllShopItemsResponse = {};
 
   // Загружаем товары для каждого источника параллельно
@@ -111,9 +249,6 @@ export async function getAllShopItems(
       const filters = (source.filters && typeof source.filters === 'object')
         ? (source.filters as Record<string, unknown>)
         : {};
-      const filterType = filters.type;
-      const filterIsNull = filters.isNull;
-      const filterIsNotNull = filters.isNotNull;
 
       // Базовые условия WHERE
       const whereParts: string[] = [`"${dlcColumn}" = ANY($1::text[])`];
@@ -126,19 +261,52 @@ export async function getAllShopItems(
         paramIndex++;
       }
 
-      if (typeof filterType === 'string' && filterType.length > 0) {
-        whereParts.push(`"type" = $${paramIndex}`);
-        params.push(filterType);
-        paramIndex++;
-      }
+      const applyFilters = (node: unknown) => {
+        if (!node || typeof node !== 'object' || Array.isArray(node)) return;
+        const f = node as Record<string, unknown>;
 
-      if (typeof filterIsNull === 'string' && isSafeIdentifier(filterIsNull)) {
-        whereParts.push(`"${filterIsNull}" IS NULL`);
-      }
+        // AND-combinator
+        if ('all' in f && Array.isArray(f.all)) {
+          for (const child of f.all) applyFilters(child);
+        }
 
-      if (typeof filterIsNotNull === 'string' && isSafeIdentifier(filterIsNotNull)) {
-        whereParts.push(`"${filterIsNotNull}" IS NOT NULL`);
-      }
+        // type filter (column name is fixed)
+        if (typeof f.type === 'string' && f.type.length > 0) {
+          whereParts.push(`"type" = $${paramIndex}`);
+          params.push(f.type);
+          paramIndex++;
+        }
+
+        // isNull / isNotNull
+        if (typeof f.isNull === 'string' && isSafeIdentifier(f.isNull)) {
+          whereParts.push(`"${f.isNull}" IS NULL`);
+        }
+        if (typeof f.isNotNull === 'string' && isSafeIdentifier(f.isNotNull)) {
+          whereParts.push(`"${f.isNotNull}" IS NOT NULL`);
+        }
+
+        // IN filter
+        if ('in' in f && f.in && typeof f.in === 'object' && !Array.isArray(f.in)) {
+          const inFilter = f.in as Record<string, unknown>;
+          const columnRaw = typeof inFilter.column === 'string' && inFilter.column.length > 0
+            ? inFilter.column
+            : keyColumn;
+          if (!isSafeIdentifier(columnRaw)) return;
+
+          const evaluated = evalJsonLogicExpressionWrapper(inFilter.values, evalState);
+          const values = asStringArray(evaluated);
+          if (values.length === 0) {
+            // empty IN should return no rows
+            whereParts.push('FALSE');
+          } else {
+            whereParts.push(`"${columnRaw}" = ANY($${paramIndex}::text[])`);
+            params.push(values);
+            paramIndex++;
+          }
+        }
+      };
+
+      applyFilters(filters);
 
       // Определяем поля для SELECT
       const fields = new Set<string>();
@@ -163,7 +331,8 @@ export async function getAllShopItems(
         }
       }
 
-      if (filterType !== undefined) {
+      // Keep "type" available if user filtered by it (for debugging / compatibility)
+      if (filters && typeof filters === 'object' && ('type' in filters)) {
         fields.add('type');
       }
 

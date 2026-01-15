@@ -425,3 +425,16 @@ SELECT
       )
     )
   ) AS body;
+
+-- Эффекты: бюджет на алхимические ингредиенты (50) для магазина
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o08' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.money.alchemyIngredientsCrowns'),
+      50
+    )
+  ) AS body;

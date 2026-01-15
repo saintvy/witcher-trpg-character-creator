@@ -1,18 +1,167 @@
-\echo '092_shop_professional.sql'
--- Узел: Профессиональный магазин (специализированный магазин для профессий)
+\echo '092_shop.sql'
+-- Узел: Магазин (закупка перед стартом)
 
--- i18n записи для бюджета и предупреждений профессионального магазина
+-- Иерархия путей (если ещё не добавлена)
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-SELECT ck_id('witcher_cc.wcc_shop_professional.' || v.key) AS id
+SELECT ck_id('witcher_cc.hierarchy.' || v.path) AS id
+     , 'hierarchy' AS entity
+     , 'path' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('equipment', 'ru', 'Снаряжение'),
+          ('equipment', 'en', 'Equipment')
+       ) AS v(path, lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+-- i18n записи для заголовков источников и названий столбцов магазина
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
      , 'questions' AS entity
      , 'metadata' AS entity_field
      , v.lang
      , v.text
   FROM (VALUES
-          -- Бюджет
-          ('budget.tokens.name', 'ru', 'Жетоны'),
-          ('budget.tokens.name', 'en', 'Tokens'),
+          -- Заголовки источников
+          ('source.weapons.title', 'ru', 'Оружие'),
+          ('source.weapons.title', 'en', 'Weapons'),
+          ('source.armors.title', 'ru', 'Броня'),
+          ('source.armors.title', 'en', 'Armors'),
+          ('source.general_gear.title', 'ru', 'Обычные вещи'),
+          ('source.general_gear.title', 'en', 'General Gear'),
+          ('source.vehicles.title', 'ru', 'Скакуны и транспорт'),
+          ('source.vehicles.title', 'en', 'Mounts & Vehicles'),
+          ('source.potions.title', 'ru', 'Алхимические продукты'),
+          ('source.potions.title', 'en', 'Alchemical Products'),
+          ('source.ingredients_alchemy.title', 'ru', 'Алхимические субстанции'),
+          ('source.ingredients_alchemy.title', 'en', 'Alchemical Substances'),
+          ('source.ingredients_craft.title', 'ru', 'Ремесленные компоненты'),
+          ('source.ingredients_craft.title', 'en', 'Crafting Components'),
+          ('source.upgrades.title', 'ru', 'Улучшения'),
+          ('source.upgrades.title', 'en', 'Upgrades'),
+          ('source.recipes.title', 'ru', 'Алхимические рецепты'),
+          ('source.recipes.title', 'en', 'Alchemy Recipes'),
+          ('source.blueprints.title', 'ru', 'Ремесленные чертежи'),
+          ('source.blueprints.title', 'en', 'Crafting Diagrams'),
+          ('source.mutagens.title', 'ru', 'Мутагены'),
+          ('source.mutagens.title', 'en', 'Mutagens'),
+          ('source.trophies.title', 'ru', 'Трофеи'),
+          ('source.trophies.title', 'en', 'Trophies'),
+          -- Названия столбцов (общие)
+          ('column.name', 'ru', 'Название'),
+          ('column.name', 'en', 'Name'),
+          ('column.class', 'ru', 'Класс'),
+          ('column.class', 'en', 'Class'),
+          ('column.damage', 'ru', 'Урон'),
+          ('column.damage', 'en', 'Damage'),
+          ('column.weight', 'ru', 'Вес'),
+          ('column.weight', 'en', 'Weight'),
+          ('column.price', 'ru', 'Цена'),
+          ('column.price', 'en', 'Price'),
+          ('column.hands', 'ru', 'Руки'),
+          ('column.hands', 'en', 'Hands'),
+          ('column.availability', 'ru', 'Доступность'),
+          ('column.availability', 'en', 'Availability'),
+          ('column.crafted_by', 'ru', 'Изготовлено'),
+          ('column.crafted_by', 'en', 'Crafted By'),
+          ('column.concealment', 'ru', 'Скрытность'),
+          ('column.concealment', 'en', 'Concealment'),
+          ('column.damage_types', 'ru', 'Типы урона'),
+          ('column.damage_types', 'en', 'Damage Types'),
+          ('column.effects', 'ru', 'Эффекты'),
+          ('column.effects', 'en', 'Effects'),
+          ('column.dlc', 'ru', 'DLC'),
+          ('column.dlc', 'en', 'DLC'),
+          -- Названия столбцов (специфичные для брони)
+          ('column.body_part', 'ru', 'Часть тела'),
+          ('column.body_part', 'en', 'Body Part'),
+          ('column.stopping_power', 'ru', 'Защита'),
+          ('column.stopping_power', 'en', 'Stopping Power'),
+          ('column.encumbrance', 'ru', 'Обременение'),
+          ('column.encumbrance', 'en', 'Encumbrance'),
+          ('column.protections', 'ru', 'Защита'),
+          ('column.protections', 'en', 'Protections'),
+          ('column.group', 'ru', 'Категория'),
+          ('column.group', 'en', 'Category'),
+          ('column.harvesting_complexity', 'ru', 'Сложность сбора'),
+          ('column.harvesting_complexity', 'en', 'Harvesting Complexity'),
+          ('column.alchemy_substance', 'ru', 'Алхимическое вещество'),
+          ('column.alchemy_substance', 'en', 'Alchemy Substance'),
+          -- Названия столбцов (специфичные для апгрейдов)
+          ('column.upgrade_group', 'ru', 'Группа'),
+          ('column.upgrade_group', 'en', 'Group'),
+          ('column.target', 'ru', 'Цель'),
+          ('column.target', 'en', 'Target'),
+          ('column.slots', 'ru', 'Слоты'),
+          ('column.slots', 'en', 'Slots'),
+          -- Названия столбцов (специфичные для транспорта)
+          ('column.base', 'ru', 'Атлетика + ЛВК'),
+          ('column.base', 'en', 'DEX+Athletics'),
+          ('column.control_modifier', 'ru', 'Модификатор управления'),
+          ('column.control_modifier', 'en', 'Control Mod'),
+          ('column.speed', 'ru', 'Скорость'),
+          ('column.speed', 'en', 'Speed'),
+          ('column.hp', 'ru', 'ПЗ'),
+          ('column.hp', 'en', 'HP'),
+          -- Названия столбцов (специфичные для рецептов)
+          ('column.formula', 'ru', 'Формула'),
+          ('column.formula', 'en', 'Formula'),
+          ('column.price_formula', 'ru', 'Цена формулы'),
+          ('column.price_formula', 'en', 'Formula Price'),
+          -- Названия столбцов (специфичные для чертежей)
+          ('column.price_blueprint', 'ru', 'Цена чертежа'),
+          ('column.price_blueprint', 'en', 'Blueprint Price'),
+          ('column.price_item', 'ru', 'Цена предмета'),
+          ('column.price_item', 'en', 'Item Price'),
+          ('column.price_components', 'ru', 'Цена компонентов'),
+          ('column.price_components', 'en', 'Components Price'),
+          ('column.components', 'ru', 'Компоненты'),
+          ('column.components', 'en', 'Components'),
+          ('column.difficulty_check', 'ru', 'СЛ'),
+          ('column.difficulty_check', 'en', 'DC'),
+          ('column.time_effect', 'ru', 'Время эффекта'),
+          ('column.time_effect', 'en', 'Effect Duration'),
+          ('column.toxicity', 'ru', 'Токсичность состава'),
+          ('column.toxicity', 'en', 'Composition Toxicity'),
+          ('column.craft_level', 'ru', 'Уровень крафта'),
+          ('column.craft_level', 'en', 'Craft Level'),
+          ('column.complexity', 'ru', 'Сложность крафта'),
+          ('column.complexity', 'en', 'Craft Complexity'),
+          ('column.time_craft', 'ru', 'Время крафта'),
+          ('column.time_craft', 'en', 'Craft Time'),
+          ('column.price_potion', 'ru', 'Цена зелья'),
+          ('column.price_potion', 'en', 'Potion Price'),
+          ('column.weight_potion', 'ru', 'Вес зелья'),
+          ('column.weight_potion', 'en', 'Potion Weight'),
+          -- Названия столбцов (специфичные для мутагенов)
+          ('column.mutagen_color', 'ru', 'Цвет'),
+          ('column.mutagen_color', 'en', 'Color'),
+          ('column.alchemy_dc', 'ru', 'СЛ Алхимии'),
+          ('column.alchemy_dc', 'en', 'Alchemy DC'),
+          ('column.minor_mutation', 'ru', 'Малая мутация'),
+          ('column.minor_mutation', 'en', 'Minor Mutation'),
+          -- Названия столбцов (специфичные для трофеев)
+          ('column.monster_type', 'ru', 'Тип монстра'),
+          ('column.monster_type', 'en', 'Monster Type'),
+          -- Бюджеты
+          ('budget.crowns.name', 'ru', 'Кроны'),
+          ('budget.crowns.name', 'en', 'Crowns'),
+          ('budget.alchemy_ingredients_crowns.name', 'ru', 'Кроны на алхимические ингредиенты'),
+          ('budget.alchemy_ingredients_crowns.name', 'en', 'Crowns for Alchemy Ingredients'),
+          -- Witcher token budgets
+          ('budget.witcher_decoction_formulae_tokens.name', 'ru', 'Жетоны: формулы отваров'),
+          ('budget.witcher_decoction_formulae_tokens.name', 'en', 'Tokens: Decoction Formulae'),
+          ('budget.witcher_oil_formulae_tokens.name', 'ru', 'Жетоны: формулы масел'),
+          ('budget.witcher_oil_formulae_tokens.name', 'en', 'Tokens: Oil Formulae'),
+          ('budget.witcher_potion_formulae_tokens.name', 'ru', 'Жетоны: формулы эликсиров'),
+          ('budget.witcher_potion_formulae_tokens.name', 'en', 'Tokens: Potion Formulae'),
+          ('budget.witcher_steel_sword_tokens.name', 'ru', 'Жетоны: ведьмачий стальной меч'),
+          ('budget.witcher_steel_sword_tokens.name', 'en', 'Tokens: Witcher’s Steel Sword'),
+          ('budget.witcher_silver_sword_tokens.name', 'ru', 'Жетоны: ведьмачий серебряный меч'),
+          ('budget.witcher_silver_sword_tokens.name', 'en', 'Tokens: Witcher’s Silver Sword'),
           -- Предупреждения
+          ('warning.price_zero', 'ru', 'Внимание: товары со стоимостью 0 лучше согласовать с мастером, т.к. это товары, которые не купить в магазине, но которые могут достаться другим способом (наследство, досталось во время обучения и т.д.)'),
+          ('warning.price_zero', 'en', 'Warning: items with price 0 should be coordinated with the master, as these are items that cannot be bought in the shop, but may be obtained in other ways (inheritance, received during training, etc.)'),
           ('warning.budget_exceeded', 'ru', 'Один или несколько бюджетов перевыполнены'),
           ('warning.budget_exceeded', 'en', 'One or more budgets are exceeded'),
           ('warning.ignore_warnings', 'ru', 'Игнорировать предупреждения'),
@@ -20,12 +169,9 @@ SELECT ck_id('witcher_cc.wcc_shop_professional.' || v.key) AS id
        ) AS v(key, lang, text)
 ON CONFLICT (id, lang) DO NOTHING;
 
--- Переиспользуем локализацию источников и столбцов из обычного магазина (091_shop.sql)
--- Используем те же самые i18n ключи, что и в 091_shop.sql
-
 WITH meta AS (
   SELECT 'witcher_cc' AS su_su_id
-       , 'wcc_shop_professional' AS qu_id
+       , 'wcc_shop' AS qu_id
        , 'questions' AS entity
 )
 INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
@@ -40,17 +186,87 @@ SELECT meta.qu_id
          ),
          'renderer', 'shop',
          'shop', jsonb_build_object(
+           -- Предупреждение про товары со стоимостью 0
+           'warningPriceZero', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.warning.price_zero')::text),
            -- Allowed DLCs: берём из state.dlcs (core всегда доступен и добавляется на стороне API)
            'allowedDlcs', jsonb_build_object('jsonlogic_expression', jsonb_build_object('var','dlcs')),
-           -- Бюджет с жетонами
+           -- Бюджеты
            'budgets', jsonb_build_array(
              jsonb_build_object(
-               'id', 'tokens',
-               'type', 'tokens',
-               'source', 'characterRaw.professional_gear_options.tokens',
+               'id', 'crowns',
+               'type', 'money',
+               'source', 'characterRaw.money.crowns',
                'priority', 0,
                'is_default', true,
-               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop_professional.budget.tokens.name')::text)
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.crowns.name')::text)
+             ),
+             jsonb_build_object(
+               'id', 'alchemy_ingredients_crowns',
+               'type', 'money',
+               'source', 'characterRaw.money.alchemyIngredientsCrowns',
+               'priority', 1,
+               'is_default', false,
+               -- Покрытие: бюджет тратится только на указанные источники/предметы (OR)
+               'coverage', jsonb_build_object(
+                 'sources', jsonb_build_array('ingredients_alchemy', 'ingredients_craft')
+               ),
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.alchemy_ingredients_crowns.name')::text)
+             ),
+             -- Witcher: token budgets (choice-limited lists)
+             jsonb_build_object(
+               'id', 'witcher_decoction_formulae_tokens',
+               'type', 'tokens',
+               'source', 'characterRaw.professional_gear_options.witcher_decoction_formulae_tokens',
+               'priority', 2,
+               'is_default', false,
+               'coverage', jsonb_build_object(
+                 'items', jsonb_build_array('R028','R029','R030','R031','R032','R033','R034','R035','R036','R037')
+               ),
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.witcher_decoction_formulae_tokens.name')::text)
+             ),
+             jsonb_build_object(
+               'id', 'witcher_oil_formulae_tokens',
+               'type', 'tokens',
+               'source', 'characterRaw.professional_gear_options.witcher_oil_formulae_tokens',
+               'priority', 2,
+               'is_default', false,
+               'coverage', jsonb_build_object(
+                 'items', jsonb_build_array('R016','R017','R018','R019','R020','R021','R022','R023','R024','R025','R026','R027')
+               ),
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.witcher_oil_formulae_tokens.name')::text)
+             ),
+             jsonb_build_object(
+               'id', 'witcher_potion_formulae_tokens',
+               'type', 'tokens',
+               'source', 'characterRaw.professional_gear_options.witcher_potion_formulae_tokens',
+               'priority', 2,
+               'is_default', false,
+               'coverage', jsonb_build_object(
+                 'items', jsonb_build_array('R001','R002','R005','R007','R008','R009','R010','R011','R012','R013','R014','R015')
+               ),
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.witcher_potion_formulae_tokens.name')::text)
+             ),
+             jsonb_build_object(
+               'id', 'witcher_steel_sword_tokens',
+               'type', 'tokens',
+               'source', 'characterRaw.professional_gear_options.witcher_steel_sword_tokens',
+               'priority', 2,
+               'is_default', false,
+               'coverage', jsonb_build_object(
+                 'items', jsonb_build_array('W135','W136','W137','W138','W139','W140','W141')
+               ),
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.witcher_steel_sword_tokens.name')::text)
+             ),
+             jsonb_build_object(
+               'id', 'witcher_silver_sword_tokens',
+               'type', 'tokens',
+               'source', 'characterRaw.professional_gear_options.witcher_silver_sword_tokens',
+               'priority', 2,
+               'is_default', false,
+               'coverage', jsonb_build_object(
+                 'items', jsonb_build_array('W128','W129','W130','W131','W132','W133','W134')
+               ),
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.witcher_silver_sword_tokens.name')::text)
              )
            ),
            'sources', jsonb_build_array(
@@ -65,15 +281,6 @@ SELECT meta.qu_id
                'groupColumn', 'weapon_class',
                'tooltipField', 'effect_descriptions',
                'targetPath', 'characterRaw.gear',
-               'filters', jsonb_build_object(
-                 'in', jsonb_build_object(
-                   'column', 'w_id',
-                   'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                 )
-               ),
                'columns', jsonb_build_array(
                  jsonb_build_object('field', 'weapon_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                  jsonb_build_object('field', 'weapon_class', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.class')::text)),
@@ -100,15 +307,6 @@ SELECT meta.qu_id
               'groupColumn', 'body_part',
               'tooltipField', 'effect_descriptions',
               'targetPath', 'characterRaw.gear',
-              'filters', jsonb_build_object(
-                'in', jsonb_build_object(
-                  'column', 'a_id',
-                  'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                )
-              ),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'armor_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'body_part', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.body_part')::text)),
@@ -135,15 +333,6 @@ SELECT meta.qu_id
               'groupColumn', 'upgrade_group',
               'tooltipField', 'effect_descriptions',
               'targetPath', 'characterRaw.gear',
-              'filters', jsonb_build_object(
-                'in', jsonb_build_object(
-                  'column', 'u_id',
-                  'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                )
-              ),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'upgrade_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'upgrade_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.upgrade_group')::text)),
@@ -167,15 +356,6 @@ SELECT meta.qu_id
               'groupColumn', 'group_name',
               'tooltipField', 'gear_description',
               'targetPath', 'characterRaw.gear',
-              'filters', jsonb_build_object(
-                'in', jsonb_build_object(
-                  'column', 't_id',
-                  'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                )
-              ),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'gear_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'group_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
@@ -198,15 +378,6 @@ SELECT meta.qu_id
               'groupColumn', 'recipe_group',
               'tooltipField', 'recipe_description',
               'targetPath', 'characterRaw.gear',
-              'filters', jsonb_build_object(
-                'in', jsonb_build_object(
-                  'column', 'r_id',
-                  'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                )
-              ),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'recipe_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
                 jsonb_build_object('field', 'recipe_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
@@ -234,15 +405,6 @@ SELECT meta.qu_id
               'groupColumn', 'potion_group',
               'tooltipField', 'effect',
               'targetPath', 'characterRaw.gear',
-              'filters', jsonb_build_object(
-                'in', jsonb_build_object(
-                  'column', 'p_id',
-                  'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                )
-              ),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'potion_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
                 jsonb_build_object('field', 'potion_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
@@ -264,20 +426,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'ingredient_group',
               'targetPath', 'characterRaw.ingredients',
-              'filters', jsonb_build_object(
-                'all', jsonb_build_array(
-                  jsonb_build_object('isNotNull', 'alchemy_substance'),
-                  jsonb_build_object(
-                    'in', jsonb_build_object(
-                      'column', 'i_id',
-                      'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                    )
-                  )
-                )
-              ),
+              'filters', jsonb_build_object('isNotNull', 'alchemy_substance'),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'ingredient_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'ingredient_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
@@ -300,15 +449,6 @@ SELECT meta.qu_id
               'groupColumn', 'blueprint_group',
               'targetPath', 'characterRaw.gear',
               'tooltipField', 'components',
-              'filters', jsonb_build_object(
-                'in', jsonb_build_object(
-                  'column', 'b_id',
-                  'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                )
-              ),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'blueprint_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
                 jsonb_build_object('field', 'blueprint_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
@@ -331,20 +471,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'ingredient_group',
               'targetPath', 'characterRaw.ingredients',
-              'filters', jsonb_build_object(
-                'all', jsonb_build_array(
-                  jsonb_build_object('isNull', 'alchemy_substance'),
-                  jsonb_build_object(
-                    'in', jsonb_build_object(
-                      'column', 'i_id',
-                      'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                    )
-                  )
-                )
-              ),
+              'filters', jsonb_build_object('isNull', 'alchemy_substance'),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'ingredient_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'ingredient_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
@@ -364,15 +491,6 @@ SELECT meta.qu_id
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
               'targetPath', 'characterRaw.gear',
-              'filters', jsonb_build_object(
-                'in', jsonb_build_object(
-                  'column', 'wt_id',
-                  'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                )
-              ),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'vehicle_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'base', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.base')::text)),
@@ -393,15 +511,6 @@ SELECT meta.qu_id
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
               'targetPath', 'characterRaw.gear',
-              'filters', jsonb_build_object(
-                'in', jsonb_build_object(
-                  'column', 'm_id',
-                  'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                )
-              ),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'mutagen_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'mutagen_color', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.mutagen_color')::text)),
@@ -422,15 +531,6 @@ SELECT meta.qu_id
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
               'targetPath', 'characterRaw.gear',
-              'filters', jsonb_build_object(
-                'in', jsonb_build_object(
-                  'column', 'tr_id',
-                  'values', jsonb_build_object('jsonlogic_expression', jsonb_build_object('concat_arrays', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.professional_gear_options.items'),
-                    jsonb_build_object('cat_array', 'characterRaw.professional_gear_options.bundles[].items[].itemId')
-                  )))
-                )
-              ),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'trophy_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'monster_type', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.monster_type')::text)),
@@ -452,14 +552,12 @@ SET
   qtype = EXCLUDED.qtype,
   metadata = EXCLUDED.metadata;
 
--- Связи: после выбора профессии — профессиональный магазин
+-- Связи: после выбора профессии — магазин
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
-SELECT 'wcc_shop', 'wcc_shop_professional'
+SELECT 'wcc_shop_professional', 'wcc_shop'
 WHERE NOT EXISTS (
   SELECT 1
   FROM transitions t
-  WHERE t.from_qu_qu_id = 'wcc_shop'
-    AND t.to_qu_qu_id = 'wcc_shop_professional'
+  WHERE t.from_qu_qu_id = 'wcc_shop_professional'
+    AND t.to_qu_qu_id = 'wcc_shop'
 );
-
-
