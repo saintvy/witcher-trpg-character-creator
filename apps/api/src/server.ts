@@ -5,7 +5,7 @@ import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
 import { generateCharacter } from './handlers/generateCharacter.js';
 import { nextQuestion } from './handlers/nextQuestion.js';
-import { shopSourceRows } from './handlers/shopSourceRows.js';
+import { getAllShopItemsHandler } from './handlers/getAllShopItems.js';
 
 const app = new Hono();
 
@@ -16,7 +16,7 @@ app.post('/generate-character', async (c) => {
   return c.json(result);
 });
 app.post('/survey/next', nextQuestion);
-app.post('/shop/sourceRows', shopSourceRows);
+app.post('/shop/allItems', getAllShopItemsHandler);
 
 const port = Number(process.env.PORT || 4000);
 serve({ fetch: app.fetch, port }, () => {

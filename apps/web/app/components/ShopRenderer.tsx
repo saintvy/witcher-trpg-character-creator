@@ -176,13 +176,42 @@ export function ShopRenderer(props: {
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [expandedGroup, setExpandedGroup] = useState<Record<string, boolean>>({});
-  const [groupsBySource, setGroupsBySource] = useState<Record<string, { value: string; count: number }[]>>({});
-  const [rowsBySource, setRowsBySource] = useState<Record<string, Record<string, unknown>[]>>({});
-  const [rowsBySourceGroup, setRowsBySourceGroup] = useState<Record<string, Record<string, Record<string, unknown>[]>>>({});
-  const [loadingSource, setLoadingSource] = useState<Record<string, boolean>>({});
-  const [loadErrorSource, setLoadErrorSource] = useState<Record<string, string | null>>({});
-  const [loadingGroup, setLoadingGroup] = useState<Record<string, boolean>>({});
-  const [loadErrorGroup, setLoadErrorGroup] = useState<Record<string, string | null>>({});
+  // Единая структура для хранения всех товаров
+  const [allItemsBySource, setAllItemsBySource] = useState<Record<string, {
+    groups?: Array<{ value: string; count: number }>;
+    rowsByGroup?: Record<string, Record<string, unknown>[]>;
+    rows?: Record<string, unknown>[];
+  }>>({});
+  const [loadingAllItems, setLoadingAllItems] = useState(true);
+  const [loadErrorAllItems, setLoadErrorAllItems] = useState<string | null>(null);
+  // Обратная совместимость: используем allItemsBySource для заполнения старых состояний
+  const groupsBySource = useMemo(() => {
+    const result: Record<string, { value: string; count: number }[]> = {};
+    for (const [sourceId, data] of Object.entries(allItemsBySource)) {
+      if (data.groups) {
+        result[sourceId] = data.groups;
+      }
+    }
+    return result;
+  }, [allItemsBySource]);
+  const rowsBySource = useMemo(() => {
+    const result: Record<string, Record<string, unknown>[]> = {};
+    for (const [sourceId, data] of Object.entries(allItemsBySource)) {
+      if (data.rows && !data.groups) {
+        result[sourceId] = data.rows;
+      }
+    }
+    return result;
+  }, [allItemsBySource]);
+  const rowsBySourceGroup = useMemo(() => {
+    const result: Record<string, Record<string, Record<string, unknown>[]>> = {};
+    for (const [sourceId, data] of Object.entries(allItemsBySource)) {
+      if (data.rowsByGroup) {
+        result[sourceId] = data.rowsByGroup;
+      }
+    }
+    return result;
+  }, [allItemsBySource]);
   const [qtyBySource, setQtyBySource] = useState<Record<string, Record<string, number>>>({});
   const [sortBySource, setSortBySource] = useState<Record<string, { column: string | null; direction: 'asc' | 'desc' }>>({});
   const [ignoreWarnings, setIgnoreWarnings] = useState(false);
@@ -427,52 +456,31 @@ export function ShopRenderer(props: {
     throw new Error(`HTTP ${response.status}${detail ? `: ${detail}` : ""}`);
   }
 
-  const ensureLoadedSourceRoot = useCallback(
-    async (sourceId: string) => {
-      // Already loaded (even if empty)
-      if (
-        Object.prototype.hasOwnProperty.call(rowsBySource, sourceId) ||
-        Object.prototype.hasOwnProperty.call(groupsBySource, sourceId)
-      ) {
-        return;
-      }
-      setLoadingSource((prev) => ({ ...prev, [sourceId]: true }));
-      setLoadErrorSource((prev) => ({ ...prev, [sourceId]: null }));
-      try {
-        const response = await fetch(`${API_URL}/shop/sourceRows`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ questionId, sourceId, lang, allowedDlcs: resolvedAllowedDlcs }),
-        });
-        const payload = (await fetchJsonOrThrow(response)) as
-          | { rows?: Record<string, unknown>[]; groups?: { value: string; count: number }[] }
-          | { rows: Record<string, unknown>[] };
-
-        if (Array.isArray((payload as any).groups)) {
-          setGroupsBySource((prev) => ({ ...prev, [sourceId]: (payload as any).groups ?? [] }));
-        } else {
-          setRowsBySource((prev) => ({ ...prev, [sourceId]: (payload as any).rows ?? [] }));
-        }
-      } catch (e) {
-        setLoadErrorSource((prev) => ({
-          ...prev,
-          [sourceId]: e instanceof Error ? e.message : String(e),
-        }));
-      } finally {
-        setLoadingSource((prev) => ({ ...prev, [sourceId]: false }));
-      }
-    },
-    [questionId, rowsBySource, groupsBySource, lang, resolvedAllowedDlcs],
-  );
-
-  // Prefetch root lists for all sources so we can hide empty sources
+  // Загружаем все товары сразу при монтировании компонента
   const prefetchKey = useMemo(() => `${lang}::${resolvedAllowedDlcs.join(",")}`, [lang, resolvedAllowedDlcs]);
   const prefetchRef = useRef<string | null>(null);
   useEffect(() => {
     if (prefetchRef.current === prefetchKey) return;
     prefetchRef.current = prefetchKey;
-    void Promise.all(shop.sources.map((s) => ensureLoadedSourceRoot(s.id)));
-  }, [prefetchKey, shop.sources, ensureLoadedSourceRoot]);
+    
+    setLoadingAllItems(true);
+    setLoadErrorAllItems(null);
+    
+    fetch(`${API_URL}/shop/allItems`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ questionId, lang, allowedDlcs: resolvedAllowedDlcs }),
+    })
+      .then(fetchJsonOrThrow)
+      .then((data) => {
+        setAllItemsBySource(data);
+        setLoadingAllItems(false);
+      })
+      .catch((e) => {
+        setLoadErrorAllItems(e instanceof Error ? e.message : String(e));
+        setLoadingAllItems(false);
+      });
+  }, [prefetchKey, questionId, lang, resolvedAllowedDlcs]);
 
   const visibleSources = useMemo(() => {
     return shop.sources.filter((source) => {
@@ -482,50 +490,30 @@ export function ShopRenderer(props: {
         return true;
       }
 
-      const hasLoadedRows = Object.prototype.hasOwnProperty.call(rowsBySource, source.id);
-      const hasLoadedGroups = Object.prototype.hasOwnProperty.call(groupsBySource, source.id);
-
-      if (hasLoadedGroups) {
-        return (groupsBySource[source.id]?.length ?? 0) > 0;
-      }
-      if (hasLoadedRows) {
-        return (rowsBySource[source.id]?.length ?? 0) > 0;
+      const sourceData = allItemsBySource[source.id];
+      if (!sourceData) {
+        // Not loaded yet — keep it for now (will disappear once loaded if empty)
+        return true;
       }
 
-      // Not loaded yet — keep it for now (will disappear once loaded if empty)
-      return true;
+      if (sourceData.groups) {
+        return (sourceData.groups.length ?? 0) > 0;
+      }
+      if (sourceData.rows) {
+        return (sourceData.rows.length ?? 0) > 0;
+      }
+
+      return false;
     });
-  }, [shop.sources, qtyBySource, rowsBySource, groupsBySource]);
+  }, [shop.sources, qtyBySource, allItemsBySource]);
 
+  // Товары уже загружены, эта функция больше не нужна, но оставляем для совместимости
   const ensureLoadedGroupRows = useCallback(
     async (sourceId: string, groupValue: string) => {
-      const existing = rowsBySourceGroup[sourceId]?.[groupValue];
-      if (existing) return;
-      const key = `${sourceId}::${groupValue}`;
-      setLoadingGroup((prev) => ({ ...prev, [key]: true }));
-      setLoadErrorGroup((prev) => ({ ...prev, [key]: null }));
-      try {
-        const response = await fetch(`${API_URL}/shop/sourceRows`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ questionId, sourceId, lang, groupValue, allowedDlcs: resolvedAllowedDlcs }),
-        });
-        const payload = (await fetchJsonOrThrow(response)) as { rows?: Record<string, unknown>[] };
-        const rows = payload.rows ?? [];
-        setRowsBySourceGroup((prev) => ({
-          ...prev,
-          [sourceId]: { ...(prev[sourceId] ?? {}), [groupValue]: rows },
-        }));
-      } catch (e) {
-        setLoadErrorGroup((prev) => ({
-          ...prev,
-          [key]: e instanceof Error ? e.message : String(e),
-        }));
-      } finally {
-        setLoadingGroup((prev) => ({ ...prev, [key]: false }));
-      }
+      // Товары уже загружены в allItemsBySource, ничего не делаем
+      return;
     },
-    [questionId, rowsBySourceGroup, lang, resolvedAllowedDlcs],
+    [],
   );
 
   const renderCell = useCallback((value: unknown) => {
@@ -752,13 +740,23 @@ export function ShopRenderer(props: {
         )}
       </div>
 
+      {loadingAllItems && (
+        <div className="shop-muted" style={{ marginBottom: '16px' }}>
+          Loading all items...
+        </div>
+      )}
+      {loadErrorAllItems && (
+        <div className="shop-error" style={{ marginBottom: '16px' }}>
+          Failed to load items: {loadErrorAllItems}
+        </div>
+      )}
+
       <div className="shop-sources">
         {visibleSources.map((source) => {
           const isOpen = Boolean(expanded[source.id]);
-          const rawRows = rowsBySource[source.id] ?? [];
-          const groups = groupsBySource[source.id] ?? null;
-          const isLoading = Boolean(loadingSource[source.id]);
-          const err = loadErrorSource[source.id];
+          const sourceData = allItemsBySource[source.id];
+          const rawRows = sourceData?.rows ?? [];
+          const groups = sourceData?.groups ?? null;
           const selected = qtyBySource[source.id] ?? {};
           const visibleColumns = source.groupColumn
             ? source.columns.filter((c) => c.field !== source.groupColumn)
@@ -773,7 +771,6 @@ export function ShopRenderer(props: {
                 className="shop-source-header"
                 onClick={() => {
                   toggleExpanded(source.id);
-                  if (!isOpen) void ensureLoadedSourceRoot(source.id);
                 }}
                 disabled={disabled}
               >
@@ -786,17 +783,11 @@ export function ShopRenderer(props: {
 
               {isOpen && (
                 <div className="shop-source-body">
-                  {isLoading && <div className="shop-muted">Loading...</div>}
-                  {err && <div className="shop-error">Failed to load: {err}</div>}
-
-                  {!isLoading && !err && groups && (
+                  {groups && (
                     <div className="shop-sources">
                       {groups.map((g) => {
                         const gKey = `${source.id}::${g.value}`;
                         const gOpen = Boolean(expandedGroup[gKey]);
-                        const gLoading = Boolean(loadingGroup[gKey]);
-                        const gErr = loadErrorGroup[gKey];
-                        const gRows = rowsBySourceGroup[source.id]?.[g.value] ?? [];
                         return (
                           <div key={gKey} className="shop-source">
                             <button
@@ -804,7 +795,6 @@ export function ShopRenderer(props: {
                               className="shop-source-header"
                               onClick={() => {
                                 setExpandedGroup((prev) => ({ ...prev, [gKey]: !prev[gKey] }));
-                                if (!gOpen) void ensureLoadedGroupRows(source.id, g.value);
                               }}
                               disabled={disabled}
                             >
@@ -813,12 +803,9 @@ export function ShopRenderer(props: {
                               </span>
                               <span className="shop-source-chevron">{gOpen ? "▾" : "▸"}</span>
                             </button>
-                            {gOpen && (
-                              <div className="shop-source-body">
-                                {gLoading && <div className="shop-muted">Loading...</div>}
-                                {gErr && <div className="shop-error">Failed to load: {gErr}</div>}
-                                {!gLoading && !gErr && (() => {
-                                  const sortedGRows = getSortedRows(gRows, source.id, source.keyColumn, source.columns);
+                            {gOpen && (() => {
+                              const gRows = rowsBySourceGroup[source.id]?.[g.value] ?? [];
+                              const sortedGRows = getSortedRows(gRows, source.id, source.keyColumn, source.columns);
                                   return (
                                     <div style={{ overflowX: "auto" }}>
                                       <table className="survey-table shop-table">
@@ -908,16 +895,14 @@ export function ShopRenderer(props: {
                                     </table>
                                   </div>
                                   );
-                                })()}
-                              </div>
-                            )}
+                            })()}
                           </div>
                         );
                       })}
                     </div>
                   )}
 
-                  {!isLoading && !err && !groups && (
+                  {!groups && (
                     <div style={{ overflowX: "auto" }}>
                       <table className="survey-table shop-table">
                         <thead>
