@@ -83,7 +83,7 @@ WITH raw_data (e_id, name_ru, name_en, description_ru, description_en) AS ( VALU
     ('E064', 'Пробивающее броню (+)', 'Armor Piercing (+)', 'Игнорирует сопротивление урону любой брони и половину прочности брони, по которой оно попадает.', 'Ignores the damage resistance of any armor it hits and half of that armor’s durability.'),
     ('E065', 'Прочность Чернобога', 'Blackbog Durability', 'С вероятностью 50% оружие не получает урон, когда должно.', 'With a 50% chance, the weapon takes no damage when it otherwise would.'),
     ('E066', 'Разделяющееся (<mod>)', 'Splitting', 'При выстреле связка снарядов разделяется на <mod> отдельных. Цель получает дополнительное попадание в случайную часть тела за каждое очко выше защиты до <mod>.', 'When fired, the bundle splits into <mod> separate projectiles. The target suffers an additional hit to a random body location for each point your roll exceeds the target’s defense (up to <mod>).'),
-    ('E067', 'Разрушающее', 'Sundering', 'При попадании это оружие наносит 1d6/2 урона Прочности брони.', 'On a hit, this weapon deals 1d6/2 damage to armor durability.'),
+    ('E067', 'Разрушающее', 'Ablating', 'При попадании это оружие наносит 1d6/2 урона Прочности брони.', 'On a hit, this weapon deals 1d6/2 damage to armor durability.'),
     ('E068', 'Рвение Перуна', 'Perun’s Zeal', 'Удваивает количество получаемых дайсов адреналина.', 'Doubles the number of adrenaline dice gained.'),
     ('E069', 'Реликвия (<mod>)', 'Relic (<mod>)', 'Если пробросить Образование со СЛ<mod>, то вы вспомните историю этой реликвии', 'If you roll Education at DC <mod>, you recall the history of this relic.'),
     ('E070', 'Рукопашное', 'Brawling', 'Такое оружие использует навык Борьба. Его урон прибавляется к урону от атаки без оружия.', 'This weapon uses the Wrestling skill. Its damage is added to your unarmed attack damage.'),
@@ -124,7 +124,8 @@ WITH raw_data (e_id, name_ru, name_en, description_ru, description_en) AS ( VALU
     ('E105', 'Эффект синергии "Спокойствие"', 'Synergy Effect "Calm"', 'Снижает вдвое затраты Выносливости на использование дайсов Адреналин.', 'Halves the Stamina cost of spending Adrenaline dice.'),
     ('E106', 'Эффект синергии "Тяжесть"', 'Synergy Effect "Heaviness"', 'Доп. Прочность Брони (+2), Скованность Движений брони удваивается.', 'Bonus armor durability (+2); armor encumbrance is doubled.'),
     ('E107', 'Яркая вспышка', 'Bright Flash', 'Штраф к Устойчивости к ослеплению (-2). Цель получает слепоту на 6 ходов.', 'Penalty to Stamina vs blinding (-2). The target is blinded for 6 rounds.'),
-    ('E108', 'Яркая вспышка (+)', 'Bright Flash (+)', 'Цель получает слепоту на 5 ходов. Если цель обладает ночным зрением, то получает дополнительные 5 ходов слепоты и ошеломление (дезориентацию для ночного зрения (+)).', 'The target is blinded for 5 rounds. If the target has night vision, it suffers an additional 5 rounds of blindness and is stunned (disoriented for night vision (+)).')
+    ('E108', 'Яркая вспышка (+)', 'Bright Flash (+)', 'Цель получает слепоту на 5 ходов. Если цель обладает ночным зрением, то получает дополнительные 5 ходов слепоты и ошеломление (дезориентацию для ночного зрения (+)).', 'The target is blinded for 5 rounds. If the target has night vision, it suffers an additional 5 rounds of blindness and is stunned (disoriented for night vision (+)).'),
+    ('E109', 'Сокрушающая сила', 'Crushing Force', 'Удары оружием невозможно парировать. Разрушающий урон оружия удваивается.', 'Weapon strikes cannot be parried. The weapon''s bludgeoning damage is doubled.')
 ),
 ins_names AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

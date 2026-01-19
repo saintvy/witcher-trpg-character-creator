@@ -280,7 +280,7 @@ SELECT meta.qu_id
                'langPath', 'characterRaw.lang',
                'groupColumn', 'weapon_class',
                'tooltipField', 'effect_descriptions',
-               'targetPath', 'characterRaw.gear',
+               'targetPath', 'characterRaw.gear.weapons',
                'columns', jsonb_build_array(
                  jsonb_build_object('field', 'weapon_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                  jsonb_build_object('field', 'weapon_class', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.class')::text)),
@@ -306,7 +306,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'body_part',
               'tooltipField', 'effect_descriptions',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.armors',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'armor_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'body_part', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.body_part')::text)),
@@ -317,7 +317,6 @@ SELECT meta.qu_id
                 jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
                 jsonb_build_object('field', 'availability', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.availability')::text)),
                 jsonb_build_object('field', 'crafted_by', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.crafted_by')::text)),
-                jsonb_build_object('field', 'dmg_types', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.protections')::text)),
                 jsonb_build_object('field', 'effect_names', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.effects')::text)),
                 jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
               )
@@ -332,7 +331,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'upgrade_group',
               'tooltipField', 'effect_descriptions',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.upgrades',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'upgrade_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'upgrade_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.upgrade_group')::text)),
@@ -355,7 +354,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'group_name',
               'tooltipField', 'gear_description',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.general',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'gear_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'group_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
@@ -377,7 +376,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'recipe_group',
               'tooltipField', 'recipe_description',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.recipes',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'recipe_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
                 jsonb_build_object('field', 'recipe_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
@@ -404,7 +403,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'potion_group',
               'tooltipField', 'effect',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.potions',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'potion_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
                 jsonb_build_object('field', 'potion_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
@@ -425,7 +424,7 @@ SELECT meta.qu_id
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
               'groupColumn', 'ingredient_group',
-              'targetPath', 'characterRaw.ingredients',
+              'targetPath', 'characterRaw.gear.ingredients.alchemy',
               'filters', jsonb_build_object('isNotNull', 'alchemy_substance'),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'ingredient_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
@@ -447,7 +446,7 @@ SELECT meta.qu_id
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
               'groupColumn', 'blueprint_group',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.blueprints',
               'tooltipField', 'components',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'blueprint_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
@@ -470,7 +469,7 @@ SELECT meta.qu_id
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
               'groupColumn', 'ingredient_group',
-              'targetPath', 'characterRaw.ingredients',
+              'targetPath', 'characterRaw.gear.ingredients.craft',
               'filters', jsonb_build_object('isNull', 'alchemy_substance'),
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'ingredient_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
@@ -490,7 +489,7 @@ SELECT meta.qu_id
               'keyColumn', 'wt_id',
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.vehicles',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'vehicle_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'base', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.base')::text)),
@@ -510,7 +509,7 @@ SELECT meta.qu_id
               'keyColumn', 'm_id',
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.mutagens',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'mutagen_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'mutagen_color', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.mutagen_color')::text)),
@@ -530,7 +529,7 @@ SELECT meta.qu_id
               'keyColumn', 'tr_id',
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.trophies',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'trophy_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'monster_type', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.monster_type')::text)),

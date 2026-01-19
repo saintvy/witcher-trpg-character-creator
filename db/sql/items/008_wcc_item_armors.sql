@@ -10,14 +10,6 @@ CREATE TABLE IF NOT EXISTS wcc_item_armors (
     crafted_by_id   uuid NULL,                        -- ck_id('crafted_by.*')
     availability_id uuid NULL,                        -- ck_id('availability.*')
 
-    -- Damage protections (flags from source data)
-    is_piercing     boolean NOT NULL DEFAULT FALSE,
-    is_slashing     boolean NOT NULL DEFAULT FALSE,
-    is_bludgeoning  boolean NOT NULL DEFAULT FALSE,
-    is_elemental    boolean NOT NULL DEFAULT FALSE,
-    is_poison       boolean NOT NULL DEFAULT FALSE,
-    is_bleeding     boolean NOT NULL DEFAULT FALSE,
-
     reliability     integer NULL,
     stopping_power  integer NULL,
     enhancements    integer NOT NULL DEFAULT 0,
@@ -551,6 +543,14 @@ WITH raw_data (
     'crafted_by.witchers','availability.U',
     NULL,12,3,'0','12',NULL,
     $$$$,
+    $$$$),
+
+  ('A064','dlc_sch_snail','bodypart.full','armor_class.heavy',
+    $$Броня школы Улитки$$, $$Gastropod Armor$$,
+    'TRUE','TRUE','TRUE','TRUE',NULL,NULL,
+    'crafted_by.witchers','availability.R',
+    NULL,30,1,'6','42',NULL,
+    $$$$,
     $$$$)
 ),
 ins_i18n AS (
@@ -592,54 +592,84 @@ ins_i18n AS (
   ) foo
   ON CONFLICT (id, lang) DO NOTHING
 )
-INSERT INTO wcc_item_armors (
-  a_id, dlc_dlc_id, name_id,
-  body_part_id, armor_class_id, crafted_by_id, availability_id,
-  is_piercing, is_slashing, is_bludgeoning, is_elemental, is_poison, is_bleeding,
-  reliability, stopping_power, enhancements, encumbrance, weight, price,
-  description_id
+,
+upsert_armors AS (
+  INSERT INTO wcc_item_armors (
+    a_id, dlc_dlc_id, name_id,
+    body_part_id, armor_class_id, crafted_by_id, availability_id,
+    reliability, stopping_power, enhancements, encumbrance, weight, price,
+    description_id
+  )
+  SELECT rd.a_id
+       , rd.source_id AS dlc_dlc_id
+       , ck_id('witcher_cc.items.armor.name.'||rd.a_id) AS name_id
+       , ck_id(rd.body_part) AS body_part_id
+       , ck_id(rd.armor_class) AS armor_class_id
+       , ck_id(rd.crafted_by) AS crafted_by_id
+       , ck_id(rd.availability) AS availability_id
+       , CAST(NULLIF(rd.reliability,'') AS integer) AS reliability
+       , CAST(NULLIF(rd.stopping_power::text,'') AS integer) AS stopping_power
+       , coalesce(CAST(NULLIF(rd.enhancements::text,'') AS integer), 0) AS enhancements
+       , CAST(NULLIF(REPLACE(rd.encumbrance, ',', '.'), '') AS numeric) AS encumbrance
+       , CAST(NULLIF(REPLACE(rd.weight, ',', '.'), '') AS numeric) AS weight
+       , CAST(NULLIF(REPLACE(rd.price, ',', '.'), '') AS numeric) AS price
+       , ck_id('witcher_cc.items.armor.description.'||rd.a_id) AS description_id
+    FROM raw_data rd
+  ON CONFLICT (a_id) DO UPDATE
+  SET
+    dlc_dlc_id = EXCLUDED.dlc_dlc_id,
+    name_id = EXCLUDED.name_id,
+    body_part_id = EXCLUDED.body_part_id,
+    armor_class_id = EXCLUDED.armor_class_id,
+    crafted_by_id = EXCLUDED.crafted_by_id,
+    availability_id = EXCLUDED.availability_id,
+    reliability = EXCLUDED.reliability,
+    stopping_power = EXCLUDED.stopping_power,
+    enhancements = EXCLUDED.enhancements,
+    encumbrance = EXCLUDED.encumbrance,
+    weight = EXCLUDED.weight,
+    price = EXCLUDED.price,
+    description_id = EXCLUDED.description_id
+  RETURNING a_id
+),
+prot_effects AS (
+  -- Protection flags (from source data) are stored as effects (instead of boolean columns on wcc_item_armors)
+  SELECT rd.a_id AS item_id, 'E077'::varchar(10) AS e_e_id, NULL::varchar(10) AS ec_ec_id, NULL::varchar(50) AS modifier
+    FROM raw_data rd
+   WHERE coalesce(rd.is_piercing, '') = 'TRUE'
+  UNION ALL
+  SELECT rd.a_id, 'E078', NULL, NULL
+    FROM raw_data rd
+   WHERE coalesce(rd.is_slashing, '') = 'TRUE'
+  UNION ALL
+  SELECT rd.a_id, 'E076', NULL, NULL
+    FROM raw_data rd
+   WHERE coalesce(rd.is_bludgeoning, '') = 'TRUE'
+  UNION ALL
+  SELECT rd.a_id, 'E079', NULL, NULL
+    FROM raw_data rd
+   WHERE coalesce(rd.is_elemental, '') = 'TRUE'
+  UNION ALL
+  SELECT rd.a_id, 'E080', NULL, NULL
+    FROM raw_data rd
+   WHERE coalesce(rd.is_bleeding, '') = 'TRUE'
+  UNION ALL
+  SELECT rd.a_id, 'E082', NULL, NULL
+    FROM raw_data rd
+   WHERE coalesce(rd.is_poison, '') = 'TRUE'
+),
+ins_prot_effects AS (
+  INSERT INTO wcc_item_to_effects (item_id, e_e_id, ec_ec_id, modifier)
+  SELECT pe.item_id, pe.e_e_id, pe.ec_ec_id, pe.modifier
+    FROM prot_effects pe
+   WHERE NOT EXISTS (
+     SELECT 1
+       FROM wcc_item_to_effects ite
+      WHERE ite.item_id = pe.item_id
+        AND ite.e_e_id = pe.e_e_id
+        AND coalesce(ite.ec_ec_id, '') = coalesce(pe.ec_ec_id, '')
+        AND coalesce(ite.modifier, '') = coalesce(pe.modifier, '')
+   )
+  RETURNING 1
 )
-SELECT rd.a_id
-     , rd.source_id AS dlc_dlc_id
-     , ck_id('witcher_cc.items.armor.name.'||rd.a_id) AS name_id
-     , ck_id(rd.body_part) AS body_part_id
-     , ck_id(rd.armor_class) AS armor_class_id
-     , ck_id(rd.crafted_by) AS crafted_by_id
-     , ck_id(rd.availability) AS availability_id
-     , (coalesce(rd.is_piercing, '') = 'TRUE') AS is_piercing
-     , (coalesce(rd.is_slashing, '') = 'TRUE') AS is_slashing
-     , (coalesce(rd.is_bludgeoning, '') = 'TRUE') AS is_bludgeoning
-     , (coalesce(rd.is_elemental, '') = 'TRUE') AS is_elemental
-     , (coalesce(rd.is_poison, '') = 'TRUE') AS is_poison
-     , (coalesce(rd.is_bleeding, '') = 'TRUE') AS is_bleeding
-     , CAST(NULLIF(rd.reliability,'') AS integer) AS reliability
-     , CAST(NULLIF(rd.stopping_power::text,'') AS integer) AS stopping_power
-     , coalesce(CAST(NULLIF(rd.enhancements::text,'') AS integer), 0) AS enhancements
-     , CAST(NULLIF(REPLACE(rd.encumbrance, ',', '.'), '') AS numeric) AS encumbrance
-     , CAST(NULLIF(REPLACE(rd.weight, ',', '.'), '') AS numeric) AS weight
-     , CAST(NULLIF(REPLACE(rd.price, ',', '.'), '') AS numeric) AS price
-     , ck_id('witcher_cc.items.armor.description.'||rd.a_id) AS description_id
-  FROM raw_data rd
-ON CONFLICT (a_id) DO UPDATE
-SET
-  dlc_dlc_id = EXCLUDED.dlc_dlc_id,
-  name_id = EXCLUDED.name_id,
-  body_part_id = EXCLUDED.body_part_id,
-  armor_class_id = EXCLUDED.armor_class_id,
-  crafted_by_id = EXCLUDED.crafted_by_id,
-  availability_id = EXCLUDED.availability_id,
-  is_piercing = EXCLUDED.is_piercing,
-  is_slashing = EXCLUDED.is_slashing,
-  is_bludgeoning = EXCLUDED.is_bludgeoning,
-  is_elemental = EXCLUDED.is_elemental,
-  is_poison = EXCLUDED.is_poison,
-  is_bleeding = EXCLUDED.is_bleeding,
-  reliability = EXCLUDED.reliability,
-  stopping_power = EXCLUDED.stopping_power,
-  enhancements = EXCLUDED.enhancements,
-  encumbrance = EXCLUDED.encumbrance,
-  weight = EXCLUDED.weight,
-  price = EXCLUDED.price,
-  description_id = EXCLUDED.description_id;
-
-
+SELECT 1;

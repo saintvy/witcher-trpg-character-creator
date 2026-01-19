@@ -17,14 +17,6 @@ SELECT ia.a_id
      , coalesce(ia.price, 0) AS price
      , iav.text AS availability
      , icb.text AS crafted_by
-     , concat_ws(', ',
-         CASE WHEN ia.is_piercing    THEN idp.text  ELSE NULL END,
-         CASE WHEN ia.is_slashing    THEN ids.text  ELSE NULL END,
-         CASE WHEN ia.is_bludgeoning THEN idb.text  ELSE NULL END,
-         CASE WHEN ia.is_elemental   THEN ide.text  ELSE NULL END,
-         CASE WHEN ia.is_poison      THEN idpo.text ELSE NULL END,
-         CASE WHEN ia.is_bleeding    THEN idbl.text ELSE NULL END
-       ) AS dmg_types
      , ef.effect_names
      , ef.effect_descriptions
      , idesc.text AS armor_description
@@ -38,12 +30,6 @@ SELECT ia.a_id
   LEFT JOIN i18n_text iac ON iac.id = ia.armor_class_id AND iac.lang = iname.lang
   LEFT JOIN i18n_text iav ON iav.id = ia.availability_id AND iav.lang = iname.lang
   LEFT JOIN i18n_text icb ON icb.id = ia.crafted_by_id AND icb.lang = iname.lang
-  LEFT JOIN i18n_text idp  ON idp.id  = ck_id('damage_type.P')        AND idp.lang  = iname.lang
-  LEFT JOIN i18n_text ids  ON ids.id  = ck_id('damage_type.S')        AND ids.lang  = iname.lang
-  LEFT JOIN i18n_text idb  ON idb.id  = ck_id('damage_type.B')        AND idb.lang  = iname.lang
-  LEFT JOIN i18n_text ide  ON ide.id  = ck_id('damage_type.E')        AND ide.lang  = iname.lang
-  LEFT JOIN i18n_text idpo ON idpo.id = ck_id('damage_type.Poison')   AND idpo.lang = iname.lang
-  LEFT JOIN i18n_text idbl ON idbl.id = ck_id('damage_type.Bleeding') AND idbl.lang = iname.lang
   LEFT JOIN (
     SELECT ite.item_id
          , ie.lang

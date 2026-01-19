@@ -396,4 +396,21 @@ VALUES
   ('U043', 'E012', NULL, '+1'),
   ('U044', 'E104', NULL, NULL),
   ('U045', 'E106', NULL, NULL),
-  ('U046', 'E013', NULL, '+5');
+  ('U046', 'E013', NULL, '+5'),
+
+  -- Witcher School: Snail (Gastropod) gear
+  ('W169', 'E047', NULL, NULL),  -- Meteorite
+  ('W169', 'E063', NULL, NULL),  -- Armor Piercing
+  ('W169', 'E067', NULL, NULL),  -- Ablating
+  ('W169', 'E008', NULL, '-2'),  -- "Stun (-2)" trait
+  ('W169', 'E109', NULL, NULL),  -- Crushing Force
+
+  ('W170', 'E067', NULL, NULL),  -- Ablating
+  ('W170', 'E073', NULL, '3d6'),   -- Silver (3)
+  ('W170', 'E008', NULL, '-2'),  -- "Stun (-2)" trait
+  ('W170', 'E109', NULL, NULL),  -- Crushing Force
+
+  ('A064', 'E076', NULL, NULL),  -- Resistance (B)
+  ('A064', 'E077', NULL, NULL),  -- Resistance (P)
+  ('A064', 'E078', NULL, NULL),  -- Resistance (S)
+  ('A064', 'E079', NULL, NULL);  -- Resistance (E)

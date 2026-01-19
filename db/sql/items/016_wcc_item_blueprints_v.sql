@@ -1,8 +1,6 @@
 -- Materialized view for shop UI (blueprints catalog)
 -- Provides localized rows per language, plus dlc_id for filtering by allowedDlcs.
 
-DROP MATERIALIZED VIEW IF EXISTS wcc_item_blueprints_v;
-
 CREATE MATERIALIZED VIEW wcc_item_blueprints_v AS
 WITH langs AS (
   SELECT 'ru'::text AS lang

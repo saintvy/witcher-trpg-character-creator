@@ -287,6 +287,9 @@ raw_data (b_id, item_id, name_ru, name_en, dlc_id, group_key, craft_level_key, d
   , ('B247', 'W165', 'Краснолюдский топор', 'Dwarven Axe', 'core', 'weapons.wt_axe', 'craft.level.master', 24, 12, 'time.unit.hour', 'I039 (3), I006 (4), I019 (2), I026 (4), I029 (1), I041 (2), I002 (3)', 555, 1110, 205)
   , ('B248', 'W166', 'Топор', 'Hand Axe', 'core', 'weapons.wt_axe', 'craft.level.novice', 10, 3, 'time.unit.hour', 'I006 (1), I043 (1), I019 (1), I020 (1), I009 (4)', 148, 306, 960)
   , ('B249', 'W167', 'Топор берсерка', 'Berserker''s Axe', 'core', 'weapons.wt_axe', 'craft.level.master', 25, 13, 'time.unit.hour', 'I039 (4), I006 (5), I019 (1), I043 (2), I009 (1), I029 (1), I025 (1)', 772, 1440, NULL)
+  , ('B250', 'W169', 'Стальной меч школы Улитки', 'Gastropod Steel Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 18, 13, 'time.unit.hour', 'I006 (3), I020 (2), I040 (1), I043 (7), I037 (1), I029 (2), I026 (2), I025 (2), I011 (1), I002 (1)', 656, 0, NULL)
+  , ('B251', 'W170', 'Серебряный меч школы Улитки', 'Gastropod Silver Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 19, 15, 'time.unit.hour', 'I006 (3), I020 (2), I042 (2), I043 (2), I037 (4), I029 (2), I026 (1), I025 (2), I002 (1), I041 (10)', 597, 0, NULL)
+  , ('B252', 'A064', 'Броня школы Улитки', 'Gastropod Armor', 'dlc_sch_snail', 'bodypart.full', 'craft.level.master', 18, 24, 'time.unit.hour', 'I004 (10), I011 (10), I037 (10), I043 (10), I040 (2), I025 (10), I028 (10), I089 (1), I002 (20), I041 (30)', 1538, 0, NULL)
 ),
 ins_i18n_tech AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -492,10 +495,5 @@ SET
   price_components = EXCLUDED.price_components,
   price_blueprint = EXCLUDED.price_blueprint,
   price_item = EXCLUDED.price_item;
-
--- Cleanup: if these helper functions were created in previous revisions, remove them.
-DROP FUNCTION IF EXISTS parse_blueprint_components(text, text);
-DROP FUNCTION IF EXISTS wcc_blueprint_item_name_id(text);
-DROP FUNCTION IF EXISTS wcc_blueprint_tech_val_id(text, int);
 
 
