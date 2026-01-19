@@ -51,6 +51,10 @@ WITH
                 <li>Обезболивающие травы ×5</li>
                 <li>Ингредиенты общей стоимостью 100 крон</li>
             </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>75 крон × 2d6</li>
+            </ul>
         </td>
     </tr>
 </table>
@@ -225,6 +229,10 @@ WITH
                 <li>Staff</li>
                 <li>Sterilizing fluid ×5</li>
                 <li>Surgeon''s kit</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>75 crowns × 2d6</li>
             </ul>
         </td>
     </tr>
@@ -479,6 +487,31 @@ SELECT
                 'itemId', 'P054',
                 'quantity', 5
               )
+            )
+          )
+        )
+      )
+    )
+  ) AS body;
+
+-- Эффекты: стартовые деньги
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o06' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.money.crowns'),
+      jsonb_build_object(
+        '*',
+        jsonb_build_array(
+          75,
+          jsonb_build_object(
+            '+',
+            jsonb_build_array(
+              jsonb_build_object('d6', jsonb_build_array()),
+              jsonb_build_object('d6', jsonb_build_array())
             )
           )
         )

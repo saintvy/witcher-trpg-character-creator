@@ -47,6 +47,10 @@ WITH
                 <li>Компоненты общей стоимостью 50 крон</li>
                 <li>Замок</li>
             </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>120 крон × 2d6</li>
+            </ul>
         </td>
     </tr>
 </table>
@@ -229,6 +233,10 @@ WITH
                 <li>Merchant’s tools</li>
                 <li>Small chest</li>
                 <li>Tinker’s forge</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>120 crowns × 2d6</li>
             </ul>
         </td>
     </tr>
@@ -422,6 +430,31 @@ SELECT
         'tokens', 5,
         'items', jsonb_build_array('T105', 'T107', 'T091', 'W116', 'T053', 'W069', 'T102', 'T023', 'T114'),
         'bundles', jsonb_build_array()
+      )
+    )
+  ) AS body;
+
+-- Эффекты: стартовые деньги
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o08' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.money.crowns'),
+      jsonb_build_object(
+        '*',
+        jsonb_build_array(
+          120,
+          jsonb_build_object(
+            '+',
+            jsonb_build_array(
+              jsonb_build_object('d6', jsonb_build_array()),
+              jsonb_build_object('d6', jsonb_build_array())
+            )
+          )
+        )
       )
     )
   ) AS body;

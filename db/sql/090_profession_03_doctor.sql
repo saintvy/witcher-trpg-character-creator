@@ -46,6 +46,10 @@ WITH
                 <li>Большая палатка</li>
                 <li>Кинжал</li>
             </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>150 крон × 2d6</li>
+            </ul>
         </td>
     </tr>
 </table>
@@ -245,6 +249,10 @@ WITH
                 <li>Sterilizing fluid x10</li>
                 <li>Surgeon''s kit</li>
                 <li>Writing kit</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>150 crowns × 2d6</li>
             </ul>
         </td>
     </tr>
@@ -551,6 +559,31 @@ SELECT
                 'itemId', 'P054',
                 'quantity', 10
               )
+            )
+          )
+        )
+      )
+    )
+  ) AS body;
+
+-- Эффекты: стартовые деньги
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o03' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.money.crowns'),
+      jsonb_build_object(
+        '*',
+        jsonb_build_array(
+          150,
+          jsonb_build_object(
+            '+',
+            jsonb_build_array(
+              jsonb_build_object('d6', jsonb_build_array()),
+              jsonb_build_object('d6', jsonb_build_array())
             )
           )
         )

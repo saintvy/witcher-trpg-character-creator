@@ -11,6 +11,11 @@ const __dirname = path.dirname(__filename);
 const defaultCharacterPath = path.join(__dirname, '../data/defaultCharacter.json');
 const defaultCharacter = JSON.parse(fs.readFileSync(defaultCharacterPath, 'utf-8'));
 
+function rollDie(sides: number): number {
+  const safeSides = Number.isFinite(sides) && sides > 0 ? Math.floor(sides) : 1;
+  return Math.floor(Math.random() * safeSides) + 1;
+}
+
 type AnswerValue = { type: "number"; data: number } | { type: "string"; data: string };
 type AnswerInput = { questionId: string; answerIds: string[]; value?: AnswerValue };
 
@@ -550,6 +555,10 @@ jsonLogic.add_operation('ck_id', (src: unknown): string => {
   const strArg = src !== null && src !== undefined ? String(src) : '';
   return ck_id(strArg);
 });
+
+// Dice operations: random integer 1..6 and 1..10
+jsonLogic.add_operation('d6', () => rollDie(6));
+jsonLogic.add_operation('d10', () => rollDie(10));
 
 // Register cat_array operation in jsonLogic
 // Extracts values from nested arrays using a path with [] syntax
@@ -2998,10 +3007,19 @@ function applyEffect(
   effect: Record<string, unknown>,
   state: SurveyState,
 ) {
+  const evaluateEffectValue = (expr: unknown): unknown => {
+    // 1) First evaluate jsonlogic_expression wrappers (they rely on raw JSON-Logic structure)
+    const afterJsonLogic = evaluateJsonLogicExpressionsInValue(expr, state);
+    // 2) Then evaluate our lightweight effect expression language (var/cat/+/*/ck_id/d6/d10/etc)
+    const afterEvaluate = evaluate(afterJsonLogic, state, undefined);
+    // 3) Finally, in case the result still contains nested jsonlogic_expression wrappers, resolve them too
+    return evaluateJsonLogicExpressionsInValue(afterEvaluate, state);
+  };
+
   if ('set' in effect) {
     const [target, valueExpr] = normalisePair((effect as Record<string, unknown>).set);
     const path = extractPath(target);
-    const value = evaluate(valueExpr, state, undefined);
+    const value = evaluateEffectValue(valueExpr);
     setAtPath(state, path, value);
     return;
   }
@@ -3010,7 +3028,7 @@ function applyEffect(
     const [target, deltaExpr] = normalisePair((effect as Record<string, unknown>).inc);
     const path = extractPath(target);
     const current = Number(getAtPath(state, path) ?? 0);
-    const delta = Number(evaluate(deltaExpr, state, undefined) ?? 0);
+    const delta = Number(evaluateEffectValue(deltaExpr) ?? 0);
     setAtPath(state, path, current + delta);
     return;
   }
@@ -3018,11 +3036,7 @@ function applyEffect(
   if ('add' in effect) {
     const [target, valueExpr] = normalisePair((effect as Record<string, unknown>).add);
     const path = extractPath(target);
-    const value = evaluate(valueExpr, state, undefined);
-    
-    // Evaluate jsonlogic_expression in value immediately, using current state
-    // This is important for correct counter computation at effect application time
-    const evaluatedValue = evaluateJsonLogicExpressionsInValue(value, state);
+    const evaluatedValue = evaluateEffectValue(valueExpr);
     
     const existing = getAtPath(state, path);
     if (Array.isArray(existing)) {
@@ -3076,6 +3090,14 @@ function evaluate(
     if (node.var === 'counters') {
       return getCounters(state);
     }
+    // JSONLogic var can also be ["path", default]
+    if (Array.isArray(node.var)) {
+      const args = node.var as unknown[];
+      const path = args[0] !== undefined ? String(args[0]) : '';
+      const fallback = args.length > 1 ? args[1] : undefined;
+      const value = getAtPath(state, path);
+      return value === undefined ? fallback : value;
+    }
     return getAtPath(state, String(node.var));
   }
   if ('cat' in node) {
@@ -3105,6 +3127,12 @@ function evaluate(
       return total + value;
     }, 0);
   }
+  if ('*' in node && Array.isArray(node['*'])) {
+    return (node['*'] as unknown[]).reduce<number>((total, part) => {
+      const value = Number(evaluate(part, state, context) ?? 1);
+      return total * value;
+    }, 1);
+  }
   if ('min' in node && Array.isArray(node.min)) {
     const values = (node.min as unknown[]).map((part) => Number(evaluate(part, state, context)));
     return Math.min(...values);
@@ -3112,6 +3140,12 @@ function evaluate(
   if ('max' in node && Array.isArray(node.max)) {
     const values = (node.max as unknown[]).map((part) => Number(evaluate(part, state, context)));
     return Math.max(...values);
+  }
+  if ('d6' in node) {
+    return rollDie(6);
+  }
+  if ('d10' in node) {
+    return rollDie(10);
   }
   if ('ck_id' in node) {
     // jsonLogic передает аргументы как массив, но может быть и одно значение

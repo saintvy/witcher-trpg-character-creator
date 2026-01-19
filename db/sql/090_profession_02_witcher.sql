@@ -58,6 +58,11 @@ WITH
                 <li>Формула масла ×2</li>
                 <li>Формула отвара</li>
             </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>50 крон × 2d6<br><em>ИЛИ</em></li>
+                <li>10 крон × 1d6 (если включен DLC «Снаряжение ведьмака»)</li>
+            </ul>
         </td>
     </tr>
 </table>
@@ -253,6 +258,11 @@ WITH
                 <li>Witcher medallion</li>
                 <li>Witcher’s steel sword</li>
                 <li>Witcher’s silver sword</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>50 crowns × 2d6<br><em>OR</em>/li>
+                <li>10 crowns × 1d6 (if DLC "Witcher Gear" is enabled)</li>
             </ul>
         </td>
     </tr>
@@ -475,6 +485,54 @@ SELECT
                 'sourceId', 'weapons',
                 'itemId', 'W107',
                 'quantity', 5
+              )
+            )
+          )
+        )
+      )
+    )
+  ) AS body;
+
+-- Эффекты: стартовые деньги (ветвление по DLC dlc_wt)
+-- dlcs находятся в состоянии в массиве dlcs
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o02' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.money.crowns'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'if',
+          jsonb_build_array(
+            jsonb_build_object(
+              'in',
+              jsonb_build_array(
+                'dlc_wt',
+                jsonb_build_object('var', jsonb_build_array('dlcs', jsonb_build_array()))
+              )
+            ),
+            jsonb_build_object(
+              '*',
+              jsonb_build_array(
+                10,
+                jsonb_build_object('d6', jsonb_build_array())
+              )
+            ),
+            jsonb_build_object(
+              '*',
+              jsonb_build_array(
+                50,
+                jsonb_build_object(
+                  '+',
+                  jsonb_build_array(
+                    jsonb_build_object('d6', jsonb_build_array()),
+                    jsonb_build_object('d6', jsonb_build_array())
+                  )
+                )
               )
             )
           )

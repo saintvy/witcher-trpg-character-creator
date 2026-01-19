@@ -51,6 +51,10 @@ WITH
                 <li>Дневник</li>
                 <li>Ингредиенты общей стоимостью 100 крон</li>
             </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>200 крон × 2d6</li>
+            </ul>
         </td>
     </tr>
 </table>
@@ -242,6 +246,10 @@ WITH
                 <li>Makeup kit</li>
                 <li>Staff</li>
                 <li>Writing kit</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>200 crowns × 2d6</li>
             </ul>
         </td>
     </tr>
@@ -444,6 +452,31 @@ SELECT
         'tokens', 5,
         'items', jsonb_build_array('T012', 'W082', 'T020', 'T048', 'T091', 'T060', 'T049', 'W157', 'T115'),
         'bundles', jsonb_build_array()
+      )
+    )
+  ) AS body;
+
+-- Эффекты: стартовые деньги
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o04' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.money.crowns'),
+      jsonb_build_object(
+        '*',
+        jsonb_build_array(
+          200,
+          jsonb_build_object(
+            '+',
+            jsonb_build_array(
+              jsonb_build_object('d6', jsonb_build_array()),
+              jsonb_build_object('d6', jsonb_build_array())
+            )
+          )
+        )
       )
     )
   ) AS body;

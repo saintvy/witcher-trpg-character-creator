@@ -6,6 +6,19 @@ import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
 import { ShopRenderer } from "../components/ShopRenderer";
 
+// Custom JSON-Logic operations used by the survey engine
+// (needed here to correctly evaluate metadata expressions in the builder UI)
+const __wccJsonLogicOpsRegistered = (() => {
+  try {
+    jsonLogic.add_operation("d6", () => Math.floor(Math.random() * 6) + 1);
+    jsonLogic.add_operation("d10", () => Math.floor(Math.random() * 10) + 1);
+  } catch {
+    // no-op (e.g. if ops already registered)
+  }
+  return true;
+})();
+void __wccJsonLogicOpsRegistered;
+
 type AnswerValue = { type: "number"; data: number } | { type: "string"; data: string };
 type AnswerInput = {
   questionId: string;
