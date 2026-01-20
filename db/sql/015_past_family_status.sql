@@ -317,7 +317,7 @@ SELECT 'character', 'wcc_past_family_status_o' || to_char(gear_items.group_id, '
           'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*gear_items.group_id+gear_items.num, 'FM0000') ||'.'|| 'gear' ||'.'|| gear_items.item_num ||'.'|| 'name')::text),
           'weight', 0
         ) ||
-        CASE WHEN gear_items.is_gear_notes IS NOT NULL 
+        CASE WHEN gear_items.is_gear_notes = 1
           THEN jsonb_build_object('notes', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*gear_items.group_id+gear_items.num, 'FM0000') ||'.'|| 'gear' ||'.'|| gear_items.item_num ||'.'|| 'notes')::text))
           ELSE '{}'::jsonb
         END ||

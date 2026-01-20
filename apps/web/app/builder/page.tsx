@@ -503,9 +503,13 @@ export default function BuilderPage() {
     // Считаем веса и сумму по видимым опциям.
     const weights = options.map((opt) => {
       const raw = (opt.metadata as Record<string, unknown> | undefined)?.probability;
+      // Если вес не задан — считаем его 1 (как раньше).
+      if (raw === undefined || raw === null) {
+        return 1;
+      }
       const weight = typeof raw === "number" ? raw : Number(raw);
-      // Если вес невалидный — считаем его 1 (так же, как в рандомайзере).
-      return Number.isFinite(weight) && weight > 0 ? weight : 1;
+      // 0 — валидный вес (ноль означает "не выпадает"); fallback к 1 только для NaN/∞/некорректных значений.
+      return Number.isFinite(weight) && weight >= 0 ? weight : 1;
     });
 
     const sum = weights.reduce((acc, w) => acc + w, 0);
@@ -553,7 +557,8 @@ export default function BuilderPage() {
       const weight = Number((metadata as Record<string, unknown>)["probability"]);
       
       // Если вес невалидный, используем равномерное распределение (вес = 1)
-      const validWeight = Number.isFinite(weight) && weight > 0 ? weight : 1;
+      // 0 — валидный вес (ноль означает "не выпадает"); fallback к 1 только для NaN/∞/некорректных значений.
+      const validWeight = Number.isFinite(weight) && weight >= 0 ? weight : 1;
       weightedOptions.push({ option, weight: validWeight });
     }
 
