@@ -2261,12 +2261,35 @@ async function applyShopNode(
       ? (source.filters as Record<string, unknown>)
       : {};
 
+    // Extra DLC eligibility (rare cases): allow specific ids even if their dlcColumn is not in allowed dlcs.
+    // Here the ids list is already small, so we can cheaply prefetch only matching extra keys.
+    const extraIdsResult = await db.query<{ item_key: string }>(
+      `
+        SELECT x.item_key
+        FROM wcc_shop_item_dlc_extra x
+        WHERE x.table_name = $1
+          AND x.dlc_id = ANY($2::text[])
+          AND x.item_key = ANY($3::text[])
+      `,
+      [table, dlcs, ids],
+    );
+    const extraIds = extraIdsResult.rows
+      .map((r) => r.item_key)
+      .filter((v): v is string => typeof v === 'string' && v.length > 0);
+
     const whereParts: string[] = [
       `"${keyColumn}" = ANY($1::text[])`,
-      `"${dlcColumn}" = ANY($2::text[])`,
     ];
     const params: unknown[] = [ids, dlcs];
     let paramIndex = 3;
+
+    if (extraIds.length > 0) {
+      whereParts.push(`("${dlcColumn}" = ANY($2::text[]) OR "${keyColumn}" = ANY($3::varchar[]))`);
+      params.push(extraIds);
+      paramIndex = 4;
+    } else {
+      whereParts.push(`"${dlcColumn}" = ANY($2::text[])`);
+    }
 
     // If the source is language-specific, keep the row language consistent with state.lang
     if (langColumn && typeof (state as any).lang === 'string' && (state as any).lang.length > 0) {
@@ -2411,12 +2434,34 @@ async function applyShopNode(
         ? (source.filters as Record<string, unknown>)
         : {};
 
+      // Extra DLC eligibility (rare cases): allow specific ids even if their dlcColumn is not in allowed dlcs.
+      const extraIdsResult = await db.query<{ item_key: string }>(
+        `
+          SELECT x.item_key
+          FROM wcc_shop_item_dlc_extra x
+          WHERE x.table_name = $1
+            AND x.dlc_id = ANY($2::text[])
+            AND x.item_key = ANY($3::text[])
+        `,
+        [table, dlcs, ids],
+      );
+      const extraIds = extraIdsResult.rows
+        .map((r) => r.item_key)
+        .filter((v): v is string => typeof v === 'string' && v.length > 0);
+
       const whereParts: string[] = [
         `"${keyColumn}" = ANY($1::text[])`,
-        `"${dlcColumn}" = ANY($2::text[])`,
       ];
       const params: unknown[] = [ids, dlcs];
       let paramIndex = 3;
+
+      if (extraIds.length > 0) {
+        whereParts.push(`("${dlcColumn}" = ANY($2::text[]) OR "${keyColumn}" = ANY($3::varchar[]))`);
+        params.push(extraIds);
+        paramIndex = 4;
+      } else {
+        whereParts.push(`"${dlcColumn}" = ANY($2::text[])`);
+      }
 
       if (langColumn && typeof (state as any).lang === 'string' && (state as any).lang.length > 0) {
         whereParts.push(`"${langColumn}" = $${paramIndex}`);

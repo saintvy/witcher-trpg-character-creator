@@ -250,10 +250,36 @@ export async function getAllShopItems(
         ? (source.filters as Record<string, unknown>)
         : {};
 
+      // Extra DLC eligibility (rare cases): allow specific item ids even if their dlcColumn is not in allowed dlcs.
+      // We do it via a small "extra ids" list to keep queries cheap (no table-wide EXISTS checks).
+      const extraIdsResult = await db.query<{ item_key: string }>(
+        `
+          SELECT x.item_key
+          FROM wcc_shop_item_dlc_extra x
+          WHERE x.table_name = $1
+            AND x.dlc_id = ANY($2::text[])
+        `,
+        [table, dlcs],
+      );
+      const extraIds = extraIdsResult.rows
+        .map((r) => r.item_key)
+        .filter((v): v is string => typeof v === 'string' && v.length > 0);
+
       // Базовые условия WHERE
-      const whereParts: string[] = [`"${dlcColumn}" = ANY($1::text[])`];
-      const params: unknown[] = [dlcs];
-      let paramIndex = 2;
+      const whereParts: string[] = [];
+      const params: unknown[] = [];
+      let paramIndex = 1;
+
+      if (extraIds.length > 0) {
+        // NOTE: OR does not duplicate rows; it only relaxes DLC filter for explicitly whitelisted items.
+        whereParts.push(`("${dlcColumn}" = ANY($1::text[]) OR "${keyColumn}" = ANY($2::varchar[]))`);
+        params.push(dlcs, extraIds);
+        paramIndex = 3;
+      } else {
+        whereParts.push(`"${dlcColumn}" = ANY($1::text[])`);
+        params.push(dlcs);
+        paramIndex = 2;
+      }
 
       if (langColumn && lang) {
         whereParts.push(`"${langColumn}" = $${paramIndex}`);

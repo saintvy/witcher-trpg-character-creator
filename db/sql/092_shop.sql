@@ -255,7 +255,7 @@ SELECT meta.qu_id
                'priority', 2,
                'is_default', false,
                'coverage', jsonb_build_object(
-                 'items', jsonb_build_array('W135','W136','W137','W138','W139','W140','W141')
+                 'items', jsonb_build_array('W135','W136','W137','W138','W139','W140','W141','W169')
                ),
                'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.witcher_steel_sword_tokens.name')::text)
              ),
@@ -266,7 +266,7 @@ SELECT meta.qu_id
                'priority', 2,
                'is_default', false,
                'coverage', jsonb_build_object(
-                 'items', jsonb_build_array('W128','W129','W130','W131','W132','W133','W134')
+                 'items', jsonb_build_array('W128','W129','W130','W131','W132','W133','W134','W170')
                ),
                'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.witcher_silver_sword_tokens.name')::text)
              )
