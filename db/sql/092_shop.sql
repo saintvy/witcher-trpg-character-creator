@@ -563,3 +563,28 @@ WHERE NOT EXISTS (
   WHERE t.from_qu_qu_id = 'wcc_shop_professional'
     AND t.to_qu_qu_id = 'wcc_shop'
 );
+
+-- Связи (приоритетные): для ведьмака с включенным dlc_wt (фиксированное школьное снаряжение)
+-- пропускаем профессиональный магазин и идём сразу в обычный магазин.
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
+SELECT
+  'wcc_profession' AS from_qu_qu_id,
+  'wcc_shop' AS to_qu_qu_id,
+  v.an_id AS via_an_an_id,
+  1 AS priority
+FROM (VALUES
+        ('wcc_profession_o02_wt_wolf'),
+        ('wcc_profession_o02_wt_gryphon'),
+        ('wcc_profession_o02_wt_cat'),
+        ('wcc_profession_o02_wt_viper'),
+        ('wcc_profession_o02_wt_bear'),
+        ('wcc_profession_o02_wt_manticore'),
+        ('wcc_profession_o02_wt_snail')
+     ) AS v(an_id)
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM transitions t
+  WHERE t.from_qu_qu_id = 'wcc_profession'
+    AND t.to_qu_qu_id = 'wcc_shop'
+    AND t.via_an_an_id = v.an_id
+);

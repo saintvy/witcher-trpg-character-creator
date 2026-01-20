@@ -492,12 +492,60 @@ export default function BuilderPage() {
     return <span dangerouslySetInnerHTML={{ __html: option.label ?? "" }} />;
   };
 
+  // Нормализация процентов в single_table:
+  // В БД probability хранится как "вес", но в таблице мы хотим показывать вероятность
+  // относительно суммы весов всех ВИДИМЫХ вариантов (options уже отфильтрованы на бэкенде).
+  const normalisedSingleTableRowHtml = useMemo(() => {
+    if (!question || question.qtype !== "single_table") {
+      return new Map<string, string>();
+    }
+
+    // Считаем веса и сумму по видимым опциям.
+    const weights = options.map((opt) => {
+      const raw = (opt.metadata as Record<string, unknown> | undefined)?.probability;
+      const weight = typeof raw === "number" ? raw : Number(raw);
+      // Если вес невалидный — считаем его 1 (так же, как в рандомайзере).
+      return Number.isFinite(weight) && weight > 0 ? weight : 1;
+    });
+
+    const sum = weights.reduce((acc, w) => acc + w, 0);
+    if (!(sum > 0)) {
+      return new Map<string, string>();
+    }
+
+    const truncateTo2 = (value: number): number => Math.trunc(value * 100) / 100;
+    const formatPercent = (value: number): string => {
+      const truncated = truncateTo2(value);
+      // always show 2 decimals, but without rounding
+      const [intPart, fracPart = ""] = String(truncated).split(".");
+      const frac2 = (fracPart + "00").slice(0, 2);
+      return `${intPart}.${frac2}%`;
+    };
+
+    const map = new Map<string, string>();
+    options.forEach((opt, idx) => {
+      const html = opt.label ?? "";
+      if (typeof html !== "string" || html.length === 0) {
+        return;
+      }
+      const w = weights[idx] ?? 1;
+      const percent = (w / sum) * 100;
+      const percentText = formatPercent(percent);
+
+      // Replace the first <td>...</td> that contains a % (Chance column).
+      const replaced = html.replace(/<td>\s*[^<]*?%<\/td>/i, `<td>${percentText}</td>`);
+      map.set(opt.id, replaced);
+    });
+
+    return map;
+  }, [question, options]);
+
   const pickRandomOption = useCallback((): AnswerOption | null => {
     if (!options.length) {
       return null;
     }
 
-    // Собираем варианты с весами
+    // Собираем варианты с весами (metadata.probability трактуем как "вес", не как % от 1.0)
     const weightedOptions: Array<{ option: AnswerOption; weight: number }> = [];
     
     for (const option of options) {
@@ -1263,6 +1311,7 @@ export default function BuilderPage() {
                       <tbody>
                         {options.map((option) => {
                           const isHovered = hoveredOptionId === option.id;
+                          const rowHtml = normalisedSingleTableRowHtml.get(option.id) ?? (option.label ?? "");
                           return (
                             <tr
                               key={option.id}
@@ -1273,7 +1322,7 @@ export default function BuilderPage() {
                                 cursor: loading ? "not-allowed" : "pointer",
                                 opacity: loading ? 0.7 : 1,
                               }}
-                              dangerouslySetInnerHTML={{ __html: option.label ?? "" }}
+                              dangerouslySetInnerHTML={{ __html: rowHtml }}
                             />
                           );
                         })}

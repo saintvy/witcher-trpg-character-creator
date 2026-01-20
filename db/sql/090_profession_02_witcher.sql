@@ -5,10 +5,125 @@ WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
                 , 'wcc_profession' AS qu_id
                 , 'answer_options' AS entity)
-, raw_data AS (
-  SELECT 'ru' AS lang, raw_data_ru.*
-    FROM (VALUES
-            ( 2, 'Ведьмак', '
+-- Базовые правила видимости (профессия "Ведьмак" только для расы Witcher)
+, ensure_rules AS (
+  -- гарантируем, что is_dlc_wt_enabled существует (детерминированный ru_id как в 047_witcher_school.sql)
+  INSERT INTO rules (ru_id, name, body)
+  VALUES
+    (ck_id('witcher_cc.rules.is_dlc_wt_enabled'), 'is_dlc_wt_enabled', '{"in":["dlc_wt",{"var":["dlcs",[]]}]}'::jsonb)
+  ON CONFLICT (ru_id) DO NOTHING
+  RETURNING ru_id
+)
+, rule_parts AS (
+  SELECT
+    (SELECT r.body FROM rules r WHERE r.name = 'is_witcher' ORDER BY r.ru_id LIMIT 1) AS is_witcher_expr,
+    (SELECT r.body FROM rules r WHERE r.ru_id = ck_id('witcher_cc.rules.is_dlc_wt_enabled') LIMIT 1) AS wt_expr
+)
+, vis_rules AS (
+  -- 8 правил: 1 для случая без dlc_wt и 7 для dlc_wt+школа
+  INSERT INTO rules (ru_id, name, body)
+  SELECT *
+  FROM (
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_off') AS ru_id,
+      'wcc_profession_witcher_wt_off' AS name,
+      jsonb_build_object(
+        'and',
+        jsonb_build_array(
+          rule_parts.is_witcher_expr,
+          jsonb_build_object('!', rule_parts.wt_expr)
+        )
+      ) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_wolf') AS ru_id,
+      'wcc_profession_witcher_wt_wolf' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'wolf'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_gryphon') AS ru_id,
+      'wcc_profession_witcher_wt_gryphon' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'gryphon'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_cat') AS ru_id,
+      'wcc_profession_witcher_wt_cat' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'cat'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_viper') AS ru_id,
+      'wcc_profession_witcher_wt_viper' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'viper'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_bear') AS ru_id,
+      'wcc_profession_witcher_wt_bear' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'bear'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_manticore') AS ru_id,
+      'wcc_profession_witcher_wt_manticore' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'manticore'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_snail') AS ru_id,
+      'wcc_profession_witcher_wt_snail' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'snail'))
+      )) AS body
+    FROM rule_parts
+  ) r
+  ON CONFLICT (ru_id) DO NOTHING
+  RETURNING ru_id
+)
+, variants(an_id, variant_key, sort_order, visible_ru_ru_id) AS (
+  VALUES
+    ('wcc_profession_o02', 'wt_off', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_off')),
+    ('wcc_profession_o02_wt_wolf', 'wt_wolf', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_wolf')),
+    ('wcc_profession_o02_wt_gryphon', 'wt_gryphon', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_gryphon')),
+    ('wcc_profession_o02_wt_cat', 'wt_cat', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_cat')),
+    ('wcc_profession_o02_wt_viper', 'wt_viper', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_viper')),
+    ('wcc_profession_o02_wt_bear', 'wt_bear', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_bear')),
+    ('wcc_profession_o02_wt_manticore', 'wt_manticore', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_manticore')),
+    ('wcc_profession_o02_wt_snail', 'wt_snail', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_snail'))
+)
+, templates(lang, title, prefix, suffix) AS (
+  VALUES
+    ('ru', 'Ведьмак',
+'
 <div class="ddlist_option">
 <table class="profession_table">
     <tr>
@@ -39,31 +154,8 @@ WITH
                 <li>[Ремесло] - Алхимия</li>
             </ul>
         </td>
-        <td>
-            <strong>Снаряжение</strong><br>
-            <strong class="section-title">(выберите 2)</strong>
-            <ul>
-                <li>Инструменты алхимика</li>
-                <li>Лошадь</li>
-                <li>Метательные ножи ×5</li>
-                <li>Ручной арбалет</li>
-                <li>Двуслойный гамбезон</li>
-            </ul>
-            <br><strong>Особое снаряжение</strong>
-            <ul>
-                <li>Ведьмачий медальон</li>
-                <li>Стальной ведьмачий меч</li>
-                <li>Серебряный ведьмачий меч</li>
-                <li>Формула эликсира ×2</li>
-                <li>Формула масла ×2</li>
-                <li>Формула отвара</li>
-            </ul>
-            <br><br><strong>Деньги</strong>
-            <ul>
-                <li>50 крон × 2d6<br><em>ИЛИ</em></li>
-                <li>10 крон × 1d6 (если включен DLC «Снаряжение ведьмака»)</li>
-            </ul>
-        </td>
+',
+'
     </tr>
 </table>
 
@@ -204,12 +296,9 @@ WITH
     </tr>
 </table>
 </div>
-')
-         ) AS raw_data_ru(num, title, description)
-  UNION ALL
-  SELECT 'en' AS lang, raw_data_en.*
-    FROM (VALUES
-            ( 2, 'Witcher', '
+'),
+    ('en', 'Witcher',
+'
 <div class="ddlist_option">
 <table class="profession_table">
     <tr>
@@ -240,31 +329,8 @@ WITH
                 <li>[WILL] - Spell Casting</li>
             </ul>
         </td>
-        <td>
-            <strong>Gear</strong><br>
-            <strong class="section-title">(Pick 2)</strong>
-            <ul>
-                <li>Alchemy set</li>
-                <li>Double woven gambeson</li>
-                <li>Hand crossbow</li>
-                <li>Horse</li>
-                <li>Throwing knives ×5</li>
-            </ul><br>
-            <strong>Special</strong>
-            <ul>
-                <li>Decoction formulae</li>
-                <li>Oil formulae ×2</li>
-                <li>Potion formulae ×2</li>
-                <li>Witcher medallion</li>
-                <li>Witcher’s steel sword</li>
-                <li>Witcher’s silver sword</li>
-            </ul>
-            <br><br><strong>Money</strong>
-            <ul>
-                <li>50 crowns × 2d6<br><em>OR</em>/li>
-                <li>10 crowns × 1d6 (if DLC "Witcher Gear" is enabled)</li>
-            </ul>
-        </td>
+',
+'
     </tr>
 </table>
 
@@ -405,12 +471,342 @@ WITH
     </tr>
 </table>
 </div>
-'
-         )) AS raw_data_en(num, title, description)
+')
+)
+, gear_cols(lang, variant_key, html) AS (
+  VALUES
+    -- dlc_wt OFF: показываем как раньше (мечи неопределены, значит будут токены на выбор)
+    ('ru', 'wt_off',
+'        <td>
+            <strong>Снаряжение</strong><br>
+            <strong class="section-title">(выберите 2)</strong>
+            <ul>
+                <li>Инструменты алхимика</li>
+                <li>Лошадь</li>
+                <li>Метательные ножи ×5</li>
+                <li>Ручной арбалет</li>
+                <li>Двуслойный гамбезон</li>
+            </ul>
+            <br><strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч</li>
+                <li>Серебряный ведьмачий меч</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>50 крон × 2d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_off',
+'        <td>
+            <strong>Gear</strong><br>
+            <strong class="section-title">(Pick 2)</strong>
+            <ul>
+                <li>Alchemy set</li>
+                <li>Double woven gambeson</li>
+                <li>Hand crossbow</li>
+                <li>Horse</li>
+                <li>Throwing knives ×5</li>
+            </ul><br>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Witcher’s steel sword</li>
+                <li>Witcher’s silver sword</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>50 crowns × 2d6</li>
+            </ul>
+        </td>
+'),
+    -- dlc_wt ON: фиксированное школьное снаряжение + медальон/формулы
+    ('ru', 'wt_wolf',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Волка</li>
+                <li>Серебряный ведьмачий меч школы Волка</li>
+                <li>Броня школы Волка</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_wolf',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Wolven Steel Sword</li>
+                <li>Wolven Silver Sword</li>
+                <li>Wolven Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_gryphon',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Грифона</li>
+                <li>Серебряный ведьмачий меч школы Грифона</li>
+                <li>Арбалет школы Грифона</li>
+                <li>Броня школы Грифона</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_gryphon',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Griffin Steel Sword</li>
+                <li>Griffin Silver Sword</li>
+                <li>Griffin Crossbow</li>
+                <li>Griffin Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_cat',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Кота</li>
+                <li>Серебряный ведьмачий меч школы Кота</li>
+                <li>Арбалет школы Кота</li>
+                <li>Броня школы Кота</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_cat',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Feline Steel Sword</li>
+                <li>Feline Silver Sword</li>
+                <li>Feline Crossbow</li>
+                <li>Feline Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_viper',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Змеи</li>
+                <li>Серебряный ведьмачий меч школы Змеи</li>
+                <li>Змеиный клык ×2</li>
+                <li>Броня школы Змеи</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_viper',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Serpentine Steel Sword</li>
+                <li>Serpentine Silver Sword</li>
+                <li>Viper''s Fang ×2</li>
+                <li>Serpentine Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_bear',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Медведя</li>
+                <li>Серебряный ведьмачий меч школы Медведя</li>
+                <li>Арбалет школы Медведя</li>
+                <li>Броня школы Медведя</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_bear',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Ursine Steel Sword</li>
+                <li>Ursine Silver Sword</li>
+                <li>Ursine Crossbow</li>
+                <li>Ursine Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_manticore',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Мантикоры</li>
+                <li>Серебряный ведьмачий меч школы Мантикоры</li>
+                <li>Щит школы Мантикоры</li>
+                <li>Броня школы Мантикоры</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_manticore',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Manticore Steel Sword</li>
+                <li>Manticore Silver Sword</li>
+                <li>Manticore Shield</li>
+                <li>Manticore Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_snail',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной меч школы Улитки</li>
+                <li>Серебряный меч школы Улитки</li>
+                <li>Броня школы Улитки</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_snail',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Gastropod Steel Sword</li>
+                <li>Gastropod Silver Sword</li>
+                <li>Gastropod Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+')
+)
+, raw_data AS (
+  SELECT
+    t.lang,
+    v.an_id,
+    v.sort_order,
+    t.title,
+    (t.prefix || g.html || t.suffix) AS description,
+    v.visible_ru_ru_id
+  FROM templates t
+  CROSS JOIN variants v
+  JOIN gear_cols g ON g.lang = t.lang AND g.variant_key = v.variant_key
 )
 , ins_title AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title') AS id
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.title') AS id
        , meta.entity, 'title', raw_data.lang, raw_data.title
     FROM raw_data
     CROSS JOIN meta
@@ -418,21 +814,22 @@ WITH
 )
 , ins_description AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.description') AS id
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.description') AS id
        , meta.entity, 'description', raw_data.lang, raw_data.description
     FROM raw_data
     CROSS JOIN meta
   ON CONFLICT (id, lang) DO NOTHING
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
-SELECT 'wcc_profession_o' || to_char(raw_data.num, 'FM00') AS an_id,
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
+SELECT raw_data.an_id AS an_id,
        meta.su_su_id,
        meta.qu_id,
-       ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title') AS label,
-       raw_data.num AS sort_order,
+       ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.title') AS label,
+       raw_data.sort_order AS sort_order,
+       raw_data.visible_ru_ru_id AS visible_ru_ru_id,
        jsonb_build_object(
-           'title', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title')::text),
-           'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.description')::text)
+           'title', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.title')::text),
+           'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.description')::text)
        ) AS metadata
 FROM raw_data
 CROSS JOIN meta
@@ -468,7 +865,7 @@ ON CONFLICT (id, lang) DO NOTHING;
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
   'character' AS scope,
-  'wcc_profession_o02' AS an_an_id,
+  v.an_id AS an_an_id,
   jsonb_build_object(
     'set',
     jsonb_build_array(
@@ -491,14 +888,18 @@ SELECT
         )
       )
     )
-  ) AS body;
+  ) AS body
+FROM (
+  VALUES
+    ('wcc_profession_o02')
+) AS v(an_id);
 
 -- Эффекты: стартовые деньги (ветвление по DLC dlc_wt)
 -- dlcs находятся в состоянии в массиве dlcs
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
   'character' AS scope,
-  'wcc_profession_o02' AS an_an_id,
+  v.an_id AS an_an_id,
   jsonb_build_object(
     'set',
     jsonb_build_array(
@@ -539,34 +940,144 @@ SELECT
         )
       )
     )
-  ) AS body;
+  ) AS body
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
 
 -- Эффекты: жетоны ведьмака для токеновых бюджетов магазина (092_shop.sql)
 INSERT INTO effects (scope, an_an_id, body)
-SELECT 'character', 'wcc_profession_o02',
-  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_decoction_formulae_tokens'), 1));
+SELECT 'character', v.an_id,
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_decoction_formulae_tokens'), 1))
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
 
 INSERT INTO effects (scope, an_an_id, body)
-SELECT 'character', 'wcc_profession_o02',
-  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_oil_formulae_tokens'), 2));
+SELECT 'character', v.an_id,
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_oil_formulae_tokens'), 2))
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
 
 INSERT INTO effects (scope, an_an_id, body)
-SELECT 'character', 'wcc_profession_o02',
-  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_potion_formulae_tokens'), 2));
+SELECT 'character', v.an_id,
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_potion_formulae_tokens'), 2))
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
 
 INSERT INTO effects (scope, an_an_id, body)
-SELECT 'character', 'wcc_profession_o02',
-  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_steel_sword_tokens'), 1));
+SELECT 'character', v.an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.professional_gear_options.witcher_steel_sword_tokens'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'if',
+          jsonb_build_array(
+            jsonb_build_object(
+              'in',
+              jsonb_build_array(
+                'dlc_wt',
+                jsonb_build_object('var', jsonb_build_array('dlcs', jsonb_build_array()))
+              )
+            ),
+            0,
+            1
+          )
+        )
+      )
+    )
+  )
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
 
 INSERT INTO effects (scope, an_an_id, body)
-SELECT 'character', 'wcc_profession_o02',
-  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_silver_sword_tokens'), 1));
+SELECT 'character', v.an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.professional_gear_options.witcher_silver_sword_tokens'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'if',
+          jsonb_build_array(
+            jsonb_build_object(
+              'in',
+              jsonb_build_array(
+                'dlc_wt',
+                jsonb_build_object('var', jsonb_build_array('dlcs', jsonb_build_array()))
+              )
+            ),
+            0,
+            1
+          )
+        )
+      )
+    )
+  )
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
 
 -- Эффекты: ведьмачий медальон (T041) сразу в инвентарь (достаточно key + sourceId)
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
   'character' AS scope,
-  'wcc_profession_o02' AS an_an_id,
+  v.an_id AS an_an_id,
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -577,4 +1088,15 @@ SELECT
         'amount', 1
       )
     )
-  ) AS body;
+  ) AS body
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
