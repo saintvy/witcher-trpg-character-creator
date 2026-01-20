@@ -176,7 +176,6 @@ VALUES
   ('W110', 'E055', NULL, '90%'),
   ('W110', 'E071', NULL, NULL),
   ('W111', 'E063', NULL, NULL),
-  ('W171', 'E063', NULL, NULL),
   ('W113', 'E040', NULL, '50%'),
   ('W114', 'E050', NULL, NULL),
   ('W117', 'E040', NULL, '25%'),

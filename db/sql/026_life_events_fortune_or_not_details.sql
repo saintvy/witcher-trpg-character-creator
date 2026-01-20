@@ -217,7 +217,8 @@ raw_data AS (
             (20, 3, 0.2, '<b style="font-size: 1.17em;">Проклятие заразы</b><br><b>Интенсивность:</b> Высокая<br><b>Эффект:</b> Делает жертву проклятия носителем опасной болезни. Болезнь не влияет на носителя, но любой, кто дотронется до него и провалит проверку Стойкости со СЛ 18, заражается. Если носитель остаётся в здании дольше 3 дней, то все, кто находится в этом здании, должны пройти проверку Стойкости со СЛ 16. Если носитель проводит в городе больше недели, то все в городе должны совершить проверку Стойкости со СЛ 14.'),
             (20, 4, 0.2, '<b style="font-size: 1.17em;">Проклятие странника</b><br><b>Интенсивность:</b> Высокая<br><b>Эффект:</b> Одно из самых жестоких проклятий. Самой жертве оно вреда не причиняет, но даже самый верный друг, близкий родственник или товарищ от неё отвернётся. Постепенно люди покидают жертву из-за разногласий, ссор, по естественным причинам или из-за похищений, пока (если носитель проклятия дольше месяца остаётся на одном месте) сама судьба не попытается убить несчастного.'),
             (20, 5, 0.2, '<b style="font-size: 1.17em;">Проклятие ликантропии</b><br><b>Интенсивность:</b> Высокая<br><b>Эффект:</b> Проклятый ликантропией с вероятностью 30 % каждую ночь на восходе луны превращается в волколака. После превращения персонаж становится жестоким хищником с человеческой хитростью и с желанием убивать. Если обратившийся — персонаж игрока, то до восхода солнца им управляет ведущий. Будучи волколаком, персонаж потакает самым ужасным своим порывам, без жалости убивая любого, кто встанет на пути. Находясь в зверином облике, проклятый получает всё оружие, броню и способности волколака. Персонаж также прибавляет бонус к четырём своим параметрам, как указано ниже.<br><b>Бонусы волколака:</b> Реакция +2, Телосложение +3, Скорость +4, Эмпатия -5'),
-            (20, 6, 0.0, '<b style="font-size: 1.17em;">Другое</b><br>Придумайте собственное!')
+            (20, 6, 0.2, '<b style="font-size: 1.17em;">Проклятие айлурантропии</b><br><b>Интенсивность:</b> Высокая<br><b>Эффект:</b> Персонаж, страдающий айлурантропией, имеет 30% шанс превратиться в котолака каждую ночь, когда восходит луна. В своей форме котолака персонаж представляет собой злого, хитрого хищника с жаждою убивать. Если персонаж является игровым персонажем, он переходит в управление Мастера до восхода солнца. Находясь в зверином состоянии, айлурантроп обладает всем оружием, доспехами, уязвимостями и способностями котолака. Персонаж также прибавляет бонус к четырём своим параметрам, как указано ниже.<br><b>Бонусы котолака:</b> Реакция +2, Телосложение +1, Ловкость +2, Скорость +5, Эмпатия -5'),
+            (20, 7, 0.0, '<b style="font-size: 1.17em;">Другое</b><br>Придумайте собственное!')
           ) AS raw_data_ru(group_id, num, probability, option_txt)
   UNION ALL
   SELECT 'en' AS lang, raw_data_en.*
@@ -367,7 +368,8 @@ raw_data AS (
             (20, 3, 0.2, '<b style="font-size: 1.17em;">Curse of Pestilence</b><br><b>Intensity:</b> High<br><b>Effect:</b> The victim becomes a carrier of a dangerous disease. It does not affect the carrier, but anyone who touches them and fails a Physique check DC 18 is infected. If the carrier stays inside a building for more than 3 days, everyone inside must make a Physique check DC 16. If the carrier remains in a city for more than a week, everyone in the city must make a Physique check DC 14.'),
             (20, 4, 0.2, '<b style="font-size: 1.17em;">Curse of the Wanderer</b><br><b>Intensity:</b> High<br><b>Effect:</b> One of the cruelest curses. It does not harm the victim directly, but even the truest friend or closest kin will eventually abandon them. People drift away due to quarrels, distance, circumstance, or kidnappings until—if the victim stays in one place longer than a month—fate itself tries to kill them.'),
             (20, 5, 0.2, '<b style="font-size: 1.17em;">Curse of Lycanthropy</b><br><b>Intensity:</b> High<br><b>Effect:</b> Each night at moonrise there is a 30% chance the victim transforms into a werewolf. While transformed, the character becomes a brutal predator with human cunning and a lust for killing. If it is a PC, the GM controls them until sunrise. In beast form, the character gains the werewolf’s weapons, armor, and abilities plus the following bonuses:<br><b>Werewolf Bonuses:</b> Reflex +2, Body +3, Speed +4, Empathy −5'),
-            (20, 6, 0.0,  '<b style="font-size: 1.17em;">Other</b><br>Create your own!')
+            (20, 6, 0.2, '<b style="font-size: 1.17em;">Curse of Ailuranthropy</b><br><b>Intensity:</b> High<br><b>Effect:</b> A character afflicted with ailuranthropy has a 30% chance of changing into a werecat every night, when the moon rises. In their werecat form, they are a vicious, cunning predator with an urge to kill. If the character is a player character, they are taken over by the Game Master until the sun rises. While in their beast state, the ailuranthrope has all of the werecat’s weapons, armor, vulnerabilities, and abilities. The character also augments their statistics with the following changes. They increase their Body Statistic by 1, their Reflex and Dexterity Statistics by 2, and their Speed Statistic by 5. Additionally, they lower their Empathy Statistic by 5.<br><b>Werecat Bonuses:</b> Reflex +2, Body +1, Dexterity +2, Speed +5, Empathy −5'),
+            (20, 7, 0.0,  '<b style="font-size: 1.17em;">Other</b><br>Create your own!')
           ) AS raw_data_en(group_id, num, probability, option_txt)
 
 ),
@@ -418,9 +420,13 @@ vals AS (
 , ins_rules AS (
   INSERT INTO rules(ru_id, body) SELECT r.id, r.body FROM rules_vals r
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
+INSERT INTO answer_options (an_id, su_su_id, dlc_dlc_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_life_events_fortune_or_not_details_o' || to_char(vals.group_id, 'FM00') || to_char(vals.num, 'FM00') AS an_id,
        meta.su_su_id,
+       CASE
+         WHEN vals.group_id = 20 AND vals.num = 6 THEN 'dlc_sh_mothr'
+         ELSE 'core'
+       END AS dlc_dlc_id,
        meta.qu_id,
        ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*vals.group_id+vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label,
        vals.num AS sort_order,
@@ -428,7 +434,7 @@ SELECT 'wcc_life_events_fortune_or_not_details_o' || to_char(vals.group_id, 'FM0
        jsonb_build_object(
            'probability', vals.probability
        ) || CASE WHEN to_char(vals.group_id, 'FM00') || to_char(vals.num, 'FM00')
-                  IN ('1802','1803','1310','2006') THEN '{}'::jsonb
+                  IN ('1802','1803','1310','2007') THEN '{}'::jsonb
                   ELSE jsonb_build_object( 'counterIncrement'
                                          , jsonb_build_object('id', 'lifeEventsCounter', 'step', 10))
            END AS metadata
@@ -587,7 +593,8 @@ WITH
             (20, 3, 0.2, '<b style="font-size: 1.17em;">Проклятие заразы</b><br><b>Интенсивность:</b> Высокая<br><b>Эффект:</b> Делает жертву проклятия носителем опасной болезни. Болезнь не влияет на носителя, но любой, кто дотронется до него и провалит проверку Стойкости со СЛ 18, заражается. Если носитель остаётся в здании дольше 3 дней, то все, кто находится в этом здании, должны пройти проверку Стойкости со СЛ 16. Если носитель проводит в городе больше недели, то все в городе должны совершить проверку Стойкости со СЛ 14.'),
             (20, 4, 0.2, '<b style="font-size: 1.17em;">Проклятие странника</b><br><b>Интенсивность:</b> Высокая<br><b>Эффект:</b> Одно из самых жестоких проклятий. Самой жертве оно вреда не причиняет, но даже самый верный друг, близкий родственник или товарищ от неё отвернётся. Постепенно люди покидают жертву из-за разногласий, ссор, по естественным причинам или из-за похищений, пока (если носитель проклятия дольше месяца остаётся на одном месте) сама судьба не попытается убить несчастного.'),
             (20, 5, 0.2, '<b style="font-size: 1.17em;">Проклятие ликантропии</b><br><b>Интенсивность:</b> Высокая<br><b>Эффект:</b> Проклятый ликантропией с вероятностью 30 % каждую ночь на восходе луны превращается в волколака. После превращения персонаж становится жестоким хищником с человеческой хитростью и с желанием убивать. Если обратившийся — персонаж игрока, то до восхода солнца им управляет ведущий. Будучи волколаком, персонаж потакает самым ужасным своим порывам, без жалости убивая любого, кто встанет на пути. Находясь в зверином облике, проклятый получает всё оружие, броню и способности волколака. Персонаж также прибавляет бонус к четырём своим параметрам, как указано ниже.<br><b>Бонусы волколака:</b> Реакция +2, Телосложение +3, Скорость +4, Эмпатия -5'),
-            (20, 6, 0.0, '<b style="font-size: 1.17em;">Другое</b><br>Придумайте собственное!')
+            (20, 6, 0.2, '<b style="font-size: 1.17em;">Проклятие аилурантропии</b><br><b>Интенсивность:</b> Высокая<br><b>Эффект:</b> Персонаж, страдающий айлурантропией, имеет 30% шанс превратиться в котолака каждую ночь, когда восходит луна. В своей форме котолака персонаж представляет собой злого, хитрого хищника с жаждою убивать. Если персонаж является игровым персонажем, он переходит в управление Мастера до восхода солнца. Находясь в зверином состоянии, айлурантроп обладает всем оружием, доспехами, уязвимостями и способностями котолака. Персонаж также прибавляет бонус к четырём своим параметрам, как указано ниже.<br><b>Бонусы котолака:</b> Реакция +2, Телосложение +1, Ловкость +2, Скорость +5, Эмпатия -5'),
+            (20, 7, 0.0, '<b style="font-size: 1.17em;">Другое</b><br>Придумайте собственное!')
           ) AS raw_data_ru(group_id, num, probability, option_txt)
   UNION ALL
   SELECT 'en' AS lang, raw_data_en.*
@@ -737,7 +744,8 @@ WITH
             (20, 3, 0.2, '<b style="font-size: 1.17em;">Curse of Pestilence</b><br><b>Intensity:</b> High<br><b>Effect:</b> The victim becomes a carrier of a dangerous disease. It does not affect the carrier, but anyone who touches them and fails a Physique check DC 18 is infected. If the carrier stays inside a building for more than 3 days, everyone inside must make a Physique check DC 16. If the carrier remains in a city for more than a week, everyone in the city must make a Physique check DC 14.'),
             (20, 4, 0.2, '<b style="font-size: 1.17em;">Curse of the Wanderer</b><br><b>Intensity:</b> High<br><b>Effect:</b> One of the cruelest curses. It does not harm the victim directly, but even the truest friend or closest kin will eventually abandon them. People drift away due to quarrels, distance, circumstance, or kidnappings until—if the victim stays in one place longer than a month—fate itself tries to kill them.'),
             (20, 5, 0.2, '<b style="font-size: 1.17em;">Curse of Lycanthropy</b><br><b>Intensity:</b> High<br><b>Effect:</b> Each night at moonrise there is a 30% chance the victim transforms into a werewolf. While transformed, the character becomes a brutal predator with human cunning and a lust for killing. If it is a PC, the GM controls them until sunrise. In beast form, the character gains the werewolf''s weapons, armor, and abilities plus the following bonuses:<br><b>Werewolf Bonuses:</b> Reflex +2, Body +3, Speed +4, Empathy −5'),
-            (20, 6, 0.0,  '<b style="font-size: 1.17em;">Other</b><br>Create your own!')
+            (20, 6, 0.2, '<b style="font-size: 1.17em;">Curse of Ailuranthropy</b><br><b>Intensity:</b> High<br><b>Effect:</b> A character afflicted with ailuranthropy has a 30% chance of changing into a werecat every night, when the moon rises. In their werecat form, they are a vicious, cunning predator with an urge to kill. If the character is a player character, they are taken over by the Game Master until the sun rises. While in their beast state, the ailuranthrope has all of the werecat’s weapons, armor, vulnerabilities, and abilities. The character also augments their statistics with the following changes. They increase their Body Statistic by 1, their Reflex and Dexterity Statistics by 2, and their Speed Statistic by 5. Additionally, they lower their Empathy Statistic by 5.<br><b>Werecat Bonuses:</b> Reflex +2, Body +1, Dexterity +2, Speed +5, Empathy −5'),
+            (20, 7, 0.0,  '<b style="font-size: 1.17em;">Other</b><br>Create your own!')
           ) AS raw_data_en(group_id, num, probability, option_txt)
 
 )
@@ -1160,13 +1168,15 @@ WITH
         ('ru', 3, 'Проклятие: Проклятие заразы (Интенсивность: Высокая).'),
         ('ru', 4, 'Проклятие: Проклятие странника (Интенсивность: Высокая).'),
         ('ru', 5, 'Проклятие: Проклятие ликантропии (Интенсивность: Высокая).'),
-        ('ru', 6, 'Проклятие: Кастомное проклятие.'),
+        ('ru', 6, 'Проклятие: Проклятие аилурантропии (Интенсивность: Высокая).'),
+        ('ru', 7, 'Проклятие: Кастомное проклятие.'),
         ('en', 1, 'Curse: Curse of Monstrosity (Intensity: Moderate).'),
         ('en', 2, 'Curse: Curse of Phantoms (Intensity: Moderate).'),
         ('en', 3, 'Curse: Curse of Pestilence (Intensity: High).'),
         ('en', 4, 'Curse: Curse of the Wanderer (Intensity: High).'),
         ('en', 5, 'Curse: Curse of Lycanthropy (Intensity: High).'),
-        ('en', 6, 'Curse: Custom curse.')
+        ('en', 6, 'Curse: Curse of Ailuranthropy (Intensity: High).'),
+        ('en', 7, 'Curse: Custom curse.')
       ) AS vals(lang, num, text)
       CROSS JOIN meta
 )
@@ -1271,11 +1281,13 @@ WITH
         ('ru', 3, 'Проклятие заразы'),
         ('ru', 4, 'Проклятие странника'),
         ('ru', 5, 'Проклятие ликантропии'),
+        ('ru', 6, 'Проклятие аилурантропии'),
         ('en', 1, 'Curse of Monstrosity'),
         ('en', 2, 'Curse of Phantoms'),
         ('en', 3, 'Curse of Pestilence'),
         ('en', 4, 'Curse of the Wanderer'),
-        ('en', 5, 'Curse of Lycanthropy')
+        ('en', 5, 'Curse of Lycanthropy'),
+        ('en', 6, 'Curse of Ailuranthropy')
       ) AS vals(lang, num, text)
       CROSS JOIN meta
 )
@@ -1289,11 +1301,13 @@ WITH
         ('ru', 3, 'Высокая'),
         ('ru', 4, 'Высокая'),
         ('ru', 5, 'Высокая'),
+        ('ru', 6, 'Высокая'),
         ('en', 1, 'Moderate'),
         ('en', 2, 'Moderate'),
         ('en', 3, 'High'),
         ('en', 4, 'High'),
-        ('en', 5, 'High')
+        ('en', 5, 'High'),
+        ('en', 6, 'High')
       ) AS vals(lang, num, text)
       CROSS JOIN meta
 )
@@ -1307,11 +1321,13 @@ WITH
         ('ru', 3, 'Делает жертву проклятия носителем опасной болезни. Болезнь не влияет на носителя, но любой, кто дотронется до него и провалит проверку Стойкости со СЛ 18, заражается. Если носитель остаётся в здании дольше 3 дней, то все, кто находится в этом здании, должны пройти проверку Стойкости со СЛ 16. Если носитель проводит в городе больше недели, то все в городе должны совершить проверку Стойкости со СЛ 14.'),
         ('ru', 4, 'Одно из самых жестоких проклятий. Самой жертве оно вреда не причиняет, но даже самый верный друг, близкий родственник или товарищ от неё отвернётся. Постепенно люди покидают жертву из-за разногласий, ссор, по естественным причинам или из-за похищений, пока (если носитель проклятия дольше месяца остаётся на одном месте) сама судьба не попытается убить несчастного.'),
         ('ru', 5, 'Проклятый ликантропией с вероятностью 30 % каждую ночь на восходе луны превращается в волколака. После превращения персонаж становится жестоким хищником с человеческой хитростью и с желанием убивать. Если обратившийся — персонаж игрока, то до восхода солнца им управляет ведущий. Будучи волколаком, персонаж потакает самым ужасным своим порывам, без жалости убивая любого, кто встанет на пути. Находясь в зверином облике, проклятый получает всё оружие, броню и способности волколака. Персонаж также прибавляет бонус к четырём своим параметрам, как указано ниже. Бонусы волколака: Реакция +2, Телосложение +3, Скорость +4, Эмпатия -5'),
+        ('ru', 6, 'Проклятый айлурантропией с вероятностью 30 % каждую ночь, когда восходит луна, превращается в котолака. В форме котолака персонаж становится злым, хитрым хищником с жаждою убивать. Если обратившийся — персонаж игрока, то до восхода солнца им управляет ведущий. Находясь в зверином облике, проклятый получает всё оружие, броню, уязвимости и способности котолака. Персонаж также прибавляет бонус к четырём своим параметрам, как указано ниже. Бонусы котолака: Реакция +2, Телосложение +1, Ловкость +2, Скорость +5, Эмпатия -5'),
         ('en', 1, 'The victim appears monstrous to all who see them. They remain humanoid, but their features resemble a random animal. Roll 1d10 to determine the animal: 1–2 bear, 3–4 boar, 5–6 bird, 7–8 snake, 9–10 insect. The victim''s social status becomes "Hated & Feared." They are not actually a monster and do not take damage from silver, but can be mistaken for one on a failed Education check DC 18.'),
         ('en', 2, 'Affects an area, summoning as ghosts all who were wronged there. When casting, roll 5d6 to determine how many appear (add 2d6 if the area is especially horrific; only 2d6 if it is rather calm). Ghosts remain until destroyed and return the next night. They attack anything entering the cursed zone. The only way to lift the curse is to somehow right all the wrongs done there.'),
         ('en', 3, 'The victim becomes a carrier of a dangerous disease. It does not affect the carrier, but anyone who touches them and fails a Physique check DC 18 is infected. If the carrier stays inside a building for more than 3 days, everyone inside must make a Physique check DC 16. If the carrier remains in a city for more than a week, everyone in the city must make a Physique check DC 14.'),
         ('en', 4, 'One of the cruelest curses. It does not harm the victim directly, but even the truest friend or closest kin will eventually abandon them. People drift away due to quarrels, distance, circumstance, or kidnappings until—if the victim stays in one place longer than a month—fate itself tries to kill them.'),
-        ('en', 5, 'Each night at moonrise there is a 30% chance the victim transforms into a werewolf. While transformed, the character becomes a brutal predator with human cunning and a lust for killing. If it is a PC, the GM controls them until sunrise. In beast form, the character gains the werewolf''s weapons, armor, and abilities plus the following bonuses: Reflex +2, Body +3, Speed +4, Empathy −5')
+        ('en', 5, 'Each night at moonrise there is a 30% chance the victim transforms into a werewolf. While transformed, the character becomes a brutal predator with human cunning and a lust for killing. If it is a PC, the GM controls them until sunrise. In beast form, the character gains the werewolf''s weapons, armor, and abilities plus the following bonuses: Reflex +2, Body +3, Speed +4, Empathy −5'),
+        ('en', 6, 'A character afflicted with ailuranthropy has a 30% chance of changing into a werecat every night, when the moon rises. In their werecat form, they are a vicious, cunning predator with an urge to kill. If the character is a player character, they are taken over by the Game Master until the sun rises. While in their beast state, the ailuranthrope has all of the werecat’s weapons, armor, vulnerabilities, and abilities. The character also augments their statistics with the following changes. They increase their Body Statistic by 1, their Reflex and Dexterity Statistics by 2, and their Speed Statistic by 5. Additionally, they lower their Empathy Statistic by 5. Werecat Bonuses: Reflex +2, Body +1, Dexterity +2, Speed +5, Empathy −5')
       ) AS vals(lang, num, text)
       CROSS JOIN meta
 )
@@ -1544,7 +1560,7 @@ SELECT DISTINCT
   )
 FROM raw_data
 CROSS JOIN meta
-WHERE raw_data.group_id = 20 AND raw_data.num <= 5 --AND raw_data.lang = 'en'
+WHERE raw_data.group_id = 20 AND raw_data.num <= 6 --AND raw_data.lang = 'en'
 UNION ALL
 -- 9. Группа 13: Зависимости (добавляем в diseases_and_curses с типом "Зависимость")
 SELECT DISTINCT

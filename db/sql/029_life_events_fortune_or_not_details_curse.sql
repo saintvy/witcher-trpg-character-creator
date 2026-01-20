@@ -150,7 +150,7 @@ FROM meta;
   
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-  SELECT 'wcc_life_events_fortune_or_not_details', 'wcc_life_events_fortune_or_not_details_curse', 'wcc_life_events_fortune_or_not_details_o2006', 2;
+  SELECT 'wcc_life_events_fortune_or_not_details', 'wcc_life_events_fortune_or_not_details_curse', 'wcc_life_events_fortune_or_not_details_o2007', 2;
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details_curse', 'wcc_life_events_event', r.ru_id, 1

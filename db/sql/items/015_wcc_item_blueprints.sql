@@ -238,7 +238,7 @@ raw_data (b_id, item_id, name_ru, name_en, dlc_id, group_key, craft_level_key, d
   , ('B198', 'W108', 'Метательный топор', 'Throwing Axe', 'core', 'weapons.wt_thrown', 'craft.level.novice', 10, 1, 'time.unit.hour', 'I012 (1), I043 (1)', 51, 116, 75)
   , ('B199', 'W109', 'Орион', 'Orion', 'core', 'weapons.wt_thrown', 'craft.level.novice', 12, 1, 'time.unit.hour', 'I043 (1), I008 (2), I041 (1), I001 (3)', 62, 125, 100)
   , ('B200', 'W110', 'Отравленный коготь гарпии', 'Poisoned Harpy Claw', 'dlc_rw2', 'weapons.wt_thrown', 'craft.level.master', 22, 5, 'time.unit.hour', 'I032 (1), I023 (1), I024 (1), I026 (4), I029 (2), I115 (3)', 337, 675, 450)
-  , ('B201', 'W111', 'Боклерский меч', 'Buckler Sword', 'exp_toc', 'weapons.wt_sword', 'craft.level.master', 23, 12, 'time.unit.hour', 'I032 (4), I036 (2), I019 (1), I006 (1), I029 (1)', 594, 1200, 800)
+  , ('B201', 'W111', 'Герцогский меч', 'Ducal Sword', 'dlc_rw5', 'weapons.wt_sword', 'craft.level.master', 23, 12, 'time.unit.hour', 'I032 (4), I036 (2), I019 (1), I006 (1), I029 (1)', 594, 1200, 800)
   , ('B202', 'W112', 'Гледдиф', 'Gleddyf', 'core', 'weapons.wt_sword', 'craft.level.novice', 14, 7, 'time.unit.hour', 'I012 (1), I019 (1), I020 (1), I037 (1), I043 (2), I008 (1), I009 (4)', 210, 426, 285)
   , ('B203', 'W113', 'Гномий гвихир', 'Gnomish Gwyhyr', 'core', 'weapons.wt_sword', 'craft.level.grand_master', 25, 13, 'time.unit.hour', 'I006 (2), I019 (1), I033 (2), I032 (1), I025 (3), I029 (4), I023 (1)', 818, 1628, 1090)
   , ('B204', 'W114', 'Деревянный меч', 'Wooden Sword', 'hb', 'weapons.wt_sword', 'craft.level.novice', 6, 2, 'time.unit.hour', 'I012 (2), I011 (1), I007 (1), I006 (2)', 50, 98, 67)
@@ -290,7 +290,6 @@ raw_data (b_id, item_id, name_ru, name_en, dlc_id, group_key, craft_level_key, d
   , ('B250', 'W169', 'Стальной меч школы Улитки', 'Gastropod Steel Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 18, 13, 'time.unit.hour', 'I006 (3), I020 (2), I040 (1), I043 (7), I037 (1), I029 (2), I026 (2), I025 (2), I011 (1), I002 (1)', 656, 0, NULL)
   , ('B251', 'W170', 'Серебряный меч школы Улитки', 'Gastropod Silver Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 19, 15, 'time.unit.hour', 'I006 (3), I020 (2), I042 (2), I043 (2), I037 (4), I029 (2), I026 (1), I025 (2), I002 (1), I041 (10)', 597, 0, NULL)
   , ('B252', 'A064', 'Броня школы Улитки', 'Gastropod Armor', 'dlc_sch_snail', 'bodypart.full', 'craft.level.master', 18, 24, 'time.unit.hour', 'I004 (10), I011 (10), I037 (10), I043 (10), I040 (2), I025 (10), I028 (10), I089 (1), I002 (20), I041 (30)', 1538, 0, NULL)
-  , ('B253', 'W171', 'Герцогский меч', 'Ducal Sword', 'dlc_rw5', 'weapons.wt_sword', 'craft.level.master', 23, 12, 'time.unit.hour', 'I032 (4), I036 (2), I019 (1), I006 (1), I029 (1)', 594, 1200, 800)
 ),
 ins_i18n_tech AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
