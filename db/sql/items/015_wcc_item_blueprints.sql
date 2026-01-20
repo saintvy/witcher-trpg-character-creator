@@ -290,6 +290,7 @@ raw_data (b_id, item_id, name_ru, name_en, dlc_id, group_key, craft_level_key, d
   , ('B250', 'W169', 'Стальной меч школы Улитки', 'Gastropod Steel Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 18, 13, 'time.unit.hour', 'I006 (3), I020 (2), I040 (1), I043 (7), I037 (1), I029 (2), I026 (2), I025 (2), I011 (1), I002 (1)', 656, 0, NULL)
   , ('B251', 'W170', 'Серебряный меч школы Улитки', 'Gastropod Silver Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 19, 15, 'time.unit.hour', 'I006 (3), I020 (2), I042 (2), I043 (2), I037 (4), I029 (2), I026 (1), I025 (2), I002 (1), I041 (10)', 597, 0, NULL)
   , ('B252', 'A064', 'Броня школы Улитки', 'Gastropod Armor', 'dlc_sch_snail', 'bodypart.full', 'craft.level.master', 18, 24, 'time.unit.hour', 'I004 (10), I011 (10), I037 (10), I043 (10), I040 (2), I025 (10), I028 (10), I089 (1), I002 (20), I041 (30)', 1538, 0, NULL)
+  , ('B253', 'W171', 'Герцогский меч', 'Ducal Sword', 'dlc_rw5', 'weapons.wt_sword', 'craft.level.master', 23, 12, 'time.unit.hour', 'I032 (4), I036 (2), I019 (1), I006 (1), I029 (1)', 594, 1200, 800)
 ),
 ins_i18n_tech AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
