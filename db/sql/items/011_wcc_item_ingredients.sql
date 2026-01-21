@@ -174,6 +174,7 @@ WITH raw_data (name_ru, name_en, i_id, source_id, group_key, harvesting_complexi
     ('Винный камень', 'Wine Stone', 'I071', 'core', 'ingredients.alchemy.from_the_environment', 18, 'availability.R', '0,5', 88, 'ingredients.rebis'),
     ('Корень зарника', 'Allspice Root', 'I072', 'core', 'ingredients.alchemy.from_the_environment', 15, 'availability.P', '0,1', 18, 'ingredients.aether'),
     ('Плод берберки', 'Berbercane Fruit', 'I073', 'core', 'ingredients.alchemy.from_the_environment', 12, 'availability.C', '0,1', 9, 'ingredients.aether'),
+    ('Явер', 'Sweet Flag', 'I252', 'dlc_wpaw', 'ingredients.alchemy.from_the_environment', 12, 'availability.C', '1', 18, 'ingredients.aether'),
     ('Лепестки гинации', 'Ginatia Petals', 'I075', 'core', 'ingredients.alchemy.from_the_environment', 15, 'availability.P', '0,1', 17, 'ingredients.aether'),
     ('Лепестки морозника', 'Hellebore Petals', 'I076', 'core', 'ingredients.alchemy.from_the_environment', 15, 'availability.P', '0,1', 19, 'ingredients.aether'),
     ('Жемчуг', 'Pearl', 'I077', 'core', 'ingredients.alchemy.from_the_environment', 20, 'availability.R', '0,1', 100, 'ingredients.aether'),

@@ -290,6 +290,12 @@ raw_data (b_id, item_id, name_ru, name_en, dlc_id, group_key, craft_level_key, d
   , ('B250', 'W169', 'Стальной меч школы Улитки', 'Gastropod Steel Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 18, 13, 'time.unit.hour', 'I006 (3), I020 (2), I040 (1), I043 (7), I037 (1), I029 (2), I026 (2), I025 (2), I011 (1), I002 (1)', 656, 0, NULL)
   , ('B251', 'W170', 'Серебряный меч школы Улитки', 'Gastropod Silver Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 19, 15, 'time.unit.hour', 'I006 (3), I020 (2), I042 (2), I043 (2), I037 (4), I029 (2), I026 (1), I025 (2), I002 (1), I041 (10)', 597, 0, NULL)
   , ('B252', 'A064', 'Броня школы Улитки', 'Gastropod Armor', 'dlc_sch_snail', 'bodypart.full', 'craft.level.master', 18, 24, 'time.unit.hour', 'I004 (10), I011 (10), I037 (10), I043 (10), I040 (2), I025 (10), I028 (10), I089 (1), I002 (20), I041 (30)', 1538, 0, NULL)
+  , ('B253', 'T126', 'Обычная инвалидная коляска', 'Basic Wheelchair', 'dlc_wpaw', 'general_gear.group.transport', 'craft.level.novice', 13, 5, 'time.unit.hour', 'I003 (5), I007 (1), I012 (8)', 38, 76, 50)
+  , ('B254', 'T127', 'Качественная инвалидная коляска', 'Quality Wheelchair', 'dlc_wpaw', 'general_gear.group.transport', 'craft.level.journeyman', 16, 8, 'time.unit.hour', 'I003 (6), I025 (2), I043 (1), I020 (2), I012 (8)', 150, 300, 200)
+  , ('B255', 'T128', 'Обычный протез', 'Basic Prosthesis', 'dlc_wpaw', 'general_gear.group.transport', 'craft.level.novice', 13, 5, 'time.unit.hour', 'I003 (1), I012 (3), I020 (1)', 38, 76, 50)
+  , ('B256', 'T129', 'Магический протез', 'Magical Prosthesis', 'dlc_wpaw', 'general_gear.group.transport', 'craft.level.master', 10, 8, 'time.unit.hour', 'I003 (3), I004 (2), I025 (4), I026 (4), I027 (2), I006 (3), I020 (1), I043 (1)', 375, 750, 500)
+  , ('B257', 'T130', 'Ведьмачий протез', 'Witcher Prosthesis', 'dlc_wpaw', 'general_gear.group.transport', 'craft.level.master', 22, 9, 'time.unit.hour', 'I003 (2), I004 (2), I025 (2), I026 (6), I027 (3), I006 (2), I019 (1), I029 (1), I042 (1), I043 (2)', 600, 1200, 800)
+  , ('B258', 'T131', 'Протез-проводник', 'Conduit Prosthesis', 'dlc_wpaw', 'general_gear.group.transport', 'craft.level.master', 24, 10, 'time.unit.hour', 'I003 (4), I004 (2), I025 (4), I026 (8), I027 (4), I034 (1), I006 (3), I020 (1), I085 (1), I043 (1), I013 (1)', 750, 1500, 1000)
 ),
 ins_i18n_tech AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
