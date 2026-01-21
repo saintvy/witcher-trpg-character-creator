@@ -90,7 +90,13 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('general_gear.group.standard',      'Стандартное',         'Standard'),
   ('general_gear.group.tools',         'Инструменты',         'Tools'),
   ('general_gear.group.transport',     'Транспорт',           'Transport'),
-  ('general_gear.group.harness',       'Упряжь',              'Outfitting for a mount'),
+  ('general_gear.group.harness',       'Транспорт - Упряж для животных', 'Transport - Animal Harness'),
+  ('general_gear.group.vehicle_upgrades', 'Транспорт - Улучшения транспорта', 'Transport - Vehicle Upgrades'),
+
+  -- Vehicle subgroups (shop grouping)
+  ('vehicles.subgroup.animals',        'Животные',            'Animals'),
+  ('vehicles.subgroup.water',          'Водный транспорт',    'Watercraft'),
+  ('vehicles.subgroup.attached',       'Пристёгиваемый транспорт', 'Towable Vehicles'),
 
   -- Alchemy reciples
   ('reciples.group.potion', 'Зелье', 'Potion'),
@@ -126,7 +132,15 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('weapons.wt_thrown',   'Метательное',   'Thrown Weapon'),
   ('weapons.wt_sword',    'Меч',           'Sword'),
   ('weapons.wt_staff',    'Посох',         'Staff'),
-  ('weapons.wt_axe',      'Топор',         'Axe')
+  ('weapons.wt_axe',      'Топор',         'Axe'),
+
+  -- Magic
+  ('magic.gruid_invocations', 'Инвокации друида', 'Druid Invocations'),
+  ('magic.priest_invocations', 'Инвокации жреца', 'Priest Invocations'),
+  ('magic.rituals', 'Ритуалы', 'Rituals'),
+  ('magic.spells', 'Заклинания мага', 'Mage Spells'),
+  ('magic.signs', 'Знаки ведьмака', 'Witcher Signs'),
+  ('magic.hexes', 'Порчи', 'Hexes')
 ),
 ins_dict AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -147,7 +161,8 @@ ins_dict AS (
       FROM raw_data rd
      WHERE nullif(rd.name_en,'') IS NOT NULL
   ) foo
-  ON CONFLICT (id, lang) DO NOTHING
+  ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
 )
 SELECT 1;
 

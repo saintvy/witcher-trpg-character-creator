@@ -8,15 +8,21 @@ SELECT iv.wt_id
      , iv.dlc_dlc_id AS dlc_id
      , idlcs.text AS dlc
      , iname.text AS vehicle_name
+     , isubgrp.text AS subgroup_name
      , iv.base
      , iv.control_modifier
      , iv.speed
+     , iv.occupancy
+     , iv.upgrade_slots
      , iv.hp
      , coalesce(iv.weight, 0) AS weight
      , coalesce(iv.price, 0) AS price
      , iname.lang
   FROM wcc_item_vehicles iv
   JOIN i18n_text iname ON iname.id = iv.name_id
+  LEFT JOIN i18n_text isubgrp
+    ON isubgrp.id = iv.subgroup_id
+   AND isubgrp.lang = iname.lang
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = iv.dlc_dlc_id
   JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = iname.lang
  ORDER BY iname.text;

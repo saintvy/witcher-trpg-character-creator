@@ -379,6 +379,8 @@ SELECT meta.qu_id
               'keyColumn', 'wt_id',
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
+              'groupColumn', 'subgroup_name',
+              'orderBy', jsonb_build_object('column', 'vehicle_name', 'direction', 'asc'),
               'targetPath', 'characterRaw.gear',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
@@ -389,15 +391,34 @@ SELECT meta.qu_id
                   )))
                 )
               ),
-              'columns', jsonb_build_array(
-                jsonb_build_object('field', 'vehicle_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
-                jsonb_build_object('field', 'base', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.base')::text)),
-                jsonb_build_object('field', 'control_modifier', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.control_modifier')::text)),
-                jsonb_build_object('field', 'speed', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.speed')::text)),
-                jsonb_build_object('field', 'hp', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.hp')::text)),
-                jsonb_build_object('field', 'weight', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.weight')::text)),
-                jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
-                jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
+              'columns', jsonb_build_object(
+                'jsonlogic_expression', jsonb_build_object(
+                  'if', jsonb_build_array(
+                    jsonb_build_object('in', jsonb_build_array('dlc_sh_wat', jsonb_build_object('var', 'dlcs'))),
+                    jsonb_build_array(
+                      jsonb_build_object('field', 'vehicle_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
+                      jsonb_build_object('field', 'base', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.base')::text)),
+                      jsonb_build_object('field', 'control_modifier', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.control_modifier')::text)),
+                      jsonb_build_object('field', 'speed', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.speed')::text)),
+                      jsonb_build_object('field', 'occupancy', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.occupancy')::text)),
+                      jsonb_build_object('field', 'upgrade_slots', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.upgrade_slots')::text)),
+                      jsonb_build_object('field', 'hp', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.hp')::text)),
+                      jsonb_build_object('field', 'weight', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.weight')::text)),
+                      jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
+                      jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
+                    ),
+                    jsonb_build_array(
+                      jsonb_build_object('field', 'vehicle_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
+                      jsonb_build_object('field', 'base', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.base')::text)),
+                      jsonb_build_object('field', 'control_modifier', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.control_modifier')::text)),
+                      jsonb_build_object('field', 'speed', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.speed')::text)),
+                      jsonb_build_object('field', 'hp', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.hp')::text)),
+                      jsonb_build_object('field', 'weight', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.weight')::text)),
+                      jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
+                      jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
+                    )
+                  )
+                )
               )
             ),
             jsonb_build_object(

@@ -88,7 +88,7 @@ function catArray(state: Record<string, unknown>, path: string): unknown[] {
 
 /**
  * Minimal json-logic evaluator for shop filters.
- * Supports: var, concat_arrays, cat_array.
+ * Supports: var, concat_arrays, cat_array, in, if.
  */
 function evalJsonLogicLite(expr: unknown, state: Record<string, unknown>): unknown {
   if (expr === null || expr === undefined) return expr;
@@ -106,6 +106,37 @@ function evalJsonLogicLite(expr: unknown, state: Record<string, unknown>): unkno
       return value === undefined ? v[1] : value;
     }
     return undefined;
+  }
+
+  if ('in' in obj) {
+    const args = obj.in;
+    const parts = Array.isArray(args) ? args : [args];
+    const needle = evalJsonLogicLite(parts[0], state);
+    const haystack = evalJsonLogicLite(parts[1], state);
+    if (Array.isArray(haystack)) {
+      return haystack.includes(needle as any);
+    }
+    if (typeof haystack === 'string') {
+      return haystack.includes(String(needle ?? ''));
+    }
+    return false;
+  }
+
+  if ('if' in obj) {
+    const args = obj.if;
+    const parts = Array.isArray(args) ? args : [args];
+    // json-logic `if` supports multiple (cond, then) pairs + optional else at the end
+    for (let i = 0; i + 1 < parts.length; i += 2) {
+      const cond = evalJsonLogicLite(parts[i], state);
+      if (cond) {
+        return evalJsonLogicLite(parts[i + 1], state);
+      }
+    }
+    // else branch (odd length)
+    if (parts.length % 2 === 1) {
+      return evalJsonLogicLite(parts[parts.length - 1], state);
+    }
+    return null;
   }
 
   if ('cat_array' in obj) {
@@ -152,6 +183,11 @@ type ShopSourceConfig = {
   langPath?: string;
   groupColumn?: string;
   tooltipField?: string;
+  /**
+   * Optional initial ordering for rows returned by /shop/allItems.
+   * Example: { column: "vehicle_name", direction: "asc" }
+   */
+  orderBy?: unknown;
   filters?: Record<string, unknown>;
   columns?: Array<{ field: string; label?: unknown }>;
 };
@@ -239,12 +275,30 @@ export async function getAllShopItems(
       const langColumn = source.langColumn;
       const groupColumn = source.groupColumn;
       const tooltipField = source.tooltipField;
+      const orderByRaw = source.orderBy;
 
       if (!ALLOWED_TABLES.has(table)) return;
       if (!isSafeIdentifier(keyColumn) || !isSafeIdentifier(dlcColumn)) return;
       if (langColumn && !isSafeIdentifier(langColumn)) return;
       if (groupColumn && !isSafeIdentifier(groupColumn)) return;
       if (tooltipField && !isSafeIdentifier(tooltipField)) return;
+
+      // Optional ordering (safe identifiers only)
+      let orderByColumn: string = keyColumn;
+      let orderByDirection: 'ASC' | 'DESC' = 'ASC';
+      if (typeof orderByRaw === 'string' && isSafeIdentifier(orderByRaw)) {
+        orderByColumn = orderByRaw;
+      } else if (orderByRaw && typeof orderByRaw === 'object' && !Array.isArray(orderByRaw)) {
+        const o = orderByRaw as Record<string, unknown>;
+        const col = typeof o.column === 'string' ? o.column : '';
+        const dir = typeof o.direction === 'string' ? o.direction.toLowerCase() : '';
+        if (col && isSafeIdentifier(col)) {
+          orderByColumn = col;
+        }
+        if (dir === 'desc') {
+          orderByDirection = 'DESC';
+        }
+      }
 
       const filters = (source.filters && typeof source.filters === 'object')
         ? (source.filters as Record<string, unknown>)
@@ -348,7 +402,12 @@ export async function getAllShopItems(
         fields.add(tooltipField);
       }
 
-      const columns = Array.isArray(source.columns) ? source.columns : [];
+      // Columns can be a static array or a jsonlogic_expression wrapper (evaluated against state)
+      const columnsEvaluated = evalJsonLogicExpressionWrapper((source as any).columns, evalState);
+      const columns = Array.isArray(columnsEvaluated)
+        ? columnsEvaluated
+        : (Array.isArray(source.columns) ? source.columns : []);
+
       for (const col of columns) {
         if (!col || typeof col !== 'object') continue;
         const field = (col as { field?: unknown }).field;
@@ -398,7 +457,7 @@ export async function getAllShopItems(
                 SELECT ${selectList}
                 FROM "${table}"
                 WHERE ${groupWhereParts.join(' AND ')}
-                ORDER BY "${keyColumn}" ASC
+                ORDER BY "${orderByColumn}" ${orderByDirection}, "${keyColumn}" ASC
               `,
               groupParams,
             );
@@ -418,7 +477,7 @@ export async function getAllShopItems(
             SELECT ${selectList}
             FROM "${table}"
             WHERE ${whereParts.join(' AND ')}
-            ORDER BY "${keyColumn}" ASC
+            ORDER BY "${orderByColumn}" ${orderByDirection}, "${keyColumn}" ASC
           `,
           params,
         );
