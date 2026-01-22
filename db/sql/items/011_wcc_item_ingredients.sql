@@ -198,7 +198,7 @@ WITH raw_data (name_ru, name_en, i_id, source_id, group_key, harvesting_complexi
     ('Краснолюдский бессмертник', 'Dwarven Immortelle', 'I118', 'core', 'ingredients.alchemy.from_the_environment', 18, 'availability.R', '0,1', 75, 'ingredients.fulgur'),
     ('Корень лопуха', 'Burdock Root', 'I158', 'exp_wj', 'ingredients.alchemy.from_the_environment', 16, 'availability.C', '0,1', 32, 'ingredients.vermilion'),
     ('Чернящее масло', 'Darkening Oil', 'I023', 'core', 'ingredients.craft.alchemical_treatments', 16, 'availability.P', '0,1', 24, NULL),
-    ('Масло из дрейка', 'Drake Oil', 'I024', 'core', 'ingredients.craft.alchemical_treatments', 16, 'availability.P', '0,1', 45, NULL),
+    ('Драконье масло', 'Drake Oil', 'I024', 'core', 'ingredients.craft.alchemical_treatments', 16, 'availability.P', '0,1', 45, NULL),
     ('Эфирная смазка', 'Ester Grease', 'I025', 'core', 'ingredients.craft.alchemical_treatments', 14, 'availability.C', '0,1', 8, NULL),
     ('Травильная кислота', 'Etching Acid', 'I026', 'core', 'ingredients.craft.alchemical_treatments', 14, 'availability.C', '0,1', 2, NULL),
     ('Пятая эссенция', 'Fifth Essence', 'I027', 'core', 'ingredients.craft.alchemical_treatments', NULL, 'availability.R', '0,1', 82, NULL),
@@ -249,7 +249,29 @@ WITH raw_data (name_ru, name_en, i_id, source_id, group_key, harvesting_complexi
     ('Третогорская сталь', 'Tretogor Steel', 'I045', 'core', 'ingredients.craft.ingots_and_minerals', NULL, 'availability.P', '1', 64, NULL),
     ('Зерриканская смесь', 'Zerrikanian Powder', 'I046', 'core', 'ingredients.craft.ingots_and_minerals', 18, 'availability.P', '0,1', 30, NULL),
     ('Изумрудная пыль', 'Emerald Dust', 'I124', 'dlc_rw5', 'ingredients.craft.ingots_and_minerals', 22, 'availability.R', '0,1', 90, NULL),
-    ('Рубиновая пыль', 'Ruby Dust', 'I125', 'dlc_rw5', 'ingredients.craft.ingots_and_minerals', 22, 'availability.R', '0,1', 90, NULL)
+    ('Рубиновая пыль', 'Ruby Dust', 'I125', 'dlc_rw5', 'ingredients.craft.ingots_and_minerals', 22, 'availability.R', '0,1', 90, NULL),
+
+    -- Custom / technical components (used by rituals & hexes as "ingredients")
+    ('Плошка чистой воды', 'Bowl of Pure Water', 'I253', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Бутылёк чернил', 'Vial of Ink', 'I254', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Ветвь белого мирта', 'Branch of White Myrtle', 'I255', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Серебряный гвоздь', 'Silver Nail', 'I256', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Локон волос девственницы', 'Lock of a Virgin''s Hair', 'I257', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Живое животное', 'Live Animal', 'I258', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Ведро', 'Bucket', 'I259', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Коралл из Великого Моря', 'Coral from the Great Sea', 'I260', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Мясо волка', 'Wolf Meat', 'I261', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Небольшая водная поверхность', 'Small Body of Water', 'I262', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Небольшой огонь', 'Small Fire', 'I263', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Кровь умершего или его родственника', 'Blood of the Deceased or Their Relative', 'I264', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Место с возможностью поспать', 'A Place to Sleep', 'I265', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Череп животного', 'Animal Skull', 'I266', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Хрустальный череп животного', 'Crystal Animal Skull', 'I267', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Трофей из монстра', 'Monster Trophy', 'I268', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Сыр', 'Cheese', 'I269', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Мутаген', 'Mutagen', 'I270', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Алкоголь (на 40 крон)', 'Alcohol (worth 40 crowns)', 'I271', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Бутылка спиртного', 'Bottle of Spirits', 'I272', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL)
 ),
 ins_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

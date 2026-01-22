@@ -197,7 +197,24 @@ type ShopQuestionConfig = {
   sources?: unknown;
 };
 
-const ALLOWED_TABLES = new Set(['wcc_item_weapons_v', 'wcc_item_armors_v', 'wcc_item_ingredients_v', 'wcc_item_upgrades_v', 'wcc_item_general_gear_v', 'wcc_item_vehicles_v', 'wcc_item_recipes_v', 'wcc_item_potions_v', 'wcc_item_mutagens_v', 'wcc_item_trophies_v', 'wcc_item_blueprints_v']);
+const ALLOWED_TABLES = new Set([
+  'wcc_item_weapons_v',
+  'wcc_item_armors_v',
+  'wcc_item_ingredients_v',
+  'wcc_item_upgrades_v',
+  'wcc_item_general_gear_v',
+  'wcc_item_vehicles_v',
+  'wcc_item_recipes_v',
+  'wcc_item_potions_v',
+  'wcc_item_mutagens_v',
+  'wcc_item_trophies_v',
+  'wcc_item_blueprints_v',
+  // Magic (shop extensions)
+  'wcc_magic_spells_v',
+  'wcc_magic_hexes_v',
+  'wcc_magic_invocations_v',
+  'wcc_magic_rituals_v',
+]);
 
 export type GetAllShopItemsRequest = {
   surveyId?: string;
