@@ -1,3 +1,4 @@
+\echo '009_wcc_item_weapons_v.sql'
 -- Materialized view for shop UI (weapons catalog)
 -- Provides localized rows per language, plus dlc_id for filtering by allowedDlcs.
 

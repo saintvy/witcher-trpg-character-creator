@@ -1,3 +1,4 @@
+\echo '001_wcc_items_dict.sql'
 -- Common dictionary terms for items (shared across multiple item categories)
 -- Source: db/sql/items/dict.tsv
 --
