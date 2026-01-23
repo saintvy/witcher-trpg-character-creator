@@ -13,7 +13,7 @@ components_expanded AS (
        , l.lang
        , comp_elt.ord AS pos
        , (comp_elt.val->>'id')::uuid AS comp_name_id
-       , NULLIF(comp_elt.val->>'qty', '') AS qty
+       , NULLIF(comp_elt.val->>'qty', '')::int AS qty
     FROM wcc_magic_hexes h
     CROSS JOIN langs l
     CROSS JOIN LATERAL (
@@ -26,7 +26,7 @@ components_pretty AS (
        , ce.lang
        , string_agg(
            CASE
-             WHEN ce.qty IS NOT NULL THEN (COALESCE(i18n.text,'') || ' (' || ce.qty || ')')
+             WHEN ce.qty IS NOT NULL THEN (COALESCE(i18n.text,'') || ' (' || ce.qty::text || ')')
              ELSE COALESCE(i18n.text,'')
            END,
            E',\n' ORDER BY ce.pos

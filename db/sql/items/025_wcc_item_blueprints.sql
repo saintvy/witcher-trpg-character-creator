@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS wcc_item_blueprints (
   time_value        integer NULL,
   time_unit_id      uuid NULL,               -- ck_id(<time.unit.*>)
 
-  components        jsonb NULL,              -- [{"id":"<uuid>","qty":<int|null>}, ...]
+  components        jsonb NULL,              
 
   price_components  integer NULL,
   price_blueprint   integer NULL,

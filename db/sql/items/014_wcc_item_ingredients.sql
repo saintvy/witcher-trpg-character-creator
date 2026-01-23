@@ -282,7 +282,8 @@ WITH raw_data (name_ru, name_en, i_id, source_id, group_key, harvesting_complexi
     ('Труп (с работающими голосовыми связками, легкими, мозгом и ртом)', 'Corpse (with working vocal cords, lungs, brain, and mouth)', 'I279', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
     ('Головная броня', 'Head Armor', 'I280', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
     ('Корпусная броня', 'Torso Armor', 'I281', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
-    ('Ножная броня', 'Leg Armor', 'I282', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL)
+    ('Ножная броня', 'Leg Armor', 'I282', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Боевой конь', 'War Horse', 'I283', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL)
 ),
 ins_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

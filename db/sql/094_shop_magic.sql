@@ -44,6 +44,19 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
 ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text;
 
+-- Иерархия путей (если ещё не добавлена)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.hierarchy.' || v.path) AS id
+     , 'hierarchy' AS entity
+     , 'path' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('magicShop', 'ru', 'Выбор магии'),
+          ('magicShop', 'en', 'Magic Selection')
+       ) AS v(path, lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
 WITH meta AS (
   SELECT 'witcher_cc' AS su_su_id
        , 'wcc_shop_magic' AS qu_id
@@ -57,7 +70,7 @@ SELECT meta.qu_id
      , 'value_textbox'
      , jsonb_build_object(
          'path', jsonb_build_array(
-           ck_id('witcher_cc.hierarchy.equipment')::text
+           ck_id('witcher_cc.hierarchy.magicShop')::text
          ),
          'renderer', 'shop',
          'shop', jsonb_build_object(

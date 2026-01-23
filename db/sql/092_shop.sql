@@ -9,8 +9,8 @@ SELECT ck_id('witcher_cc.hierarchy.' || v.path) AS id
      , v.lang
      , v.text
   FROM (VALUES
-          ('equipment', 'ru', 'Снаряжение'),
-          ('equipment', 'en', 'Equipment')
+          ('equipment', 'ru', 'Закупка снаряжения'),
+          ('equipment', 'en', 'Equipment Purchase')
        ) AS v(path, lang, text)
 ON CONFLICT (id, lang) DO NOTHING;
 
