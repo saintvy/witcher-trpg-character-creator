@@ -39,7 +39,19 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('column.preparing_time', 'ru', 'Подготовка'),
           ('column.preparing_time', 'en', 'Preparation'),
           ('column.zone_size', 'ru', 'Зона'),
-          ('column.zone_size', 'en', 'Area')
+          ('column.zone_size', 'en', 'Area'),
+
+          -- Budget names
+          ('budget.novice_invocation_tokens.name', 'ru', 'Жетоны инвокаций новичка'),
+          ('budget.novice_invocation_tokens.name', 'en', 'Novice Invocation Tokens'),
+          ('budget.novice_spells_tokens.name', 'ru', 'Жетоны заклинаний новичка'),
+          ('budget.novice_spells_tokens.name', 'en', 'Novice Spells Tokens'),
+          ('budget.novice_signs_tokens.name', 'ru', 'Жетоны ведьмачьих знаков новичка'),
+          ('budget.novice_signs_tokens.name', 'en', 'Novice Witcher Signs Tokens'),
+          ('budget.novice_rituals_tokens.name', 'ru', 'Жетоны ритуалов новичка'),
+          ('budget.novice_rituals_tokens.name', 'en', 'Novice Rituals Tokens'),
+          ('budget.novice_hexes_tokens.name', 'ru', 'Жетоны порч с низкой опасностью'),
+          ('budget.novice_hexes_tokens.name', 'en', 'Low Danger Hexes Tokens')
        ) AS v(key, lang, text)
 ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text;
@@ -78,12 +90,54 @@ SELECT meta.qu_id
            'allowedDlcs', jsonb_build_object('jsonlogic_expression', jsonb_build_object('var','dlcs')),
            'budgets', jsonb_build_array(
              jsonb_build_object(
-               'id', 'crowns',
-               'type', 'money',
-               'source', 'characterRaw.money.crowns',
-               'priority', 0,
-               'is_default', true,
-               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.crowns.name')::text)
+               'id', 'novice_invocation_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.novice_invocation_tokens',
+               'priority', 1,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.novice_invocation_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS066', 'MS067', 'MS068', 'MS069', 'MS070', 'MS071', 'MS077', 'MS078', 'MS079', 'MS080', 'MS081', 'MS082', 'MS177', 'MS178', 'MS179', 'MS180', 'MS181', 'MS195', 'MS196', 'MS197', 'MS198', 'MS199'))
+             ),
+             jsonb_build_object(
+               'id', 'novice_spells_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.novice_spells_tokens',
+               'priority', 1,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.novice_spells_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS001', 'MS002', 'MS003', 'MS004', 'MS005', 'MS006', 'MS007', 'MS008', 'MS009', 'MS010', 'MS011', 'MS012', 'MS013', 'MS014', 'MS015', 'MS016', 'MS017', 'MS018', 'MS019', 'MS020', 'MS021', 'MS022', 'MS023', 'MS024', 'MS025', 'MS026', 'MS027', 'MS028', 'MS029', 'MS030', 'MS031', 'MS032', 'MS033', 'MS034', 'MS035', 'MS036', 'MS037', 'MS038', 'MS039', 'MS040', 'MS125', 'MS126', 'MS127', 'MS128', 'MS129', 'MS130', 'MS131', 'MS132', 'MS133', 'MS134', 'MS135', 'MS136', 'MS137', 'MS138', 'MS139', 'MS140', 'MS141', 'MS142', 'MS143', 'MS144', 'MS145', 'MS146', 'MS147', 'MS148'))
+             ),
+             jsonb_build_object(
+               'id', 'novice_signs_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.novice_signs_tokens',
+               'priority', 1,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.novice_signs_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS094', 'MS095', 'MS096', 'MS097', 'MS098'))
+             ),
+             jsonb_build_object(
+               'id', 'novice_rituals_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.novice_rituals_tokens',
+               'priority', 1,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.novice_rituals_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS104', 'MS105', 'MS106', 'MS107', 'MS108', 'MS109', 'MS110', 'MS111', 'MS112', 'MS212', 'MS213', 'MS214', 'MS215', 'MS226', 'MS227', 'MS228'))
+             ),
+             jsonb_build_object(
+               'id', 'novice_hexes_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.novice_hexes_tokens',
+               'priority', 1,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.novice_hexes_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS119', 'MS120', 'MS222', 'MS223'))
              )
            ),
            'sources', jsonb_build_array(

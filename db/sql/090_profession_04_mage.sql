@@ -493,3 +493,40 @@ SELECT
       100
     )
   ) AS body;
+
+-- Эффекты: жетоны для магии (5 заклинаний новичка, 1 ритуал новичка, 1 порча с низкой опасностью)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o04' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.novice_spells_tokens'),
+      5
+    )
+  ) AS body;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o04' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.novice_rituals_tokens'),
+      1
+    )
+  ) AS body;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o04' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.novice_hexes_tokens'),
+      1
+    )
+  ) AS body;

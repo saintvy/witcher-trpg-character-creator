@@ -1100,3 +1100,27 @@ FROM (
     ('wcc_profession_o02_wt_manticore'),
     ('wcc_profession_o02_wt_snail')
 ) AS v(an_id);
+
+-- Эффекты: жетоны для магии (5 ведьмачьих знаков новичка)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.novice_signs_tokens'),
+      5
+    )
+  ) AS body
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
