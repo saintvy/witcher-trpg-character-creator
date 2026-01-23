@@ -278,7 +278,7 @@ WITH raw_data (name_ru, name_en, i_id, source_id, group_key, harvesting_complexi
     ('Мелок', 'Chalk', 'I275', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
     ('Ваша собственная кровь', 'Your Own Blood', 'I276', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
     ('Череп (от существа, убитого за последние 24 часа)', 'Skull (from a creature killed within the last 24 hours)', 'I277', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
-    ('10 трупов (от существ, убитых за последние 24 часа)', '10 Corpses (from creatures killed within the last 24 hours)', 'I278', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Свежий труп (от существа, убитого за последние 24 часа)', 'Fresh Corpse (from a creature killed within the last 24 hours)', 'I278', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
     ('Труп (с работающими голосовыми связками, легкими, мозгом и ртом)', 'Corpse (with working vocal cords, lungs, brain, and mouth)', 'I279', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
     ('Головная броня', 'Head Armor', 'I280', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
     ('Корпусная броня', 'Torso Armor', 'I281', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
