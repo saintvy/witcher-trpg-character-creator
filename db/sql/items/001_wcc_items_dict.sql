@@ -156,6 +156,8 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('element.air',   'Воздух',    'Air'),
   ('element.fire',  'Огонь',     'Fire'),
   ('element.water', 'Вода',      'Water'),
+  ('element.necromancy', 'Некромантия', 'Necromancy'),
+  
 
   -- Magic: forms (targeting / area)
   ('magic.form.direct',               'Прямая',                    'Direct'),

@@ -13,7 +13,7 @@ components_expanded AS (
        , l.lang
        , comp_elt.ord AS pos
        , (comp_elt.val->>'id')::uuid AS comp_name_id
-       , NULLIF(comp_elt.val->>'qty', '') AS qty
+       , NULLIF(comp_elt.val->>'qty', '')::int AS qty
     FROM wcc_magic_rituals r
     CROSS JOIN langs l
     CROSS JOIN LATERAL (
@@ -26,7 +26,7 @@ components_pretty AS (
        , ce.lang
        , string_agg(
            CASE
-             WHEN ce.qty IS NOT NULL THEN (COALESCE(i18n.text,'') || ' (' || ce.qty || ')')
+             WHEN ce.qty IS NOT NULL THEN (COALESCE(i18n.text,'') || ' (' || ce.qty::text || ')')
              ELSE COALESCE(i18n.text,'')
            END,
            E',\n' ORDER BY ce.pos
@@ -64,7 +64,17 @@ SELECT r.ms_id
          WHEN r.effect_time_value IS NOT NULL THEN r.effect_time_value
          ELSE NULL
        END AS effect_time
-     , ieffect.text AS effect
+     , CASE
+         WHEN cp.ingredients IS NOT NULL THEN
+           COALESCE(ieffect.text, '') || E'\n\n' || 
+           CASE l.lang
+             WHEN 'ru' THEN 'Компоненты:'
+             WHEN 'en' THEN 'Components:'
+             ELSE 'Components:'
+           END || E'\n' || cp.ingredients
+         ELSE
+           COALESCE(ieffect.text, '')
+       END AS effect
      , iremove.text AS how_to_remove
      , lpad(
          CASE r.level_id

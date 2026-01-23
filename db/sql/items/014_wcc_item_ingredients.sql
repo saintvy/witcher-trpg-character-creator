@@ -272,7 +272,17 @@ WITH raw_data (name_ru, name_en, i_id, source_id, group_key, harvesting_complexi
     ('Сыр', 'Cheese', 'I269', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
     ('Мутаген', 'Mutagen', 'I270', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
     ('Алкоголь (на 40 крон)', 'Alcohol (worth 40 crowns)', 'I271', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
-    ('Бутылка спиртного', 'Bottle of Spirits', 'I272', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL)
+    ('Бутылка спиртного', 'Bottle of Spirits', 'I272', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Труп', 'Corpse', 'I273', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Свечи', 'Candles', 'I274', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Мелок', 'Chalk', 'I275', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Ваша собственная кровь', 'Your Own Blood', 'I276', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Череп (от существа, убитого за последние 24 часа)', 'Skull (from a creature killed within the last 24 hours)', 'I277', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('10 трупов (от существ, убитых за последние 24 часа)', '10 Corpses (from creatures killed within the last 24 hours)', 'I278', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Труп (с работающими голосовыми связками, легкими, мозгом и ртом)', 'Corpse (with working vocal cords, lungs, brain, and mouth)', 'I279', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Головная броня', 'Head Armor', 'I280', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Корпусная броня', 'Torso Armor', 'I281', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL),
+    ('Ножная броня', 'Leg Armor', 'I282', 'core', 'custom.technical', NULL, NULL, NULL, 0, NULL)
 ),
 ins_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

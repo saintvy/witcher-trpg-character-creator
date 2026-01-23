@@ -185,13 +185,15 @@ WITH raw_data (
  2 - Волколак, Эндриага и т.д.
  3 - Главоглаз, Тролль и т.д.$$, 'magic.form.zone_circle', $$4$$, $$2$$, $$12$$, $$$$, $$4d6$$, $$$$, '', $$Уклонение$$, $$Атлетика$$, $$$$),
   ('MS230', 'exp_bot', 'level.journeyman', 'element.mixed', $$Замещение де Клодин$$, $$De Claudine’s Substitution$$, $$Позволяет навсегда изменить одну единицу алхимического ингредиента. - Мутированный ингредиент меняет содержащийся в нем алхимический ингредиент на любой другой. - В алхимической формуле можно использовать только одну единицу трансмутированного вещества без разрушения смеси.$$, 'magic.form.direct', $$2$$, $$$$, $$8$$, $$$$, $$$$, $$$$, '', $$$$, $$$$, $$$$),
-  ('MS231', 'exp_bot', 'level.journeyman', 'element.air', $$Шторм ван Аделаиды$$, $$Van Adelaide’s Gale$$, $$Переносит вас на расстояние до 30м мощным ветром с мягкой посадкой без получения урона. - Порыв ветра в момент прыжка:   * отбрасывает любого на 6м   * цели получают урон в корпус   * цели получают дополнительно та-ранящий урон при столкновении. Т.е. 3d6 умноженный на модификатор веса цели. 
+  ('MS231', 'exp_bot', 'level.journeyman', 'element.air', $$Шторм ван Аделаиды$$, $$Van Adelaide's Gale$$, $$Переносит вас на расстояние до 30м мощным ветром с мягкой посадкой без получения урона. - Порыв ветра в момент прыжка:   * отбрасывает любого на 6м   * цели получают урон в корпус   * цели получают дополнительно та-ранящий урон при столкновении. Т.е. 3d6 умноженный на модификатор веса цели. 
  
  Модификаторы тарана:
  0.5 - Накер, кошка и т.д.
  1 - Человек и т.д.
  2 - Волколак, Эндриага и т.д.
- 3 - Главоглаз, Тролль и т.д.$$, 'magic.form.zone_circle', $$$$, $$2$$, $$12$$, $$$$, $$1d6$$, $$$$, '', $$Уклонение$$, $$Атлетика$$, $$$$)
+ 3 - Главоглаз, Тролль и т.д.$$, 'magic.form.zone_circle', $$$$, $$2$$, $$12$$, $$$$, $$1d6$$, $$$$, '', $$Уклонение$$, $$Атлетика$$, $$$$),
+  ('MS232', 'exp_toc', 'level.journeyman', 'element.necromancy', $$Восстановление трупа$$, $$Corpse Restoration$$, $$Восстанавливает мышцы, плоть, кожу и волосы целевого трупа в призрачной форме. Восстановленный труп выглядит как полупрозрачная версия человека в момент смерти со всеми ранами. Форму можно трогать и исследовать как настоящую. Можно призвать части тела, которые у вас есть, даже если они не соединены, в пределах 4м. - При провале происходит вторжение Беспокойных Духов.$$, 'magic.form.direct', $$4$$, $$$$, $$7$$, $$$$, $$$$, $$1$$, 'time.unit.hour', $$$$, $$$$, $$$$),
+  ('MS233', 'exp_toc', 'level.master', 'element.necromancy', $$Буря душ$$, $$Storm of Souls$$, $$Втягивает беспокойные души в мир, чтобы сеять хаос. Сразу после сотворения призывается 1d6+4 призрака, ослепленных яростью. Они атакуют любую цель, включая заклинателя и союзников. - При провале происходит вторжение Беспокойных Духов.$$, 'magic.form.direct', $$10$$, $$$$, $$22$$, $$$$, $$$$, $$2d6$$, 'time.unit.round', $$$$, $$$$, $$$$)
 ),
 spell_effects_en (ms_id, text_en) AS (
   VALUES
@@ -677,7 +679,9 @@ Weight modifiers:
 0.5 — nekker, cat, etc.
 1 — human, etc.
 2 — werewolf, endriaga, etc.
-3 — fiend, troll, etc.')
+3 — fiend, troll, etc.'),
+    ('MS232', 'Restores the muscle, flesh, skin, and hair of a targeted corpse in ghostly form. The restored corpse appears as a translucent version of the person at the moment of death with all wounds present. The form can be touched and examined as if real. You can summon body parts you have, even if disconnected, within 4m. - On failure, Restless Spirits invade.'),
+    ('MS233', 'Drags restless souls into the world to sow chaos. Immediately upon casting, 1d6+4 wraiths are summoned, blinded by rage. They attack any target, including the caster and allies. - On failure, Restless Spirits invade.')
 ),
 ins_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
