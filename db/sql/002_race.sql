@@ -1139,5 +1139,6 @@ SELECT 'character', 'wcc_race_witcher',
 
 -- Правила
 INSERT INTO rules(name, body) VALUES ('is_elf', '{"==":[{"var":"characterRaw.logicFields.race"},"Elf"]}'::jsonb);
+INSERT INTO rules(name, body) VALUES ('is_human', '{"==":[{"var":"characterRaw.logicFields.race"},"Human"]}'::jsonb);
 INSERT INTO rules(name, body) VALUES ('is_dwarf', '{"==":[{"var":"characterRaw.logicFields.race"},"Dwarf"]}'::jsonb);
 INSERT INTO rules(name, body) VALUES ('is_witcher', '{"==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb);

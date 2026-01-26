@@ -5,6 +5,21 @@ WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
                 , 'wcc_profession' AS qu_id
                 , 'answer_options' AS entity)
+-- Базовые правила видимости (профессия "Воин" только для расы НЕ ведьмак)
+, rule_parts AS (
+  SELECT
+    (SELECT r.body FROM rules r WHERE r.name = 'is_witcher' ORDER BY r.ru_id LIMIT 1) AS is_witcher_expr
+)
+, vis_rules AS (
+  INSERT INTO rules (ru_id, name, body)
+  SELECT
+    ck_id('witcher_cc.rules.wcc_profession.man_at_arms') AS ru_id,
+    'wcc_profession_man_at_arms' AS name,
+    jsonb_build_object('!', rule_parts.is_witcher_expr) AS body
+  FROM rule_parts
+  ON CONFLICT (ru_id) DO NOTHING
+  RETURNING ru_id
+)
 , raw_data AS (
   SELECT 'ru' AS lang, raw_data_ru.*
     FROM (VALUES
@@ -450,12 +465,13 @@ WITH
     CROSS JOIN meta
   ON CONFLICT (id, lang) DO NOTHING
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_profession_o' || to_char(raw_data.num, 'FM00') AS an_id,
        meta.su_su_id,
        meta.qu_id,
        ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title') AS label,
        raw_data.num AS sort_order,
+       ck_id('witcher_cc.rules.wcc_profession.man_at_arms') AS visible_ru_ru_id,
        jsonb_build_object(
            'title', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title')::text),
            'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.description')::text)
