@@ -1,0 +1,1133 @@
+\echo '005_profession_02_witcher.sql'
+-- Вариант ответа: Ведьмак
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_profession' AS qu_id
+                , 'answer_options' AS entity)
+-- Базовые правила видимости (профессия "Ведьмак" только для расы Witcher)
+, ensure_is_witcher AS (
+  -- гарантируем, что is_witcher существует (создается в 002_race.sql, но на случай если файл еще не выполнился)
+  INSERT INTO rules (name, body)
+  SELECT 'is_witcher', '{"==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb
+  WHERE NOT EXISTS (SELECT 1 FROM rules WHERE name = 'is_witcher')
+  RETURNING ru_id
+)
+, ensure_is_dlc_wt_enabled AS (
+  -- гарантируем, что is_dlc_wt_enabled существует (детерминированный ru_id как в 047_witcher_school.sql)
+  INSERT INTO rules (ru_id, name, body)
+  VALUES
+    (ck_id('witcher_cc.rules.is_dlc_wt_enabled'), 'is_dlc_wt_enabled', '{"in":["dlc_wt",{"var":["dlcs",[]]}]}'::jsonb)
+  ON CONFLICT (ru_id) DO NOTHING
+  RETURNING ru_id
+)
+, rule_parts AS (
+  SELECT
+    (SELECT r.body FROM rules r WHERE r.name = 'is_witcher' ORDER BY r.ru_id LIMIT 1) AS is_witcher_expr,
+    (SELECT r.body FROM rules r WHERE r.ru_id = ck_id('witcher_cc.rules.is_dlc_wt_enabled') LIMIT 1) AS wt_expr
+)
+, vis_rules AS (
+  -- 8 правил: 1 для случая без dlc_wt и 7 для dlc_wt+школа
+  INSERT INTO rules (ru_id, name, body)
+  SELECT *
+  FROM (
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_off') AS ru_id,
+      'wcc_profession_witcher_wt_off' AS name,
+      jsonb_build_object(
+        'and',
+        jsonb_build_array(
+          rule_parts.is_witcher_expr,
+          jsonb_build_object('!', rule_parts.wt_expr)
+        )
+      ) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_wolf') AS ru_id,
+      'wcc_profession_witcher_wt_wolf' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'wolf'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_gryphon') AS ru_id,
+      'wcc_profession_witcher_wt_gryphon' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'gryphon'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_cat') AS ru_id,
+      'wcc_profession_witcher_wt_cat' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'cat'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_viper') AS ru_id,
+      'wcc_profession_witcher_wt_viper' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'viper'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_bear') AS ru_id,
+      'wcc_profession_witcher_wt_bear' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'bear'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_manticore') AS ru_id,
+      'wcc_profession_witcher_wt_manticore' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'manticore'))
+      )) AS body
+    FROM rule_parts
+    UNION ALL
+    SELECT
+      ck_id('witcher_cc.rules.wcc_profession.witcher.wt_snail') AS ru_id,
+      'wcc_profession_witcher_wt_snail' AS name,
+      jsonb_build_object('and', jsonb_build_array(
+        rule_parts.is_witcher_expr,
+        rule_parts.wt_expr,
+        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var','characterRaw.logicFields.witcher_school'), 'snail'))
+      )) AS body
+    FROM rule_parts
+  ) r
+  ON CONFLICT (ru_id) DO NOTHING
+  RETURNING ru_id
+)
+, variants(an_id, variant_key, sort_order, visible_ru_ru_id) AS (
+  VALUES
+    ('wcc_profession_o02', 'wt_off', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_off')),
+    ('wcc_profession_o02_wt_wolf', 'wt_wolf', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_wolf')),
+    ('wcc_profession_o02_wt_gryphon', 'wt_gryphon', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_gryphon')),
+    ('wcc_profession_o02_wt_cat', 'wt_cat', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_cat')),
+    ('wcc_profession_o02_wt_viper', 'wt_viper', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_viper')),
+    ('wcc_profession_o02_wt_bear', 'wt_bear', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_bear')),
+    ('wcc_profession_o02_wt_manticore', 'wt_manticore', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_manticore')),
+    ('wcc_profession_o02_wt_snail', 'wt_snail', 2, ck_id('witcher_cc.rules.wcc_profession.witcher.wt_snail'))
+)
+, templates(lang, title, prefix, suffix) AS (
+  VALUES
+    ('ru', 'Ведьмак',
+'
+<div class="ddlist_option">
+<table class="profession_table">
+    <tr>
+        <td>
+            <strong>Энергия:</strong> 2<br><br>
+            <strong>Магические способности:</strong><br>
+            <strong class="section-title">(Все базовые знаки)</strong>
+            <ul>
+                <li>Аксий</li>
+                <li>Аард</li>
+                <li>Квен</li>
+                <li>Игни</li>
+                <li>Ирден</li>
+            </ul>
+        </td>
+        <td>
+            <strong>Навыки</strong>
+            <ul>
+                <li>[Воля] - Сотворение заклинаний</li>
+                <li>[Интеллект] - Внимание</li>
+                <li>[Интеллект] - Выживание в дикой природе</li>
+                <li>[Интеллект] - Дедукция</li>
+                <li>[Ловкость] - Атлетика</li>
+                <li>[Ловкость] - Скрытность</li>
+                <li>[Реакция] - Верховая езда</li>
+                <li>[Реакция] - Владение мечом</li>
+                <li>[Реакция] - Уклонение / Изворотливость</li>
+                <li>[Ремесло] - Алхимия</li>
+            </ul>
+        </td>
+',
+'
+    </tr>
+</table>
+
+<h3>Определяющий навык</h3>
+<table class="main_skill">
+    <tr>
+        <td class="header">Подготовка ведьмака (Инт)</td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            Большинство ведьмаков проводят детство и юность в крепости, корпя над пыльными томами и проходя чудовищные боевые тренировки. Многие говорят, что главное оружие ведьмака — это знания о чудовищах и умение найти выход из любой ситуации. Находясь в опасной среде или на пересечённой местности, ведьмак может снизить соответствующие штрафы на половину значения своего навыка <strong>Подготовка ведьмака</strong> (минимум 1). <strong>Подготовку ведьмака</strong> также можно использовать в любой ситуации, где понадобился бы навык <strong>Монстрология</strong>. 
+        </td>
+    </tr>
+</table>
+
+<h3>Профессиональные навыки</h3>
+
+<table class="skills_branch_1">
+    <tr>
+        <td class="header">Магический клинок</td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Медитация</strong><br>
+            Ведьмак может войти в медитативный транс, что позволяет ему получить все преимущества сна, но при этом сохранять бдительность. Во время медитации ведьмак считается находящимся в сознании для того, чтобы заметить что-либо в радиусе в метрах, равном удвоенному значению его <strong>Медитации</strong>.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Магический источник</strong><br>
+            По мере того как ведьмак всё больше использует знаки, его тело постепенно привыкает к течению магической энергии. Каждые 2 очка, вложенные в способность <strong>Магический источник</strong>, повышают значение Энергии ведьмака на 1. Когда эта способность достигает 10 уровня, максимальное значение Энергии ведьмака становится равно 7. Эта способность развивается аналогично прочим навыкам.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Гелиотроп (Воля)</strong><br>
+            Когда ведьмак становится целью заклинания, инвокации или порчи, он может совершить проверку способности <strong>Гелиотроп</strong>, чтобы попытаться отменить эффект. Он должен выкинуть результат, который больше либо равен результату его противника, а также потратить количество Выносливости, равное половине Выносливости, затраченной на сотворение магии.
+        </td>
+    </tr>
+</table>
+
+<table class="skills_branch_2">
+    <tr>
+        <td class="header">Мутант</td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Крепкий желудок</strong><br>
+            За годы употребления ядовитых ведьмачьих эликсиров ведьмаки привыкают к токсинам. Ведьмак может выдержать отвары и эликсиры суммарной токсичностью на 5% больше за каждые 2 очка, вложенные в способность <strong>Крепкий желудок</strong>. Эта способность развивается аналогично прочим навыкам. На 10 уровне максимальная токсичность для ведьмака равна 150%.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Ярость</strong><br>
+            Будучи отравленным, ведьмак впадает в ярость и наносит дополнительно 1 урон в ближнем бою за каждый уровень <strong>Ярости</strong>. В этом состоянии единственная цель ведьмака — добраться до безопасного места или убить отравителя. Действие <strong>Ярости</strong> заканчивается одновременно с действием яда. Ведьмак может попытаться избавиться от <strong>Ярости</strong> раньше, совершив проверку Стойкости со СЛ 15.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Трансмутация (Тел)</strong><br>
+            Принимая отвар, ведьмак может совершить проверку <strong>Трансмутации</strong> со СЛ 18. При успехе тело ведьмака принимает в себя несколько больше мутагена, чем обычно, что позволяет получить бонус в зависимости от принятого отвара (см. таблицу на полях). Длительность действия отвара уменьшается вдвое. Дополнительные мутации слишком малы, чтобы их заметить.
+            <br><br>
+            <div style="display:inline-block;">
+            <table border="1" cellpadding="4" cellspacing="0" class="table-small">
+                <tr>
+                    <th>Отвар</th>
+                    <th>Эффект</th>
+                </tr>
+                <tr>
+                    <td><b>Главоглаз</b></td>
+                    <td>Любой, кто контактирует с вашей слюной, имеет 50%-ный шанс отравиться.</td>
+                </tr>
+                <tr>
+                    <td><b>Накер</b></td>
+                    <td>Ваши ноги становятся сильнее, и значение Прж увеличивается на 3 м.</td>
+                </tr>
+                <tr>
+                    <td><b>Полуденница</b></td>
+                    <td>Ваши глаза меняются, и уровень освещения на вас больше не влияет.</td>
+                </tr>
+                <tr>
+                    <td><b>Катакан</b></td>
+                    <td>Ваши надпочечники меняются, позволяя восстанавливать 3 ПЗ, когда вы наносите урон.</td>
+                </tr>
+                <tr>
+                    <td><b>Виверна</b></td>
+                    <td>Ваши мускулы становятся сильнее, что даёт +5 к Скор, что также влияет на Бег.</td>
+                </tr>
+                <tr>
+                    <td><b>Тролль</b></td>
+                    <td>Ваше тело и кости становятся крепче. Вы наносите дополнительно 1d6 физического урона.</td>
+                </tr>
+                <tr>
+                    <td><b>Бес</b></td>
+                    <td>Ваши глаза незаметно меняются, взгляд становится зачаровывающим. Вы получаете +4 к Харизме, Соблазнению и Убеждению.</td>
+                </tr>
+                <tr>
+                    <td><b>Кладбищенская баба</b></td>
+                    <td>Ваше тело незаметно меняется, позволяя получить 10 Вын при убийстве цели.</td>
+                </tr>
+                <tr>
+                    <td><b>Волколак</b></td>
+                    <td>Ваши челюсти становятся сильнее, а зубы слегка заостряются. Вы можете атаковать укусом, нанося 2d6 урона.</td>
+                </tr>
+                <tr>
+                    <td><b>Грифон</b></td>
+                    <td>Ваши глаза меняются, позволяя видеть куда дальше. Вы получаете +4 к Вниманию.</td>
+                </tr>
+            </table>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<table class="skills_branch_3">
+    <tr>
+        <td class="header">Убийца</td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Отбивание стрел (Лвк)</strong><br>
+            Ведьмак может совершить проверку этой способности со штрафом -3, чтобы отбить летящий физический снаряд. При отбивании ведьмак может выбрать цель в пределах 10 м. Эта цель должна совершить действие защиты против броска <strong>Отбивания стрел</strong> ведьмака, или она будет ошеломлена из-за попадания отбитого снаряда.
+            <br><br>
+            <b>Отбивание бомб.</b> Бомбы и другие атаки, поражающие зону, взрываются после отбивания. Если вторая цель уклоняется от атаки, совершите бросок по таблице разброса (см. стр. 152), чтобы определить, куда попадёт снаряд.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Быстрый удар (Реа)</strong><br>
+            Закончив свой ход, ведьмак может потратить 5 очков Вын и совершить проверку <strong>Быстрого удара</strong> со СЛ, равной Реа противника хЗ. При успехе ведьмак совершает ещё одну атаку в этот раунд против этого противника, которая может включать в себя разоружение, подсечку и прочие атаки.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Вихрь (Реа)</strong><br>
+            Потратив 5 очков Вын за раунд, ведьмак может закрутиться в <strong>Вихре</strong>, совершая каждый ход по одной атаке против всех, кто находится в пределах дистанции его меча. Проверка <strong>Вихря</strong> считается проверкой атаки. Находясь в <strong>Вихре</strong>, ведьмак может только поддерживать его, уклоняться и передвигаться на 2 метра за раунд. Любое другое действие или полученный удар прекращают <strong>Вихрь</strong>.
+        </td>
+    </tr>
+</table>
+</div>
+'),
+    ('en', 'Witcher',
+'
+<div class="ddlist_option">
+<table class="profession_table">
+    <tr>
+        <td>
+            <strong>Vigor:</strong> 2<br><br>
+            <strong>Magical Perks:</strong><br>
+            <strong class="section-title">(All Basic Signs)</strong>
+            <ul>
+                <li>Axii</li>
+                <li>Aard</li>
+                <li>Quen</li>
+                <li>Igni</li>
+                <li>Yrden</li>
+            </ul>
+        </td>
+        <td>
+            <strong class="section-title">Skills</strong>
+            <ul>
+                <li>[CRA] - Alchemy</li>
+                <li>[DEX] - Athletics</li>
+                <li>[DEX] - Stealth</li>
+                <li>[INT] - Awareness</li>
+                <li>[INT] - Deduction</li>
+                <li>[INT] - Wilderness Survival</li>
+                <li>[REF] - Dodge/Escape</li>
+                <li>[REF] - Riding</li>
+                <li>[REF] - Swordsmanship</li>
+                <li>[WILL] - Spell Casting</li>
+            </ul>
+        </td>
+',
+'
+    </tr>
+</table>
+
+<h3>Defining Skill</h3>
+<table class="main_skill">
+    <tr>
+        <td class="header">Witcher Training (INT)</td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            Most of a Witcher’s early life is spent within the walls of their keep, studying huge, dusty tomes and going through hellish combat training. Many have argued that the Witcher’s greatest weapon is their knowledge of monsters and their adaptability in any situation. When in a hostile environment or difficult terrain, a Witcher can lessen the penalties by half their <strong>Witcher Training</strong> value (minimum 1). <strong>Witcher Training</strong> can also be used in any situation that you would normally use Monster Lore for.
+        </td>
+    </tr>
+</table>
+
+<h3>Professional Skills</h3>
+
+<table class="skills_branch_1">
+    <tr>
+        <td class="header">The Spellsword</td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Meditation</strong><br>
+            A Witcher can enter a meditative trance which grants all the benefits of sleeping but allows them to remain vigilant. While meditating a Witcher is considered awake for the purpose of noticing anything within double their <strong>Meditation</strong> value in meters.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Magical Source</strong><br>
+            As a Witcher uses signs more often their body becomes more used to the effort. For every 2 points a Witcher has in <strong>Magical Source</strong> they gain 1 points of Vigor threshold. When this ability reaches level 10, your maximum Vigor threshold becomes 7. This skill can be trained like other skills.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Heliotrope (WILL)</strong><br>
+            When a Witcher is targeted by a spell, invocation, or hex they can roll <strong>Heliotrope</strong> to attempt to negate the effects. They must roll a Heliotrope roll that equals or beats the opponent’s roll and then expend an amount of Stamina equal to half the Stamina spent to cast the magic.
+        </td>
+    </tr>
+</table>
+
+<table class="skills_branch_2">
+    <tr>
+        <td class="header">The Mutant</td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Iron Stomach</strong><br>
+            After decades of drinking toxic witcher potions, witcher bodies adapt to the toxins. A witcher can endure 5% more toxicity from drinking potions and decoctions per 2 points they spend on <strong>Iron Stomach</strong>. This skill can be trained like other skills. At level 10, a witcher’s maximum toxicity is 150%.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Frenzy</strong><br>
+            When poisoned, a witcher goes into a frenzy and deals an extra 1 melee damage per level in <strong>Frenzy</strong>. While in a <strong>Frenzy</strong>, your single goal is to get to a place of safety or kill the target that poisoned you. When the poison wears off, the <strong>Frenzy</strong> ends. You can attempt to end Frenzy early with a DC:15 Endurance roll.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Transmutation (BODY)</strong><br>
+            When taking decoctions a Witcher can roll <strong>Transmutation</strong> at DC:18. A success allows their body to assimilate slightly more of the mutagen than usual and gain a bonus based on which decoction they take. The decoction lasts half as long as it normally would. The extra mutations are too subtle to spot.
+            <br><br>
+            <div style="display:inline-block;">
+            <table border="1" cellpadding="4" cellspacing="0" class="table-small">
+                <tr>
+                    <th>Decoction</th>
+                    <th>Effect</th>
+                </tr>
+                <tr>
+                    <td><b>Arachas</b></td>
+                    <td>Anyone who comes in contact with your saliva has a 50% chance of being poisoned.</td>
+                </tr>
+                <tr>
+                    <td><b>Nekker</b></td>
+                    <td>Your legs become stronger, raising your LEAP by 3m.</td>
+                </tr>
+                <tr>
+                    <td><b>Noon Wraith</b></td>
+                    <td>Your eyes change, and you aren’t affected by light conditions.</td>
+                </tr>
+                <tr>
+                    <td><b>Katakan</b></td>
+                    <td>Your adrenal glands change, allowing you to regenerate 3 HP when you deal damage.</td>
+                </tr>
+                <tr>
+                    <td><b>Wyvern</b></td>
+                    <td>Your muscles strengthen, giving you a +5 to SPD which carries over to RUN.</td>
+                </tr>
+                <tr>
+                    <td><b>Troll</b></td>
+                    <td>Your body hardens, and so do your bones. You do an extra 1d6 physical damage.</td>
+                </tr>
+                <tr>
+                    <td><b>Fiend</b></td>
+                    <td>Your eyes change imperceptibly and your gaze becomes subtly enthralling, giving a +4 to Charisma, Seduction, and Persuasion.</td>
+                </tr>
+                <tr>
+                    <td><b>Grave Hag</b></td>
+                    <td>Your body changes imperceptibly, allowing you to gain 10 STA by killing targets.</td>
+                </tr>
+                <tr>
+                    <td><b>Werewolf</b></td>
+                    <td>Your jaws strengthen and your teeth sharpen just a hair, giving you a bite attack of 2d6.</td>
+                </tr>
+                <tr>
+                    <td><b>Griffin</b></td>
+                    <td>Your eyes change, allowing you to see for a great distance, giving a +4 to Awareness.</td>
+                </tr>
+            </table>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<table class="skills_branch_3">
+    <tr>
+        <td class="header">The Slayer</td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Parry Arrows (DEX)</strong><br>
+            A Witcher can roll <strong>Parry Arrows</strong> at a −3 to deflect physical projectiles. When parrying, the Witcher can choose a target within 10m. That target must take a defense action against the Witcher’s <strong>Parry Arrows</strong> roll or be Staggered by the flying projectile.
+            <br><br>
+            <b>Parrying Bombs.</b> Bombs and other area of effect attacks detonate after the parry resolves. If the second target dodged the attack, roll on the Scatter Table to see where the attack lands.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Quick Strike (REF)</strong><br>
+            After a Witcher takes their turn they can spend 5 STA and make a <strong>Quick Strike</strong> roll at a DC equal to their opponent’s REF×3. On success, they make another single strike in that round. This attack must be made against the opponent they rolled against, but can include disarms, trips, and other attacks.
+        </td>
+    </tr>
+    <tr>
+        <td class="opt_content">
+            <strong>Whirl (REF)</strong><br>
+            By spending 5 STA per round, a witcher can enter a <strong>Whirl</strong>, where the witcher makes one attack against everyone within sword range each turn, with their <strong>Whirl</strong> roll acting as the attack roll. The witcher can only maintain this Whirl, dodge, and move 2m each round. Doing anything else or being hit halts the <strong>Whirl</strong>.
+        </td>
+    </tr>
+</table>
+</div>
+')
+)
+, gear_cols(lang, variant_key, html) AS (
+  VALUES
+    -- dlc_wt OFF: показываем как раньше (мечи неопределены, значит будут токены на выбор)
+    ('ru', 'wt_off',
+'        <td>
+            <strong>Снаряжение</strong><br>
+            <strong class="section-title">(выберите 2)</strong>
+            <ul>
+                <li>Инструменты алхимика</li>
+                <li>Лошадь</li>
+                <li>Метательные ножи ×5</li>
+                <li>Ручной арбалет</li>
+                <li>Двуслойный гамбезон</li>
+            </ul>
+            <br><strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч</li>
+                <li>Серебряный ведьмачий меч</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>50 крон × 2d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_off',
+'        <td>
+            <strong>Gear</strong><br>
+            <strong class="section-title">(Pick 2)</strong>
+            <ul>
+                <li>Alchemy set</li>
+                <li>Double woven gambeson</li>
+                <li>Hand crossbow</li>
+                <li>Horse</li>
+                <li>Throwing knives ×5</li>
+            </ul><br>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Witcher’s steel sword</li>
+                <li>Witcher’s silver sword</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>50 crowns × 2d6</li>
+            </ul>
+        </td>
+'),
+    -- dlc_wt ON: фиксированное школьное снаряжение + медальон/формулы
+    ('ru', 'wt_wolf',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Волка</li>
+                <li>Серебряный ведьмачий меч школы Волка</li>
+                <li>Броня школы Волка</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_wolf',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Wolven Steel Sword</li>
+                <li>Wolven Silver Sword</li>
+                <li>Wolven Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_gryphon',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Грифона</li>
+                <li>Серебряный ведьмачий меч школы Грифона</li>
+                <li>Арбалет школы Грифона</li>
+                <li>Броня школы Грифона</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_gryphon',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Griffin Steel Sword</li>
+                <li>Griffin Silver Sword</li>
+                <li>Griffin Crossbow</li>
+                <li>Griffin Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_cat',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Кота</li>
+                <li>Серебряный ведьмачий меч школы Кота</li>
+                <li>Арбалет школы Кота</li>
+                <li>Броня школы Кота</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_cat',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Feline Steel Sword</li>
+                <li>Feline Silver Sword</li>
+                <li>Feline Crossbow</li>
+                <li>Feline Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_viper',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Змеи</li>
+                <li>Серебряный ведьмачий меч школы Змеи</li>
+                <li>Змеиный клык ×2</li>
+                <li>Броня школы Змеи</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_viper',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Serpentine Steel Sword</li>
+                <li>Serpentine Silver Sword</li>
+                <li>Viper''s Fang ×2</li>
+                <li>Serpentine Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_bear',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Медведя</li>
+                <li>Серебряный ведьмачий меч школы Медведя</li>
+                <li>Арбалет школы Медведя</li>
+                <li>Броня школы Медведя</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_bear',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Ursine Steel Sword</li>
+                <li>Ursine Silver Sword</li>
+                <li>Ursine Crossbow</li>
+                <li>Ursine Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_manticore',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной ведьмачий меч школы Мантикоры</li>
+                <li>Серебряный ведьмачий меч школы Мантикоры</li>
+                <li>Щит школы Мантикоры</li>
+                <li>Броня школы Мантикоры</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_manticore',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Manticore Steel Sword</li>
+                <li>Manticore Silver Sword</li>
+                <li>Manticore Shield</li>
+                <li>Manticore Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('ru', 'wt_snail',
+'        <td>
+            <strong>Особое снаряжение</strong>
+            <ul>
+                <li>Ведьмачий медальон</li>
+                <li>Стальной меч школы Улитки</li>
+                <li>Серебряный меч школы Улитки</li>
+                <li>Броня школы Улитки</li>
+                <li>Формула эликсира ×2</li>
+                <li>Формула масла ×2</li>
+                <li>Формула отвара</li>
+            </ul>
+            <br><br><strong>Деньги</strong>
+            <ul>
+                <li>10 крон × 1d6</li>
+            </ul>
+        </td>
+'),
+    ('en', 'wt_snail',
+'        <td>
+            <strong>Special</strong>
+            <ul>
+                <li>Decoction formulae</li>
+                <li>Oil formulae ×2</li>
+                <li>Potion formulae ×2</li>
+                <li>Witcher medallion</li>
+                <li>Gastropod Steel Sword</li>
+                <li>Gastropod Silver Sword</li>
+                <li>Gastropod Armor</li>
+            </ul>
+            <br><br><strong>Money</strong>
+            <ul>
+                <li>10 crowns × 1d6</li>
+            </ul>
+        </td>
+')
+)
+, raw_data AS (
+  SELECT
+    t.lang,
+    v.an_id,
+    v.sort_order,
+    t.title,
+    (t.prefix || g.html || t.suffix) AS description,
+    v.visible_ru_ru_id
+  FROM templates t
+  CROSS JOIN variants v
+  JOIN gear_cols g ON g.lang = t.lang AND g.variant_key = v.variant_key
+)
+, ins_title AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.title') AS id
+       , meta.entity, 'title', raw_data.lang, raw_data.title
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+, ins_description AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.description') AS id
+       , meta.entity, 'description', raw_data.lang, raw_data.description
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
+SELECT raw_data.an_id AS an_id,
+       meta.su_su_id,
+       meta.qu_id,
+       ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.title') AS label,
+       raw_data.sort_order AS sort_order,
+       raw_data.visible_ru_ru_id AS visible_ru_ru_id,
+       jsonb_build_object(
+           'title', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.title')::text),
+           'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| raw_data.an_id ||'.'|| meta.entity ||'.description')::text)
+       ) AS metadata
+FROM raw_data
+CROSS JOIN meta
+ON CONFLICT (an_id) DO NOTHING;
+
+-- Witcher (pick 2)
+-- Alchemy set - T105
+-- Double woven gambeson - A014
+-- Hand crossbow - W012
+-- Horse - WT004
+-- Throwing knives ×5 - W107 x5
+
+-- Decoction formulae - budget(1) - R028, R029, R030, R031, R032, R033, R034, R035, R036, R037
+-- Oil formulae ×2 - budget(2) - R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027
+-- Potion formulae ×2 - budget(2) - R001, R002, R005, R007, R008, R009, R010, R011, R012, R013, R014, R015
+-- Witcher medallion - T041
+-- Witcher's steel sword - budget(1) - W135, W136, W137, W138, W139, W140, W141
+-- Witcher's silver sword - budget(1) - W128, W129, W130, W131, W132, W133, W134
+
+-- Эффекты: заполнение professional_gear_options
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.witcher_throwing_knives') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Метательные ножи ×5'),
+          ('en', 'Throwing knives ×5')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options'),
+      jsonb_build_object(
+        'tokens', 2,
+        'items', jsonb_build_array('T105', 'A014', 'W012', 'WT004'),
+        'bundles', jsonb_build_array(
+          jsonb_build_object(
+            'bundleId', 'witcher_throwing_knives',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.witcher_throwing_knives')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object(
+                'sourceId', 'weapons',
+                'itemId', 'W107',
+                'quantity', 5
+              )
+            )
+          )
+        )
+      )
+    )
+  ) AS body
+FROM (
+  VALUES
+    ('wcc_profession_o02')
+) AS v(an_id);
+
+-- Эффекты: стартовые деньги (ветвление по DLC dlc_wt)
+-- dlcs находятся в состоянии в массиве dlcs
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.money.crowns'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'if',
+          jsonb_build_array(
+            jsonb_build_object(
+              'in',
+              jsonb_build_array(
+                'dlc_wt',
+                jsonb_build_object('var', jsonb_build_array('dlcs', jsonb_build_array()))
+              )
+            ),
+            jsonb_build_object(
+              '*',
+              jsonb_build_array(
+                10,
+                jsonb_build_object('d6', jsonb_build_array())
+              )
+            ),
+            jsonb_build_object(
+              '*',
+              jsonb_build_array(
+                50,
+                jsonb_build_object(
+                  '+',
+                  jsonb_build_array(
+                    jsonb_build_object('d6', jsonb_build_array()),
+                    jsonb_build_object('d6', jsonb_build_array())
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  ) AS body
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
+
+-- Эффекты: жетоны ведьмака для токеновых бюджетов магазина (092_shop.sql)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', v.an_id,
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_decoction_formulae_tokens'), 1))
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', v.an_id,
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_oil_formulae_tokens'), 2))
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', v.an_id,
+  jsonb_build_object('set', jsonb_build_array(jsonb_build_object('var','characterRaw.professional_gear_options.witcher_potion_formulae_tokens'), 2))
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', v.an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.professional_gear_options.witcher_steel_sword_tokens'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'if',
+          jsonb_build_array(
+            jsonb_build_object(
+              'in',
+              jsonb_build_array(
+                'dlc_wt',
+                jsonb_build_object('var', jsonb_build_array('dlcs', jsonb_build_array()))
+              )
+            ),
+            0,
+            1
+          )
+        )
+      )
+    )
+  )
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', v.an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.professional_gear_options.witcher_silver_sword_tokens'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'if',
+          jsonb_build_array(
+            jsonb_build_object(
+              'in',
+              jsonb_build_array(
+                'dlc_wt',
+                jsonb_build_object('var', jsonb_build_array('dlcs', jsonb_build_array()))
+              )
+            ),
+            0,
+            1
+          )
+        )
+      )
+    )
+  )
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
+
+-- Эффекты: ведьмачий медальон (T041) сразу в инвентарь (достаточно key + sourceId)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object(
+        't_id', 'T041',
+        'sourceId', 'general_gear',
+        'amount', 1
+      )
+    )
+  ) AS body
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
+
+-- Эффекты: жетоны для магии (5 ведьмачьих знаков новичка)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.novice_signs_tokens'),
+      5
+    )
+  ) AS body
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
