@@ -83,12 +83,18 @@ function collectI18nUuids(value: unknown, acc: Set<string>): void {
     return;
   }
   if (isI18nValue(value)) {
-    acc.add(value.i18n_uuid);
+    if (UUID_PATTERN.test(value.i18n_uuid)) {
+      acc.add(value.i18n_uuid);
+    }
     return;
   }
   if (isI18nArrayValue(value)) {
     // [separator, ...uuids]
-    value.i18n_uuid_array.slice(1).forEach((uuid) => acc.add(uuid));
+    value.i18n_uuid_array.slice(1).forEach((uuid) => {
+      if (UUID_PATTERN.test(uuid)) {
+        acc.add(uuid);
+      }
+    });
     return;
   }
   if (Array.isArray(value)) {

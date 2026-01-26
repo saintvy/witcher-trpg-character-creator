@@ -258,7 +258,9 @@ function collectI18nUuids(value: unknown, uuids: Set<string>): void {
     
     // Check if this is an object with i18n_uuid
     if ('i18n_uuid' in obj && typeof obj.i18n_uuid === 'string') {
-      uuids.add(obj.i18n_uuid);
+      if (UUID_PATTERN.test(obj.i18n_uuid)) {
+        uuids.add(obj.i18n_uuid);
+      }
     }
     
     // Check if this is an object with i18n_uuid_array
@@ -266,7 +268,7 @@ function collectI18nUuids(value: unknown, uuids: Set<string>): void {
       // First element is separator, rest are UUIDs
       const arr = obj.i18n_uuid_array as unknown[];
       for (let i = 1; i < arr.length; i++) {
-        if (typeof arr[i] === 'string') {
+        if (typeof arr[i] === 'string' && UUID_PATTERN.test(arr[i] as string)) {
           uuids.add(arr[i] as string);
         }
       }
