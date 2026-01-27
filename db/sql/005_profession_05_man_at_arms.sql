@@ -585,3 +585,24 @@ SELECT
       )
     )
   ) AS body;
+
+-- Эффекты: добавление начальных навыков в characterRaw.skills.initial[]
+WITH skill_mapping (skill_name) AS ( VALUES
+    ('intimidation'),         -- Запугивание
+    ('courage'),              -- Храбрость
+    ('wilderness_survival'),  -- Выживание в дикой природе
+    ('dodge'),                -- Уклонение / Изворотливость
+    ('physique')              -- Сила
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o05' AS an_an_id,
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.initial'),
+      sm.skill_name
+    )
+  ) AS body
+FROM skill_mapping sm;

@@ -686,11 +686,19 @@ export default function BuilderPage() {
     }
 
     if (question.qtype === "multiple") {
-      setPendingMultiple([picked.id]);
+      const minSelected = typeof questionMetadata.minSelected === "number" ? questionMetadata.minSelected : 0;
+      const maxSelected = typeof questionMetadata.maxSelected === "number" 
+        ? Math.min(questionMetadata.maxSelected, options.length) 
+        : options.length;
+      const effectiveMin = Math.min(minSelected, options.length);
+      const count = Math.floor(Math.random() * (maxSelected - effectiveMin + 1)) + effectiveMin;
+      const shuffled = [...options].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, count).map((o) => o.id);
+      setPendingMultiple(selected);
     } else {
       void submitAnswer([picked.id]);
     }
-  }, [canRandomiseQuestion, loading, pickRandomOption, question, submitAnswer, numericMinRand, numericMaxRand, allowFloat, clampValue, submitValue]);
+  }, [canRandomiseQuestion, loading, pickRandomOption, question, questionMetadata, options, submitAnswer, numericMinRand, numericMaxRand, allowFloat, clampValue, submitValue]);
 
   const content = {
     en: {
@@ -1345,16 +1353,74 @@ export default function BuilderPage() {
                     {(() => {
                       const allowEmptySelection =
                         Boolean((questionMetadata as Record<string, unknown>).allowEmptySelection);
+                      const minSelected = typeof questionMetadata.minSelected === "number" ? questionMetadata.minSelected : 0;
+                      const maxSelected = typeof questionMetadata.maxSelected === "number" 
+                        ? Math.min(questionMetadata.maxSelected, options.length) 
+                        : options.length;
+                      const selectedCount = pendingMultiple.length;
+                      const isBelowMin = selectedCount < minSelected;
+                      const isAboveMax = maxSelected !== undefined && selectedCount > maxSelected;
+                      const hasValidationError = isBelowMin || isAboveMax;
+                      const canSubmit = !hasValidationError && (allowEmptySelection || selectedCount > 0);
+                      
+                      // Получаем сообщения валидации из метаданных (могут быть уже разрешенными строками или объектами с i18n_uuid)
+                      const getWarningText = (key: string, fallbackRu: string, fallbackEn: string): string => {
+                        const value = questionMetadata[key];
+                        if (typeof value === "string") {
+                          return value;
+                        }
+                        if (value && typeof value === "object" && !Array.isArray(value) && "i18n_uuid" in value) {
+                          const uuid = (value as { i18n_uuid: string }).i18n_uuid;
+                          // Если это UUID, используем fallback (на бэкенде должно быть разрешено, но на всякий случай)
+                          return displayLang === "ru" ? fallbackRu : fallbackEn;
+                        }
+                        return displayLang === "ru" ? fallbackRu : fallbackEn;
+                      };
+                      
+                      const warningMinText = getWarningText(
+                        "warningMinSelected",
+                        `Выбрано опций меньше требуемого. Минимум: ${minSelected}`,
+                        `Selected options are less than required. Minimum: ${minSelected}`
+                      );
+                      const warningMaxText = getWarningText(
+                        "warningMaxSelected",
+                        `Выбрано опций больше допустимого. Максимум: ${maxSelected}`,
+                        `Selected options are more than allowed. Maximum: ${maxSelected}`
+                      );
+                      
                       return (
                     <div className="survey-multiple-toolbar">
-                      <button
-                        type="button"
-                        onClick={() => submitAnswer(pendingMultiple)}
-                        disabled={loading || (!allowEmptySelection && pendingMultiple.length === 0)}
-                        className="btn btn-primary"
-                      >
-                        {displayLang === "ru" ? "Продолжить" : "Continue"}
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => submitAnswer(pendingMultiple)}
+                          disabled={loading || !canSubmit}
+                          className="btn btn-primary"
+                        >
+                          {displayLang === "ru" ? "Продолжить" : "Continue"}
+                        </button>
+                        {hasValidationError && (
+                          <div style={{ 
+                            padding: '8px 10px', 
+                            fontSize: '12px',
+                            color: '#ffdd63',
+                            background: 'rgba(242,199,68,0.12)',
+                            border: '1px solid rgba(242,199,68,0.35)',
+                            borderRadius: '10px'
+                          }}>
+                            {isBelowMin && (
+                              <div>
+                                {warningMinText}
+                              </div>
+                            )}
+                            {isAboveMax && maxSelected !== undefined && (
+                              <div>
+                                {warningMaxText}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
 
                       <div className="survey-multiple-toolbar-right">
                         <button

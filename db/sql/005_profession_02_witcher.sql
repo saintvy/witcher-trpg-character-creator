@@ -1131,3 +1131,40 @@ FROM (
     ('wcc_profession_o02_wt_manticore'),
     ('wcc_profession_o02_wt_snail')
 ) AS v(an_id);
+
+-- Эффекты: добавление начальных навыков в characterRaw.skills.initial[]
+WITH skill_mapping (skill_name) AS ( VALUES
+    ('spell_casting'),         -- Сотворение заклинаний
+    ('awareness'),             -- Внимание
+    ('wilderness_survival'),   -- Выживание в дикой природе
+    ('deduction'),             -- Дедукция
+    ('athletics'),             -- Атлетика
+    ('stealth'),               -- Скрытность
+    ('riding'),                -- Верховая езда
+    ('swordsmanship'),         -- Владение мечом
+    ('dodge'),                 -- Уклонение / Изворотливость
+    ('alchemy')                -- Алхимия
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.initial'),
+      sm.skill_name
+    )
+  ) AS body
+FROM skill_mapping sm
+CROSS JOIN (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);

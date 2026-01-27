@@ -24,8 +24,3 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_race', 'wcc_profession';
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_witcher_school', 'wcc_profession';
-
-
-
-
-

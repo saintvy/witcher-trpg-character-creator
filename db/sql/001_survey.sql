@@ -253,6 +253,8 @@ SELECT ck_id('witcher_cc.hierarchy.' || v.path) AS id
           ('values_feelings_on_people', 'ru', 'Отношение к людям'),
           ('values_feelings_on_people', 'en', 'Feelings on people'),
           ('profession', 'ru', 'Профессия'),
-          ('profession', 'en', 'Profession')
+          ('profession', 'en', 'Profession'),
+          ('battle_skills', 'ru', 'Боевые навыки'),
+          ('battle_skills', 'en', 'Battle skills')
        ) AS v(path, lang, text)
   ON CONFLICT (id, lang) DO NOTHING;
