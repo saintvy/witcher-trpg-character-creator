@@ -1094,6 +1094,10 @@ async function loadMinimalSurveyData(
     
     questions.set(row.qu_id, question);
   }
+  
+  // 8a. Resolve dynamic body from metadata.body if present
+  // This needs state, so we'll do it later when state is available
+  // For now, we'll handle it in the function that returns the question
 
   const answerOptions = new Map<string, AnswerOptionRow[]>();
   const visibleRules = new Map<string, Record<string, unknown>>();
@@ -1484,9 +1488,40 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
     
     if (questionResult.rows.length > 0) {
       const row = questionResult.rows[0]!;
+      let body = row.body;
+      
+      // Handle dynamic body from metadata.body if present
+      if (row.metadata && typeof row.metadata === 'object' && 'body' in row.metadata) {
+        const bodyConfig = row.metadata.body;
+        if (bodyConfig && typeof bodyConfig === 'object' && 'jsonlogic_expression' in bodyConfig) {
+          try {
+            const dynamicBodyUuid = jsonLogic.apply(bodyConfig.jsonlogic_expression, state);
+            if (typeof dynamicBodyUuid === 'string') {
+              // Load the dynamic body text
+              const dynamicBodyResult = await db.query<{ text: string | null }>(
+                `
+                  SELECT COALESCE(b_lang.text, b_en.text) AS "text"
+                  FROM i18n_text b_lang
+                  LEFT JOIN i18n_text b_en ON b_en.id = b_lang.id AND b_en.lang = 'en'
+                  WHERE b_lang.id::text = $1 AND (b_lang.lang = $2 OR b_lang.lang = 'en')
+                  ORDER BY CASE WHEN b_lang.lang = $2 THEN 0 ELSE 1 END
+                  LIMIT 1
+                `,
+                [dynamicBodyUuid, lang],
+              );
+              if (dynamicBodyResult.rows.length > 0 && dynamicBodyResult.rows[0]!.text) {
+                body = dynamicBodyResult.rows[0]!.text;
+              }
+            }
+          } catch (error) {
+            console.error('[survey] dynamic body evaluation', row.qu_id, error);
+          }
+        }
+      }
+      
       question = {
         id: row.qu_id,
-        body: row.body,
+        body: body,
         qtype: row.qtype,
         metadata: row.metadata,
       };

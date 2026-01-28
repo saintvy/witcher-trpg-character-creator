@@ -70,6 +70,66 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
     FROM vals
     CROSS JOIN meta
   ON CONFLICT (an_id) DO NOTHING;
+
+-- Эффекты для опции по умолчанию (o01): Доль Блатанна
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_elf_q1' AS qu_id
+                , 'character' AS entity)
+-- i18n записи для родины
+, ins_homeland AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'o01' ||'.'|| meta.entity ||'.'|| 'homeland') AS id
+         , meta.entity, 'homeland', v.lang, v.text
+      FROM (VALUES ('ru', 'Доль Блатанна'), ('en', 'Dol Blathanna')) AS v(lang, text)
+      CROSS JOIN meta
+  )
+-- i18n записи для родного языка: Старшая речь
+, ins_lang_elder_speech AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language') AS id
+         , meta.entity, 'home_language', v.lang, v.text
+      FROM (VALUES ('ru', 'Старшая речь'), ('en', 'Elder Speech')) AS v(lang, text)
+      CROSS JOIN meta
+  )
+INSERT INTO effects (scope, an_an_id, body)
+-- 01: +1 к Этикету (Social Etiquette)
+SELECT 'character', 'wcc_past_elf_q1_o01',
+  jsonb_build_object('inc', jsonb_build_array(
+    jsonb_build_object('var','characterRaw.skills.common.social_etiquette.bonus'), 1
+  ))
+FROM meta UNION ALL
+-- 01: Родина - Доль Блатанна
+SELECT 'character', 'wcc_past_elf_q1_o01',
+  jsonb_build_object('set', jsonb_build_array(
+    jsonb_build_object('var','characterRaw.lore.homeland'),
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'o01' ||'.'|| meta.entity ||'.'|| 'homeland')::text)
+  ))
+FROM meta UNION ALL
+-- 01: Родной язык - Старшая речь
+SELECT 'character', 'wcc_past_elf_q1_o01',
+  jsonb_build_object('set', jsonb_build_array(
+    jsonb_build_object('var','characterRaw.lore.home_language'),
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+  ))
+FROM meta UNION ALL
+-- 01: +8 к Старшей речи (language_elder_speech)
+SELECT 'character', 'wcc_past_elf_q1_o01',
+  jsonb_build_object('inc', jsonb_build_array(
+    jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
+  ))
+FROM meta UNION ALL
+-- 01: Логическое поле родного языка - Elder Speech
+SELECT 'character', 'wcc_past_elf_q1_o01',
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.logicFields.home_language'),
+      'Elder Speech'
+    )
+  )
+FROM meta;
+
 -- Связи
 -- Переход из профессии (через правило is_elf) - добавлен в 090_profession.sql
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)

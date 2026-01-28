@@ -286,12 +286,12 @@ WITH
       FROM (VALUES ('ru', 'Этолия'), ('en', 'Etolia')) AS v(lang, text)
       CROSS JOIN meta
   )
--- i18n записи для родного языка: Всеобщий (Northern) для 101-106, 108-110
-, ins_lang_northern AS (
+-- i18n записи для родного языка: Всеобщий (Common) для 101-106, 108-110
+, ins_lang_common AS (
     INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language') AS id
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language') AS id
          , meta.entity, 'home_language', v.lang, v.text
-      FROM (VALUES ('ru', 'Всеобщий'), ('en', 'Northern')) AS v(lang, text)
+      FROM (VALUES ('ru', 'Всеобщий'), ('en', 'Common Speech')) AS v(lang, text)
       CROSS JOIN meta
   )
 -- i18n записи для родного языка: Старшая речь (Elder Speech) для 107, 201, 301-310
@@ -329,16 +329,16 @@ SELECT 'character', 'wcc_past_homeland_human_o0101',
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.lore.home_language'),
-      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
     )
   )
 FROM meta UNION ALL
--- 101: +8 к Всеобщему языку (language_northern)
+-- 101: +8 к Всеобщему языку (language_common_speech)
 SELECT 'character', 'wcc_past_homeland_human_o0101',
   jsonb_build_object(
     'inc',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.skills.common.language_northern.bonus'),
+      jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'),
       8
     )
   )
@@ -362,12 +362,12 @@ FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0102',
   jsonb_build_object('set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
-    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0102',
   jsonb_build_object('inc', jsonb_build_array(
-    jsonb_build_object('var','characterRaw.skills.common.language_northern.bonus'),
+    jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'),
     8
   ))
 FROM meta UNION ALL
@@ -386,12 +386,12 @@ FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0103',
   jsonb_build_object('set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
-    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0103',
   jsonb_build_object('inc', jsonb_build_array(
-    jsonb_build_object('var','characterRaw.skills.common.language_northern.bonus'), 8
+    jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 104: Аэдирн - +1 к Изготовлению (Crafting)
@@ -409,12 +409,12 @@ FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0104',
   jsonb_build_object('set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
-    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0104',
   jsonb_build_object('inc', jsonb_build_array(
-    jsonb_build_object('var','characterRaw.skills.common.language_northern.bonus'), 8
+    jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 105: Лирия и Ривия - +1 к Сопротивлению убеждению (Resist Coercion)
@@ -432,12 +432,12 @@ FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0105',
   jsonb_build_object('set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
-    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0105',
   jsonb_build_object('inc', jsonb_build_array(
-    jsonb_build_object('var','characterRaw.skills.common.language_northern.bonus'), 8
+    jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 106: Ковир и Повисс - +1 к Торговле (Business)
@@ -455,12 +455,12 @@ FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0106',
   jsonb_build_object('set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
-    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0106',
   jsonb_build_object('inc', jsonb_build_array(
-    jsonb_build_object('var','characterRaw.skills.common.language_northern.bonus'), 8
+    jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 107: Скеллиге - +1 к Храбрости (Courage)
@@ -501,12 +501,12 @@ FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0108',
   jsonb_build_object('set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
-    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0108',
   jsonb_build_object('inc', jsonb_build_array(
-    jsonb_build_object('var','characterRaw.skills.common.language_northern.bonus'), 8
+    jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 109: Вердэн - +1 к Выживанию в дикой природе (Wilderness Survival)
@@ -524,12 +524,12 @@ FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0109',
   jsonb_build_object('set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
-    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0109',
   jsonb_build_object('inc', jsonb_build_array(
-    jsonb_build_object('var','characterRaw.skills.common.language_northern.bonus'), 8
+    jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 110: Цинтра - +1 к Пониманию людей (Human Perception)
@@ -547,12 +547,12 @@ FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0110',
   jsonb_build_object('set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
-    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'northern' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
+    jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0110',
   jsonb_build_object('inc', jsonb_build_array(
-    jsonb_build_object('var','characterRaw.skills.common.language_northern.bonus'), 8
+    jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 201: Сердце Нильфгаарда - +1 к Обману (Deceit)
@@ -822,7 +822,7 @@ SELECT 'character', an_id,
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.logicFields.home_language'),
-      'Northern'
+      'Common Speech'
     )
   )
 FROM meta_lang,
@@ -836,7 +836,7 @@ FROM meta_lang,
     ('wcc_past_homeland_human_o0108'),
     ('wcc_past_homeland_human_o0109'),
     ('wcc_past_homeland_human_o0110')
-  ) AS northern(an_id)
+  ) AS common(an_id)
 UNION ALL
 -- Elder Speech: 107, 201, 301-310
 SELECT 'character', an_id,
