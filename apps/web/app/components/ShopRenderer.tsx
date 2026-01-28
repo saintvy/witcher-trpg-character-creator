@@ -186,10 +186,11 @@ export function ShopRenderer(props: {
   shop: ShopConfig;
   lang: string;
   state: Record<string, unknown>;
+  onlyCoveredByBudget?: boolean;
   disabled?: boolean;
   onSubmit: (payload: { v: 1; purchases: ShopPurchase[]; bundles?: string[]; ignoreWarnings?: boolean }) => void;
 }) {
-  const { questionId, shop, lang, state, disabled, onSubmit } = props;
+  const { questionId, shop, lang, state, disabled, onSubmit, onlyCoveredByBudget } = props;
 
   const isProfessionalShop = Boolean((shop as any)?.isProfessional);
   const isMagicShop = questionId === 'wcc_shop_magic';
@@ -295,6 +296,7 @@ export function ShopRenderer(props: {
   const qtyBySourceForCalculations = qtyBySource;
   const [sortBySource, setSortBySource] = useState<Record<string, { column: string | null; direction: 'asc' | 'desc' }>>({});
   const [ignoreWarnings, setIgnoreWarnings] = useState(false);
+  const [showAllItems, setShowAllItems] = useState(false);
   const budgetSummaryRef = useRef<HTMLDivElement>(null);
 
   // Get all budgets, defaulting to old format for backward compatibility
@@ -610,6 +612,7 @@ export function ShopRenderer(props: {
     setQtyBySource({});
     setSortBySource({});
     setIgnoreWarnings(false);
+    setShowAllItems(false);
     setBundleCheckedById({});
     setAllItemsBySource({});
     setLoadingAllItems(true);
@@ -641,6 +644,82 @@ export function ShopRenderer(props: {
       });
   }, [prefetchKey, questionId, lang, resolvedAllowedDlcs, state]);
 
+  const budgetsWithPositiveInitial = useMemo(() => {
+    const out: ShopBudgetConfig[] = [];
+    for (const b of budgets) {
+      if (!b.is_default) {
+        const sourceValue = getAtPath(state, b.source);
+        if (sourceValue === undefined) continue;
+      }
+      const initial = clampInt(toNumber(getAtPath(state, b.source), 0));
+      if (initial > 0) out.push(b);
+    }
+    return out;
+  }, [budgets, state]);
+
+  const displayAllItemsBySource = useMemo(() => {
+    const shouldFilter = Boolean(onlyCoveredByBudget) && !showAllItems && budgetsWithPositiveInitial.length > 0;
+    if (!shouldFilter) return allItemsBySource;
+
+    const result: Record<string, {
+      groups?: Array<{ value: string; count: number }>;
+      rowsByGroup?: Record<string, Record<string, unknown>[]>;
+      rows?: Record<string, unknown>[];
+    }> = {};
+
+    function shouldKeepRow(sourceId: string, keyColumn: string, row: Record<string, unknown>): boolean {
+      const rawKey = (row as any)?.[keyColumn];
+      const itemId = typeof rawKey === 'string' ? rawKey : null;
+      if (!itemId) return true; // fallback ids (by index) can't be matched against coverage
+
+      const selectedQty = qtyBySource[sourceId]?.[itemId] ?? 0;
+      if (selectedQty > 0) return true;
+
+      return budgetsWithPositiveInitial.some((b) => isItemCoveredByBudget(b, sourceId, itemId));
+    }
+
+    for (const source of shop.sources) {
+      const sourceId = source.id;
+      const data = allItemsBySource[sourceId];
+      if (!data) continue;
+
+      if (data.rowsByGroup) {
+        const nextRowsByGroup: Record<string, Record<string, unknown>[]> = {};
+        const nextGroups: Array<{ value: string; count: number }> = [];
+        const groupValues = Array.isArray(data.groups)
+          ? data.groups.map((g) => g.value)
+          : Object.keys(data.rowsByGroup);
+        const seen = new Set<string>();
+        for (const groupValue of groupValues) {
+          if (seen.has(groupValue)) continue;
+          seen.add(groupValue);
+          const groupRows = data.rowsByGroup[groupValue] ?? [];
+          const filtered = (groupRows ?? []).filter((row) => shouldKeepRow(sourceId, source.keyColumn, row));
+          if (filtered.length > 0) {
+            nextRowsByGroup[groupValue] = filtered;
+            nextGroups.push({ value: groupValue, count: filtered.length });
+          }
+        }
+        result[sourceId] = { ...data, rowsByGroup: nextRowsByGroup, groups: nextGroups };
+      } else if (data.rows) {
+        const filtered = (data.rows ?? []).filter((row) => shouldKeepRow(sourceId, source.keyColumn, row));
+        result[sourceId] = { ...data, rows: filtered };
+      } else {
+        result[sourceId] = data;
+      }
+    }
+
+    return result;
+  }, [
+    allItemsBySource,
+    budgetsWithPositiveInitial,
+    isItemCoveredByBudget,
+    onlyCoveredByBudget,
+    qtyBySource,
+    shop.sources,
+    showAllItems,
+  ]);
+
   const visibleSources = useMemo(() => {
     return shop.sources.filter((source) => {
       // If user already selected something in this source — keep it visible
@@ -649,7 +728,7 @@ export function ShopRenderer(props: {
         return true;
       }
 
-      const sourceData = allItemsBySource[source.id];
+      const sourceData = displayAllItemsBySource[source.id];
       if (!sourceData) {
         // Not loaded yet — keep it for now (will disappear once loaded if empty)
         return true;
@@ -674,7 +753,7 @@ export function ShopRenderer(props: {
 
       return false;
     });
-  }, [shop.sources, qtyBySource, allItemsBySource, isProfessionalShop, professionalFreeItemIds]);
+  }, [shop.sources, qtyBySource, displayAllItemsBySource, isProfessionalShop, professionalFreeItemIds]);
 
   const renderCell = useCallback((value: unknown) => {
     const text = value === null || value === undefined ? "" : String(value);
@@ -989,6 +1068,19 @@ export function ShopRenderer(props: {
         >
           Continue
         </button>
+        {Boolean(onlyCoveredByBudget) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px' }}>
+            <input
+              type="checkbox"
+              id="show-all-items"
+              checked={showAllItems}
+              onChange={(e) => setShowAllItems(e.target.checked)}
+            />
+            <label htmlFor="show-all-items" style={{ cursor: 'pointer' }}>
+              {lang === 'ru' ? 'Показать всё' : 'Show all'}
+            </label>
+          </div>
+        )}
         {hasWarnings && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px' }}>
             <input
@@ -1005,6 +1097,21 @@ export function ShopRenderer(props: {
       </div>
 
       <div className="shop-summary" ref={budgetSummaryRef}>
+        {Boolean(onlyCoveredByBudget) && showAllItems && (
+          <div className="shop-warning" style={{ 
+            marginBottom: '12px', 
+            padding: '8px 10px', 
+            fontSize: '12px',
+            color: '#ffdd63',
+            background: 'rgba(242,199,68,0.12)',
+            border: '1px solid rgba(242,199,68,0.35)',
+            borderRadius: '10px'
+          }}>
+            {lang === 'ru'
+              ? 'Убедись, что гейм-мастер не против добавления персонажу позиций, противоречащих стандартным правилам.'
+              : 'Make sure the game master is ok with adding items that contradict the standard rules.'}
+          </div>
+        )}
         {(shop.warningPriceZero && hasPriceZeroItems && budgets.some((b) => b.type === 'money')) && (
           <div className="shop-warning" style={{ 
             marginBottom: '12px', 
@@ -1081,7 +1188,7 @@ export function ShopRenderer(props: {
       <div className="shop-sources">
         {visibleSources.map((source) => {
           const isOpen = Boolean(expanded[source.id]);
-          const sourceData = allItemsBySource[source.id];
+          const sourceData = displayAllItemsBySource[source.id];
           const allFlatRows = sourceData?.rows
             ?? (sourceData?.rowsByGroup ? Object.values(sourceData.rowsByGroup).flat() : []);
           const rawRows = isProfessionalShop
@@ -1140,7 +1247,7 @@ export function ShopRenderer(props: {
                               <span className="shop-source-chevron">{gOpen ? "▾" : "▸"}</span>
                             </button>
                             {gOpen && (() => {
-                              const gRows = rowsBySourceGroup[source.id]?.[g.value] ?? [];
+                              const gRows = sourceData?.rowsByGroup?.[g.value] ?? [];
                               const sortedGRows = getSortedRows(gRows, source.id, source.keyColumn);
                                   return (
                                     <div style={{ overflowX: "auto" }}>

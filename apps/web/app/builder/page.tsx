@@ -92,6 +92,11 @@ export default function BuilderPage() {
     return shop && typeof shop === "object" && !Array.isArray(shop) ? (shop as any) : null;
   }, [question, questionMetadata]);
 
+  const onlyCoveredByBudget = useMemo(() => {
+    const raw = (questionMetadata as any)?.onlyCoveredByBudget;
+    return raw === true;
+  }, [questionMetadata]);
+
   // Вычисление min/max из метаданных через jsonLogic
   const numericMin = useMemo(() => {
     if (!question || question.qtype !== "value_numeric") {
@@ -1153,6 +1158,7 @@ export default function BuilderPage() {
                     shop={shopConfig}
                     lang={lang}
                     state={state}
+                    onlyCoveredByBudget={onlyCoveredByBudget}
                     disabled={loading}
                     onSubmit={(payload) => {
                       void submitValue({ type: "string", data: JSON.stringify(payload) });
