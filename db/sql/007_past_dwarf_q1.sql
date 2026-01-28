@@ -126,6 +126,16 @@ SELECT 'character', 'wcc_past_dwarf_q1_o01',
     )
   )
 FROM meta UNION ALL
+-- Эффект: logicFields.home_language = 'Dwarvish'
+SELECT 'character', 'wcc_past_dwarf_q1_o01',
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.logicFields.home_language'),
+      'Dwarvish'
+    )
+  )
+FROM meta UNION ALL
 -- Эффект: +8 к Краснолюдскому языку (language_dwarvish)
 SELECT 'character', 'wcc_past_dwarf_q1_o01',
   jsonb_build_object(

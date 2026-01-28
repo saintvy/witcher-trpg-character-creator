@@ -632,3 +632,44 @@ SELECT
     )
   ) AS body
 FROM skill_mapping sm;
+
+-- i18n записи для названия профессии
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_profession' AS qu_id
+                , 'character' AS entity)
+, ins_profession AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'o06' ||'.'|| meta.entity ||'.'|| 'profession') AS id
+       , meta.entity, 'profession', v.lang, v.text
+    FROM (VALUES
+            ('ru', 'Жрец'),
+            ('en', 'Priest')
+         ) AS v(lang, text)
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+-- Эффекты: установка профессии
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o06' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.profession'),
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'o06' ||'.'|| meta.entity ||'.'|| 'profession')::text)
+    )
+  ) AS body
+FROM meta
+UNION ALL
+SELECT
+  'character' AS scope,
+  'wcc_profession_o06' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.logicFields.profession'),
+      'Priest'
+    )
+  ) AS body;

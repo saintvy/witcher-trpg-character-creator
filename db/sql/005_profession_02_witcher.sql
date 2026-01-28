@@ -1168,3 +1168,66 @@ CROSS JOIN (
     ('wcc_profession_o02_wt_manticore'),
     ('wcc_profession_o02_wt_snail')
 ) AS v(an_id);
+
+-- i18n записи для названия профессии
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_profession' AS qu_id
+                , 'character' AS entity)
+, ins_profession AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'o02' ||'.'|| meta.entity ||'.'|| 'profession') AS id
+       , meta.entity, 'profession', v.lang, v.text
+    FROM (VALUES
+            ('ru', 'Ведьмак'),
+            ('en', 'Witcher')
+         ) AS v(lang, text)
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+-- Эффекты: установка профессии для всех вариантов ведьмака
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.profession'),
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'o02' ||'.'|| meta.entity ||'.'|| 'profession')::text)
+    )
+  ) AS body
+FROM meta
+CROSS JOIN (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id)
+UNION ALL
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.logicFields.profession'),
+      'Witcher'
+    )
+  ) AS body
+FROM (
+  VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+) AS v(an_id);

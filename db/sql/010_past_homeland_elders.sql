@@ -173,7 +173,36 @@ SELECT 'character', 'wcc_past_homeland_elders_o02',
     jsonb_build_object('var','characterRaw.skills.common.language_dwarvish.bonus'), 8
   ))
 FROM meta;
-  
+
+-- Дополнительные эффекты: логическое поле родного языка (logicFields.home_language)
+WITH meta_lang AS (
+  SELECT 'witcher_cc' AS su_su_id,
+         'wcc_past_homeland_elders' AS qu_id,
+         'character' AS entity
+)
+INSERT INTO effects (scope, an_an_id, body)
+-- 01: Dol Blathanna -> Elder Speech
+SELECT 'character', 'wcc_past_homeland_elders_o01',
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.logicFields.home_language'),
+      'Elder Speech'
+    )
+  )
+FROM meta_lang
+UNION ALL
+-- 02: Mahakam -> Dwarvish
+SELECT 'character', 'wcc_past_homeland_elders_o02',
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.logicFields.home_language'),
+      'Dwarvish'
+    )
+  )
+FROM meta_lang;
+
 -- Связи  
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
   SELECT 'wcc_past_dwarf_q1', 'wcc_past_homeland_elders', 'wcc_past_dwarf_q1_o02' UNION ALL

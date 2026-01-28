@@ -808,7 +808,61 @@ SELECT 'character', 'wcc_past_homeland_human_o0310',
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta;
-  
+
+-- Дополнительные эффекты: логическое поле родного языка (logicFields.home_language)
+WITH meta_lang AS (
+  SELECT 'witcher_cc' AS su_su_id,
+         'wcc_past_homeland_human' AS qu_id,
+         'character' AS entity
+)
+INSERT INTO effects (scope, an_an_id, body)
+-- Northern: 101-106, 108-110
+SELECT 'character', an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.logicFields.home_language'),
+      'Northern'
+    )
+  )
+FROM meta_lang,
+  (VALUES
+    ('wcc_past_homeland_human_o0101'),
+    ('wcc_past_homeland_human_o0102'),
+    ('wcc_past_homeland_human_o0103'),
+    ('wcc_past_homeland_human_o0104'),
+    ('wcc_past_homeland_human_o0105'),
+    ('wcc_past_homeland_human_o0106'),
+    ('wcc_past_homeland_human_o0108'),
+    ('wcc_past_homeland_human_o0109'),
+    ('wcc_past_homeland_human_o0110')
+  ) AS northern(an_id)
+UNION ALL
+-- Elder Speech: 107, 201, 301-310
+SELECT 'character', an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.logicFields.home_language'),
+      'Elder Speech'
+    )
+  )
+FROM meta_lang,
+  (VALUES
+    ('wcc_past_homeland_human_o0107'),
+    ('wcc_past_homeland_human_o0201'),
+    ('wcc_past_homeland_human_o0301'),
+    ('wcc_past_homeland_human_o0302'),
+    ('wcc_past_homeland_human_o0303'),
+    ('wcc_past_homeland_human_o0304'),
+    ('wcc_past_homeland_human_o0305'),
+    ('wcc_past_homeland_human_o0306'),
+    ('wcc_past_homeland_human_o0307'),
+    ('wcc_past_homeland_human_o0308'),
+    ('wcc_past_homeland_human_o0309'),
+    ('wcc_past_homeland_human_o0310')
+  ) AS elder(an_id);
+
 -- Связи
 -- Переход из профессии (через правило is_human) - добавлен в 090_profession.sql
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
