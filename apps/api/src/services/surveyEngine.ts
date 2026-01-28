@@ -1519,11 +1519,122 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
         }
       }
       
+      // Resolve jsonlogic expressions in metadata
+      const resolveMetadata = (metadata: unknown, state: SurveyState, i18nTexts: Map<string, Map<string, string>>, lang: string): unknown => {
+        if (metadata === null || metadata === undefined) {
+          return metadata;
+        }
+        
+        if (typeof metadata === 'string') {
+          // Check if it's a UUID and resolve it
+          if (UUID_PATTERN.test(metadata)) {
+            const texts = i18nTexts.get(metadata);
+            return texts?.get(lang) ?? texts?.get('en') ?? metadata;
+          }
+          return metadata;
+        }
+        
+        if (Array.isArray(metadata)) {
+          return metadata.map(item => resolveMetadata(item, state, i18nTexts, lang));
+        }
+        
+        if (typeof metadata === 'object') {
+          const obj = metadata as Record<string, unknown>;
+          
+          // Check if this is an object with jsonlogic_expression
+          if ('jsonlogic_expression' in obj && Object.keys(obj).length === 1) {
+            try {
+              const result = jsonLogic.apply(obj.jsonlogic_expression, state);
+              // If result is a UUID, resolve it
+              if (typeof result === 'string' && UUID_PATTERN.test(result)) {
+                const texts = i18nTexts.get(result);
+                return texts?.get(lang) ?? texts?.get('en') ?? result;
+              }
+              // If result is an array with [uuid, value], resolve UUID and concatenate
+              if (Array.isArray(result) && result.length === 2) {
+                const first = result[0];
+                const second = result[1];
+                if (typeof first === 'string' && UUID_PATTERN.test(first)) {
+                  const texts = i18nTexts.get(first);
+                  const text = texts?.get(lang) ?? texts?.get('en') ?? first;
+                  return text + String(second ?? '');
+                }
+              }
+              return result;
+            } catch (error) {
+              console.error('[survey] metadata jsonlogic evaluation', row.qu_id, error);
+              return metadata;
+            }
+          }
+          
+          // Check if this is an object with i18n_uuid
+          if ('i18n_uuid' in obj && typeof obj.i18n_uuid === 'string' && Object.keys(obj).length === 1) {
+            const texts = i18nTexts.get(obj.i18n_uuid);
+            return texts?.get(lang) ?? texts?.get('en') ?? obj.i18n_uuid;
+          }
+          
+          // Recursively process object
+          const resolved: Record<string, unknown> = {};
+          for (const key in obj) {
+            resolved[key] = resolveMetadata(obj[key], state, i18nTexts, lang);
+          }
+          return resolved;
+        }
+        
+        return metadata;
+      };
+      
+      // Collect UUIDs from metadata for i18n resolution
+      const metadataUuids = new Set<string>();
+      const collectUuids = (value: unknown): void => {
+        if (typeof value === 'string' && UUID_PATTERN.test(value)) {
+          metadataUuids.add(value);
+        } else if (value && typeof value === 'object') {
+          if (Array.isArray(value)) {
+            value.forEach(item => collectUuids(item));
+          } else {
+            const obj = value as Record<string, unknown>;
+            if ('i18n_uuid' in obj && typeof obj.i18n_uuid === 'string') {
+              metadataUuids.add(obj.i18n_uuid);
+            }
+            if ('jsonlogic_expression' in obj) {
+              // Extract UUIDs from jsonlogic expression
+              extractStringsFromJsonLogic(obj.jsonlogic_expression, metadataUuids);
+            }
+            Object.values(obj).forEach(v => collectUuids(v));
+          }
+        }
+      };
+      collectUuids(row.metadata);
+      
+      // Load i18n texts for metadata
+      const metadataI18nTexts = new Map<string, Map<string, string>>();
+      if (metadataUuids.size > 0) {
+        const metadataI18nResult = await db.query<{ id: string; lang: string; text: string }>(
+          `
+            SELECT id::text AS "id", lang AS "lang", text AS "text"
+            FROM i18n_text
+            WHERE id::text = ANY($1::text[])
+              AND lang IN ($2, 'en')
+          `,
+          [Array.from(metadataUuids), lang],
+        );
+        
+        for (const i18nRow of metadataI18nResult.rows) {
+          if (!metadataI18nTexts.has(i18nRow.id)) {
+            metadataI18nTexts.set(i18nRow.id, new Map());
+          }
+          metadataI18nTexts.get(i18nRow.id)!.set(i18nRow.lang, i18nRow.text);
+        }
+      }
+      
+      const resolvedMetadata = resolveMetadata(row.metadata, state, metadataI18nTexts, lang) as Record<string, unknown>;
+      
       question = {
         id: row.qu_id,
         body: body,
         qtype: row.qtype,
-        metadata: row.metadata,
+        metadata: resolvedMetadata,
       };
       
       // Load answer options for this question
