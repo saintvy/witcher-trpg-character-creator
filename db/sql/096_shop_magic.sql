@@ -85,6 +85,7 @@ SELECT meta.qu_id
            ck_id('witcher_cc.hierarchy.magicShop')::text
          ),
          'renderer', 'shop',
+         'onlyCoveredByBudget', true,
          'shop', jsonb_build_object(
            'warningPriceZero', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.warning.price_zero')::text),
            'allowedDlcs', jsonb_build_object('jsonlogic_expression', jsonb_build_object('var','dlcs')),
