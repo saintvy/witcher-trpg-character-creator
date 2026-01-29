@@ -81,7 +81,8 @@ WITH raw_data (
   ('U043','exp_toc','upgrades.glyphword','Очарование','Beguilement','availability.R','upgrades.target.head',2,1150,'1'),
   ('U044','exp_toc','upgrades.glyphword','Сияние','Shining','availability.R','upgrades.target.torso',2,875,'1'),
   ('U045','exp_toc','upgrades.glyphword','Тяжесть','Heft','availability.R','upgrades.target.any_armor',2,550,'1'),
-  ('U046','exp_toc','upgrades.glyphword','Щит','Protection','availability.R','upgrades.target.torso',3,1450,'1,5')
+  ('U046','exp_toc','upgrades.glyphword','Щит','Protection','availability.R','upgrades.target.torso',3,1450,'1,5'),
+  ('U047','core','upgrades.armor','Доп. слот для улучшения на броне/оружии','Additional upgrade slot on armor/weapon','availability.P','upgrades.target.any_armor',0,684,'0')
 ),
 ins_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

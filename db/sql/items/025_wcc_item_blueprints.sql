@@ -2,9 +2,9 @@
 -- Узел: Чертежи (blueprints)
 -- Источник данных: inline `VALUES (...)` (сформировано из db/sql/items/wcc_items - wcc_item_blueprints.tsv)
 --
+
 -- Примечания:
--- - Название чертежа в общем случае уже есть в i18n_text (через name_id).
--- - Исключение: item_id, заканчивающийся на 'B' — названия отсутствуют в i18n_text, храним name_ru/name_en прямо в таблице (name_id = NULL).
+-- - Название чертежа всегда в i18n_text (через name_id). Для item_id без постфикса B — ссылка на название создаваемого объекта (armor/weapon/...). Для item_id с постфиксом B — свои записи в i18n (witcher_cc.items.blueprint.name.<item_id>).
 -- - components сохраняем как JSONB массив пар: [{"id": "<uuid>", "qty": <int|null>}, ...]
 --   где id — это i18n UUID (ck_id) для *названия* соответствующего предмета (armor/weapon/ingredient/...),
 --   qty — число из скобок (если есть), иначе NULL.
@@ -15,9 +15,7 @@ CREATE TABLE IF NOT EXISTS wcc_item_blueprints (
   item_id           varchar(10) NOT NULL,    -- e.g. 'A001', 'I004', 'W015B', ...
   dlc_dlc_id        varchar(64) NOT NULL REFERENCES wcc_dlcs(dlc_id),
 
-  name_id           uuid NULL,               -- usually points to existing i18n_text (see wcc_blueprint_item_name_id)
-  name_ru           text NULL,               -- only for item_id ending with 'B'
-  name_en           text NULL,               -- only for item_id ending with 'B'
+  name_id           uuid NULL,               -- i18n_text: для не-B — название создаваемого объекта; для ..B — witcher_cc.items.blueprint.name.<item_id>
 
   group_id          uuid NULL,               -- ck_id(<group_key>) e.g. 'bodypart.head', 'weapons.wt_ammo', ...
   craft_level_id    uuid NULL,               -- ck_id(<craft.level.*>)
@@ -33,7 +31,7 @@ CREATE TABLE IF NOT EXISTS wcc_item_blueprints (
 );
 
 COMMENT ON TABLE wcc_item_blueprints IS
-  'Чертежи для крафта предметов (armor/weapon/ingredients/etc). Названия в i18n_text (name_id), кроме item_id, оканчивающихся на B. Компоненты — JSONB массив пар (i18n_uuid, qty).';
+  'Чертежи для крафта предметов (armor/weapon/ingredients/etc). Названия в i18n_text (name_id). Компоненты — JSONB массив пар (i18n_uuid, qty).';
 
 WITH
 -- Data as VALUES for cleaner structure
@@ -160,17 +158,17 @@ raw_data (b_id, item_id, name_ru, name_en, dlc_id, group_key, craft_level_key, d
   , ('B119', 'W011', 'Охотничий арбалет', 'Huntsman''s Crossbow', 'exp_bot', 'weapons.wt_crossbow', 'craft.level.journeyman', 18, 9, 'time.unit.hour', 'I019 (1), I006 (3), I039 (3), I028 (1), I011 (4)', 460, 900, 600)
   , ('B120', 'W012', 'Ручной арбалет', 'Hand Crossbow', 'core', 'weapons.wt_crossbow', 'craft.level.journeyman', 15, 8, 'time.unit.hour', 'I006 (2), I011 (4), I013 (2), I009 (2), I043 (1), I019 (1), I025 (2), I028 (2), I037 (1)', 214, 426, 285)
   , ('B121', 'W013', 'Скорпио', 'Scorpio', 'dlc_rw2', 'weapons.wt_crossbow', 'craft.level.master', 22, 24, 'time.unit.hour', 'I014 (9), I031 (5), I032 (8), I026 (4), I019 (4), I006 (30), I028 (8), I008 (3), I009 (10), I011 (18), I013 (10)', 1875, 3750, 2500)
-  , ('B122', 'W015B', 'Бронебойные (х10)', 'Bodkin Arrow', 'core', 'weapons.wt_ammo', 'craft.level.journeyman', 16, 1, 'time.unit.hour', 'I006 (1), I043 (1), I018 (1), I029 (1), I028 (1)', 110, 224, 15)
-  , ('B123', 'W016', 'Взрывные (х5)', 'Explosive Arrow', 'core', 'weapons.wt_ammo', 'craft.level.master', 20, 30, 'time.unit.minute', 'I032 (2), I018 (1), I006 (1), I008 (1), I041 (3), I028 (4), I046 (4)', 362, 0, 108)
-  , ('B124', 'W017', 'Выслеживающие (х5)', 'Tracking Arrow', 'core', 'weapons.wt_ammo', 'craft.level.master', 14, 30, 'time.unit.minute', 'I006 (1), I043 (1), I009 (1), I030 (2)', 76, 0, 22)
-  , ('B125', 'W018', 'Гавенкарские разбрызгивающие (х5)', 'HavenKar Bloom Arrow', 'hb', 'weapons.wt_ammo', 'craft.level.master', 18, 2, 'time.unit.hour', 'I032 (3), I009 (1), I018 (2), I006 (1), I028 (1), I029 (6), I011 (3)', 483, 374, 130)
-  , ('B126', 'W019', 'Краснолюдские пробивные', 'Dwarven Impact Arrow', 'core', 'weapons.wt_ammo', 'craft.level.master', 20, 30, 'time.unit.minute', 'I039 (1), I006 (1), I018 (1), I028 (2), I037 (1)', 184, 100, 50)
-  , ('B127', 'W020', 'Разделяющиеся (х5)', 'Split Arrow', 'core', 'weapons.wt_ammo', 'craft.level.master', 18, 30, 'time.unit.minute', 'I006 (2), I043 (2), I018 (3), I011 (3), I004 (1), I041 (2)', 181, 0, 54)
-  , ('B128', 'W021', 'С затупленным наконечником (х5)', 'Blunt Arrow', 'core', 'weapons.wt_ammo', 'craft.level.novice', 12, 1, 'time.unit.hour', 'I012 (1), I037 (1), I018 (1)', 37, 74, 5)
-  , ('B129', 'W022B', 'С широким наконечником (х10)', 'Broadhead Arrow', 'core', 'weapons.wt_ammo', 'craft.level.journeyman', 15, 1, 'time.unit.hour', 'I012 (1), I037 (1), I018 (1), I029 (1)', 69, 125, 10)
-  , ('B130', 'W023B', 'Серебряные (х10)', 'Silver Arrow', 'hb', 'weapons.wt_ammo', 'craft.level.journeyman', 16, 1, 'time.unit.hour', 'I012 (1), I042 (1), I018 (1), I029 (1)', 111, 212, 16)
-  , ('B131', 'W024', 'Стандартные (х10)', 'Standard Arrows (x10)', 'core', 'weapons.wt_ammo', 'craft.level.novice', 10, 2, 'time.unit.hour', 'I012 (1), I037 (1), I018 (1)', 37, 14, 10)
-  , ('B132', 'W025', 'Эльфские ввинчивающиеся', 'Elven Burrower Arrow', 'core', 'weapons.wt_ammo', 'craft.level.master', 20, 30, 'time.unit.minute', 'I032 (1), I009 (1), I006 (1), I018 (2), I029 (2), I028 (1), I011 (1)', 185, 100, 50)
+  , ('B122', 'W015B', 'Бронебойные (х10)', 'Bodkin Arrow (х10)', 'core', 'weapons.wt_ammo', 'craft.level.journeyman', 16, 1, 'time.unit.hour', 'I006 (1), I043 (1), I018 (1), I029 (1), I028 (1)', 110, 224, 15)
+  , ('B123', 'W016B', 'Взрывные (х5)', 'Explosive Arrow (х5)', 'core', 'weapons.wt_ammo', 'craft.level.master', 20, 30, 'time.unit.minute', 'I032 (2), I018 (1), I006 (1), I008 (1), I041 (3), I028 (4), I046 (4)', 362, 0, 108)
+  , ('B124', 'W017B', 'Выслеживающие (х5)', 'Tracking Arrow (х5)', 'core', 'weapons.wt_ammo', 'craft.level.master', 14, 30, 'time.unit.minute', 'I006 (1), I043 (1), I009 (1), I030 (2)', 76, 0, 22)
+  , ('B125', 'W018B', 'Гавенкарские разбрызгивающие (х5)', 'HavenKar Bloom Arrow (х5)', 'hb', 'weapons.wt_ammo', 'craft.level.master', 18, 2, 'time.unit.hour', 'I032 (3), I009 (1), I018 (2), I006 (1), I028 (1), I029 (6), I011 (3)', 483, 374, 130)
+  , ('B126', 'W019B', 'Краснолюдские пробивные (х5)', 'Dwarven Impact Arrow (х5)', 'core', 'weapons.wt_ammo', 'craft.level.master', 20, 30, 'time.unit.minute', 'I039 (1), I006 (1), I018 (1), I028 (2), I037 (1)', 184, 100, 50)
+  , ('B127', 'W020B', 'Разделяющиеся (х5)', 'Split Arrow (х5)', 'core', 'weapons.wt_ammo', 'craft.level.master', 18, 30, 'time.unit.minute', 'I006 (2), I043 (2), I018 (3), I011 (3), I004 (1), I041 (2)', 181, 0, 54)
+  , ('B128', 'W021B', 'С затупленным наконечником (х5)', 'Blunt Arrow (х5)', 'core', 'weapons.wt_ammo', 'craft.level.novice', 12, 1, 'time.unit.hour', 'I012 (1), I037 (1), I018 (1)', 37, 74, 5)
+  , ('B129', 'W022B', 'С широким наконечником (х10)', 'Broadhead Arrow (х10)', 'core', 'weapons.wt_ammo', 'craft.level.journeyman', 15, 1, 'time.unit.hour', 'I012 (1), I037 (1), I018 (1), I029 (1)', 69, 125, 10)
+  , ('B130', 'W023B', 'Серебряные (х10)', 'Silver Arrow (х10)', 'hb', 'weapons.wt_ammo', 'craft.level.journeyman', 16, 1, 'time.unit.hour', 'I012 (1), I042 (1), I018 (1), I029 (1)', 111, 212, 16)
+  , ('B131', 'W024B', 'Стандартные (х30)', 'Standard Arrows (x30)', 'core', 'weapons.wt_ammo', 'craft.level.novice', 10, 2, 'time.unit.hour', 'I012 (1), I037 (1), I018 (1)', 37, 14, 10)
+  , ('B132', 'W025B', 'Эльфские ввинчивающиеся (х5)', 'Elven Burrower Arrow (х5)', 'core', 'weapons.wt_ammo', 'craft.level.master', 20, 30, 'time.unit.minute', 'I032 (1), I009 (1), I006 (1), I018 (2), I029 (2), I028 (1), I011 (1)', 185, 100, 50)
   , ('B133', 'W026B', 'Бронебойный болт (x5)', 'Piercing Scorpio Bolt (x5)', 'dlc_rw2', 'weapons.wt_ammo', 'craft.level.journeyman', 17, 3, 'time.unit.hour', 'I002 (1), I018 (6), I006 (6), I041 (4), I029 (1), I043 (2), I011 (2)', 275, 550, 75)
   , ('B134', 'W027B', 'Разрушающий болт (x5)', 'Breaker Scorpio Bolt (x5)', 'dlc_rw2', 'weapons.wt_ammo', 'craft.level.journeyman', 17, 3, 'time.unit.hour', 'I031 (2), I018 (4), I006 (7), I028 (4), I011 (1)', 275, 550, 75)
   , ('B135', 'W028B', 'Стандартный болт (x5)', 'Standard Scorpio Bolt (x5)', 'dlc_rw2', 'weapons.wt_ammo', 'craft.level.journeyman', 16, 3, 'time.unit.hour', 'I018 (6), I006 (6), I037 (2), I009 (2), I011 (1)', 187, 375, 50)
@@ -235,9 +233,9 @@ raw_data (b_id, item_id, name_ru, name_en, dlc_id, group_key, craft_level_key, d
   , ('B194', 'W103', 'Эльфский зефар', 'Elven Zefhar', 'core', 'weapons.wt_bow', 'craft.level.grand_master', 25, 13, 'time.unit.hour', 'I006 (8), I011 (8), I028 (8), I027 (2), I014 (4), I018 (4), I032 (3), I020 (2), I025 (9), I026 (6)', 830, 1660, 1100)
   , ('B195', 'W104', 'Эльфский походный лук', 'Elven Travel Bow', 'core', 'weapons.wt_bow', 'craft.level.master', 22, 11, 'time.unit.hour', 'I006 (4), I011 (4), I013 (4), I027 (1), I020 (1), I032 (2), I018 (3), I014 (2), I025 (5), I026 (3)', 432, 862, 575)
   , ('B196', 'W105', 'Эльфский сдвоенный лук', 'Elven Double Bow', 'hb', 'weapons.wt_bow', 'craft.level.master', 22, 12, 'time.unit.hour', 'I006 (6), I018 (5), I027 (2), I011 (5), I013 (7), I014 (3), I025 (6), I020 (2), I026 (5), I032 (2)', 611, 1242, 816)
-  , ('B197', 'W107', 'Метательный нож', 'Throwing Knife', 'core', 'weapons.wt_thrown', 'craft.level.novice', 8, 1, 'time.unit.hour', 'I043 (1)', 48, 74, 50)
-  , ('B198', 'W108', 'Метательный топор', 'Throwing Axe', 'core', 'weapons.wt_thrown', 'craft.level.novice', 10, 1, 'time.unit.hour', 'I012 (1), I043 (1)', 51, 116, 75)
-  , ('B199', 'W109', 'Орион', 'Orion', 'core', 'weapons.wt_thrown', 'craft.level.novice', 12, 1, 'time.unit.hour', 'I043 (1), I008 (2), I041 (1), I001 (3)', 62, 125, 100)
+  , ('B197', 'W107B', 'Метательный нож (х3)', 'Throwing Knife (х3)', 'core', 'weapons.wt_thrown', 'craft.level.novice', 8, 1, 'time.unit.hour', 'I043 (1)', 48, 74, 50)
+  , ('B198', 'W108B', 'Метательный топор (х3)', 'Throwing Axe (х3)', 'core', 'weapons.wt_thrown', 'craft.level.novice', 10, 1, 'time.unit.hour', 'I012 (1), I043 (1)', 51, 116, 75)
+  , ('B199', 'W109B', 'Орион (х3)', 'Orion (х3)', 'core', 'weapons.wt_thrown', 'craft.level.novice', 12, 1, 'time.unit.hour', 'I043 (1), I008 (2), I041 (1), I001 (3)', 62, 125, 100)
   , ('B200', 'W110', 'Отравленный коготь гарпии', 'Poisoned Harpy Claw', 'dlc_rw2', 'weapons.wt_thrown', 'craft.level.master', 22, 5, 'time.unit.hour', 'I032 (1), I023 (1), I024 (1), I026 (4), I029 (2), I115 (3)', 337, 675, 450)
   , ('B201', 'W111', 'Герцогский меч', 'Ducal Sword', 'dlc_rw5', 'weapons.wt_sword', 'craft.level.master', 23, 12, 'time.unit.hour', 'I032 (4), I036 (2), I019 (1), I006 (1), I029 (1)', 594, 1200, 800)
   , ('B202', 'W112', 'Гледдиф', 'Gleddyf', 'core', 'weapons.wt_sword', 'craft.level.novice', 14, 7, 'time.unit.hour', 'I012 (1), I019 (1), I020 (1), I037 (1), I043 (2), I008 (1), I009 (4)', 210, 426, 285)
@@ -318,6 +316,31 @@ ins_i18n_tech AS (
   ) foo
   ON CONFLICT (id, lang) DO NOTHING
 ),
+ins_i18n_blueprint_B AS (
+  -- Названия чертежей с постфиксом B (нет в таблицах вещей) — сохраняем в i18n, id = ck_id('witcher_cc.items.blueprint.name.'||item_id)
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT id, entity, entity_field, lang, text
+    FROM (
+      SELECT ck_id('witcher_cc.items.blueprint.name.' || rd.item_id) AS id
+           , 'items'::text AS entity
+           , 'blueprint_name'::text AS entity_field
+           , 'ru'::text AS lang
+           , nullif(trim(rd.name_ru), '') AS text
+        FROM raw_data rd
+       WHERE right(rd.item_id, 1) = 'B'
+         AND nullif(trim(rd.name_ru), '') IS NOT NULL
+      UNION ALL
+      SELECT ck_id('witcher_cc.items.blueprint.name.' || rd.item_id)
+           , 'items'
+           , 'blueprint_name'
+           , 'en'
+           , nullif(trim(rd.name_en), '')
+        FROM raw_data rd
+       WHERE right(rd.item_id, 1) = 'B'
+         AND nullif(trim(rd.name_en), '') IS NOT NULL
+    ) foo
+  ON CONFLICT (id, lang) DO UPDATE SET text = EXCLUDED.text
+),
 ins_i18n_blueprint_groups AS (
   -- Create generalized group labels like "Оружие - Арбалеты", "Броня - Ноги"
   -- Stored under deterministic UUID: ck_id('blueprint_groups.'||ck_id(<group_key>)::text)
@@ -358,7 +381,7 @@ ins_i18n_blueprint_groups AS (
 )
 INSERT INTO wcc_item_blueprints (
   b_id, item_id, dlc_dlc_id,
-  name_id, name_ru, name_en,
+  name_id,
   group_id, craft_level_id,
   difficulty_check, time_value, time_unit_id,
   components,
@@ -368,7 +391,7 @@ SELECT rd.b_id
      , rd.item_id
      , rd.dlc_id AS dlc_dlc_id
      , CASE
-         WHEN right(rd.item_id, 1) = 'B' THEN NULL
+         WHEN right(rd.item_id, 1) = 'B' THEN ck_id('witcher_cc.items.blueprint.name.' || rd.item_id)
          ELSE CASE
            WHEN rd.item_id ~ '^A[0-9]{3}$' THEN ck_id('witcher_cc.items.armor.name.'||rd.item_id)
            WHEN rd.item_id ~ '^I[0-9]{3}$' THEN ck_id('witcher_cc.items.ingredient.name.'||rd.item_id)
@@ -379,8 +402,6 @@ SELECT rd.b_id
            ELSE NULL
          END
        END AS name_id
-     , CASE WHEN right(rd.item_id, 1) = 'B' THEN nullif(rd.name_ru, '') ELSE NULL END AS name_ru
-     , CASE WHEN right(rd.item_id, 1) = 'B' THEN nullif(rd.name_en, '') ELSE NULL END AS name_en
      , CASE WHEN rd.group_key IS NOT NULL THEN ck_id(rd.group_key) ELSE NULL END AS group_id
      , CASE WHEN rd.craft_level_key IS NOT NULL THEN ck_id(rd.craft_level_key) ELSE NULL END AS craft_level_id
      , rd.difficulty_check
@@ -491,8 +512,6 @@ SET
   item_id = EXCLUDED.item_id,
   dlc_dlc_id = EXCLUDED.dlc_dlc_id,
   name_id = EXCLUDED.name_id,
-  name_ru = EXCLUDED.name_ru,
-  name_en = EXCLUDED.name_en,
   group_id = EXCLUDED.group_id,
   craft_level_id = EXCLUDED.craft_level_id,
   difficulty_check = EXCLUDED.difficulty_check,
@@ -502,5 +521,8 @@ SET
   price_components = EXCLUDED.price_components,
   price_blueprint = EXCLUDED.price_blueprint,
   price_item = EXCLUDED.price_item;
+
+-- Удаление колонок name_ru/name_en (для уже развёрнутых БД)
+ALTER TABLE wcc_item_blueprints DROP COLUMN IF EXISTS name_ru, DROP COLUMN IF EXISTS name_en;
 
 

@@ -41,7 +41,7 @@ SELECT b.b_id
      , b.item_id
      , b.dlc_dlc_id AS dlc_id
      , idlcs.text AS dlc
-     , COALESCE(iname.text, CASE l.lang WHEN 'ru' THEN b.name_ru ELSE b.name_en END) AS blueprint_name
+     , iname.text AS blueprint_name
      , COALESCE(ibg.text, igroup.text) AS blueprint_group
      , icl.text AS craft_level
      , b.difficulty_check
