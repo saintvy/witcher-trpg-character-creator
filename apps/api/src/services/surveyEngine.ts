@@ -1460,6 +1460,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
   // Step 4: Load data for next question and history (if needed)
   let question: QuestionRow | undefined;
   let answerOptions: AnswerOptionRow[] = [];
+  let rawNextQuestionMetadata: Record<string, unknown> | null = null;
   let surveyDataForHistory: SurveyData | null = null;
   
   if (nextQuestionId) {
@@ -1488,6 +1489,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
     
     if (questionResult.rows.length > 0) {
       const row = questionResult.rows[0]!;
+      rawNextQuestionMetadata = row.metadata ?? {};
       let body = row.body;
       
       // Handle dynamic body from metadata.body if present
@@ -1851,7 +1853,9 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
   }
 
   // Add current question to historyQuestions with correct path from metadata
-  const metadata = question.metadata as { path?: unknown[] } | undefined;
+  // NOTE: question.metadata is resolved for display (UUIDs -> localized texts) via resolveMetadata above.
+  // For history grouping we need a stable, non-localized path.
+  const metadata = (rawNextQuestionMetadata ?? question.metadata) as { path?: unknown[] } | undefined;
   const path = metadata?.path || [];
   
   // Build pathTexts without i18n resolving (keep UUIDs as-is, still evaluate var/jsonlogic segments)
