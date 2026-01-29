@@ -42,6 +42,7 @@ SELECT b.b_id
      , b.dlc_dlc_id AS dlc_id
      , idlcs.text AS dlc
      , iname.text AS blueprint_name
+     , iav.text AS availability
      , COALESCE(ibg.text, igroup.text) AS blueprint_group
      , icl.text AS craft_level
      , b.difficulty_check
@@ -61,6 +62,7 @@ SELECT b.b_id
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = b.dlc_dlc_id
   JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = l.lang
   LEFT JOIN i18n_text iname ON iname.id = b.name_id AND iname.lang = l.lang
+  LEFT JOIN i18n_text iav ON iav.id = b.availability_id AND iav.lang = l.lang
   LEFT JOIN i18n_text igroup ON igroup.id = b.group_id AND igroup.lang = l.lang
   LEFT JOIN i18n_text ibg ON ibg.id = ck_id('blueprint_groups.' || b.group_id::text) AND ibg.lang = l.lang
   LEFT JOIN i18n_text icl ON icl.id = b.craft_level_id AND icl.lang = l.lang

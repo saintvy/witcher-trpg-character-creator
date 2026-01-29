@@ -328,6 +328,7 @@ SELECT meta.qu_id
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'blueprint_group', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
                 jsonb_build_object('field', 'blueprint_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
+                jsonb_build_object('field', 'availability', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.availability')::text)),
                 jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price_blueprint')::text)),
                 jsonb_build_object('field', 'price_components', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price_components')::text)),
                 jsonb_build_object('field', 'price_item', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price_item')::text)),
