@@ -16,6 +16,8 @@ cdk.out
 # DB
 db/data
 db/*.log
+db/sql/items/temp
+db/sql/wcc_sql_deploy.sql
 
 # OS
 Thumbs.db
