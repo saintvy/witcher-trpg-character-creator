@@ -110,7 +110,7 @@ vals AS (
                         {
                           "id": "lifeEventsCounter",
                           "step": 10
-                        }')) as c(counter_txt) ON raw_data.num in (4,6,7,9,10)
+                        }')) as c(counter_txt) ON raw_data.num in (4,7,9)
 )
 , ins_lbl AS (
   INSERT INTO i18n_text (id,entity,entity_field,lang,text)

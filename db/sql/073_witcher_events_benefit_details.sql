@@ -261,6 +261,21 @@ vals AS (
     CROSS JOIN meta
 )
 
+, skill_mapping_group10(num, skill_path) AS (
+  SELECT 1, 'awareness'::text
+  UNION ALL SELECT 2, 'wilderness_survival'
+  UNION ALL SELECT 3, 'deduction'
+  UNION ALL SELECT 4, 'monster_lore'
+  UNION ALL SELECT 5, 'education'
+  UNION ALL SELECT 6, 'streetwise'
+  UNION ALL SELECT 7, 'teaching'
+  UNION ALL SELECT 8, 'tactics'
+  UNION ALL SELECT 9, 'business'
+  UNION ALL SELECT 10, 'social_etiquette'
+  UNION ALL SELECT 11, 'language_common_speech'
+  UNION ALL SELECT 12, 'language_dwarvish'
+  UNION ALL SELECT 13, 'language_elder_speech'
+)
 , rules_vals(group_id, id, body) AS (
     SELECT v.group_id
          , gen_random_uuid()
@@ -276,9 +291,28 @@ vals AS (
                   "wcc_witcher_events_benefit_o' || to_char(group_id, 'FM00') || '"
                 ]
             }')::jsonb FROM (SELECT DISTINCT group_id FROM raw_data) v(group_id)
-),
-ins_rules AS (
+)
+, rules_visibility_10(num, id, body) AS (
+  SELECT sm.num
+       , gen_random_uuid()
+       , jsonb_build_object(
+           '<', jsonb_build_array(
+             jsonb_build_object(
+               '+', jsonb_build_array(
+                 jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.cur'), 0)),
+                 jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.bonus'), 0))
+               )
+             ),
+             6
+           )
+         )
+    FROM skill_mapping_group10 sm
+)
+, ins_rules AS (
   INSERT INTO rules(ru_id, body) SELECT r.id, r.body FROM rules_vals r
+)
+, ins_rules_visibility_10 AS (
+  INSERT INTO rules(ru_id, body) SELECT r10.id, r10.body FROM rules_visibility_10 r10
 )
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, visible_ru_ru_id, sort_order,metadata)
 SELECT
@@ -286,7 +320,7 @@ SELECT
   meta.su_su_id,
   meta.qu_id,
   ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*vals.group_id+vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label,
-  r.id,
+  COALESCE(r10.id, r.id),
   vals.num,
   jsonb_build_object(
            'probability', vals.probability
@@ -294,6 +328,7 @@ SELECT
 FROM vals
 CROSS JOIN meta
 JOIN rules_vals r ON vals.group_id = r.group_id
+LEFT JOIN rules_visibility_10 r10 ON vals.group_id = 10 AND vals.num = r10.num
 ON CONFLICT (an_id) DO NOTHING;
 
 -- Эффекты
@@ -915,21 +950,23 @@ WHERE raw_data.group_id = 10
 UNION ALL
 SELECT 'character', 'wcc_witcher_events_benefit_details_o' || to_char(10, 'FM00') || to_char(skill_mapping_group10.num, 'FM00'),
   jsonb_build_object(
-    'inc',
+    'set',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.bonus'),
-      1
-    )
-  )
-FROM skill_mapping_group10
-CROSS JOIN meta
-UNION ALL
-SELECT 'character', 'wcc_witcher_events_benefit_details_o' || to_char(10, 'FM00') || to_char(skill_mapping_group10.num, 'FM00'),
-  jsonb_build_object(
-    'inc',
-    jsonb_build_array(
-      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.bonus_if_new'),
-      1
+      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.cur'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'max', jsonb_build_array(
+            2,
+            jsonb_build_object(
+              '+', jsonb_build_array(
+                jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.cur'), 0)),
+                1
+              )
+            )
+          )
+        )
+      )
     )
   )
 FROM skill_mapping_group10
