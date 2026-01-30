@@ -164,6 +164,9 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('budget.witcher_steel_sword_tokens.name', 'ru', 'Жетоны: ведьмачий стальной меч'),
           ('budget.witcher_steel_sword_tokens.name', 'en', 'Tokens: Witcher’s Steel Sword'),
           ('budget.witcher_silver_sword_tokens.name', 'ru', 'Жетоны: ведьмачий серебряный меч'),
+          ('budget.witcher_silver_sword_tokens.name', 'en', 'Tokens: Witcher''s Silver Sword'),
+          ('budget.simple_blueprint_tokens.name', 'ru', 'Жетоны: обычные чертежи/формулы'),
+          ('budget.simple_blueprint_tokens.name', 'en', 'Tokens: Common Diagrams/Formulae'),
           ('budget.witcher_silver_sword_tokens.name', 'en', 'Tokens: Witcher’s Silver Sword'),
           -- Предупреждения
           ('warning.price_zero', 'ru', 'Внимание: товары со стоимостью 0 лучше согласовать с мастером, т.к. это товары, которые не купить в магазине, но которые могут достаться другим способом (наследство, досталось во время обучения и т.д.)'),
@@ -273,6 +276,17 @@ SELECT meta.qu_id
                  'items', jsonb_build_array('W128','W129','W130','W131','W132','W133','W134','W170')
                ),
                'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.witcher_silver_sword_tokens.name')::text)
+             ),
+             jsonb_build_object(
+               'id', 'simple_blueprint_tokens',
+               'type', 'tokens',
+               'source', 'characterRaw.money.simple_blueprint_tokens',
+               'priority', 2,
+               'is_default', false,
+               'coverage', jsonb_build_object(
+                 'items', jsonb_build_array('B002','B003','B004','B005','B007','B012','B017','B021','B028','B029','B033','B049','B050','B051','B053','B063','B064','B067','B081','B082','B094','B095','B097','B109','B119','B120','B122','B128','B129','B131','B145','B146','B148','B206','B153','B156','B159','B162','B163','B164','B165','B166','B171','B172','B175','B182','B184','B190','B191','B193','B197','B198','B202','B204','B205','B212','B216','B217','B232','B240','B245','B248','B253','B255','R039','R042','R043','R044','R048','R049','R050','R051','R052','R053','R054','R056','R062','R063','R064','R069','R070','R071','R072','R073','R074','R075','R076','R077','R078')
+               ),
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.simple_blueprint_tokens.name')::text)
              )
            ),
            'sources', jsonb_build_array(

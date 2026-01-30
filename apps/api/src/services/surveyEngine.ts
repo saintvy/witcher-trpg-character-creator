@@ -2766,9 +2766,13 @@ async function applyShopNode(
           if (toSpend > 0) {
             budgetStates.set(budget.id, budgetRemaining - toSpend);
             remainingQty -= Math.floor(toSpend / costPerUnit);
+            // Without is_with_money, token payment fully covers cost for those units; only remaining qty is paid by lower-priority budgets (e.g. crowns)
+            if (!budget.is_with_money) {
+              remainingCost = price * remainingQty;
+            }
           }
-          
-          // If is_with_money, also spend money
+
+          // If is_with_money, also spend money (in addition to tokens)
           if (budget.is_with_money && remainingCost > 0) {
             const moneyBudgets = budgets
               .filter(b => b.type === 'money' && isItemCoveredByBudget(b, sourceId, entry.purchase.id))

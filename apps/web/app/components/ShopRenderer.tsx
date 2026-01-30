@@ -464,10 +464,13 @@ export function ShopRenderer(props: {
             const coverage = budget.coverage as ShopBudgetCoverageTokens | undefined;
             let costPerUnit = 1;
             
-            // Find cost for this item
+            // Find cost for this item (string id => 1 token per unit)
             if (coverage?.items) {
               for (const item of coverage.items) {
-                if (typeof item === 'string') continue;
+                if (typeof item === 'string') {
+                  if (item === itemId) break;
+                  continue;
+                }
                 if (item?.ids && item.ids.includes(itemId)) {
                   costPerUnit = item.cost ?? 1;
                   break;
@@ -484,13 +487,19 @@ export function ShopRenderer(props: {
               }
             }
             
-            const tokensNeeded = costPerUnit * remainingQty;
-            // Always add to spent and subtract from remaining (allows negative)
-            usage[budget.id].spent += tokensNeeded;
-            usage[budget.id].remaining -= tokensNeeded;
-            remainingQty = 0;
+            const budgetRemaining = usage[budget.id].remaining;
+            const unitsPayableByTokens = costPerUnit > 0
+              ? Math.max(0, Math.min(remainingQty, Math.floor(budgetRemaining / costPerUnit)))
+              : 0;
+            const tokensToSpend = unitsPayableByTokens * costPerUnit;
+            usage[budget.id].spent += tokensToSpend;
+            usage[budget.id].remaining -= tokensToSpend;
+            remainingQty -= unitsPayableByTokens;
+            if (!budget.is_with_money) {
+              remainingCost = price * remainingQty;
+            }
             
-            // If is_with_money, also spend money
+            // If is_with_money, also spend money (in addition to tokens)
             if (budget.is_with_money && remainingCost > 0) {
               const moneyBudgets = budgets
                 .filter(b => b.type === 'money' && isItemCoveredByBudget(b, source.id, itemId))

@@ -306,7 +306,7 @@ SELECT 'character', 'wcc_past_family_status_o' || to_char(raw_data.group_id, 'FM
 FROM raw_data
 CROSS JOIN meta
 UNION ALL
--- Эффект: Добавление предметов в gear
+-- Эффект: Добавление предметов в gear (кроме чертежей — для них выдаётся жетон)
 SELECT 'character', 'wcc_past_family_status_o' || to_char(gear_items.group_id, 'FM00') || to_char(gear_items.num, 'FM00'),
   jsonb_build_object(
     'add',
@@ -329,7 +329,19 @@ SELECT 'character', 'wcc_past_family_status_o' || to_char(gear_items.group_id, '
     )
   )
 FROM gear_items
-CROSS JOIN meta;
+CROSS JOIN meta
+WHERE gear_items.gear_amount IS DISTINCT FROM 3
+UNION ALL
+-- Эффект: вместо чертежей в инвентарь — 1 жетон simple_blueprint_tokens (3 варианта: Семья мастеров / Артисты по группам)
+SELECT 'character', 'wcc_past_family_status_o' || to_char(blueprint_opt.group_id, 'FM00') || to_char(blueprint_opt.num, 'FM00'),
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.money.simple_blueprint_tokens'),
+      1
+    )
+  )
+FROM (VALUES (1, 5), (2, 4), (3, 6)) AS blueprint_opt(group_id, num);
   
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
