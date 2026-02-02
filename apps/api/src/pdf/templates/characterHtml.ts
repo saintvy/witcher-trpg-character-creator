@@ -1,4 +1,4 @@
-import type { CharacterPdfViewModel } from '../viewModel.js';
+import type { CharacterPdfPage1Vm } from '../viewModel.js';
 
 function escapeHtml(value: string): string {
   return value
@@ -9,309 +9,288 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#039;');
 }
 
-function richText(value: string): string {
-  // Keep only a tiny whitelist of formatting tags emitted by our generator.
-  const escaped = escapeHtml(value);
-  return escaped
-    .replaceAll('&lt;b&gt;', '<b>')
-    .replaceAll('&lt;/b&gt;', '</b>')
-    .replaceAll('&lt;strong&gt;', '<b>')
-    .replaceAll('&lt;/strong&gt;', '</b>')
-    .replaceAll('&lt;i&gt;', '<i>')
-    .replaceAll('&lt;/i&gt;', '</i>')
-    .replaceAll('&lt;br&gt;', '<br>')
-    .replaceAll('&lt;br/&gt;', '<br>')
-    .replaceAll('&lt;br /&gt;', '<br>');
+function formatSigned(value: number): string {
+  return value >= 0 ? `+${value}` : `${value}`;
 }
 
-function renderBox(title: string, bodyHtml: string, extraClass = ''): string {
+function renderBonus(bonus: number | null, raceBonus: number | null): string {
+  const parts: string[] = [];
+  if (bonus !== null && bonus !== 0) parts.push(escapeHtml(formatSigned(bonus)));
+  if (raceBonus !== null && raceBonus !== 0) parts.push(`<b>${escapeHtml(formatSigned(raceBonus))}</b>`);
+  return parts.join('');
+}
+
+function renderStatValue(cur: number | null, bonus: number | null, raceBonus: number | null): string {
+  const c = cur === null ? '' : String(cur);
+  const b = renderBonus(bonus, raceBonus);
+  if (!c && !b) return '';
+  if (c && b) return `${escapeHtml(c)}${b}`;
+  return c ? escapeHtml(c) : b;
+}
+
+function box(title: string, body: string, extraClass = ''): string {
   return `
     <section class="box ${extraClass}">
-      <div class="box-title"><span>${escapeHtml(title)}</span></div>
-      <div class="box-body">${bodyHtml}</div>
+      ${title ? `<div class="box-title">${escapeHtml(title)}</div>` : ''}
+      <div class="box-body">${body}</div>
     </section>
   `;
 }
 
-function renderMetaTable(vm: CharacterPdfViewModel): string {
-  const rows: { label: string; value: string }[] = [
-    { label: 'Игрок', value: vm.meta.player },
-    { label: 'Имя', value: vm.meta.name },
-    { label: 'Раса', value: vm.meta.race },
-    { label: 'Профессия', value: vm.meta.profession },
-    { label: 'Возраст', value: vm.meta.age },
-    { label: 'Определ. навык', value: vm.meta.definingSkill },
+function renderBaseInfo(vm: CharacterPdfPage1Vm): string {
+  const rows: Array<[string, string]> = [
+    ['Имя', vm.base.name],
+    ['Раса', vm.base.race],
+    ['Пол', vm.base.gender],
+    ['Возраст', vm.base.age],
+    ['Профессия', vm.base.profession],
+    ['Определяющий навык', vm.base.definingSkill],
   ];
 
-  const body = rows
-    .map(
-      (r) => `
-        <tr>
-          <td class="kv-label">${escapeHtml(r.label)}</td>
-          <td class="kv-value">${escapeHtml(r.value || '')}</td>
-        </tr>
-      `,
-    )
-    .join('');
-
-  return `<table class="kv"><tbody>${body}</tbody></table>`;
-}
-
-function renderStatsTable(vm: CharacterPdfViewModel): string {
-  const body = vm.stats
-    .map(
-      (s) => `
-        <tr>
-          <td class="stat-id">${escapeHtml(s.label)}</td>
-          <td class="stat-val">${s.value ?? ''}</td>
-        </tr>
-      `,
-    )
-    .join('');
-
-  return `<table class="stats"><tbody>${body}</tbody></table>`;
-}
-
-function renderDerivedTable(vm: CharacterPdfViewModel): string {
-  if (vm.derived.length === 0) return `<div class="empty">—</div>`;
-  const body = vm.derived
-    .map(
-      (d) => `
-        <tr>
-          <td class="kv-label">${escapeHtml(d.label)}</td>
-          <td class="kv-value">${escapeHtml(d.value)}</td>
-        </tr>
-      `,
-    )
-    .join('');
-  return `<table class="kv"><tbody>${body}</tbody></table>`;
-}
-
-function renderWeaponsTable(vm: CharacterPdfViewModel): string {
-  const rows = vm.weapons.length > 0 ? vm.weapons : new Array(4).fill(null).map(() => null);
-
-  const body = rows
-    .map((w) => {
-      if (!w) {
-        return `<tr><td class="fill">&nbsp;</td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr>`;
-      }
-      return `
-        <tr>
-          <td>${escapeHtml(w.name)}</td>
-          <td class="t-right">${escapeHtml(w.dmg)}</td>
-          <td class="t-right">${escapeHtml(w.reliability)}</td>
-          <td class="t-right">${escapeHtml(w.hands)}</td>
-          <td class="t-center">${escapeHtml(w.concealment)}</td>
-          <td class="t-right">${escapeHtml(w.weight)}</td>
-        </tr>
-      `;
-    })
-    .join('');
-
   return `
-    <table class="grid-table">
-      <thead>
-        <tr>
-          <th>Название</th>
-          <th class="th-narrow">Урон</th>
-          <th class="th-narrow">Прочн</th>
-          <th class="th-narrow">Хват</th>
-          <th class="th-narrow">Скрыт</th>
-          <th class="th-narrow">Вес</th>
-        </tr>
-      </thead>
-      <tbody>${body}</tbody>
+    <table class="kv">
+      <tbody>
+        ${rows
+          .map(
+            ([k, v]) => `
+              <tr>
+                <td class="kv-k">${escapeHtml(k)}</td>
+                <td class="kv-v">${escapeHtml(v || '')}</td>
+              </tr>
+            `,
+          )
+          .join('')}
+      </tbody>
     </table>
   `;
 }
 
-function renderArmorTable(vm: CharacterPdfViewModel): string {
-  const rows = vm.armor.length > 0 ? vm.armor : new Array(4).fill(null).map(() => null);
+function renderComputed(vm: CharacterPdfPage1Vm): string {
+  const items: Array<[string, string]> = [
+    ['Бег', vm.computed.run],
+    ['Прыжок', vm.computed.leap],
+    ['Устойчивость', vm.computed.stability],
+    ['Удар рукой', vm.computed.punch],
+    ['Удар ногой', vm.computed.kick],
+    ['Отдых', vm.computed.rest],
+    ['Энергия (Vigor)', vm.computed.vigor],
+  ];
 
-  const body = rows
-    .map((a) => {
-      if (!a) {
-        return `<tr><td class="fill">&nbsp;</td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr>`;
-      }
-      return `
-        <tr>
-          <td>${escapeHtml(a.name)}</td>
-          <td class="t-right">${escapeHtml(a.sp)}</td>
-          <td class="t-right">${escapeHtml(a.penalty)}</td>
-          <td class="t-right">${escapeHtml(a.weight)}</td>
-        </tr>
-      `;
-    })
-    .join('');
+  const cells = items.concat(new Array(Math.max(0, 8 - items.length)).fill(['', '']));
+  const row = (start: number) => `
+    <tr>
+      <td class="comp-k">${escapeHtml(cells[start][0] || '')}</td>
+      <td class="comp-v">${escapeHtml(cells[start][1] || '')}</td>
+      <td class="comp-k">${escapeHtml(cells[start + 1][0] || '')}</td>
+      <td class="comp-v">${escapeHtml(cells[start + 1][1] || '')}</td>
+    </tr>
+  `;
 
   return `
-    <table class="grid-table">
-      <thead>
-        <tr>
-          <th>Название</th>
-          <th class="th-narrow">SP</th>
-          <th class="th-narrow">ПБ</th>
-          <th class="th-narrow">Вес</th>
-        </tr>
-      </thead>
-      <tbody>${body}</tbody>
+    <table class="computed-table">
+      <tbody>
+        ${row(0)}
+        ${row(2)}
+        ${row(4)}
+        ${row(6)}
+      </tbody>
     </table>
   `;
 }
 
-function renderSkillBox(skillGroup: CharacterPdfViewModel['skillsByStat'][number]): string {
-  const rows = skillGroup.rows.length > 0 ? skillGroup.rows : new Array(8).fill(null).map(() => null);
-
-  const body = rows
-    .map((row) => {
-      if (!row) return `<tr><td class="fill">&nbsp;</td><td class="fill"></td></tr>`;
-
-      const marker = row.isInitial ? `<span class="mark">*</span>` : '';
-      const difficult = row.isDifficult ? `<span class="diff">D</span>` : '';
-
-      return `
-        <tr>
-          <td class="skill-name">${escapeHtml(row.name)} ${marker}${difficult}</td>
-          <td class="skill-val">${row.value ?? ''}</td>
-        </tr>
-      `;
-    })
-    .join('');
-
-  return renderBox(skillGroup.title, `<table class="skills"><tbody>${body}</tbody></table>`, 'box-skill');
+function renderMainStats(vm: CharacterPdfPage1Vm): string {
+  const pairs = vm.mainStats;
+  const rows = [];
+  for (let i = 0; i < pairs.length; i += 2) {
+    const left = pairs[i];
+    const right = pairs[i + 1];
+    rows.push(`
+      <tr>
+        <td class="ms-k">${left ? escapeHtml(left.label) : ''}</td>
+        <td class="ms-v">${left ? renderStatValue(left.cur, left.bonus, left.raceBonus) : ''}</td>
+        <td class="ms-k">${right ? escapeHtml(right.label) : ''}</td>
+        <td class="ms-v">${right ? renderStatValue(right.cur, right.bonus, right.raceBonus) : ''}</td>
+      </tr>
+    `);
+  }
+  return `<table class="main-stats"><tbody>${rows.join('')}</tbody></table>`;
 }
 
-function renderGearTable(vm: CharacterPdfViewModel): string {
-  const rows = vm.gear.length > 0 ? vm.gear : new Array(12).fill(null).map(() => null);
-  const body = rows
-    .map((g) => {
-      if (!g) return `<tr><td class="fill">&nbsp;</td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr>`;
-      return `
-        <tr>
-          <td>${escapeHtml(g.name)}</td>
-          <td>${richText(g.notes || '')}</td>
-          <td class="t-right">${escapeHtml(g.weight || '')}</td>
-          <td class="t-right">${escapeHtml(g.qty || '')}</td>
-        </tr>
-      `;
-    })
-    .join('');
+function renderParamsCombined(vm: CharacterPdfPage1Vm): string {
+  const mainPairs = vm.mainStats;
+  const mainRows: string[] = [];
+  for (let i = 0; i < mainPairs.length; i += 2) {
+    const left = mainPairs[i];
+    const right = mainPairs[i + 1];
+    mainRows.push(`
+      <tr>
+        <td class="ms-k">${left ? escapeHtml(left.label) : ''}</td>
+        <td class="ms-v">${left ? renderStatValue(left.cur, left.bonus, left.raceBonus) : ''}</td>
+        <td class="ms-k">${right ? escapeHtml(right.label) : ''}</td>
+        <td class="ms-v">${right ? renderStatValue(right.cur, right.bonus, right.raceBonus) : ''}</td>
+      </tr>
+    `);
+  }
+
+  const additionalItems: Array<[string, string]> = [
+    ['бег', vm.computed.run],
+    ['прыж.', vm.computed.leap],
+    ['уст', vm.computed.stability],
+    ['уд.р.', vm.computed.punch],
+    ['уд.н.', vm.computed.kick],
+    ['Отдых', vm.computed.rest],
+    ['Энергия', vm.computed.vigor],
+  ];
+  const cells = additionalItems.concat(new Array(Math.max(0, 8 - additionalItems.length)).fill(['', '']));
+  const additionalRow = (start: number) => `
+    <tr>
+      <td class="comp-k">${escapeHtml(cells[start][0] || '')}</td>
+      <td class="comp-v">${escapeHtml(cells[start][1] || '')}</td>
+      <td class="comp-k">${escapeHtml(cells[start + 1][0] || '')}</td>
+      <td class="comp-v">${escapeHtml(cells[start + 1][1] || '')}</td>
+    </tr>
+  `;
 
   return `
-    <table class="grid-table">
-      <thead>
-        <tr>
-          <th>Название</th>
-          <th>Описание</th>
-          <th class="th-narrow">Вес</th>
-          <th class="th-narrow">Кол-во</th>
-        </tr>
-      </thead>
-      <tbody>${body}</tbody>
+    <table class="params-table">
+      <tbody>
+        <tr><td class="subhead" colspan="4">Основные параметры</td></tr>
+        ${mainRows.join('')}
+        <tr><td class="subhead" colspan="4">Доп. параметры</td></tr>
+        ${additionalRow(0)}
+        ${additionalRow(2)}
+        ${additionalRow(4)}
+        ${additionalRow(6)}
+      </tbody>
     </table>
   `;
 }
 
-function renderPerks(vm: CharacterPdfViewModel): string {
-  if (vm.perks.length === 0) return `<div class="empty">—</div>`;
-  return `<ul class="bullets">${vm.perks.map((p) => `<li>${richText(p)}</li>`).join('')}</ul>`;
-}
-
-function renderLoreNotes(vm: CharacterPdfViewModel): string {
-  if (vm.loreNotes.length === 0) return `<div class="empty">—</div>`;
-  const body = vm.loreNotes
-    .map(
-      (r) =>
-        `<div class="note-row"><span class="note-k">${escapeHtml(r.label)}:</span> <span class="note-v">${richText(
-          r.value,
-        )}</span></div>`,
-    )
-    .join('');
-  return `<div class="notes">${body}</div>`;
-}
-
-function renderReputation(vm: CharacterPdfViewModel): string {
-  const rows = vm.reputation.length > 0 ? vm.reputation : new Array(4).fill(null).map(() => null);
-  const body = rows
-    .map((r) => {
-      if (!r) return `<tr><td class="fill">&nbsp;</td><td class="fill"></td><td class="fill"></td></tr>`;
-      return `
+function renderConsumables(vm: CharacterPdfPage1Vm): string {
+  return `
+    <table class="consumables">
+      <thead>
         <tr>
-          <td>${escapeHtml(r.groupName)}</td>
-          <td class="t-right">${r.status ?? ''}</td>
-          <td class="t-center">${r.isFeared ? '✓' : ''}</td>
+          <th>Параметр</th>
+          <th class="narrow">MAX</th>
+          <th class="narrow">CUR</th>
         </tr>
+      </thead>
+      <tbody>
+        ${vm.consumables
+          .map(
+            (c) => `
+              <tr>
+                <td>${escapeHtml(c.label)}</td>
+                <td class="narrow t-right">${escapeHtml(c.max || '')}</td>
+                <td class="narrow t-right">${escapeHtml(c.current || '')}</td>
+              </tr>
+            `,
+          )
+          .join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderAvatar(vm: CharacterPdfPage1Vm): string {
+  if (vm.avatar.dataUrl) {
+    return `<img class="avatar-img" src="${escapeHtml(vm.avatar.dataUrl)}" alt="avatar" />`;
+  }
+  return `<div class="avatar-placeholder">Аватар</div>`;
+}
+
+function renderSkillGroups(vm: CharacterPdfPage1Vm): string {
+  return vm.skillGroups
+    .map((group) => {
+      const statValue = renderStatValue(group.stat.cur, group.stat.bonus, group.stat.raceBonus);
+      const skillsHtml = group.skills
+        .map((s) => {
+          const cur = s.cur !== null && s.cur !== 0 ? String(s.cur) : '';
+          const bonus = renderBonus(s.bonus, s.raceBonus);
+          const statCur = group.stat.cur ?? 0;
+          const skillCur = s.cur ?? 0;
+          const skillBonus = s.bonus ?? 0;
+          const raceBonus = s.raceBonus ?? 0;
+          const baseValue = statCur + Math.min(skillCur + skillBonus, 10) + raceBonus;
+          const shouldShowBase =
+            (s.cur !== null && s.cur !== 0) || (s.bonus !== null && s.bonus !== 0) || (s.raceBonus !== null && s.raceBonus !== 0);
+          const base = shouldShowBase ? escapeHtml(String(baseValue)) : '';
+          return `
+            <tr>
+              <td class="sk-name">${escapeHtml(s.name)}</td>
+              <td class="sk-cur">${escapeHtml(cur)}</td>
+              <td class="sk-bonus">${bonus}</td>
+              <td class="sk-base">${base}</td>
+            </tr>
+          `;
+        })
+        .join('');
+
+      return `
+        <section class="skill-group">
+          <div class="skill-group-header">
+            <div class="sg-title">${escapeHtml(group.statLabel)}</div>
+            <div class="sg-stat">${statValue}</div>
+          </div>
+          <table class="skills">
+            <tbody>
+              ${skillsHtml}
+            </tbody>
+          </table>
+        </section>
       `;
     })
     .join('');
+}
+
+function renderProfessional(vm: CharacterPdfPage1Vm): string {
+  const colorClass: Record<CharacterPdfPage1Vm['professional']['branches'][number]['color'], string> = {
+    blue: 'prof-col-blue',
+    green: 'prof-col-green',
+    red: 'prof-col-red',
+  };
 
   return `
-    <table class="grid-table">
-      <thead>
-        <tr>
-          <th>Область</th>
-          <th class="th-narrow">Ранг</th>
-          <th class="th-narrow">Страх</th>
-        </tr>
-      </thead>
-      <tbody>${body}</tbody>
-    </table>
+    <div class="prof-grid">
+      ${vm.professional.branches
+        .map((b) => {
+          const rows = new Array(3).fill(null).map((_, i) => b.skills[i] ?? null);
+          return `
+            <table class="prof-table ${colorClass[b.color]}">
+              <colgroup>
+                <col style="width:80%" />
+                <col style="width:20%" />
+              </colgroup>
+              <thead>
+                <tr><th colspan="2">${escapeHtml(b.title)}</th></tr>
+              </thead>
+              <tbody>
+                ${rows
+                  .map((row) => {
+                    const name = row ? row.name : '';
+                    const param = row?.paramAbbr ? ` (${row.paramAbbr})` : '';
+                    return `<tr><td class="prof-skill">${escapeHtml(name)}<span class="prof-param">${escapeHtml(
+                      param,
+                    )}</span></td><td class="prof-val"></td></tr>`;
+                  })
+                  .join('')}
+              </tbody>
+            </table>
+          `;
+        })
+        .join('')}
+    </div>
   `;
 }
 
-function renderCharacteristics(vm: CharacterPdfViewModel): string {
-  const rows = vm.characteristics.length > 0 ? vm.characteristics : new Array(6).fill(null).map(() => null);
-  const body = rows
-    .map((r) => {
-      if (!r) return `<tr><td class="fill">&nbsp;</td><td class="fill"></td></tr>`;
-      return `<tr><td>${escapeHtml(r.label)}</td><td>${escapeHtml(r.value)}</td></tr>`;
-    })
-    .join('');
-
-  return `<table class="grid-table"><tbody>${body}</tbody></table>`;
-}
-
-function renderValues(vm: CharacterPdfViewModel): string {
-  if (vm.values.length === 0) return `<div class="empty">—</div>`;
-  const body = vm.values
-    .map((r) => `<div class="note-row"><span class="note-k">${escapeHtml(r.label)}:</span> <span class="note-v">${escapeHtml(r.value)}</span></div>`)
-    .join('');
-  return `<div class="notes">${body}</div>`;
-}
-
-function renderLifeEvents(vm: CharacterPdfViewModel): string {
-  const rows = vm.lifeEvents.length > 0 ? vm.lifeEvents : new Array(8).fill(null).map(() => null);
-  const body = rows
-    .map((e) => {
-      if (!e) return `<tr><td class="fill">&nbsp;</td><td class="fill"></td></tr>`;
-      const left = [e.timePeriod, e.eventType].filter(Boolean).join(' • ');
-      return `<tr><td>${escapeHtml(left)}</td><td>${richText(e.description)}</td></tr>`;
-    })
-    .join('');
-
-  return `
-    <table class="grid-table">
-      <thead>
-        <tr>
-          <th class="th-medium">Год</th>
-          <th>Событие</th>
-        </tr>
-      </thead>
-      <tbody>${body}</tbody>
-    </table>
-  `;
-}
-
-export function renderCharacterHtml(vm: CharacterPdfViewModel): string {
-  const vigor = vm.stats.find((s) => s.id === 'vigor')?.value ?? null;
-  const totalWeightText = vm.totalWeight !== null ? vm.totalWeight.toFixed(1) : '';
-
+export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
   return `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(vm.meta.name)} — Witcher Character Sheet</title>
+    <title>${escapeHtml(vm.base.name)} — Character Sheet</title>
     <style>
       @page { size: A4; margin: 0; }
       * { box-sizing: border-box; }
@@ -320,301 +299,177 @@ export function renderCharacterHtml(vm: CharacterPdfViewModel): string {
         font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
         color: #111827;
         background: white;
-        font-size: 11px;
-        line-height: 1.25;
+        font-size: 10.5px;
+        line-height: 1.15;
       }
 
       .page {
         width: 210mm;
-        min-height: 297mm;
+        height: 297mm;
         padding: 6mm;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 4mm;
       }
-      .page + .page { page-break-before: always; }
 
-      .box {
-        border: 1.5px solid #111827;
-        background: #fff;
-        break-inside: avoid;
-        page-break-inside: avoid;
+      .grid-top {
+        display: grid;
+        grid-template-columns: 52mm 58mm 1fr 1fr;
+        grid-column-gap: 4mm;
+        grid-row-gap: 3mm;
+        grid-template-rows: 46mm;
+        align-items: stretch;
       }
+
+      .pos-base { grid-column: 1; grid-row: 1; }
+      .pos-main { grid-column: 2; grid-row: 1; }
+      .pos-consumables { grid-column: 3; grid-row: 1; }
+      .pos-avatar { grid-column: 4; grid-row: 1; }
+
+      .box { border: 1px solid #111827; background: #fff; height: 100%; }
       .box-title {
-        padding: 3px 6px;
-        border-bottom: 1.5px solid #111827;
+        padding: 2px 4px;
+        border-bottom: 1px solid #111827;
+        font-weight: 800;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: #f3f4f6;
+      }
+      .box-body { padding: 3px; }
+
+      .kv { width: 100%; border-collapse: collapse; }
+      .kv td { border-bottom: 1px solid #111827; padding: 2px 3px; }
+      .kv tr:last-child td { border-bottom: 0; }
+      .kv-k { width: 46%; font-weight: 800; }
+      .kv-v { width: 54%; }
+
+      .params-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .params-table td { border-bottom: 1px solid #e5e7eb; padding: 2px 2px; }
+      .params-table tr:last-child td { border-bottom: 0; }
+      .subhead {
+        border-bottom: 1px solid #111827 !important;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: #f3f4f6;
+      }
+      .comp-k { width: 40%; font-weight: 900; text-transform: uppercase; font-size: 9px; letter-spacing: 0.03em; }
+      .comp-v { width: 10%; text-align: right; font-variant-numeric: tabular-nums; }
+
+      .main-stats { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .main-stats td { border-bottom: 1px solid #111827; padding: 2px 2px; }
+      .main-stats tr:last-child td { border-bottom: 0; }
+      .ms-k { width: 24%; font-weight: 900; text-transform: uppercase; }
+      .ms-v { width: 26%; text-align: right; padding-right: 2px; font-variant-numeric: tabular-nums; }
+
+      .consumables { width: 100%; border-collapse: collapse; }
+      .consumables th, .consumables td { border: 1px solid #111827; padding: 3px; }
+      .consumables thead th { background: #f3f4f6; text-transform: uppercase; font-size: 9px; letter-spacing: 0.06em; }
+      .narrow { width: 14mm; }
+      .t-right { text-align: right; font-variant-numeric: tabular-nums; }
+
+      .avatar-box { height: 100%; }
+      .avatar-box .box-body { height: calc(100% - 18px); }
+      .avatar-placeholder {
+        height: 100%;
+        min-height: 0;
+        border: 1px dashed #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        font-style: italic;
+      }
+      .avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+      .grid-bottom {
+        display: grid;
+        grid-template-columns: 52mm 58mm 1fr 1fr;
+        grid-template-rows: auto 1fr;
+        gap: 5mm;
+        min-height: 0;
+      }
+
+      .skills-column {
+        border: 1px solid #111827;
+        padding: 2px;
+        overflow: hidden;
+        min-height: 0;
+        grid-column: 1;
+        grid-row: 1 / span 2;
+      }
+      .skill-group { break-inside: avoid; page-break-inside: avoid; margin-bottom: 4px; }
+      .skill-group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        border: 1px solid #111827;
+        background: #f9fafb;
+        padding: 2px 3px;
+      }
+      .sg-title { font-weight: 900; text-transform: uppercase; font-size: 9px; }
+      .sg-stat { font-variant-numeric: tabular-nums; }
+
+      .skills { width: 100%; border-collapse: collapse; }
+      .skills td { border-bottom: 1px solid #e5e7eb; padding: 0px 2px; vertical-align: top; }
+      .skills tr:last-child td { border-bottom: 0; }
+      .sk-name { width: 58%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .sk-cur { width: 10%; text-align: right; font-variant-numeric: tabular-nums; }
+      .sk-bonus { width: 14%; text-align: right; font-variant-numeric: tabular-nums; }
+      .sk-base { width: 18%; text-align: right; font-variant-numeric: tabular-nums; color: #374151; }
+
+      .prof-title-row {
+        grid-column: 2 / span 3;
+        grid-row: 1;
+        font-weight: 900;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         font-size: 10px;
-        font-weight: 800;
-        text-align: center;
-        background: #f3f4f6;
+        margin: 0;
+        align-self: end;
       }
-      .box-body { padding: 6px; }
+      .prof-area {
+        grid-column: 2 / span 3;
+        grid-row: 2;
+        min-height: 0;
+      }
 
-      .grid-top { display: grid; grid-template-columns: 43% 18% 39%; gap: 6px; }
-      .right-col { display: grid; grid-template-rows: auto 1fr auto; gap: 6px; }
-      .portrait { height: 105px; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-style: italic; }
-      .bars { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .prof-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+      .prof-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .prof-table th, .prof-table td { border: 1px solid #111827; padding: 3px; }
+      .prof-table thead th {
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-align: left;
+      }
+      .prof-skill { width: 78%; }
+      .prof-val { width: 22%; }
+      .prof-param { font-weight: 700; color: #374151; }
 
-      .kv, .stats, .skills, .grid-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-      .kv td { padding: 3px 4px; border-bottom: 1px solid #111827; vertical-align: top; }
-      .kv tr:last-child td { border-bottom: 0; }
-      .kv-label { width: 48%; font-weight: 700; }
-      .kv-value { width: 52%; }
-
-      .stats td { padding: 2px 4px; border-bottom: 1px solid #111827; }
-      .stats tr:last-child td { border-bottom: 0; }
-      .stat-id { width: 52%; font-weight: 800; text-transform: uppercase; }
-      .stat-val { width: 48%; text-align: right; font-variant-numeric: tabular-nums; }
-
-      .grid-mid { display: grid; grid-template-columns: 68% 32%; gap: 6px; margin-top: 6px; }
-      .skills-grid { margin-top: 6px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-
-      .skills td { padding: 2px 4px; border-bottom: 1px solid #111827; }
-      .skills tr:last-child td { border-bottom: 0; }
-      .skill-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .skill-val { width: 32px; text-align: right; font-variant-numeric: tabular-nums; }
-      .mark { font-weight: 900; margin-left: 2px; }
-      .diff { font-size: 9px; border: 1px solid #111827; padding: 0 3px; margin-left: 4px; }
-
-      .grid-table th, .grid-table td { border: 1px solid #111827; padding: 3px 4px; vertical-align: top; }
-      .grid-table thead th { background: #f3f4f6; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
-      .th-narrow { width: 38px; }
-      .th-medium { width: 80px; }
-      .t-right { text-align: right; font-variant-numeric: tabular-nums; }
-      .t-center { text-align: center; }
-
-      .empty { color: #9ca3af; font-style: italic; }
-      .fill { height: 14px; }
-
-      .bullets { margin: 0; padding-left: 16px; }
-      .bullets li { margin: 2px 0; }
-
-      .notes { display: grid; gap: 3px; }
-      .note-k { font-weight: 800; }
-
-      .money { font-size: 20px; font-weight: 900; text-align: center; padding: 10px 0; }
-
-      .page2 { display: grid; grid-template-rows: auto 1fr auto; gap: 6px; }
-      .page2-top { display: grid; grid-template-columns: 33% 33% 34%; gap: 6px; }
-      .page2-mid { display: grid; grid-template-columns: 20% 55% 25%; gap: 6px; }
-      .page2-side { display: grid; grid-template-rows: auto auto auto; gap: 6px; }
-      .page2-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-
-      .page3-top { display: grid; grid-template-columns: 65% 35%; gap: 6px; }
-      .page3-right { display: grid; grid-template-rows: auto auto auto; gap: 6px; }
+      .prof-col-blue { background: rgba(59,130,246,0.08); }
+      .prof-col-green { background: rgba(16,185,129,0.08); }
+      .prof-col-red { background: rgba(239,68,68,0.08); }
     </style>
   </head>
   <body>
     <div class="page">
       <div class="grid-top">
-        ${renderBox('Персонаж', renderMetaTable(vm))}
-        ${renderBox('Характеристики', renderStatsTable(vm))}
-        <div class="right-col">
-          ${renderBox('Производные', renderDerivedTable(vm))}
-          ${renderBox('Портрет', `<div class="portrait">Портрет</div>`)}
-          <div class="bars">
-            ${renderBox('MAX HP', `<div class="money">${vm.hpMax ?? ''}</div>`)}
-            ${renderBox('MAX STAM', `<div class="money">${vm.staMax ?? ''}</div>`)}
-          </div>
+        <div class="pos-base">${box('Базовые данные', renderBaseInfo(vm))}</div>
+        <div class="pos-main">${box('', renderParamsCombined(vm))}</div>
+        <div class="pos-consumables">${box('Расходуемые', renderConsumables(vm))}</div>
+        <div class="pos-avatar">${box('Аватар', renderAvatar(vm), 'avatar-box')}</div>
+      </div>
+
+      <div class="grid-bottom">
+        <div class="skills-column">
+          ${renderSkillGroups(vm)}
         </div>
+        <div class="prof-title-row">${escapeHtml('Профессиональные навыки')}</div>
+        <div class="prof-area">${renderProfessional(vm)}</div>
       </div>
-
-      <div class="grid-mid">
-        ${renderBox('Оружие', renderWeaponsTable(vm))}
-        ${renderBox('Броня', renderArmorTable(vm))}
-      </div>
-
-      <div class="skills-grid">
-        ${vm.skillsByStat.filter((g) => g.statId !== 'OTHER').map(renderSkillBox).join('')}
-        ${renderBox('Перк/Таланты', renderPerks(vm))}
-        ${renderBox('Заметки', renderLoreNotes(vm))}
-      </div>
-    </div>
-
-    <div class="page page2">
-      <div class="page2-top">
-        ${renderBox('Очки улучшения', `<div class="empty">—</div>`)}
-        ${renderBox('Репутация', renderReputation(vm))}
-        ${renderBox('Характер', renderCharacteristics(vm) + `<div style="margin-top:6px">${renderValues(vm)}</div>`)}
-      </div>
-
-      <div class="page2-mid">
-        <div class="page2-side">
-          ${renderBox(
-            'Щит',
-            `
-              <table class="grid-table">
-                <thead><tr><th>УРН</th><th class="th-narrow">ПБ</th></tr></thead>
-                <tbody>
-                  ${new Array(6)
-                    .fill(null)
-                    .map(() => `<tr><td class="fill">&nbsp;</td><td class="fill"></td></tr>`)
-                    .join('')}
-                </tbody>
-              </table>
-            `,
-          )}
-          ${renderBox(
-            'Компоненты',
-            `
-              <table class="grid-table">
-                <thead><tr><th>Название</th><th class="th-narrow">Вес</th></tr></thead>
-                <tbody>
-                  ${new Array(10)
-                    .fill(null)
-                    .map(() => `<tr><td class="fill">&nbsp;</td><td class="fill"></td></tr>`)
-                    .join('')}
-                </tbody>
-              </table>
-            `,
-          )}
-          ${renderBox(
-            'Общий вес',
-            `
-              <div class="notes">
-                <div><span class="note-k">Итого:</span> ${escapeHtml(totalWeightText)}</div>
-                <div><span class="note-k">ENC:</span> ${escapeHtml(vm.derived.find((d) => d.id === 'ENC')?.value ?? '')}</div>
-              </div>
-            `,
-          )}
-        </div>
-
-        ${renderBox('Рюкзак / Инвентарь', renderGearTable(vm))}
-
-        ${renderBox('Жизненный путь', renderLifeEvents(vm))}
-      </div>
-
-      <div class="page2-bottom">
-        ${renderBox(
-          'Травмы',
-          `
-            <table class="grid-table">
-              <thead><tr><th>Name</th><th>Effect</th></tr></thead>
-              <tbody>
-                ${new Array(8).fill(null).map(() => `<tr><td class="fill">&nbsp;</td><td class="fill"></td></tr>`).join('')}
-              </tbody>
-            </table>
-          `,
-        )}
-        ${renderBox(
-          'Квестовые предметы',
-          `
-            <table class="grid-table">
-              <thead><tr><th>Название</th><th class="th-narrow">Кол-во</th></tr></thead>
-              <tbody>
-                ${new Array(8).fill(null).map(() => `<tr><td class="fill">&nbsp;</td><td class="fill"></td></tr>`).join('')}
-              </tbody>
-            </table>
-          `,
-        )}
-      </div>
-
-      <div style="display:grid; grid-template-columns: 65% 35%; gap: 6px;">
-        ${renderBox(
-          'Проф. ветки / умения',
-          vm.professionalBranches.length || vm.professionalAbilities.length
-            ? `<div>
-                ${vm.professionalBranches.length ? `<div><b>Ветки:</b><br>${vm.professionalBranches.map(escapeHtml).join('<br>')}</div>` : ''}
-                ${
-                  vm.professionalAbilities.length
-                    ? `<div style="margin-top:6px"><b>Умения:</b><br>${vm.professionalAbilities
-                        .map((a) => escapeHtml(a.name))
-                        .join('<br>')}</div>`
-                    : ''
-                }
-              </div>`
-            : `<div class="empty">—</div>`,
-        )}
-        ${renderBox(
-          'Деньги',
-          `
-            <table class="grid-table">
-              <thead><tr><th>Орэны</th><th>Флорены</th><th>Реданские кроны</th></tr></thead>
-              <tbody><tr><td class="fill"></td><td class="fill"></td><td class="t-right">${escapeHtml(String(vm.moneyCrowns ?? ''))}</td></tr></tbody>
-            </table>
-          `,
-        )}
-      </div>
-    </div>
-
-    <div class="page">
-      <div class="page3-top">
-        ${renderBox(
-          'Заклинания / Инвокации / Знаки',
-          `
-            <table class="grid-table">
-              <thead>
-                <tr>
-                  <th>Название</th>
-                  <th class="th-narrow">Цена</th>
-                  <th>Эффект</th>
-                  <th class="th-narrow">ДИС</th>
-                  <th class="th-narrow">Длит.</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${new Array(18)
-                  .fill(null)
-                  .map(
-                    () =>
-                      `<tr><td class="fill">&nbsp;</td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr>`,
-                  )
-                  .join('')}
-              </tbody>
-            </table>
-          `,
-        )}
-        <div class="page3-right">
-          ${renderBox(
-            'Энергия / Выносливость',
-            `<div class="notes">
-              <div><span class="note-k">VIG:</span> ${vigor ?? ''}</div>
-              <div><span class="note-k">Текущая:</span> </div>
-              <div><span class="note-k">Потрачено:</span> </div>
-            </div>`,
-          )}
-          ${renderBox('Фокус', `<div style="height:110px"></div>`)}
-          ${renderBox(
-            'Порчи',
-            `
-              <table class="grid-table">
-                <thead><tr><th>Name</th><th class="th-narrow">Cost</th><th>Effect</th></tr></thead>
-                <tbody>${new Array(8)
-                  .fill(null)
-                  .map(() => `<tr><td class="fill">&nbsp;</td><td class="fill"></td><td class="fill"></td></tr>`)
-                  .join('')}</tbody>
-              </table>
-            `,
-          )}
-        </div>
-      </div>
-
-      ${renderBox(
-        'Ритуалы',
-        `
-          <table class="grid-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th class="th-narrow">Cost</th>
-                <th>Effect</th>
-                <th class="th-narrow">Время</th>
-                <th class="th-narrow">Сл</th>
-                <th class="th-narrow">Длит</th>
-                <th>Компоненты</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${new Array(10)
-                .fill(null)
-                .map(
-                  () =>
-                    `<tr><td class="fill">&nbsp;</td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td><td class="fill"></td></tr>`,
-                )
-                .join('')}
-            </tbody>
-          </table>
-        `,
-      )}
     </div>
   </body>
 </html>`;

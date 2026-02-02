@@ -1,52 +1,55 @@
-export type CharacterPdfViewModel = {
-  meta: {
-    player: string;
+export type SkillCatalogInfo = {
+  name: string;
+  param: string | null;
+  isDifficult: boolean;
+};
+
+export type CharacterPdfPage1Vm = {
+  base: {
     name: string;
     race: string;
-    profession: string;
+    gender: string;
     age: string;
+    profession: string;
     definingSkill: string;
-    homeland: string;
-    homeLanguage: string;
   };
-  stats: { id: string; label: string; value: number | null }[];
-  derived: { id: string; label: string; value: string }[];
-  hpMax: number | null;
-  staMax: number | null;
-  stun: number | null;
-  enc: number | null;
-  rec: number | null;
-  moneyCrowns: number | null;
-
-  reputation: { groupName: string; status: number | null; isFeared: boolean }[];
-  characteristics: { label: string; value: string }[];
-  values: { label: string; value: string }[];
-
-  perks: string[];
-  loreNotes: { label: string; value: string }[];
-  lifeEvents: { timePeriod: string; eventType: string; description: string }[];
-
-  skillsByStat: {
+  computed: {
+    run: string;
+    leap: string;
+    stability: string;
+    punch: string;
+    kick: string;
+    rest: string;
+    vigor: string;
+  };
+  mainStats: { id: string; label: string; cur: number | null; bonus: number | null; raceBonus: number | null }[];
+  consumables: {
+    id: 'carry' | 'hp' | 'sta' | 'resolve' | 'luck';
+    label: string;
+    max: string;
+    current: string;
+  }[];
+  avatar: { dataUrl?: string | null };
+  skillGroups: {
     statId: string;
-    title: string;
-    rows: { id: string; name: string; value: number | null; isInitial: boolean; isDifficult: boolean }[];
+    statLabel: string;
+    stat: { cur: number | null; bonus: number | null; raceBonus: number | null };
+    skills: {
+      id: string;
+      name: string;
+      cur: number | null;
+      bonus: number | null;
+      raceBonus: number | null;
+      isDifficult: boolean;
+    }[];
   }[];
-
-  professionalBranches: string[];
-  professionalAbilities: { id: string; name: string }[];
-  initialSkills: { id: string; name: string }[];
-
-  weapons: {
-    name: string;
-    dmg: string;
-    reliability: string;
-    hands: string;
-    concealment: string;
-    weight: string;
-  }[];
-  armor: { name: string; sp: string; penalty: string; weight: string }[];
-  gear: { name: string; qty: string; weight: string; notes: string }[];
-  totalWeight: number | null;
+  professional: {
+    branches: {
+      title: string;
+      color: 'blue' | 'green' | 'red';
+      skills: { id: string; name: string; paramAbbr: string }[];
+    }[];
+  };
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -90,103 +93,136 @@ function getFirst(root: unknown, paths: string[]): unknown {
   return undefined;
 }
 
-function getFirstString(root: unknown, paths: string[]): string | null {
-  return asString(getFirst(root, paths));
+function getFirstString(root: unknown, paths: string[]): string {
+  return asString(getFirst(root, paths)) ?? '';
 }
 
-type SkillValue = { cur?: unknown; bonus?: unknown; race_bonus?: unknown; is_difficult?: unknown };
+type SkillValue = { cur?: unknown; bonus?: unknown; race_bonus?: unknown };
 
-const SKILL_STAT_MAP: Record<string, string> = {
-  // INT
-  awareness: 'INT',
-  business: 'INT',
-  deduction: 'INT',
-  education: 'INT',
-  monster_lore: 'INT',
-  tactics: 'INT',
-  teaching: 'INT',
-  wilderness_survival: 'INT',
-  language_common_speech: 'INT',
-  language_elder_speech: 'INT',
-  language_dwarvish: 'INT',
-  language_nilfgaardian: 'INT',
-  language_skellige: 'INT',
-  language_gnomish: 'INT',
-  language_halfling: 'INT',
-  language_nordling: 'INT',
-
-  // REF
-  brawling: 'REF',
-  dodge: 'REF',
-  melee: 'REF',
-  riding: 'REF',
-  sailing: 'REF',
-  small_blades: 'REF',
-  staff: 'REF',
-  swordsmanship: 'REF',
-
-  // DEX
-  archery: 'DEX',
-  athletics: 'DEX',
-  crossbow: 'DEX',
-  sleight_of_hand: 'DEX',
-  stealth: 'DEX',
-
-  // BODY
-  endurance: 'BODY',
-  physique: 'BODY',
-  resistance: 'BODY',
-
-  // EMP
-  charisma: 'EMP',
-  deceit: 'EMP',
-  fine_arts: 'EMP',
-  gambling: 'EMP',
-  grooming_and_style: 'EMP',
-  human_perception: 'EMP',
-  leadership: 'EMP',
-  persuasion: 'EMP',
-  performance: 'EMP',
-  seduction: 'EMP',
-  social_etiquette: 'EMP',
-  streetwise: 'EMP',
-
-  // CRA
-  alchemy: 'CRA',
-  craft: 'CRA',
-  disguise: 'CRA',
-  first_aid: 'CRA',
-  forgery: 'CRA',
-  pick_lock: 'CRA',
-  trap_craft: 'CRA',
-
-  // WILL (magic)
-  courage: 'WILL',
-  hex_weaving: 'WILL',
-  ritual_crafting: 'WILL',
-  resist_magic: 'WILL',
-  spell_casting: 'WILL',
-  intimation: 'WILL',
-};
-
-function getSkillName(skillId: string, skillNameById?: ReadonlyMap<string, string>): string {
-  const fromMap = skillNameById?.get(skillId);
-  if (fromMap && fromMap.trim().length > 0) return fromMap;
-  return skillId;
+function readSkillValue(value: unknown): { cur: number | null; bonus: number | null; raceBonus: number | null } {
+  const rec = asRecord(value) as SkillValue | null;
+  if (!rec) return { cur: null, bonus: null, raceBonus: null };
+  return {
+    cur: asNumber(rec.cur),
+    bonus: asNumber(rec.bonus),
+    raceBonus: asNumber(rec.race_bonus),
+  };
 }
 
-function valueFromSkill(skillValue: SkillValue): { total: number | null; isDifficult: boolean } {
-  const cur = asNumber(skillValue.cur) ?? 0;
-  const bonus = asNumber(skillValue.bonus) ?? 0;
-  const raceBonus = asNumber(skillValue.race_bonus) ?? 0;
-  const total = cur + bonus + raceBonus;
-  const isDifficult = skillValue.is_difficult === true;
-  return { total: Number.isFinite(total) ? total : null, isDifficult };
+function formatSigned(value: number): string {
+  return value >= 0 ? `+${value}` : `${value}`;
 }
 
-function extractStats(characterJson: unknown): CharacterPdfViewModel['stats'] {
-  const statsRoot = getFirst(characterJson, ['statistics', 'stats', 'attributes', 'character.statistics', 'character.stats']);
-  const statIds: { id: string; label: string }[] = [
+function formatSkillValue(value: { cur: number | null; bonus: number | null; raceBonus: number | null }): string {
+  const parts: string[] = [];
+  if (value.cur !== null && value.cur !== 0) parts.push(String(value.cur));
+  if (value.bonus !== null && value.bonus !== 0) parts.push(formatSigned(value.bonus));
+  if (value.raceBonus !== null && value.raceBonus !== 0) parts.push(formatSigned(value.raceBonus));
+  return parts.join('');
+}
+
+function readStat(characterJson: unknown, statId: string): { cur: number | null; bonus: number | null; raceBonus: number | null } {
+  const statsRoot = asRecord(getFirst(characterJson, ['statistics', 'stats', 'attributes'])) ?? {};
+  const statRec = asRecord(statsRoot[statId]);
+  if (!statRec) return { cur: null, bonus: null, raceBonus: null };
+  return {
+    cur: asNumber(statRec.cur),
+    bonus: asNumber(statRec.bonus),
+    raceBonus: asNumber(statRec.race_bonus),
+  };
+}
+
+function readCalcCurString(characterJson: unknown, key: string): string {
+  const calc = asRecord(getPath(characterJson, 'statistics.calculated')) ?? {};
+  const rec = asRecord(calc[key]);
+  return asString(rec?.cur) ?? '';
+}
+
+function sumCarriedWeight(characterJson: unknown): number | null {
+  const gearRoot = getFirst(characterJson, ['gear', 'inventory', 'items']);
+
+  const flatten = (value: unknown): unknown[] => {
+    if (Array.isArray(value)) return value.flatMap(flatten);
+    const rec = asRecord(value);
+    if (!rec) return [];
+    return Object.values(rec).flatMap(flatten);
+  };
+
+  const items = Array.isArray(gearRoot) ? gearRoot : flatten(gearRoot);
+  if (items.length === 0) return null;
+
+  let total = 0;
+  let seen = false;
+  for (const item of items) {
+    const rec = asRecord(item);
+    if (!rec) continue;
+    const weight = asNumber(rec.weight);
+    if (weight === null) continue;
+    const qty = asNumber(rec.amount) ?? asNumber(rec.qty) ?? asNumber(rec.quantity) ?? 1;
+    total += weight * qty;
+    seen = true;
+  }
+
+  return seen ? total : null;
+}
+
+function buildSkillCatalogMaps(
+  catalog: ReadonlyMap<string, SkillCatalogInfo> | undefined,
+): { nameById: ReadonlyMap<string, string>; paramById: ReadonlyMap<string, string>; difficultById: ReadonlyMap<string, boolean> } {
+  if (!catalog) {
+    return { nameById: new Map(), paramById: new Map(), difficultById: new Map() };
+  }
+  const nameById = new Map<string, string>();
+  const paramById = new Map<string, string>();
+  const difficultById = new Map<string, boolean>();
+  for (const [id, info] of catalog.entries()) {
+    nameById.set(id, info.name);
+    if (info.param) paramById.set(id, info.param);
+    difficultById.set(id, info.isDifficult);
+  }
+  return { nameById, paramById, difficultById };
+}
+
+export function mapCharacterJsonToPage1Vm(
+  characterJson: unknown,
+  deps?: { skillsCatalog?: ReadonlyMap<string, SkillCatalogInfo> },
+): CharacterPdfPage1Vm {
+  const skillsRoot = asRecord(getFirst(characterJson, ['skills', 'character.skills'])) ?? {};
+  const common = asRecord(skillsRoot.common) ?? {};
+  const { nameById, paramById, difficultById } = buildSkillCatalogMaps(deps?.skillsCatalog);
+
+  const definingRaw = skillsRoot.defining;
+  const definingRec = asRecord(definingRaw);
+  const definingId = asString(definingRec?.id) ?? '';
+  const definingName = asString(definingRec?.name) ?? (definingId ? nameById.get(definingId) ?? definingId : '');
+  const definingValue = definingId ? readSkillValue(common[definingId]) : { cur: null, bonus: null, raceBonus: null };
+  const definingText =
+    definingName && definingId
+      ? `${definingName} ${formatSkillValue(definingValue)}`.trim()
+      : definingName
+        ? definingName
+        : '';
+
+  const base = {
+    name: getFirstString(characterJson, ['name', 'characterName', 'fullName']) || 'Персонаж',
+    race: getFirstString(characterJson, ['race']) || '',
+    gender: getFirstString(characterJson, ['gender']) || '',
+    age: getFirstString(characterJson, ['age']) || '',
+    profession: getFirstString(characterJson, ['profession', 'role', 'class', 'career']) || '',
+    definingSkill: definingText,
+  };
+
+  const computed = {
+    run: readCalcCurString(characterJson, 'run'),
+    leap: readCalcCurString(characterJson, 'leap'),
+    stability: readCalcCurString(characterJson, 'STUN'),
+    punch: readCalcCurString(characterJson, 'bonus_punch'),
+    kick: readCalcCurString(characterJson, 'bonus_kick'),
+    rest: readCalcCurString(characterJson, 'REC'),
+    vigor: asString(asRecord(getPath(characterJson, 'statistics.vigor'))?.cur) ?? '',
+  };
+
+  const mainStatOrder: { id: string; label: string }[] = [
     { id: 'INT', label: 'ИНТ' },
     { id: 'REF', label: 'РЕФ' },
     { id: 'DEX', label: 'ЛОВ' },
@@ -195,375 +231,141 @@ function extractStats(characterJson: unknown): CharacterPdfViewModel['stats'] {
     { id: 'EMP', label: 'ЭМП' },
     { id: 'CRA', label: 'РЕМ' },
     { id: 'WILL', label: 'ВОЛ' },
-    { id: 'LUCK', label: 'УДАЧА' },
-    { id: 'vigor', label: 'ВЫН' },
   ];
 
-  const rootRec = asRecord(statsRoot);
-  return statIds.map(({ id, label }) => {
-    const val = rootRec ? asRecord(rootRec[id]) : null;
-    const cur = val ? asNumber(val.cur) : null;
-    return { id, label, value: cur };
-  });
-}
+  const mainStats = mainStatOrder.map(({ id, label }) => ({
+    id,
+    label,
+    ...readStat(characterJson, id),
+  }));
 
-function extractDerived(characterJson: unknown): {
-  derived: CharacterPdfViewModel['derived'];
-  hpMax: number | null;
-  staMax: number | null;
-  stun: number | null;
-  enc: number | null;
-  rec: number | null;
-} {
-  const calc = getFirst(characterJson, ['statistics.calculated', 'calculated']);
-  const calcRec = asRecord(calc) ?? {};
+  const carryMax = readCalcCurString(characterJson, 'ENC');
+  const carried = sumCarriedWeight(characterJson);
+  const carriedText = carried === null ? '' : carried.toFixed(1);
 
-  const readCur = (key: string): string => {
-    const rec = asRecord(calcRec[key]);
-    const cur = rec ? rec.cur : undefined;
-    return asString(cur) ?? '';
+  const consumables: CharacterPdfPage1Vm['consumables'] = [
+    { id: 'carry', label: 'Переносимый вес', max: carryMax, current: carriedText },
+    { id: 'hp', label: 'Здоровье', max: readCalcCurString(characterJson, 'max_HP'), current: '' },
+    { id: 'sta', label: 'Выносливость', max: readCalcCurString(characterJson, 'STA'), current: '' },
+    { id: 'resolve', label: 'Решимость', max: '', current: '' },
+    { id: 'luck', label: 'Удача', max: asString(asRecord(getPath(characterJson, 'statistics.LUCK'))?.cur) ?? '', current: '' },
+  ];
+
+  const groupLabels: Record<string, string> = {
+    INT: 'Интеллект',
+    REF: 'Рефлексы',
+    DEX: 'Ловкость',
+    BODY: 'Тело',
+    SPD: 'Скорость',
+    EMP: 'Эмпатия',
+    CRA: 'Ремесло',
+    WILL: 'Воля',
+    LUCK: 'Удача',
+    OTHER: 'Прочее',
   };
 
-  const hpMax = asNumber(asRecord(calcRec.max_HP)?.cur);
-  const staMax = asNumber(asRecord(calcRec.STA)?.cur);
-  const stun = asNumber(asRecord(calcRec.STUN)?.cur);
-  const enc = asNumber(asRecord(calcRec.ENC)?.cur);
-  const rec = asNumber(asRecord(calcRec.REC)?.cur);
-
-  const derived: CharacterPdfViewModel['derived'] = [
-    { id: 'max_HP', label: 'MAX HP', value: readCur('max_HP') },
-    { id: 'STA', label: 'MAX STAM', value: readCur('STA') },
-    { id: 'STUN', label: 'STUN', value: readCur('STUN') },
-    { id: 'ENC', label: 'ENC', value: readCur('ENC') },
-    { id: 'REC', label: 'REC', value: readCur('REC') },
-    { id: 'bonus_punch', label: 'Punch', value: readCur('bonus_punch') },
-    { id: 'bonus_kick', label: 'Kick', value: readCur('bonus_kick') },
-    { id: 'run', label: 'Run', value: readCur('run') },
-    { id: 'leap', label: 'Leap', value: readCur('leap') },
-  ].filter((row) => row.value.trim().length > 0);
-
-  return { derived, hpMax, staMax, stun, enc, rec };
-}
-
-function extractSkillsByStat(
-  characterJson: unknown,
-  deps?: { skillNameById?: ReadonlyMap<string, string>; skillIsDifficultById?: ReadonlyMap<string, boolean> },
-): {
-  skillsByStat: CharacterPdfViewModel['skillsByStat'];
-  initialSkills: CharacterPdfViewModel['initialSkills'];
-  professionalBranches: string[];
-  professionalAbilities: CharacterPdfViewModel['professionalAbilities'];
-} {
-  const skillsRoot = asRecord(getFirst(characterJson, ['skills', 'character.skills'])) ?? {};
-  const common = asRecord(skillsRoot.common) ?? {};
-  const initialIds = Array.isArray(skillsRoot.initial)
-    ? skillsRoot.initial.map((x) => (typeof x === 'string' ? x : '')).filter(Boolean)
-    : [];
-  const initialSet = new Set(initialIds);
-
-  const professional = asRecord(skillsRoot.professional);
-  const professionalBranches = Array.isArray(professional?.branches)
-    ? (professional?.branches as unknown[]).map((x) => asString(x) ?? '').filter(Boolean)
-    : [];
-
-  const professionalAbilities: CharacterPdfViewModel['professionalAbilities'] = [];
-  if (professional) {
-    for (const [key, val] of Object.entries(professional)) {
-      if (!key.startsWith('skill_')) continue;
-      const rec = asRecord(val);
-      if (!rec) continue;
-      const id = asString(rec.id) ?? '';
-      const name = asString(rec.name) ?? (id ? getSkillName(id, deps?.skillNameById) : '');
-      if (id || name) {
-        professionalAbilities.push({ id: id || name, name: name || id });
-      }
+  const groups = new Map<string, CharacterPdfPage1Vm['skillGroups'][number]>();
+  const ensureGroup = (statId: string) => {
+    const id = (statId || 'OTHER').toUpperCase();
+    if (!groups.has(id)) {
+      groups.set(id, {
+        statId: id,
+        statLabel: groupLabels[id] ?? id,
+        stat: readStat(characterJson, id),
+        skills: [],
+      });
     }
-  }
+    return groups.get(id)!;
+  };
 
-  const statOrder: { statId: string; title: string }[] = [
-    { statId: 'INT', title: 'Интеллект' },
-    { statId: 'REF', title: 'Рефлексы (Реакция)' },
-    { statId: 'DEX', title: 'Ловкость' },
-    { statId: 'BODY', title: 'Тело' },
-    { statId: 'EMP', title: 'Эмпатия' },
-    { statId: 'CRA', title: 'Ремесло' },
-    { statId: 'WILL', title: 'Воля' },
-    { statId: 'OTHER', title: 'Прочее' },
-  ];
+  const paramFallbackBySkillId = (skillId: string): string | null => {
+    if (skillId === 'staff') return 'REF';
+    if (skillId === 'dodge') return 'REF';
+    if (skillId === 'sailing') return 'REF';
+    if (skillId === 'small_blades') return 'REF';
+    if (skillId === 'swordsmanship') return 'REF';
+    if (skillId === 'melee') return 'REF';
+    if (skillId === 'brawling') return 'REF';
+    return null;
+  };
 
-  const rowsByStat = new Map<string, CharacterPdfViewModel['skillsByStat'][number]['rows']>();
-  for (const { statId } of statOrder) rowsByStat.set(statId, []);
+  const languageSkillFallback = (skillId: string): { name: string; param: string } | null => {
+    if (!skillId.startsWith('language_')) return null;
+    const suffix = skillId.slice('language_'.length);
+    const map: Record<string, string> = {
+      common_speech: 'Всеобщий',
+      elder_speech: 'Старшая речь',
+      dwarvish: 'Краснолюдский',
+    };
+    const display = map[suffix] ?? suffix.replaceAll('_', ' ');
+    return { name: `Язык: ${display}`, param: 'INT' };
+  };
 
   for (const [skillId, value] of Object.entries(common)) {
-    const valRec = asRecord(value) as SkillValue | null;
-    if (!valRec) continue;
-    const { total, isDifficult } = valueFromSkill(valRec);
-
-    const statId = SKILL_STAT_MAP[skillId] ?? 'OTHER';
-    const name = getSkillName(skillId, deps?.skillNameById);
-    const difficultOverride = deps?.skillIsDifficultById?.get(skillId);
-    rowsByStat.get(statId)?.push({
+    const fallback = languageSkillFallback(skillId);
+    const name = nameById.get(skillId) ?? fallback?.name ?? skillId;
+    const param = paramById.get(skillId) ?? fallback?.param ?? paramFallbackBySkillId(skillId) ?? 'OTHER';
+    const group = ensureGroup(param);
+    const v = readSkillValue(value);
+    group.skills.push({
       id: skillId,
       name,
-      value: total && total > 0 ? total : null,
-      isInitial: initialSet.has(skillId),
-      isDifficult: difficultOverride ?? isDifficult,
+      cur: v.cur,
+      bonus: v.bonus,
+      raceBonus: v.raceBonus,
+      isDifficult: difficultById.get(skillId) ?? false,
     });
   }
 
-  const skillsByStat = statOrder.map(({ statId, title }) => {
-    const rows = rowsByStat.get(statId) ?? [];
-    rows.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
-    return { statId, title, rows };
+  const groupOrder = ['INT', 'REF', 'DEX', 'BODY', 'SPD', 'EMP', 'CRA', 'WILL', 'OTHER'];
+  const skillGroups = groupOrder
+    .map((id) => groups.get(id))
+    .filter((g): g is NonNullable<typeof g> => Boolean(g))
+    .map((g) => {
+      g.skills.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+      return g;
+    });
+
+  const prof = asRecord(skillsRoot.professional);
+  const branchTitles = Array.isArray(prof?.branches)
+    ? (prof?.branches as unknown[]).map((x) => asString(x) ?? '').filter(Boolean)
+    : [];
+  const colors: Array<'blue' | 'green' | 'red'> = ['blue', 'green', 'red'];
+  const paramToAbbr = (param: string | null | undefined): string => {
+    const p = (param ?? '').toUpperCase();
+    if (p === 'INT') return 'INT';
+    if (p === 'REF') return 'REF';
+    if (p === 'DEX') return 'DEX';
+    if (p === 'BODY') return 'BODY';
+    if (p === 'SPD') return 'SPD';
+    if (p === 'EMP') return 'EMP';
+    if (p === 'CRA') return 'CRA';
+    if (p === 'WILL') return 'WILL';
+    return '';
+  };
+  const branches: CharacterPdfPage1Vm['professional']['branches'] = colors.map((color, index) => {
+    const title = branchTitles[index] ?? `Ветка ${index + 1}`;
+    const skills: { id: string; name: string; paramAbbr: string }[] = [];
+    for (let slot = 1; slot <= 3; slot += 1) {
+      const key = `skill_${index + 1}_${slot}`;
+      const item = prof ? prof[key] : undefined;
+      const rec = asRecord(item);
+      const id = asString(rec?.id) ?? '';
+      const name = asString(rec?.name) ?? (id ? (nameById.get(id) ?? id) : '');
+      const param = id ? deps?.skillsCatalog?.get(id)?.param ?? null : null;
+      const paramAbbr = paramToAbbr(param);
+      if (id || name) skills.push({ id: id || name, name: name || id, paramAbbr });
+    }
+    return { title, color, skills };
   });
 
-  const initialSkills = initialIds.map((id) => ({ id, name: getSkillName(id, deps?.skillNameById) }));
-
-  return { skillsByStat, initialSkills, professionalBranches, professionalAbilities };
-}
-
-/** Flatten gear when it is an object (e.g. { professional: [], weapons: [], magic: { spells: [] } }) into one array. */
-function gearToItems(gearValue: unknown): unknown[] {
-  if (Array.isArray(gearValue)) return gearValue;
-  const rec = asRecord(gearValue);
-  if (!rec) return [];
-  const out: unknown[] = [];
-  for (const v of Object.values(rec)) {
-    if (Array.isArray(v)) {
-      out.push(...v);
-    } else if (v && typeof v === 'object' && !Array.isArray(v)) {
-      for (const w of Object.values(v as Record<string, unknown>)) {
-        if (Array.isArray(w)) out.push(...w);
-      }
-    }
-  }
-  return out;
-}
-
-function extractGear(characterJson: unknown): {
-  weapons: CharacterPdfViewModel['weapons'];
-  armor: CharacterPdfViewModel['armor'];
-  gear: CharacterPdfViewModel['gear'];
-  totalWeight: number | null;
-} {
-  const gearArr = getFirst(characterJson, ['gear', 'inventory', 'items', 'character.gear']);
-  const items = gearToItems(gearArr);
-
-  const weapons: CharacterPdfViewModel['weapons'] = [];
-  const armor: CharacterPdfViewModel['armor'] = [];
-  const gear: CharacterPdfViewModel['gear'] = [];
-  let totalWeight = 0;
-
-  for (const item of items) {
-    const rec = asRecord(item);
-    if (!rec) continue;
-
-    const amount = asString(rec.amount) ?? asString(rec.qty) ?? asString(rec.quantity) ?? '1';
-    const weight = asString(rec.weight) ?? '';
-    const qtyNum = asNumber(amount) ?? 1;
-    const weightNum = asNumber(weight) ?? null;
-
-    if (rec.weapon_name || rec.weapon_class || rec.dmg || rec.reliability) {
-      weapons.push({
-        name: asString(rec.weapon_name) ?? asString(rec.name) ?? '—',
-        dmg: asString(rec.dmg) ?? '',
-        reliability: asString(rec.reliability) ?? '',
-        hands: asString(rec.hands) ?? '',
-        concealment: asString(rec.concealment) ?? '',
-        weight,
-      });
-      if (weightNum !== null) totalWeight += weightNum * qtyNum;
-      continue;
-    }
-
-    if (rec.armor_name || rec.sp || rec.armor_sp) {
-      armor.push({
-        name: asString(rec.armor_name) ?? asString(rec.name) ?? '—',
-        sp: asString(rec.sp) ?? asString(rec.armor_sp) ?? '',
-        penalty: asString(rec.penalty) ?? asString(rec.armor_penalty) ?? '',
-        weight,
-      });
-      if (weightNum !== null) totalWeight += weightNum * qtyNum;
-      continue;
-    }
-
-    const name =
-      asString(rec.name) ??
-      asString(rec.gear_name) ??
-      asString(rec.item_name) ??
-      asString(rec.weapon_name) ??
-      asString(rec.spell_name) ??
-      asString(rec.hex_name) ??
-      asString(rec.ritual_name) ??
-      asString(rec.invocation_name) ??
-      '(item)';
-    const notes =
-      asString(rec.notes) ?? asString(rec.gear_description) ?? asString(rec.description) ?? asString(rec.desc) ?? '';
-
-    gear.push({ name, qty: amount, weight, notes });
-    if (weightNum !== null) totalWeight += weightNum * qtyNum;
-  }
-
-  return { weapons, armor, gear, totalWeight: Number.isFinite(totalWeight) && totalWeight > 0 ? totalWeight : null };
-}
-
-function extractReputation(characterJson: unknown): CharacterPdfViewModel['reputation'] {
-  const value = getFirst(characterJson, ['social_status', 'reputationByRegion', 'character.social_status']);
-  if (!Array.isArray(value)) return [];
-  return value
-    .map((item) => {
-      const rec = asRecord(item);
-      if (!rec) return null;
-      return {
-        groupName: asString(rec.group_name) ?? asString(rec.name) ?? '—',
-        status: asNumber(rec.group_status),
-        isFeared: rec.group_is_feared === true,
-      };
-    })
-    .filter((x): x is NonNullable<typeof x> => Boolean(x));
-}
-
-function extractCharacteristics(characterJson: unknown): {
-  characteristics: CharacterPdfViewModel['characteristics'];
-  values: CharacterPdfViewModel['values'];
-} {
-  const lore = asRecord(getFirst(characterJson, ['lore', 'character.lore'])) ?? {};
-  const style = asRecord(lore.style) ?? {};
-  const values = asRecord(lore.values) ?? {};
-
-  const characteristics: CharacterPdfViewModel['characteristics'] = [
-    { label: 'Возраст', value: getFirstString(characterJson, ['age']) ?? '' },
-    { label: 'Одежда', value: asString(style.clothing) ?? '' },
-    { label: 'Личность', value: asString(style.personality) ?? '' },
-    { label: 'Причёска', value: asString(style.hair_style) ?? '' },
-    { label: 'Влечения', value: asString(style.affectations) ?? '' },
-  ].filter((row) => row.value.trim().length > 0);
-
-  const valuesList: CharacterPdfViewModel['values'] = [
-    { label: 'Важные люди', value: asString(values.valued_person) ?? '' },
-    { label: 'Ценности', value: asString(values.value) ?? '' },
-    { label: 'Чувства', value: asString(values.feelings_on_people) ?? '' },
-  ].filter((row) => row.value.trim().length > 0);
-
-  return { characteristics, values: valuesList };
-}
-
-function extractLoreNotes(characterJson: unknown): CharacterPdfViewModel['loreNotes'] {
-  const lore = asRecord(getFirst(characterJson, ['lore', 'character.lore'])) ?? {};
-  const siblings = Array.isArray(lore.siblings) ? lore.siblings : [];
-
-  return [
-    { label: 'Родина', value: asString(lore.homeland) ?? '' },
-    { label: 'Родной язык', value: asString(lore.home_language) ?? '' },
-    { label: 'Статус семьи', value: asString(lore.family_status) ?? '' },
-    { label: 'Судьба родителей', value: asString(lore.parents_fate) ?? '' },
-    { label: 'Друг', value: asString(lore.friend) ?? '' },
-    {
-      label: 'Сиблинги',
-      value:
-        siblings.length > 0
-          ? siblings
-              .map((s) => {
-                const r = asRecord(s) ?? {};
-                const parts = [asString(r.gender), asString(r.age), asString(r.attitude), asString(r.personality)].filter(
-                  (x): x is string => Boolean(x && x.trim().length > 0),
-                );
-                return parts.join(', ');
-              })
-              .filter(Boolean)
-              .join(' • ')
-          : '',
-    },
-  ].filter((row) => row.value.trim().length > 0);
-}
-
-function extractLifeEvents(characterJson: unknown): CharacterPdfViewModel['lifeEvents'] {
-  const lore = asRecord(getFirst(characterJson, ['lore', 'character.lore'])) ?? {};
-  const events = lore.lifeEvents;
-  if (!Array.isArray(events)) return [];
-  return events
-    .map((e) => {
-      const rec = asRecord(e);
-      if (!rec) return null;
-      return {
-        eventType: asString(rec.eventType) ?? '',
-        timePeriod: asString(rec.timePeriod) ?? '',
-        description: asString(rec.description) ?? '',
-      };
-    })
-    .filter((x): x is NonNullable<typeof x> => Boolean(x));
-}
-
-export function mapCharacterJsonToViewModel(
-  characterJson: unknown,
-  deps?: { skillNameById?: ReadonlyMap<string, string>; skillIsDifficultById?: ReadonlyMap<string, boolean> },
-): CharacterPdfViewModel {
-  const name = getFirstString(characterJson, ['name', 'characterName', 'fullName']) ?? 'Персонаж';
-  const profession = getFirstString(characterJson, ['profession', 'role', 'class', 'career']) ?? '';
-  const race = getFirstString(characterJson, ['race', 'species', 'ancestry']) ?? '';
-  const age = getFirstString(characterJson, ['age']) ?? '';
-
-  const skillsRoot = asRecord(getFirst(characterJson, ['skills', 'character.skills'])) ?? {};
-  const definingRaw = skillsRoot.defining;
-  const definingId =
-    typeof definingRaw === 'string'
-      ? definingRaw
-      : asString(asRecord(definingRaw)?.id) ?? asString(asRecord(definingRaw)?.skill) ?? null;
-
-  const meta: CharacterPdfViewModel['meta'] = {
-    player: getFirstString(characterJson, ['player', 'playerName']) ?? '',
-    name,
-    race,
-    profession,
-    age: age ? String(age) : '',
-    definingSkill: definingId ? getSkillName(definingId, deps?.skillNameById) : '',
-    homeland: getFirstString(characterJson, ['lore.homeland']) ?? '',
-    homeLanguage: getFirstString(characterJson, ['lore.home_language']) ?? '',
-  };
-
-  const moneyCrowns = asNumber(getFirst(characterJson, ['money.crowns', 'money', 'crowns']));
-
-  const stats = extractStats(characterJson);
-  const { derived, hpMax, staMax, stun, enc, rec } = extractDerived(characterJson);
-
-  const { skillsByStat, initialSkills, professionalBranches, professionalAbilities } = extractSkillsByStat(characterJson, deps);
-
-  const { weapons, armor, gear, totalWeight } = extractGear(characterJson);
-
-  const reputation = extractReputation(characterJson);
-  const { characteristics, values } = extractCharacteristics(characterJson);
-
-  const perksValue = getFirst(characterJson, ['perks', 'advantages', 'traits', 'character.perks']);
-  const perks = Array.isArray(perksValue)
-    ? perksValue.map((x) => asString(x) ?? '').filter((x) => x.trim().length > 0)
-    : [];
-
-  const loreNotes = extractLoreNotes(characterJson);
-  const lifeEvents = extractLifeEvents(characterJson);
-
   return {
-    meta,
-    stats,
-    derived,
-    hpMax,
-    staMax,
-    stun,
-    enc,
-    rec,
-    moneyCrowns,
-    reputation,
-    characteristics,
-    values,
-    perks,
-    loreNotes,
-    lifeEvents,
-    skillsByStat,
-    professionalBranches,
-    professionalAbilities,
-    initialSkills,
-    weapons,
-    armor,
-    gear,
-    totalWeight,
+    base,
+    computed,
+    mainStats,
+    consumables,
+    avatar: { dataUrl: getFirstString(characterJson, ['avatarDataUrl', 'avatar.dataUrl']) || null },
+    skillGroups,
+    professional: { branches },
   };
 }

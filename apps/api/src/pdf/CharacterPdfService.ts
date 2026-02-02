@@ -1,6 +1,6 @@
 import { chromium, type Browser } from 'playwright';
-import { mapCharacterJsonToViewModel } from './viewModel.js';
-import { renderCharacterHtml } from './templates/characterHtml.js';
+import { mapCharacterJsonToPage1Vm, type SkillCatalogInfo } from './viewModel.js';
+import { renderCharacterPage1Html } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
 
 export class CharacterPdfService {
@@ -51,20 +51,22 @@ export class CharacterPdfService {
   async generatePdfBuffer(characterJson: unknown): Promise<Buffer> {
     const lang = this.detectLang(characterJson);
 
-    const skillNameById = new Map<string, string>();
-    const skillIsDifficultById = new Map<string, boolean>();
+    const skillsCatalog = new Map<string, SkillCatalogInfo>();
     try {
       const catalog = await this.withTimeout(getSkillsCatalog({ lang }), 2500);
       for (const s of catalog.skills) {
-        skillNameById.set(s.id, s.name);
-        skillIsDifficultById.set(s.id, Boolean(s.isDifficult));
+        skillsCatalog.set(s.id, {
+          name: s.name,
+          param: s.param,
+          isDifficult: Boolean(s.isDifficult),
+        });
       }
     } catch (error) {
       console.error('[pdf] skills catalog load failed', error);
     }
 
-    const vm = mapCharacterJsonToViewModel(characterJson, { skillNameById, skillIsDifficultById });
-    const html = renderCharacterHtml(vm);
+    const vm = mapCharacterJsonToPage1Vm(characterJson, { skillsCatalog });
+    const html = renderCharacterPage1Html(vm);
 
     const browser = await CharacterPdfService.getBrowser();
     const context = await browser.newContext({

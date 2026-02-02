@@ -84,6 +84,7 @@ export default function BuilderPage() {
   const [generateResultError, setGenerateResultError] = useState<string | null>(null);
   const [loadingGeneratePdf, setLoadingGeneratePdf] = useState(false);
   const [generatePdfError, setGeneratePdfError] = useState<string | null>(null);
+  const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
   const [copyGenerateSuccess, setCopyGenerateSuccess] = useState(false);
   const historyContainerRef = useRef<HTMLDivElement>(null);
 
@@ -954,13 +955,17 @@ export default function BuilderPage() {
     } finally {
       setLoadingGenerateResult(false);
     }
-  }, [getCharacterJson]);
+  }, [getCharacterJson, avatarDataUrl]);
 
   const downloadPdf = useCallback(async () => {
     setLoadingGeneratePdf(true);
     setGeneratePdfError(null);
     try {
-      const characterJson = await getCharacterJson();
+      const baseJson = await getCharacterJson();
+      const characterJson =
+        avatarDataUrl && baseJson && typeof baseJson === "object" && !Array.isArray(baseJson)
+          ? { ...(baseJson as any), avatarDataUrl }
+          : baseJson;
 
       const res = await fetch(`${API_URL}/character/pdf`, {
         method: "POST",
@@ -1021,6 +1026,23 @@ export default function BuilderPage() {
       setLoadingGeneratePdf(false);
     }
   }, [getCharacterJson]);
+
+  const pickAvatar = useCallback(async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === "string" ? reader.result : null;
+        setAvatarDataUrl(result);
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  }, []);
 
   // Функция для копирования результата generate-character в буфер обмена
   const copyGenerateResultToClipboard = useCallback(async () => {
@@ -1170,6 +1192,15 @@ export default function BuilderPage() {
                 className="debug-btn"
               >
                 🐛 {displayLang === "ru" ? "Debug" : "Debug"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void pickAvatar()}
+                className="debug-btn"
+                disabled={loadingGeneratePdf || loadingGenerateResult}
+                title={displayLang === "ru" ? "Выбрать изображение для аватара" : "Pick avatar image"}
+              >
+                {avatarDataUrl ? (displayLang === "ru" ? "Avatar ✓" : "Avatar ✓") : "Avatar"}
               </button>
               <button
                 type="button"
@@ -1787,4 +1818,3 @@ export default function BuilderPage() {
     </>
   );
 }
-
