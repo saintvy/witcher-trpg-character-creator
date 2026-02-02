@@ -7,6 +7,7 @@ import { generateCharacter } from './handlers/generateCharacter.js';
 import { nextQuestion } from './handlers/nextQuestion.js';
 import { getAllShopItemsHandler } from './handlers/getAllShopItems.js';
 import { getSkillsCatalogHandler } from './handlers/getSkillsCatalog.js';
+import { characterPdf } from './handlers/characterPdf.js';
 
 const app = new Hono();
 
@@ -16,6 +17,7 @@ app.post('/generate-character', async (c) => {
   const result = await generateCharacter(c);
   return c.json(result);
 });
+app.post('/character/pdf', characterPdf);
 app.post('/survey/next', nextQuestion);
 app.post('/shop/allItems', getAllShopItemsHandler);
 app.post('/skills/catalog', getSkillsCatalogHandler);
