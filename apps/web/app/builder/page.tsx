@@ -82,6 +82,8 @@ export default function BuilderPage() {
   const [generateResultJson, setGenerateResultJson] = useState<string>("");
   const [loadingGenerateResult, setLoadingGenerateResult] = useState(false);
   const [generateResultError, setGenerateResultError] = useState<string | null>(null);
+  const [loadingGeneratePdf, setLoadingGeneratePdf] = useState(false);
+  const [generatePdfError, setGeneratePdfError] = useState<string | null>(null);
   const [copyGenerateSuccess, setCopyGenerateSuccess] = useState(false);
   const historyContainerRef = useRef<HTMLDivElement>(null);
 
@@ -917,26 +919,34 @@ export default function BuilderPage() {
   }, [groupedHistory]);
 
   // Функция для загрузки результата generate-character
+  const getCharacterJson = useCallback(async () => {
+    // Prefer sending answers so API recomputes characterRaw (ensures shop 094, magic 096 and other dynamic nodes are applied)
+    const payload =
+      history.length > 0
+        ? { answers: history, lang }
+        : state && typeof state === "object" && !Array.isArray(state) && "characterRaw" in (state as any)
+          ? (state as any).characterRaw
+          : state;
+
+    const response = await fetch(`${API_URL}/generate-character?lang=${lang}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const bodyText = await response.text().catch(() => "");
+      throw new Error(`Request failed with status ${response.status}${bodyText ? `: ${bodyText}` : ""}`);
+    }
+
+    return response.json();
+  }, [state, history, lang]);
+
   const loadGenerateResult = useCallback(async () => {
     setLoadingGenerateResult(true);
     setGenerateResultError(null);
     try {
-      // Send characterRaw only (generate-character expects characterRaw, not full survey state)
-      const payload =
-        state && typeof state === "object" && !Array.isArray(state) && "characterRaw" in (state as any)
-          ? (state as any).characterRaw
-          : state;
-      const response = await fetch(`${API_URL}/generate-character?lang=${lang}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await getCharacterJson();
       setGenerateResultJson(JSON.stringify(data, null, 2));
     } catch (error) {
       setGenerateResultError(error instanceof Error ? error.message : String(error));
@@ -944,7 +954,73 @@ export default function BuilderPage() {
     } finally {
       setLoadingGenerateResult(false);
     }
-  }, [state, lang]);
+  }, [getCharacterJson]);
+
+  const downloadPdf = useCallback(async () => {
+    setLoadingGeneratePdf(true);
+    setGeneratePdfError(null);
+    try {
+      const characterJson = await getCharacterJson();
+
+      const res = await fetch(`${API_URL}/character/pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(characterJson),
+      });
+
+      if (!res.ok) {
+        let message = `Request failed with status ${res.status}`;
+        try {
+          const err = (await res.json()) as any;
+          if (err && typeof err === "object" && typeof err.error === "string" && err.error.trim().length > 0) {
+            message = err.error;
+          }
+        } catch {
+          const text = await res.text().catch(() => "");
+          if (text.trim().length > 0) message = text;
+        }
+        throw new Error(message);
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+
+      const candidateName =
+        characterJson &&
+        typeof characterJson === "object" &&
+        !Array.isArray(characterJson) &&
+        (typeof (characterJson as any).name === "string"
+          ? (characterJson as any).name
+          : typeof (characterJson as any).characterName === "string"
+          ? (characterJson as any).characterName
+          : typeof (characterJson as any).fullName === "string"
+          ? (characterJson as any).fullName
+          : null);
+
+      const safeName =
+        typeof candidateName === "string"
+          ? candidateName
+              .replace(/[<>:"/\\\\|?*\\x00-\\x1F]/g, "")
+              .replace(/\\s+/g, " ")
+              .trim()
+              .slice(0, 80)
+          : "";
+
+      const fileName = safeName ? `${safeName}-character-sheet.pdf` : "character-sheet.pdf";
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setGeneratePdfError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setLoadingGeneratePdf(false);
+    }
+  }, [getCharacterJson]);
 
   // Функция для копирования результата generate-character в буфер обмена
   const copyGenerateResultToClipboard = useCallback(async () => {
@@ -1106,7 +1182,21 @@ export default function BuilderPage() {
               >
                 {loadingGenerateResult ? "⏳" : "✨"} {displayLang === "ru" ? "Generate" : "Generate"}
               </button>
+              <button
+                type="button"
+                onClick={() => void downloadPdf()}
+                className="debug-btn"
+                disabled={loadingGeneratePdf || loadingGenerateResult}
+                title={displayLang === "ru" ? "Скачать PDF чарника" : "Download character PDF"}
+              >
+                {loadingGeneratePdf ? "⏳" : "PDF"} {displayLang === "ru" ? "Generate PDF" : "Generate PDF"}
+              </button>
             </div>
+            {generatePdfError && (
+              <div style={{ marginTop: "6px", color: "#ef4444", fontSize: "12px" }}>
+                {displayLang === "ru" ? `PDF ошибка: ${generatePdfError}` : `PDF error: ${generatePdfError}`}
+              </div>
+            )}
           </div>
           <div className="wizard-body">
             <div className="section-title-row">

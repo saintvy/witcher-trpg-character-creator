@@ -1396,6 +1396,24 @@ async function loadSurveyData(surveyId: string, lang: string): Promise<SurveyDat
   };
 }
 
+/**
+ * Derives characterRaw from survey answers (same pipeline as getNextQuestion).
+ * Use this when generating final character JSON so that shop nodes (094, 096) and
+ * other dynamic nodes are applied and purchases appear in characterRaw.gear / characterRaw.gear.magic.
+ */
+export async function getCharacterRawFromAnswers(
+  surveyId: string,
+  lang: string,
+  answers: AnswerInput[],
+): Promise<Record<string, unknown>> {
+  const historyAnswers = normaliseAnswers(answers);
+  const stateData = await loadStateData(surveyId, historyAnswers);
+  const { state } = deriveStateFromStateData(historyAnswers, lang, stateData);
+  await applyDynamicNodes(historyAnswers, stateData.questionMetadata, state);
+  const raw = (state as Record<string, unknown>).characterRaw;
+  return (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}) as Record<string, unknown>;
+}
+
 export async function getNextQuestion(payload: NextQuestionRequest): Promise<NextQuestionResponse> {
   const surveyId = payload.surveyId ?? DEFAULT_SURVEY_ID;
   const lang = payload.lang ?? DEFAULT_LANG;
@@ -2321,6 +2339,17 @@ function getTokenCostForItem(budget: ShopBudgetConfig, sourceId: string, itemId:
   return 1; // default cost
 }
 
+/**
+ * If characterRaw.gear was set as an array (by professional shop 093), JSON.stringify
+ * would omit named properties like .weapons / .magic added by 094/096. Ensure gear is
+ * an object so 094/096 targetPaths (characterRaw.gear.weapons, characterRaw.gear.magic.*) work.
+ */
+function ensureGearIsObject(state: SurveyState): void {
+  const gear = getAtPath(state, 'characterRaw.gear');
+  if (!Array.isArray(gear)) return;
+  setAtPath(state, 'characterRaw.gear', { professional: gear });
+}
+
 async function applyShopNode(
   rawValue: string,
   questionMeta: Record<string, unknown>,
@@ -2332,6 +2361,10 @@ async function applyShopNode(
   if (sources.length === 0) {
     return;
   }
+
+  // So that 094/096 paths (characterRaw.gear.weapons, characterRaw.gear.magic.*) are not lost:
+  // if gear is currently an array (from 093), convert to object with .professional
+  ensureGearIsObject(state);
 
   // Get budgets - support both old and new format
   let budgets: ShopBudgetConfig[] = [];

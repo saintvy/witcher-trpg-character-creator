@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import { db } from '../db/pool.js';
+import { getCharacterRawFromAnswers } from '../services/surveyEngine.js';
 
 /**
  * Generates character from characterRaw:
@@ -9,6 +10,8 @@ import { db } from '../db/pool.js';
 type I18nValue = { i18n_uuid: string };
 type CharacterRaw = Record<string, unknown> & { logicFields?: Record<string, unknown> };
 type Character = Record<string, unknown>;
+type AnswerValue = { type: 'number'; data: number } | { type: 'string'; data: string };
+type AnswerInput = { questionId: string; answerIds: string[]; value?: AnswerValue };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -157,18 +160,63 @@ async function resolveI18nRecursive(
   return value;
 }
 
+const DEFAULT_SURVEY_ID = 'witcher_cc';
+
 export async function generateCharacter(c: Context): Promise<Character> {
   // Accept either:
   // - raw character object (CharacterRaw)
   // - wrapper { characterRaw: CharacterRaw } (e.g. survey state)
+  // - wrapper { answers: AnswerInput[], surveyId?, lang? } to recompute characterRaw from survey (ensures shop 094/096 and magic are applied)
   const body = (await c.req.json().catch(() => ({}))) as unknown;
-  const characterRaw =
-    body && typeof body === 'object' && !Array.isArray(body) && 'characterRaw' in (body as Record<string, unknown>)
-      ? (((body as Record<string, unknown>).characterRaw ?? {}) as CharacterRaw)
-      : (body as CharacterRaw);
-  
-  // Get language from query parameter or header, default 'en'
   const lang = c.req.query('lang') || c.req.header('Accept-Language')?.split(',')[0]?.split('-')[0] || 'en';
+
+  let characterRaw: CharacterRaw;
+
+  const rawAnswers =
+    body && typeof body === 'object' && !Array.isArray(body) && Array.isArray((body as Record<string, unknown>).answers)
+      ? ((body as Record<string, unknown>).answers as unknown[])
+      : null;
+
+  const answers: AnswerInput[] | null = rawAnswers
+    ? rawAnswers
+        .map((item): AnswerInput | null => {
+          if (typeof item !== 'object' || item === null || Array.isArray(item)) return null;
+          const rec = item as Record<string, unknown>;
+          const questionId = typeof rec.questionId === 'string' ? rec.questionId : null;
+          if (!questionId) return null;
+          const answerIds = Array.isArray(rec.answerIds) ? rec.answerIds.filter((x): x is string => typeof x === 'string') : [];
+
+          const valueRaw = rec.value;
+          if (valueRaw === undefined) return { questionId, answerIds };
+          if (typeof valueRaw !== 'object' || valueRaw === null || Array.isArray(valueRaw)) return { questionId, answerIds };
+
+          const valueRec = valueRaw as Record<string, unknown>;
+          if (valueRec.type === 'number' && typeof valueRec.data === 'number') {
+            return { questionId, answerIds, value: { type: 'number', data: valueRec.data } };
+          }
+          if (valueRec.type === 'string') {
+            const data = valueRec.data;
+            const dataStr = typeof data === 'string' ? data : (data !== undefined && data !== null ? JSON.stringify(data) : '');
+            return { questionId, answerIds, value: { type: 'string', data: dataStr } };
+          }
+
+          return { questionId, answerIds };
+        })
+        .filter((x): x is AnswerInput => Boolean(x))
+    : null;
+
+  if (answers && answers.length > 0) {
+    // Recompute characterRaw from survey answers so shop (094) and magic shop (096) purchases are included
+    const surveyId = (body && typeof body === 'object' && typeof (body as Record<string, unknown>).surveyId === 'string')
+      ? ((body as Record<string, unknown>).surveyId as string)
+      : DEFAULT_SURVEY_ID;
+    characterRaw = (await getCharacterRawFromAnswers(surveyId, lang, answers)) as CharacterRaw;
+  } else {
+    characterRaw =
+      body && typeof body === 'object' && !Array.isArray(body) && 'characterRaw' in (body as Record<string, unknown>)
+        ? (((body as Record<string, unknown>).characterRaw ?? {}) as CharacterRaw)
+        : (body as CharacterRaw);
+  }
 
   // Collect all UUIDs for one query
   const uuids = new Set<string>();
@@ -177,6 +225,6 @@ export async function generateCharacter(c: Context): Promise<Character> {
 
   // Remove logicFields and resolve i18n objects
   const character = (await resolveI18nRecursive(characterRaw, lang, resolveText)) as Character;
-  
+
   return character;
 }
