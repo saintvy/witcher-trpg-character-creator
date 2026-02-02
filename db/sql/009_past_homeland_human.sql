@@ -306,6 +306,7 @@ INSERT INTO effects (scope, an_an_id, body)
 -- 101: Редания - +1 к Образованию (Education)
 SELECT 'character', 'wcc_past_homeland_human_o0101',
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'inc',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.skills.common.education.bonus'),
@@ -326,6 +327,7 @@ FROM meta UNION ALL
 -- 101: Родной язык - Всеобщий
 SELECT 'character', 'wcc_past_homeland_human_o0101',
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.lore.home_language'),
@@ -336,6 +338,7 @@ FROM meta UNION ALL
 -- 101: +8 к Всеобщему языку (language_common_speech)
 SELECT 'character', 'wcc_past_homeland_human_o0101',
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'inc',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'),
@@ -346,6 +349,7 @@ FROM meta UNION ALL
 -- 102: Каэдвен - +1 к Стойкости (Endurance)
 SELECT 'character', 'wcc_past_homeland_human_o0102',
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'inc',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.skills.common.endurance.bonus'),
@@ -360,20 +364,20 @@ SELECT 'character', 'wcc_past_homeland_human_o0102',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0102',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0102',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'),
     8
   ))
 FROM meta UNION ALL
 -- 103: Темерия - +1 к Харизме (Charisma)
 SELECT 'character', 'wcc_past_homeland_human_o0103',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.charisma.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -384,19 +388,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0103',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0103',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0103',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 104: Аэдирн - +1 к Изготовлению (Crafting)
 SELECT 'character', 'wcc_past_homeland_human_o0104',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.crafting.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -407,19 +411,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0104',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0104',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0104',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 105: Лирия и Ривия - +1 к Сопротивлению убеждению (Resist Coercion)
 SELECT 'character', 'wcc_past_homeland_human_o0105',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.resist_coercion.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -430,19 +434,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0105',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0105',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0105',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 106: Ковир и Повисс - +1 к Торговле (Business)
 SELECT 'character', 'wcc_past_homeland_human_o0106',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.business.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -453,19 +457,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0106',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0106',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0106',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 107: Скеллиге - +1 к Храбрости (Courage)
 SELECT 'character', 'wcc_past_homeland_human_o0107',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.courage.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -476,19 +480,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0107',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0107',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0107',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 108: Цидарис - +1 к Мореходству (Sailing)
 SELECT 'character', 'wcc_past_homeland_human_o0108',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.sailing.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -499,19 +503,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0108',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0108',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0108',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 109: Вердэн - +1 к Выживанию в дикой природе (Wilderness Survival)
 SELECT 'character', 'wcc_past_homeland_human_o0109',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.wilderness_survival.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -522,19 +526,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0109',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0109',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0109',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 110: Цинтра - +1 к Пониманию людей (Human Perception)
 SELECT 'character', 'wcc_past_homeland_human_o0110',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.human_perception.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -545,19 +549,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0110',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0110',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'common' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0110',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_common_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 201: Сердце Нильфгаарда - +1 к Обману (Deceit)
 SELECT 'character', 'wcc_past_homeland_human_o0201',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.deceit.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -568,19 +572,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0201',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0201',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0201',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 301: Виковаро - +1 к Образованию (Education)
 SELECT 'character', 'wcc_past_homeland_human_o0301',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.education.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -591,19 +595,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0301',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0301',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0301',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 302: Аигрен - +1 к Выживанию в дикой природе (Wilderness Survival)
 SELECT 'character', 'wcc_past_homeland_human_o0302',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.wilderness_survival.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -614,19 +618,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0302',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0302',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0302',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 303: Назаир - +1 к Борьбе (Brawling)
 SELECT 'character', 'wcc_past_homeland_human_o0303',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.brawling.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -637,19 +641,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0303',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0303',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0303',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 304: Метиина - +1 к Верховой езде (Riding)
 SELECT 'character', 'wcc_past_homeland_human_o0304',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.riding.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -660,19 +664,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0304',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0304',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0304',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 305: Маг Турга - +1 к Стойкости (Endurance)
 SELECT 'character', 'wcc_past_homeland_human_o0305',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.endurance.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -683,19 +687,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0305',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0305',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0305',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 306: Гесо - +1 к Скрытности (Stealth)
 SELECT 'character', 'wcc_past_homeland_human_o0306',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.stealth.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -706,19 +710,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0306',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0306',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0306',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 307: Эббинг - +1 к Дедукции (Deduction)
 SELECT 'character', 'wcc_past_homeland_human_o0307',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.deduction.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -729,19 +733,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0307',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0307',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0307',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 308: Мехт - +1 к Харизме (Charisma)
 SELECT 'character', 'wcc_past_homeland_human_o0308',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.charisma.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -752,19 +756,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0308',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0308',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0308',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 309: Геммера - +1 к Запугиванию (Intimidation)
 SELECT 'character', 'wcc_past_homeland_human_o0309',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.intimidation.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -775,19 +779,19 @@ SELECT 'character', 'wcc_past_homeland_human_o0309',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0309',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0309',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 310: Этолия - +1 к Храбрости (Courage)
 SELECT 'character', 'wcc_past_homeland_human_o0310',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.courage.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -798,13 +802,13 @@ SELECT 'character', 'wcc_past_homeland_human_o0310',
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0310',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 SELECT 'character', 'wcc_past_homeland_human_o0310',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta;
@@ -819,6 +823,7 @@ INSERT INTO effects (scope, an_an_id, body)
 -- Northern: 101-106, 108-110
 SELECT 'character', an_id,
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.logicFields.home_language'),
@@ -841,6 +846,7 @@ UNION ALL
 -- Elder Speech: 107, 201, 301-310
 SELECT 'character', an_id,
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.logicFields.home_language'),

@@ -123,7 +123,7 @@ WITH
 INSERT INTO effects (scope, an_an_id, body)
 -- 01: Доль Блатанна - +1 к Образованию (Education)
 SELECT 'character', 'wcc_past_homeland_elders_o01',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.education.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -136,20 +136,20 @@ SELECT 'character', 'wcc_past_homeland_elders_o01',
 FROM meta UNION ALL
 -- 01: Родной язык - Старшая речь
 SELECT 'character', 'wcc_past_homeland_elders_o01',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'elder_speech' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 -- 01: +8 к Старшей речи (language_elder_speech)
 SELECT 'character', 'wcc_past_homeland_elders_o01',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_elder_speech.bonus'), 8
   ))
 FROM meta UNION ALL
 -- 02: Махакам - +1 к Стойкости (Endurance)
 SELECT 'character', 'wcc_past_homeland_elders_o02',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.endurance.bonus'), 1
   ))
 FROM meta UNION ALL
@@ -162,14 +162,14 @@ SELECT 'character', 'wcc_past_homeland_elders_o02',
 FROM meta UNION ALL
 -- 02: Родной язык - Краснолюдский
 SELECT 'character', 'wcc_past_homeland_elders_o02',
-  jsonb_build_object('set', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'set', jsonb_build_array(
     jsonb_build_object('var','characterRaw.lore.home_language'),
     jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'dwarvish' ||'.'|| meta.entity ||'.'|| 'home_language')::text)
   ))
 FROM meta UNION ALL
 -- 02: +8 к Краснолюдскому языку (language_dwarvish)
 SELECT 'character', 'wcc_past_homeland_elders_o02',
-  jsonb_build_object('inc', jsonb_build_array(
+  jsonb_build_object('when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb, 'inc', jsonb_build_array(
     jsonb_build_object('var','characterRaw.skills.common.language_dwarvish.bonus'), 8
   ))
 FROM meta;
@@ -184,6 +184,7 @@ INSERT INTO effects (scope, an_an_id, body)
 -- 01: Dol Blathanna -> Elder Speech
 SELECT 'character', 'wcc_past_homeland_elders_o01',
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.logicFields.home_language'),
@@ -195,6 +196,7 @@ UNION ALL
 -- 02: Mahakam -> Dwarvish
 SELECT 'character', 'wcc_past_homeland_elders_o02',
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.logicFields.home_language'),

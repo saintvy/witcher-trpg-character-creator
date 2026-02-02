@@ -2716,9 +2716,25 @@ async function applyShopNode(
     }
   }
 
-  // Second pass: calculate budget spending
+  // Second pass: calculate budget spending.
+  // Process items in budget-priority order (highest-priority budget first) so that we drain
+  // e.g. alchemy-ingredients budget before main crowns, matching frontend allocation and
+  // avoiding "insufficient" when total budgets would suffice if order were different.
+  const flatEntries: Array<{ sourceId: string; entry: { purchase: ShopPurchase; row: Record<string, unknown>; targetPath: string } }> = [];
   for (const [sourceId, entries] of lookedUp.entries()) {
     for (const entry of entries) {
+      flatEntries.push({ sourceId, entry });
+    }
+  }
+  const maxMoneyPriorityForItem = (sourceId: string, itemId: string) => {
+    const moneyBudgets = budgets
+      .filter(b => b.type === 'money' && isItemCoveredByBudget(b, sourceId, itemId))
+      .sort((a, b) => b.priority - a.priority);
+    return moneyBudgets.length > 0 ? moneyBudgets[0]!.priority : -1;
+  };
+  flatEntries.sort((a, b) => maxMoneyPriorityForItem(b.sourceId, b.entry.purchase.id) - maxMoneyPriorityForItem(a.sourceId, a.entry.purchase.id));
+
+  for (const { sourceId, entry } of flatEntries) {
       const price = toFiniteNumber(entry.row.price, 0);
       const qty = entry.purchase.qty;
       
@@ -2733,16 +2749,12 @@ async function applyShopNode(
       let remainingCost = price * qty;
       let remainingQty = qty;
 
-      const moneyBudgets = applicableBudgets.filter((b) => b.type === 'money');
-      const lastMoneyBudgetId = moneyBudgets.length > 0 ? moneyBudgets[moneyBudgets.length - 1]!.id : null;
-      
       for (const budget of applicableBudgets) {
         if (budget.type === 'money') {
           if (remainingCost <= 0) break;
           const budgetRemaining = budgetStates.get(budget.id) ?? 0;
-          const isLastMoney = lastMoneyBudgetId === budget.id;
-          const available = isLastMoney ? budgetRemaining : Math.max(0, budgetRemaining);
-          const toSpend = isLastMoney ? remainingCost : Math.min(remainingCost, available);
+          const available = Math.max(0, budgetRemaining);
+          const toSpend = Math.min(remainingCost, available);
           budgetStates.set(budget.id, budgetRemaining - toSpend);
           remainingCost -= toSpend;
           
@@ -2787,7 +2799,14 @@ async function applyShopNode(
           }
         }
       }
-    }
+
+      if (remainingCost > 0) {
+        throw new Error(
+          `Insufficient money for purchase (source: ${sourceId}, id: ${entry.purchase.id}). ` +
+          `Need ${price * entry.purchase.qty} crowns, short by ${remainingCost}. ` +
+          `Spend in order of budget priority; no budget may go negative.`
+        );
+      }
   }
 
   // Professional bundles: 1 token per bundle (not per item/quantity)
@@ -2870,6 +2889,230 @@ async function applyShopNode(
   }
 }
 
+type StatsSkillsLevel = 'Average' | 'Skilled' | 'Heroes' | 'Legends';
+type StatsSkillsPayloadV1 = {
+  v: 1;
+  level: StatsSkillsLevel;
+  stats: Record<string, unknown>;
+  skills: Record<string, unknown>;
+};
+
+function normaliseStatsSkillsLevel(value: unknown): StatsSkillsLevel | null {
+  return value === 'Average' || value === 'Skilled' || value === 'Heroes' || value === 'Legends' ? value : null;
+}
+
+function statsBudgetByLevel(level: StatsSkillsLevel): number {
+  switch (level) {
+    case 'Average':
+      return 60;
+    case 'Skilled':
+      return 70;
+    case 'Heroes':
+      return 75;
+    case 'Legends':
+      return 80;
+  }
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function toInt(value: unknown, fallback: number): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.trunc(n);
+}
+
+function statVigorByProfessionLogicField(profession: unknown): number | null {
+  const p = typeof profession === 'string' ? profession : null;
+  if (!p) return null;
+  switch (p) {
+    case 'Witcher':
+      return 2;
+    case 'Mage':
+      return 5;
+    case 'Priest':
+      return 2;
+    case 'Bard':
+    case 'Doctor':
+    case 'Man At Arms':
+    case 'Criminal':
+    case 'Craftsman':
+    case 'Merchant':
+      return 0;
+    default:
+      return null;
+  }
+}
+
+function diceWithMod(base: string, mod: number): string {
+  if (!Number.isFinite(mod) || mod === 0) return base;
+  const val = Math.trunc(mod);
+  return `${base}${val > 0 ? '+' : ''}${val}`;
+}
+
+async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawValue);
+  } catch {
+    throw new Error('Invalid stats_skills payload: not JSON');
+  }
+  if (!isPlainObject(parsed) || (parsed as any).v !== 1) {
+    throw new Error('Invalid stats_skills payload: unsupported version');
+  }
+  const payload = parsed as StatsSkillsPayloadV1;
+
+  const level = normaliseStatsSkillsLevel(payload.level);
+  if (!level) {
+    throw new Error('Invalid stats_skills payload: level');
+  }
+
+  const budgetStats = statsBudgetByLevel(level);
+  const budgetProfessional = 44;
+
+  const statKeys = ['INT', 'REF', 'DEX', 'BODY', 'SPD', 'EMP', 'CRA', 'WILL', 'LUCK'] as const;
+
+  const nextStatsCur: Record<string, number> = {};
+  let spentStats = 0;
+  for (const k of statKeys) {
+    const baseline = toInt(getAtPath(state, `characterRaw.statistics.${k}.cur`), 1);
+    const requested = toInt(payload.stats?.[k], baseline);
+    const clamped = Math.max(Math.max(1, baseline), Math.min(10, requested));
+    nextStatsCur[k] = clamped;
+    spentStats += clamped;
+  }
+
+  if (spentStats > budgetStats) {
+    throw new Error(`Stats budget exceeded: ${spentStats} > ${budgetStats}`);
+  }
+
+  const statBonus = (k: string) => toInt(getAtPath(state, `characterRaw.statistics.${k}.bonus`), 0);
+  const statRace = (k: string) => toInt(getAtPath(state, `characterRaw.statistics.${k}.race_bonus`), 0);
+  const statTotal = (k: string) => nextStatsCur[k]! + statBonus(k) + statRace(k);
+  const statForSkills = (k: string) => {
+    const base = nextStatsCur[k]!;
+    const extra = Math.min(10 - base, statBonus(k)) + statRace(k);
+    return base + extra;
+  };
+
+  const commonBudget = statForSkills('INT') + statForSkills('REF');
+
+  const initialSkills = (() => {
+    const raw = getAtPath(state, 'characterRaw.skills.initial');
+    if (!Array.isArray(raw)) return [] as string[];
+    return raw.filter((x): x is string => typeof x === 'string' && x.length > 0);
+  })();
+
+  const definingSkillId = (() => {
+    const raw = getAtPath(state, 'characterRaw.skills.defining');
+    if (typeof raw === 'string') return raw;
+    if (isPlainObject(raw) && typeof raw.skill_id === 'string') return raw.skill_id;
+    if (isPlainObject(raw) && typeof raw.id === 'string') return raw.id;
+    return null;
+  })();
+
+  const professionalSet = new Set<string>(initialSkills);
+  if (definingSkillId) professionalSet.add(definingSkillId);
+
+  const commonSkillsObj = getAtPath(state, 'characterRaw.skills.common');
+  const commonSkillIds = isPlainObject(commonSkillsObj) ? Object.keys(commonSkillsObj) : [];
+
+  // Legacy skill ids used in characterRaw.skills.common vs DB ids in wcc_skills
+  const stateSkillToDbSkill: Record<string, string> = {
+    staff: 'staff_spear',
+    dodge: 'dodge_escape',
+  };
+  const dbSkillToStateSkill: Record<string, string> = {
+    staff_spear: 'staff',
+    dodge_escape: 'dodge',
+  };
+
+  const difficultyBySkillId = new Map<string, boolean>();
+  if (commonSkillIds.length > 0) {
+    const queryIds = commonSkillIds.map((id) => stateSkillToDbSkill[id] ?? id);
+    const { rows } = await db.query<{ skill_id: string; is_difficult: boolean }>(
+      `
+        SELECT skill_id, COALESCE(is_difficult, false) AS is_difficult
+        FROM wcc_skills
+        WHERE skill_id = ANY($1::text[])
+      `,
+      [queryIds],
+    );
+    for (const r of rows) {
+      const stateId = dbSkillToStateSkill[r.skill_id] ?? r.skill_id;
+      difficultyBySkillId.set(stateId, Boolean(r.is_difficult));
+    }
+  }
+
+  const nextSkillsCur: Record<string, number> = {};
+  let spentProfessional = 0;
+  let spentCommon = 0;
+
+  for (const skillId of commonSkillIds) {
+    const baseline = toInt(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0);
+    const bonus = toInt(getAtPath(state, `characterRaw.skills.common.${skillId}.bonus`), 0);
+    const maxCur = Math.max(Math.max(6 - bonus, 0), Math.max(0, baseline));
+
+    const requested = payload.skills && typeof payload.skills === 'object' ? toInt(payload.skills[skillId], baseline) : baseline;
+    const clamped = Math.max(baseline, Math.min(maxCur, Math.max(0, requested)));
+    nextSkillsCur[skillId] = clamped;
+
+    const cost = difficultyBySkillId.get(skillId) ? 2 : 1;
+    const tokens = clamped * cost;
+    if (professionalSet.has(skillId)) spentProfessional += tokens;
+    else spentCommon += tokens;
+  }
+
+  if (spentProfessional > budgetProfessional) {
+    throw new Error(`Professional knowledge budget exceeded: ${spentProfessional} > ${budgetProfessional}`);
+  }
+  if (spentCommon > commonBudget) {
+    throw new Error(`General knowledge budget exceeded: ${spentCommon} > ${commonBudget}`);
+  }
+
+  // Persist selections
+  setAtPath(state, 'characterRaw.logicFields.stats_skills.level', level);
+
+  for (const k of statKeys) {
+    setAtPath(state, `characterRaw.statistics.${k}.cur`, nextStatsCur[k]!);
+  }
+
+  for (const skillId of commonSkillIds) {
+    setAtPath(state, `characterRaw.skills.common.${skillId}.cur`, nextSkillsCur[skillId]!);
+  }
+
+  // Ensure base Vigor exists if it was never initialized.
+  const vigorCur = Number(getAtPath(state, 'characterRaw.statistics.vigor.cur'));
+  if (!Number.isFinite(vigorCur)) {
+    const prof = getAtPath(state, 'characterRaw.logicFields.profession');
+    const baseVigor = statVigorByProfessionLogicField(prof);
+    if (baseVigor !== null) {
+      setAtPath(state, 'characterRaw.statistics.vigor.cur', baseVigor);
+    }
+  }
+
+  // Derived stats (store base values; bonuses are separate fields in state).
+  const body = statTotal('BODY');
+  const will = statTotal('WILL');
+  const spd = statTotal('SPD');
+  const avg = Math.trunc((body + will) / 2);
+
+  setAtPath(state, 'characterRaw.statistics.calculated.STUN.cur', Math.max(avg, 10));
+  setAtPath(state, 'characterRaw.statistics.calculated.run.cur', spd * 3);
+  setAtPath(state, 'characterRaw.statistics.calculated.leap.cur', Math.trunc(spd * 0.6));
+  setAtPath(state, 'characterRaw.statistics.calculated.max_HP.cur', 5 * avg);
+  setAtPath(state, 'characterRaw.statistics.calculated.STA.cur', 5 * avg);
+  setAtPath(state, 'characterRaw.statistics.calculated.ENC.cur', 10 * body);
+  setAtPath(state, 'characterRaw.statistics.calculated.REC.cur', avg);
+
+  const punchMod = 2 * Math.trunc((body - 1) / 2) - 4;
+  const kickMod = 2 * Math.trunc((body - 1) / 2);
+  setAtPath(state, 'characterRaw.statistics.calculated.bonus_punch.cur', diceWithMod('1d6', punchMod));
+  setAtPath(state, 'characterRaw.statistics.calculated.bonus_kick.cur', diceWithMod('1d6', kickMod));
+}
+
 async function applyDynamicNodes(
   answers: AnswerInput[],
   questionMetadata: Map<string, Record<string, unknown>>,
@@ -2882,6 +3125,8 @@ async function applyDynamicNodes(
     const renderer = (qMeta as Record<string, unknown>).renderer;
     if (renderer === 'shop') {
       await applyShopNode(String(entry.value.data), qMeta, state);
+    } else if (renderer === 'stats_skills') {
+      await applyStatsSkillsNode(String(entry.value.data), state);
     }
   }
 }
@@ -3225,6 +3470,16 @@ function applyEffect(
   effect: Record<string, unknown>,
   state: SurveyState,
 ) {
+  // Optional "when" condition: apply effect only if it evaluates to truthy (e.g. not Witcher for homeland/family bonuses)
+  if (effect && typeof effect === 'object' && 'when' in effect) {
+    try {
+      const whenResult = evaluateJsonLogicExpression((effect as Record<string, unknown>).when, state);
+      if (!whenResult) return;
+    } catch {
+      return;
+    }
+  }
+
   const evaluateEffectValue = (expr: unknown): unknown => {
     // 1) First evaluate jsonlogic_expression wrappers (they rely on raw JSON-Logic structure)
     const afterJsonLogic = evaluateJsonLogicExpressionsInValue(expr, state);

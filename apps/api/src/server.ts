@@ -6,6 +6,7 @@ import { serve } from '@hono/node-server';
 import { generateCharacter } from './handlers/generateCharacter.js';
 import { nextQuestion } from './handlers/nextQuestion.js';
 import { getAllShopItemsHandler } from './handlers/getAllShopItems.js';
+import { getSkillsCatalogHandler } from './handlers/getSkillsCatalog.js';
 
 const app = new Hono();
 
@@ -17,6 +18,7 @@ app.post('/generate-character', async (c) => {
 });
 app.post('/survey/next', nextQuestion);
 app.post('/shop/allItems', getAllShopItemsHandler);
+app.post('/skills/catalog', getSkillsCatalogHandler);
 
 const port = Number(process.env.PORT || 4000);
 serve({ fetch: app.fetch, port }, () => {

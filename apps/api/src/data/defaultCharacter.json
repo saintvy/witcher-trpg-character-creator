@@ -111,7 +111,9 @@
         "ritual_crafting": {}
         },
         "defining": null,
-        "professional": []
+        "professional": {
+        "branches": []
+        }
     }
     }
 }

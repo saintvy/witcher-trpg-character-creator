@@ -1169,6 +1169,71 @@ CROSS JOIN (
     ('wcc_profession_o02_wt_snail')
 ) AS v(an_id);
 
+-- Эффекты: добавление профессиональных навыков в characterRaw.skills.professional (skill_id -> { branch_number, professional_number })
+WITH prof_skill_mapping (skill_id, branch_number, professional_number) AS ( VALUES
+  ('meditation', 1, 1),
+  ('magical_source', 1, 2),
+  ('heliotrope', 1, 3),
+  ('iron_stomach', 2, 1),
+  ('frenzy', 2, 2),
+  ('transmutation', 2, 3),
+  ('parry_arrows', 3, 1),
+  ('quick_strike', 3, 2),
+  ('whirl', 3, 3)
+),
+an_ids (an_id) AS (
+  SELECT an_id FROM (VALUES
+    ('wcc_profession_o02'),
+    ('wcc_profession_o02_wt_wolf'),
+    ('wcc_profession_o02_wt_gryphon'),
+    ('wcc_profession_o02_wt_cat'),
+    ('wcc_profession_o02_wt_viper'),
+    ('wcc_profession_o02_wt_bear'),
+    ('wcc_profession_o02_wt_manticore'),
+    ('wcc_profession_o02_wt_snail')
+  ) AS v(an_id)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  a.an_id AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.professional.skill_' || sm.branch_number || '_' || sm.professional_number),
+      jsonb_build_object('id', sm.skill_id, 'name', ck_id('witcher_cc.wcc_skills.' || sm.skill_id || '.name')::text)
+    )
+  ) AS body
+FROM prof_skill_mapping sm
+CROSS JOIN an_ids a;
+
+-- Эффекты: массив UUID названий веток professional.branches[] (порядок: ветка 1, 2, 3)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
+      jsonb_build_array(
+        ck_id('witcher_cc.wcc_skills.branch.магический_клинок.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.мутант.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.убийца.name')::text
+      )
+    )
+  ) AS body
+FROM (VALUES
+  ('wcc_profession_o02'),
+  ('wcc_profession_o02_wt_wolf'),
+  ('wcc_profession_o02_wt_gryphon'),
+  ('wcc_profession_o02_wt_cat'),
+  ('wcc_profession_o02_wt_viper'),
+  ('wcc_profession_o02_wt_bear'),
+  ('wcc_profession_o02_wt_manticore'),
+  ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
+
 -- i18n записи для названия профессии
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id

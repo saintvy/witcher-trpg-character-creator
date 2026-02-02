@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS wcc_skills (
   professional_number integer CHECK (professional_number IS NULL OR (professional_number >= 1 AND professional_number <= 3)),
   branch_number integer CHECK (branch_number IS NULL OR (branch_number >= 1 AND branch_number <= 3)),
   branch_name_id uuid,
-  is_difficult boolean NOT NULL DEFAULT false
+  is_difficult boolean NOT NULL DEFAULT false,
+  prof_id varchar(64) NULL  -- for skill_type = 'professional': references wcc_professions.prof_id (bard, witcher, doctor, mage, man_at_arms, priest, criminal, craftsman, merchant)
   -- Note: Foreign keys to i18n_text(id) are not possible because i18n_text has composite PK (id, lang)
   -- The UUIDs reference i18n_text entries but integrity is maintained at application level
 );
@@ -332,226 +333,226 @@ WITH
     SELECT 'ru' AS lang, raw_data_ru.*
       FROM (VALUES
         -- Bard branch 1: Обольститель
-        (201, 'return_act', 'Повторное выступление', 'emp', 'professional', 1, 1, 'Обольститель', false),
-        (202, 'raise_a_crowd', 'Заворожить публику', 'emp', 'professional', 2, 1, 'Обольститель', false),
-        (203, 'good_friend', 'Добрый друг', 'emp', 'professional', 3, 1, 'Обольститель', false),
+        (201, 'return_act', 'Повторное выступление', 'emp', 'professional', 1, 1, 'Обольститель', false, 'bard'),
+        (202, 'raise_a_crowd', 'Заворожить публику', 'emp', 'professional', 2, 1, 'Обольститель', false, 'bard'),
+        (203, 'good_friend', 'Добрый друг', 'emp', 'professional', 3, 1, 'Обольститель', false, 'bard'),
         -- Bard branch 2: Информатор
-        (204, 'fade', 'Незаметность', 'int', 'professional', 1, 2, 'Информатор', false),
-        (205, 'spread_the_word', 'Пустить слух', 'int', 'professional', 2, 2, 'Информатор', false),
-        (206, 'acclimatize', 'Сойти за своего', 'int', 'professional', 3, 2, 'Информатор', false),
+        (204, 'fade', 'Незаметность', 'int', 'professional', 1, 2, 'Информатор', false, 'bard'),
+        (205, 'spread_the_word', 'Пустить слух', 'int', 'professional', 2, 2, 'Информатор', false, 'bard'),
+        (206, 'acclimatize', 'Сойти за своего', 'int', 'professional', 3, 2, 'Информатор', false, 'bard'),
         -- Bard branch 3: Интриган
-        (207, 'poison_the_well', 'Коварство', 'emp', 'professional', 1, 3, 'Интриган', false),
-        (208, 'needling', 'Подколка', 'emp', 'professional', 2, 3, 'Интриган', false),
-        (209, 'et_tu_brute', 'И ты, Брут', 'emp', 'professional', 3, 3, 'Интриган', false),
+        (207, 'poison_the_well', 'Коварство', 'emp', 'professional', 1, 3, 'Интриган', false, 'bard'),
+        (208, 'needling', 'Подколка', 'emp', 'professional', 2, 3, 'Интриган', false, 'bard'),
+        (209, 'et_tu_brute', 'И ты, Брут', 'emp', 'professional', 3, 3, 'Интриган', false, 'bard'),
         -- Witcher branch 1: Магический клинок
-        (210, 'meditation', 'Медитация', NULL, 'professional', 1, 1, 'Магический клинок', false),
-        (211, 'magical_source', 'Магический источник', NULL, 'professional', 2, 1, 'Магический клинок', false),
-        (212, 'heliotrope', 'Гелиотроп', 'will', 'professional', 3, 1, 'Магический клинок', false),
+        (210, 'meditation', 'Медитация', NULL, 'professional', 1, 1, 'Магический клинок', false, 'witcher'),
+        (211, 'magical_source', 'Магический источник', NULL, 'professional', 2, 1, 'Магический клинок', false, 'witcher'),
+        (212, 'heliotrope', 'Гелиотроп', 'will', 'professional', 3, 1, 'Магический клинок', false, 'witcher'),
         -- Witcher branch 2: Мутант
-        (213, 'iron_stomach', 'Крепкий желудок', NULL, 'professional', 1, 2, 'Мутант', false),
-        (214, 'frenzy', 'Ярость', NULL, 'professional', 2, 2, 'Мутант', false),
-        (215, 'transmutation', 'Трансмутация', 'body', 'professional', 3, 2, 'Мутант', false),
+        (213, 'iron_stomach', 'Крепкий желудок', NULL, 'professional', 1, 2, 'Мутант', false, 'witcher'),
+        (214, 'frenzy', 'Ярость', NULL, 'professional', 2, 2, 'Мутант', false, 'witcher'),
+        (215, 'transmutation', 'Трансмутация', 'body', 'professional', 3, 2, 'Мутант', false, 'witcher'),
         -- Witcher branch 3: Убийца
-        (216, 'parry_arrows', 'Отбивание стрел', 'dex', 'professional', 1, 3, 'Убийца', false),
-        (217, 'quick_strike', 'Быстрый удар', 'ref', 'professional', 2, 3, 'Убийца', false),
-        (218, 'whirl', 'Вихрь', 'ref', 'professional', 3, 3, 'Убийца', false),
+        (216, 'parry_arrows', 'Отбивание стрел', 'dex', 'professional', 1, 3, 'Убийца', false, 'witcher'),
+        (217, 'quick_strike', 'Быстрый удар', 'ref', 'professional', 2, 3, 'Убийца', false, 'witcher'),
+        (218, 'whirl', 'Вихрь', 'ref', 'professional', 3, 3, 'Убийца', false, 'witcher'),
         -- Mage branch 1: Политик
-        (219, 'scheming', 'Строить козни', 'int', 'professional', 1, 1, 'Политик', false),
-        (220, 'grape_vine', 'Сплетни', 'int', 'professional', 2, 1, 'Политик', false),
-        (221, 'assets', 'Полезные связи', 'int', 'professional', 3, 1, 'Политик', false),
+        (219, 'scheming', 'Строить козни', 'int', 'professional', 1, 1, 'Политик', false, 'mage'),
+        (220, 'grape_vine', 'Сплетни', 'int', 'professional', 2, 1, 'Политик', false, 'mage'),
+        (221, 'assets', 'Полезные связи', 'int', 'professional', 3, 1, 'Политик', false, 'mage'),
         -- Mage branch 2: Учёный
-        (222, 'reverse_engineer', 'Анализ', 'int', 'professional', 1, 2, 'Учёный', false),
-        (223, 'distillation', 'Дистилляция', 'cra', 'professional', 2, 2, 'Учёный', false),
-        (224, 'mutate', 'Мутация', 'int', 'professional', 3, 2, 'Учёный', false),
+        (222, 'reverse_engineer', 'Анализ', 'int', 'professional', 1, 2, 'Учёный', false, 'mage'),
+        (223, 'distillation', 'Дистилляция', 'cra', 'professional', 2, 2, 'Учёный', false, 'mage'),
+        (224, 'mutate', 'Мутация', 'int', 'professional', 3, 2, 'Учёный', false, 'mage'),
         -- Mage branch 3: Архимаг
-        (225, 'in_touch', 'Укрепление связи', NULL, 'professional', 1, 3, 'Архимаг', false),
-        (226, 'immutable', 'Устойчивость к двимериту', 'will', 'professional', 2, 3, 'Архимаг', false),
-        (227, 'expanded_magic', 'Усиление магии', 'will', 'professional', 3, 3, 'Архимаг', false),
+        (225, 'in_touch', 'Укрепление связи', NULL, 'professional', 1, 3, 'Архимаг', false, 'mage'),
+        (226, 'immutable', 'Устойчивость к двимериту', 'will', 'professional', 2, 3, 'Архимаг', false, 'mage'),
+        (227, 'expanded_magic', 'Усиление магии', 'will', 'professional', 3, 3, 'Архимаг', false, 'mage'),
         -- Doctor branch 1: Хирург
-        (228, 'diagnose', 'Диагноз', 'int', 'professional', 1, 1, 'Хирург', false),
-        (229, 'analysis', 'Осмотр', 'int', 'professional', 2, 1, 'Хирург', false),
-        (230, 'effective_surgery', 'Эффективная хирургия', 'cra', 'professional', 3, 1, 'Хирург', false),
+        (228, 'diagnose', 'Диагноз', 'int', 'professional', 1, 1, 'Хирург', false, 'doctor'),
+        (229, 'analysis', 'Осмотр', 'int', 'professional', 2, 1, 'Хирург', false, 'doctor'),
+        (230, 'effective_surgery', 'Эффективная хирургия', 'cra', 'professional', 3, 1, 'Хирург', false, 'doctor'),
         -- Doctor branch 2: Травник
-        (231, 'healing_tent', 'Палатка лекаря', 'cra', 'professional', 1, 2, 'Травник', false),
-        (232, 'improvised_medicine', 'Подручные средства', 'int', 'professional', 2, 2, 'Травник', false),
-        (233, 'herbal_remedy', 'Растительное лекарство', 'cra', 'professional', 3, 2, 'Травник', false),
+        (231, 'healing_tent', 'Палатка лекаря', 'cra', 'professional', 1, 2, 'Травник', false, 'doctor'),
+        (232, 'improvised_medicine', 'Подручные средства', 'int', 'professional', 2, 2, 'Травник', false, 'doctor'),
+        (233, 'herbal_remedy', 'Растительное лекарство', 'cra', 'professional', 3, 2, 'Травник', false, 'doctor'),
         -- Doctor branch 3: Анатом
-        (234, 'bloody_wound', 'Кровавая рана', 'int', 'professional', 1, 3, 'Анатом', false),
-        (235, 'practical_butchery', 'Практическая резня', 'int', 'professional', 2, 3, 'Анатом', false),
-        (236, 'crippling_wound', 'Калечащая рана', 'int', 'professional', 3, 3, 'Анатом', false),
+        (234, 'bloody_wound', 'Кровавая рана', 'int', 'professional', 1, 3, 'Анатом', false, 'doctor'),
+        (235, 'practical_butchery', 'Практическая резня', 'int', 'professional', 2, 3, 'Анатом', false, 'doctor'),
+        (236, 'crippling_wound', 'Калечащая рана', 'int', 'professional', 3, 3, 'Анатом', false, 'doctor'),
         -- Man At Arms branch 1: Стрелок
-        (237, 'extreme_range', 'Максимальная дистанция', 'dex', 'professional', 1, 1, 'Стрелок', false),
-        (238, 'twin_shot', 'Двойной выстрел', 'dex', 'professional', 2, 1, 'Стрелок', false),
-        (239, 'precise_aim', 'Точный прицел', 'dex', 'professional', 3, 1, 'Стрелок', false),
+        (237, 'extreme_range', 'Максимальная дистанция', 'dex', 'professional', 1, 1, 'Стрелок', false, 'man_at_arms'),
+        (238, 'twin_shot', 'Двойной выстрел', 'dex', 'professional', 2, 1, 'Стрелок', false, 'man_at_arms'),
+        (239, 'precise_aim', 'Точный прицел', 'dex', 'professional', 3, 1, 'Стрелок', false, 'man_at_arms'),
         -- Man At Arms branch 2: Охотник за головами
-        (240, 'bloodhound', 'Ищейка', 'int', 'professional', 1, 2, 'Охотник за головами', false),
-        (241, 'warrior_trap', 'Ловушка воина', 'cra', 'professional', 2, 2, 'Охотник за головами', false),
-        (242, 'tactical_advantage', 'Тактическое преимущество', 'int', 'professional', 3, 2, 'Охотник за головами', false),
+        (240, 'bloodhound', 'Ищейка', 'int', 'professional', 1, 2, 'Охотник за головами', false, 'man_at_arms'),
+        (241, 'warrior_trap', 'Ловушка воина', 'cra', 'professional', 2, 2, 'Охотник за головами', false, 'man_at_arms'),
+        (242, 'tactical_advantage', 'Тактическое преимущество', 'int', 'professional', 3, 2, 'Охотник за головами', false, 'man_at_arms'),
         -- Man At Arms branch 3: Потрошитель
-        (243, 'fury', 'Неистовство', 'will', 'professional', 1, 3, 'Потрошитель', false),
-        (244, 'two_handed', 'Двуручник', 'body', 'professional', 2, 3, 'Потрошитель', false),
-        (245, 'ignore_pain', 'Игнорировать удар', 'body', 'professional', 3, 3, 'Потрошитель', false),
+        (243, 'fury', 'Неистовство', 'will', 'professional', 1, 3, 'Потрошитель', false, 'man_at_arms'),
+        (244, 'two_handed', 'Двуручник', 'body', 'professional', 2, 3, 'Потрошитель', false, 'man_at_arms'),
+        (245, 'ignore_pain', 'Игнорировать удар', 'body', 'professional', 3, 3, 'Потрошитель', false, 'man_at_arms'),
         -- Priest branch 1: Проповедник
-        (246, 'divine_power', 'Божественная сила', NULL, 'professional', 1, 1, 'Проповедник', false),
-        (247, 'divine_authority', 'Божественный авторитет', 'emp', 'professional', 2, 1, 'Проповедник', false),
-        (248, 'foresight', 'Предвидение', 'will', 'professional', 3, 1, 'Проповедник', false),
+        (246, 'divine_power', 'Божественная сила', NULL, 'professional', 1, 1, 'Проповедник', false, 'priest'),
+        (247, 'divine_authority', 'Божественный авторитет', 'emp', 'professional', 2, 1, 'Проповедник', false, 'priest'),
+        (248, 'foresight', 'Предвидение', 'will', 'professional', 3, 1, 'Проповедник', false, 'priest'),
         -- Priest branch 2: Друид
-        (249, 'one_with_nature', 'Единение с природой', NULL, 'professional', 1, 2, 'Друид', false),
-        (250, 'nature_s_signs', 'Знаки природы', 'int', 'professional', 2, 2, 'Друид', false),
-        (251, 'nature_s_ally', 'Союзник природы', 'will', 'professional', 3, 2, 'Друид', false),
+        (249, 'one_with_nature', 'Единение с природой', NULL, 'professional', 1, 2, 'Друид', false, 'priest'),
+        (250, 'nature_s_signs', 'Знаки природы', 'int', 'professional', 2, 2, 'Друид', false, 'priest'),
+        (251, 'nature_s_ally', 'Союзник природы', 'will', 'professional', 3, 2, 'Друид', false, 'priest'),
         -- Priest branch 3: Фанатик
-        (252, 'bloody_rituals', 'Кровавые ритуалы', 'will', 'professional', 1, 3, 'Фанатик', false),
-        (253, 'zeal', 'Рвение', 'emp', 'professional', 2, 3, 'Фанатик', false),
-        (254, 'holy_fire', 'Священный огонь', 'will', 'professional', 3, 3, 'Фанатик', false),
+        (252, 'bloody_rituals', 'Кровавые ритуалы', 'will', 'professional', 1, 3, 'Фанатик', false, 'priest'),
+        (253, 'zeal', 'Рвение', 'emp', 'professional', 2, 3, 'Фанатик', false, 'priest'),
+        (254, 'holy_fire', 'Священный огонь', 'will', 'professional', 3, 3, 'Фанатик', false, 'priest'),
         -- Criminal branch 1: Вор
-        (255, 'case_joint', 'Присмотреться', 'int', 'professional', 1, 1, 'Вор', false),
-        (256, 'repeat_lockpick', 'Повторный взлом', 'int', 'professional', 2, 1, 'Вор', false),
-        (257, 'lay_low', 'Залечь на дно', 'int', 'professional', 3, 1, 'Вор', false),
+        (255, 'case_joint', 'Присмотреться', 'int', 'professional', 1, 1, 'Вор', false, 'criminal'),
+        (256, 'repeat_lockpick', 'Повторный взлом', 'int', 'professional', 2, 1, 'Вор', false, 'criminal'),
+        (257, 'lay_low', 'Залечь на дно', 'int', 'professional', 3, 1, 'Вор', false, 'criminal'),
         -- Criminal branch 2: Атаман
-        (258, 'vulnerability', 'Уязвимость', 'emp', 'professional', 1, 2, 'Атаман', false),
-        (259, 'take_note', 'Взять на заметку', 'will', 'professional', 2, 2, 'Атаман', false),
-        (260, 'intimidating_presence', 'Устрашающее присутствие', 'will', 'professional', 3, 2, 'Атаман', false),
+        (258, 'vulnerability', 'Уязвимость', 'emp', 'professional', 1, 2, 'Атаман', false, 'criminal'),
+        (259, 'take_note', 'Взять на заметку', 'will', 'professional', 2, 2, 'Атаман', false, 'criminal'),
+        (260, 'intimidating_presence', 'Устрашающее присутствие', 'will', 'professional', 3, 2, 'Атаман', false, 'criminal'),
         -- Criminal branch 3: Контрабандист
-        (261, 'smuggler', 'Контрабандист', 'int', 'professional', 1, 3, 'Контрабандист', false),
-        (262, 'false_identity', 'Поддельная личность', 'cra', 'professional', 2, 3, 'Контрабандист', false),
-        (263, 'black_market', 'Чёрный рынок', 'int', 'professional', 3, 3, 'Контрабандист', false),
+        (261, 'smuggler', 'Контрабандист', 'int', 'professional', 1, 3, 'Контрабандист', false, 'criminal'),
+        (262, 'false_identity', 'Поддельная личность', 'cra', 'professional', 2, 3, 'Контрабандист', false, 'criminal'),
+        (263, 'black_market', 'Чёрный рынок', 'int', 'professional', 3, 3, 'Контрабандист', false, 'criminal'),
         -- Craftsman branch 1: Оружейник
-        (264, 'large_catalog', 'Большой каталог', 'int', 'professional', 1, 1, 'Оружейник', false),
-        (265, 'apprentice', 'Подмастерье', 'cra', 'professional', 2, 1, 'Оружейник', false),
-        (266, 'masterwork', 'Мастерская работа', 'cra', 'professional', 3, 1, 'Оружейник', false),
+        (264, 'large_catalog', 'Большой каталог', 'int', 'professional', 1, 1, 'Оружейник', false, 'craftsman'),
+        (265, 'apprentice', 'Подмастерье', 'cra', 'professional', 2, 1, 'Оружейник', false, 'craftsman'),
+        (266, 'masterwork', 'Мастерская работа', 'cra', 'professional', 3, 1, 'Оружейник', false, 'craftsman'),
         -- Craftsman branch 2: Алхимик
-        (267, 'alchemical_concoction', 'Алхимический состав', 'cra', 'professional', 1, 2, 'Алхимик', false),
-        (268, 'enhanced_potion', 'Усиленный эликсир', 'cra', 'professional', 2, 2, 'Алхимик', false),
-        (269, 'experimental_formula', 'Экспериментальная формула', 'cra', 'professional', 3, 2, 'Алхимик', false),
+        (267, 'alchemical_concoction', 'Алхимический состав', 'cra', 'professional', 1, 2, 'Алхимик', false, 'craftsman'),
+        (268, 'enhanced_potion', 'Усиленный эликсир', 'cra', 'professional', 2, 2, 'Алхимик', false, 'craftsman'),
+        (269, 'experimental_formula', 'Экспериментальная формула', 'cra', 'professional', 3, 2, 'Алхимик', false, 'craftsman'),
         -- Craftsman branch 3: Мастер
-        (270, 'workshop', 'Мастерская', NULL, 'professional', 1, 3, 'Мастер', false),
-        (271, 'repair', 'Ремонт', 'cra', 'professional', 2, 3, 'Мастер', false),
-        (272, 'upgrade', 'Улучшение', 'cra', 'professional', 3, 3, 'Мастер', false),
+        (270, 'workshop', 'Мастерская', NULL, 'professional', 1, 3, 'Мастер', false, 'craftsman'),
+        (271, 'repair', 'Ремонт', 'cra', 'professional', 2, 3, 'Мастер', false, 'craftsman'),
+        (272, 'upgrade', 'Улучшение', 'cra', 'professional', 3, 3, 'Мастер', false, 'craftsman'),
         -- Merchant branch 1: Посредник
-        (273, 'market', 'Рынок', 'int', 'professional', 1, 1, 'Посредник', false),
-        (274, 'dirty_deal', 'Нечестная сделка', 'emp', 'professional', 2, 1, 'Посредник', false),
-        (275, 'promise', 'Обещание', 'emp', 'professional', 3, 1, 'Посредник', false),
+        (273, 'market', 'Рынок', 'int', 'professional', 1, 1, 'Посредник', false, 'merchant'),
+        (274, 'dirty_deal', 'Нечестная сделка', 'emp', 'professional', 2, 1, 'Посредник', false, 'merchant'),
+        (275, 'promise', 'Обещание', 'emp', 'professional', 3, 1, 'Посредник', false, 'merchant'),
         -- Merchant branch 2: Человек со связями
-        (276, 'slums', 'Трущобы', 'emp', 'professional', 1, 2, 'Человек со связями', false),
-        (277, 'contacts', 'Связи', 'int', 'professional', 2, 2, 'Человек со связями', false),
-        (278, 'merchant_network', 'Торговая сеть', 'int', 'professional', 3, 2, 'Человек со связями', false),
+        (276, 'slums', 'Трущобы', 'emp', 'professional', 1, 2, 'Человек со связями', false, 'merchant'),
+        (277, 'contacts', 'Связи', 'int', 'professional', 2, 2, 'Человек со связями', false, 'merchant'),
+        (278, 'merchant_network', 'Торговая сеть', 'int', 'professional', 3, 2, 'Человек со связями', false, 'merchant'),
         -- Merchant branch 3: Торговец
-        (279, 'haggle', 'Торг', 'emp', 'professional', 1, 3, 'Торговец', false),
-        (280, 'merchant_sense', 'Торговая жилка', 'int', 'professional', 2, 3, 'Торговец', false),
-        (281, 'merchant_king', 'Король торговли', 'int', 'professional', 3, 3, 'Торговец', false)
-      ) AS raw_data_ru(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult)
+        (279, 'haggle', 'Торг', 'emp', 'professional', 1, 3, 'Торговец', false, 'merchant'),
+        (280, 'merchant_sense', 'Торговая жилка', 'int', 'professional', 2, 3, 'Торговец', false, 'merchant'),
+        (281, 'merchant_king', 'Король торговли', 'int', 'professional', 3, 3, 'Торговец', false, 'merchant')
+      ) AS raw_data_ru(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
     UNION ALL
-    SELECT 'en' AS lang, skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult
+    SELECT 'en' AS lang, raw_data_en.*
       FROM (VALUES
         -- Bard branch 1: The Charmer
-        (201, 'return_act', 'Return Act', 'emp', 'professional', 1, 1, 'The Charmer', false),
-        (202, 'raise_a_crowd', 'Raise A Crowd', 'emp', 'professional', 2, 1, 'The Charmer', false),
-        (203, 'good_friend', 'Good Friend', 'emp', 'professional', 3, 1, 'The Charmer', false),
+        (201, 'return_act', 'Return Act', 'emp', 'professional', 1, 1, 'The Charmer', false, 'bard'),
+        (202, 'raise_a_crowd', 'Raise A Crowd', 'emp', 'professional', 2, 1, 'The Charmer', false, 'bard'),
+        (203, 'good_friend', 'Good Friend', 'emp', 'professional', 3, 1, 'The Charmer', false, 'bard'),
         -- Bard branch 2: The Informant
-        (204, 'fade', 'Fade', 'int', 'professional', 1, 2, 'The Informant', false),
-        (205, 'spread_the_word', 'Spread the Word', 'int', 'professional', 2, 2, 'The Informant', false),
-        (206, 'acclimatize', 'Acclimatize', 'int', 'professional', 3, 2, 'The Informant', false),
+        (204, 'fade', 'Fade', 'int', 'professional', 1, 2, 'The Informant', false, 'bard'),
+        (205, 'spread_the_word', 'Spread the Word', 'int', 'professional', 2, 2, 'The Informant', false, 'bard'),
+        (206, 'acclimatize', 'Acclimatize', 'int', 'professional', 3, 2, 'The Informant', false, 'bard'),
         -- Bard branch 3: The Manipulator
-        (207, 'poison_the_well', 'Poison The Well', 'emp', 'professional', 1, 3, 'The Manipulator', false),
-        (208, 'needling', 'Needling', 'emp', 'professional', 2, 3, 'The Manipulator', false),
-        (209, 'et_tu_brute', 'Et Tu Brute', 'emp', 'professional', 3, 3, 'The Manipulator', false),
+        (207, 'poison_the_well', 'Poison The Well', 'emp', 'professional', 1, 3, 'The Manipulator', false, 'bard'),
+        (208, 'needling', 'Needling', 'emp', 'professional', 2, 3, 'The Manipulator', false, 'bard'),
+        (209, 'et_tu_brute', 'Et Tu Brute', 'emp', 'professional', 3, 3, 'The Manipulator', false, 'bard'),
         -- Witcher branch 1: The Spellsword
-        (210, 'meditation', 'Meditation', NULL, 'professional', 1, 1, 'The Spellsword', false),
-        (211, 'magical_source', 'Magical Source', NULL, 'professional', 2, 1, 'The Spellsword', false),
-        (212, 'heliotrope', 'Heliotrope', 'will', 'professional', 3, 1, 'The Spellsword', false),
+        (210, 'meditation', 'Meditation', NULL, 'professional', 1, 1, 'The Spellsword', false, 'witcher'),
+        (211, 'magical_source', 'Magical Source', NULL, 'professional', 2, 1, 'The Spellsword', false, 'witcher'),
+        (212, 'heliotrope', 'Heliotrope', 'will', 'professional', 3, 1, 'The Spellsword', false, 'witcher'),
         -- Witcher branch 2: The Mutant
-        (213, 'iron_stomach', 'Iron Stomach', NULL, 'professional', 1, 2, 'The Mutant', false),
-        (214, 'frenzy', 'Frenzy', NULL, 'professional', 2, 2, 'The Mutant', false),
-        (215, 'transmutation', 'Transmutation', 'body', 'professional', 3, 2, 'The Mutant', false),
+        (213, 'iron_stomach', 'Iron Stomach', NULL, 'professional', 1, 2, 'The Mutant', false, 'witcher'),
+        (214, 'frenzy', 'Frenzy', NULL, 'professional', 2, 2, 'The Mutant', false, 'witcher'),
+        (215, 'transmutation', 'Transmutation', 'body', 'professional', 3, 2, 'The Mutant', false, 'witcher'),
         -- Witcher branch 3: The Slayer
-        (216, 'parry_arrows', 'Parry Arrows', 'dex', 'professional', 1, 3, 'The Slayer', false),
-        (217, 'quick_strike', 'Quick Strike', 'ref', 'professional', 2, 3, 'The Slayer', false),
-        (218, 'whirl', 'Whirl', 'ref', 'professional', 3, 3, 'The Slayer', false),
+        (216, 'parry_arrows', 'Parry Arrows', 'dex', 'professional', 1, 3, 'The Slayer', false, 'witcher'),
+        (217, 'quick_strike', 'Quick Strike', 'ref', 'professional', 2, 3, 'The Slayer', false, 'witcher'),
+        (218, 'whirl', 'Whirl', 'ref', 'professional', 3, 3, 'The Slayer', false, 'witcher'),
         -- Mage branch 1: The Politician
-        (219, 'scheming', 'Scheming', 'int', 'professional', 1, 1, 'The Politician', false),
-        (220, 'grape_vine', 'Grape Vine', 'int', 'professional', 2, 1, 'The Politician', false),
-        (221, 'assets', 'Assets', 'int', 'professional', 3, 1, 'The Politician', false),
+        (219, 'scheming', 'Scheming', 'int', 'professional', 1, 1, 'The Politician', false, 'mage'),
+        (220, 'grape_vine', 'Grape Vine', 'int', 'professional', 2, 1, 'The Politician', false, 'mage'),
+        (221, 'assets', 'Assets', 'int', 'professional', 3, 1, 'The Politician', false, 'mage'),
         -- Mage branch 2: The Scientist
-        (222, 'reverse_engineer', 'Reverse Engineer', 'int', 'professional', 1, 2, 'The Scientist', false),
-        (223, 'distillation', 'Distillation', 'cra', 'professional', 2, 2, 'The Scientist', false),
-        (224, 'mutate', 'Mutate', 'int', 'professional', 3, 2, 'The Scientist', false),
+        (222, 'reverse_engineer', 'Reverse Engineer', 'int', 'professional', 1, 2, 'The Scientist', false, 'mage'),
+        (223, 'distillation', 'Distillation', 'cra', 'professional', 2, 2, 'The Scientist', false, 'mage'),
+        (224, 'mutate', 'Mutate', 'int', 'professional', 3, 2, 'The Scientist', false, 'mage'),
         -- Mage branch 3: The Arch Mage
-        (225, 'in_touch', 'In Touch', NULL, 'professional', 1, 3, 'The Arch Mage', false),
-        (226, 'immutable', 'Immutable', 'will', 'professional', 2, 3, 'The Arch Mage', false),
-        (227, 'expanded_magic', 'Expanded Magic', 'will', 'professional', 3, 3, 'The Arch Mage', false),
+        (225, 'in_touch', 'In Touch', NULL, 'professional', 1, 3, 'The Arch Mage', false, 'mage'),
+        (226, 'immutable', 'Immutable', 'will', 'professional', 2, 3, 'The Arch Mage', false, 'mage'),
+        (227, 'expanded_magic', 'Expanded Magic', 'will', 'professional', 3, 3, 'The Arch Mage', false, 'mage'),
         -- Doctor branch 1: The Surgeon
-        (228, 'diagnose', 'Diagnose', 'int', 'professional', 1, 1, 'The Surgeon', false),
-        (229, 'analysis', 'Analysis', 'int', 'professional', 2, 1, 'The Surgeon', false),
-        (230, 'effective_surgery', 'Effective Surgery', 'cra', 'professional', 3, 1, 'The Surgeon', false),
+        (228, 'diagnose', 'Diagnose', 'int', 'professional', 1, 1, 'The Surgeon', false, 'doctor'),
+        (229, 'analysis', 'Analysis', 'int', 'professional', 2, 1, 'The Surgeon', false, 'doctor'),
+        (230, 'effective_surgery', 'Effective Surgery', 'cra', 'professional', 3, 1, 'The Surgeon', false, 'doctor'),
         -- Doctor branch 2: The Herbalist
-        (231, 'healing_tent', 'Healing Tent', 'cra', 'professional', 1, 2, 'The Herbalist', false),
-        (232, 'improvised_medicine', 'Improvised Medicine', 'int', 'professional', 2, 2, 'The Herbalist', false),
-        (233, 'herbal_remedy', 'Herbal Remedy', 'cra', 'professional', 3, 2, 'The Herbalist', false),
+        (231, 'healing_tent', 'Healing Tent', 'cra', 'professional', 1, 2, 'The Herbalist', false, 'doctor'),
+        (232, 'improvised_medicine', 'Improvised Medicine', 'int', 'professional', 2, 2, 'The Herbalist', false, 'doctor'),
+        (233, 'herbal_remedy', 'Herbal Remedy', 'cra', 'professional', 3, 2, 'The Herbalist', false, 'doctor'),
         -- Doctor branch 3: The Anatomist
-        (234, 'bloody_wound', 'Bloody Wound', 'int', 'professional', 1, 3, 'The Anatomist', false),
-        (235, 'practical_butchery', 'Practical Butchery', 'int', 'professional', 2, 3, 'The Anatomist', false),
-        (236, 'crippling_wound', 'Crippling Wound', 'int', 'professional', 3, 3, 'The Anatomist', false),
+        (234, 'bloody_wound', 'Bloody Wound', 'int', 'professional', 1, 3, 'The Anatomist', false, 'doctor'),
+        (235, 'practical_butchery', 'Practical Butchery', 'int', 'professional', 2, 3, 'The Anatomist', false, 'doctor'),
+        (236, 'crippling_wound', 'Crippling Wound', 'int', 'professional', 3, 3, 'The Anatomist', false, 'doctor'),
         -- Man At Arms branch 1: The Marksman
-        (237, 'extreme_range', 'Extreme Range', 'dex', 'professional', 1, 1, 'The Marksman', false),
-        (238, 'twin_shot', 'Twin Shot', 'dex', 'professional', 2, 1, 'The Marksman', false),
-        (239, 'precise_aim', 'Precise Aim', 'dex', 'professional', 3, 1, 'The Marksman', false),
+        (237, 'extreme_range', 'Extreme Range', 'dex', 'professional', 1, 1, 'The Marksman', false, 'man_at_arms'),
+        (238, 'twin_shot', 'Twin Shot', 'dex', 'professional', 2, 1, 'The Marksman', false, 'man_at_arms'),
+        (239, 'precise_aim', 'Precise Aim', 'dex', 'professional', 3, 1, 'The Marksman', false, 'man_at_arms'),
         -- Man At Arms branch 2: The Bounty Hunter
-        (240, 'bloodhound', 'Bloodhound', 'int', 'professional', 1, 2, 'The Bounty Hunter', false),
-        (241, 'warrior_trap', 'Warrior Trap', 'cra', 'professional', 2, 2, 'The Bounty Hunter', false),
-        (242, 'tactical_advantage', 'Tactical Advantage', 'int', 'professional', 3, 2, 'The Bounty Hunter', false),
+        (240, 'bloodhound', 'Bloodhound', 'int', 'professional', 1, 2, 'The Bounty Hunter', false, 'man_at_arms'),
+        (241, 'warrior_trap', 'Warrior Trap', 'cra', 'professional', 2, 2, 'The Bounty Hunter', false, 'man_at_arms'),
+        (242, 'tactical_advantage', 'Tactical Advantage', 'int', 'professional', 3, 2, 'The Bounty Hunter', false, 'man_at_arms'),
         -- Man At Arms branch 3: The Butcher
-        (243, 'fury', 'Fury', 'will', 'professional', 1, 3, 'The Butcher', false),
-        (244, 'two_handed', 'Two Handed', 'body', 'professional', 2, 3, 'The Butcher', false),
-        (245, 'ignore_pain', 'Ignore Pain', 'body', 'professional', 3, 3, 'The Butcher', false),
+        (243, 'fury', 'Fury', 'will', 'professional', 1, 3, 'The Butcher', false, 'man_at_arms'),
+        (244, 'two_handed', 'Two Handed', 'body', 'professional', 2, 3, 'The Butcher', false, 'man_at_arms'),
+        (245, 'ignore_pain', 'Ignore Pain', 'body', 'professional', 3, 3, 'The Butcher', false, 'man_at_arms'),
         -- Priest branch 1: The Preacher
-        (246, 'divine_power', 'Divine Power', NULL, 'professional', 1, 1, 'The Preacher', false),
-        (247, 'divine_authority', 'Divine Authority', 'emp', 'professional', 2, 1, 'The Preacher', false),
-        (248, 'foresight', 'Foresight', 'will', 'professional', 3, 1, 'The Preacher', false),
+        (246, 'divine_power', 'Divine Power', NULL, 'professional', 1, 1, 'The Preacher', false, 'priest'),
+        (247, 'divine_authority', 'Divine Authority', 'emp', 'professional', 2, 1, 'The Preacher', false, 'priest'),
+        (248, 'foresight', 'Foresight', 'will', 'professional', 3, 1, 'The Preacher', false, 'priest'),
         -- Priest branch 2: The Druid
-        (249, 'one_with_nature', 'One With Nature', NULL, 'professional', 1, 2, 'The Druid', false),
-        (250, 'nature_s_signs', 'Nature''s Signs', 'int', 'professional', 2, 2, 'The Druid', false),
-        (251, 'nature_s_ally', 'Nature''s Ally', 'will', 'professional', 3, 2, 'The Druid', false),
+        (249, 'one_with_nature', 'One With Nature', NULL, 'professional', 1, 2, 'The Druid', false, 'priest'),
+        (250, 'nature_s_signs', 'Nature''s Signs', 'int', 'professional', 2, 2, 'The Druid', false, 'priest'),
+        (251, 'nature_s_ally', 'Nature''s Ally', 'will', 'professional', 3, 2, 'The Druid', false, 'priest'),
         -- Priest branch 3: The Fanatic
-        (252, 'bloody_rituals', 'Bloody Rituals', 'will', 'professional', 1, 3, 'The Fanatic', false),
-        (253, 'zeal', 'Zeal', 'emp', 'professional', 2, 3, 'The Fanatic', false),
-        (254, 'holy_fire', 'Holy Fire', 'will', 'professional', 3, 3, 'The Fanatic', false),
+        (252, 'bloody_rituals', 'Bloody Rituals', 'will', 'professional', 1, 3, 'The Fanatic', false, 'priest'),
+        (253, 'zeal', 'Zeal', 'emp', 'professional', 2, 3, 'The Fanatic', false, 'priest'),
+        (254, 'holy_fire', 'Holy Fire', 'will', 'professional', 3, 3, 'The Fanatic', false, 'priest'),
         -- Criminal branch 1: The Thief
-        (255, 'case_joint', 'Case Joint', 'int', 'professional', 1, 1, 'The Thief', false),
-        (256, 'repeat_lockpick', 'Repeat Lockpick', 'int', 'professional', 2, 1, 'The Thief', false),
-        (257, 'lay_low', 'Lay Low', 'int', 'professional', 3, 1, 'The Thief', false),
+        (255, 'case_joint', 'Case Joint', 'int', 'professional', 1, 1, 'The Thief', false, 'criminal'),
+        (256, 'repeat_lockpick', 'Repeat Lockpick', 'int', 'professional', 2, 1, 'The Thief', false, 'criminal'),
+        (257, 'lay_low', 'Lay Low', 'int', 'professional', 3, 1, 'The Thief', false, 'criminal'),
         -- Criminal branch 2: The Leader
-        (258, 'vulnerability', 'Vulnerability', 'emp', 'professional', 1, 2, 'The Leader', false),
-        (259, 'take_note', 'Take Note', 'will', 'professional', 2, 2, 'The Leader', false),
-        (260, 'intimidating_presence', 'Intimidating Presence', 'will', 'professional', 3, 2, 'The Leader', false),
+        (258, 'vulnerability', 'Vulnerability', 'emp', 'professional', 1, 2, 'The Leader', false, 'criminal'),
+        (259, 'take_note', 'Take Note', 'will', 'professional', 2, 2, 'The Leader', false, 'criminal'),
+        (260, 'intimidating_presence', 'Intimidating Presence', 'will', 'professional', 3, 2, 'The Leader', false, 'criminal'),
         -- Criminal branch 3: The Smuggler
-        (261, 'smuggler', 'Smuggler', 'int', 'professional', 1, 3, 'The Smuggler', false),
-        (262, 'false_identity', 'False Identity', 'cra', 'professional', 2, 3, 'The Smuggler', false),
-        (263, 'black_market', 'Black Market', 'int', 'professional', 3, 3, 'The Smuggler', false),
+        (261, 'smuggler', 'Smuggler', 'int', 'professional', 1, 3, 'The Smuggler', false, 'criminal'),
+        (262, 'false_identity', 'False Identity', 'cra', 'professional', 2, 3, 'The Smuggler', false, 'criminal'),
+        (263, 'black_market', 'Black Market', 'int', 'professional', 3, 3, 'The Smuggler', false, 'criminal'),
         -- Craftsman branch 1: The Weaponsmith
-        (264, 'large_catalog', 'Large Catalog', 'int', 'professional', 1, 1, 'The Weaponsmith', false),
-        (265, 'apprentice', 'Apprentice', 'cra', 'professional', 2, 1, 'The Weaponsmith', false),
-        (266, 'masterwork', 'Masterwork', 'cra', 'professional', 3, 1, 'The Weaponsmith', false),
+        (264, 'large_catalog', 'Large Catalog', 'int', 'professional', 1, 1, 'The Weaponsmith', false, 'craftsman'),
+        (265, 'apprentice', 'Apprentice', 'cra', 'professional', 2, 1, 'The Weaponsmith', false, 'craftsman'),
+        (266, 'masterwork', 'Masterwork', 'cra', 'professional', 3, 1, 'The Weaponsmith', false, 'craftsman'),
         -- Craftsman branch 2: The Alchemist
-        (267, 'alchemical_concoction', 'Alchemical Concoction', 'cra', 'professional', 1, 2, 'The Alchemist', false),
-        (268, 'enhanced_potion', 'Enhanced Potion', 'cra', 'professional', 2, 2, 'The Alchemist', false),
-        (269, 'experimental_formula', 'Experimental Formula', 'cra', 'professional', 3, 2, 'The Alchemist', false),
+        (267, 'alchemical_concoction', 'Alchemical Concoction', 'cra', 'professional', 1, 2, 'The Alchemist', false, 'craftsman'),
+        (268, 'enhanced_potion', 'Enhanced Potion', 'cra', 'professional', 2, 2, 'The Alchemist', false, 'craftsman'),
+        (269, 'experimental_formula', 'Experimental Formula', 'cra', 'professional', 3, 2, 'The Alchemist', false, 'craftsman'),
         -- Craftsman branch 3: The Master
-        (270, 'workshop', 'Workshop', NULL, 'professional', 1, 3, 'The Master', false),
-        (271, 'repair', 'Repair', 'cra', 'professional', 2, 3, 'The Master', false),
-        (272, 'upgrade', 'Upgrade', 'cra', 'professional', 3, 3, 'The Master', false),
+        (270, 'workshop', 'Workshop', NULL, 'professional', 1, 3, 'The Master', false, 'craftsman'),
+        (271, 'repair', 'Repair', 'cra', 'professional', 2, 3, 'The Master', false, 'craftsman'),
+        (272, 'upgrade', 'Upgrade', 'cra', 'professional', 3, 3, 'The Master', false, 'craftsman'),
         -- Merchant branch 1: The Middleman
-        (273, 'market', 'Market', 'int', 'professional', 1, 1, 'The Middleman', false),
-        (274, 'dirty_deal', 'Dirty Deal', 'emp', 'professional', 2, 1, 'The Middleman', false),
-        (275, 'promise', 'Promise', 'emp', 'professional', 3, 1, 'The Middleman', false),
+        (273, 'market', 'Market', 'int', 'professional', 1, 1, 'The Middleman', false, 'merchant'),
+        (274, 'dirty_deal', 'Dirty Deal', 'emp', 'professional', 2, 1, 'The Middleman', false, 'merchant'),
+        (275, 'promise', 'Promise', 'emp', 'professional', 3, 1, 'The Middleman', false, 'merchant'),
         -- Merchant branch 2: The Connected
-        (276, 'slums', 'Slums', 'emp', 'professional', 1, 2, 'The Connected', false),
-        (277, 'contacts', 'Contacts', 'int', 'professional', 2, 2, 'The Connected', false),
-        (278, 'merchant_network', 'Merchant Network', 'int', 'professional', 3, 2, 'The Connected', false),
+        (276, 'slums', 'Slums', 'emp', 'professional', 1, 2, 'The Connected', false, 'merchant'),
+        (277, 'contacts', 'Contacts', 'int', 'professional', 2, 2, 'The Connected', false, 'merchant'),
+        (278, 'merchant_network', 'Merchant Network', 'int', 'professional', 3, 2, 'The Connected', false, 'merchant'),
         -- Merchant branch 3: The Merchant
-        (279, 'haggle', 'Haggle', 'emp', 'professional', 1, 3, 'The Merchant', false),
-        (280, 'merchant_sense', 'Merchant Sense', 'int', 'professional', 2, 3, 'The Merchant', false),
-        (281, 'merchant_king', 'Merchant King', 'int', 'professional', 3, 3, 'The Merchant', false)
-      ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult)
+        (279, 'haggle', 'Haggle', 'emp', 'professional', 1, 3, 'The Merchant', false, 'merchant'),
+        (280, 'merchant_sense', 'Merchant Sense', 'int', 'professional', 2, 3, 'The Merchant', false, 'merchant'),
+        (281, 'merchant_king', 'Merchant King', 'int', 'professional', 3, 3, 'The Merchant', false, 'merchant')
+      ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
   ),
   ins_prof_skill_names AS (
     INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -572,7 +573,7 @@ WITH
       WHERE raw_prof_skills.branch_name IS NOT NULL
     ON CONFLICT (id, lang) DO NOTHING
   )
-INSERT INTO wcc_skills (skill_aid, skill_id, skill_name_id, skill_desc_id, param_param_id, skill_type, professional_number, branch_number, branch_name_id, is_difficult)
+INSERT INTO wcc_skills (skill_aid, skill_id, skill_name_id, skill_desc_id, param_param_id, skill_type, professional_number, branch_number, branch_name_id, is_difficult, prof_id)
 SELECT DISTINCT
   raw_prof_skills.skill_aid,
   raw_prof_skills.skill_id,
@@ -588,7 +589,8 @@ SELECT DISTINCT
         LOWER(REPLACE(REPLACE(REPLACE(raw_prof_skills.branch_name, ' ', '_'), '/', '_'), '&', 'and')) || '.name')
     ELSE NULL
   END AS branch_name_id,
-  raw_prof_skills.is_difficult
+  raw_prof_skills.is_difficult,
+  raw_prof_skills.prof_id
 FROM raw_prof_skills
 CROSS JOIN meta
 WHERE raw_prof_skills.lang = 'ru'

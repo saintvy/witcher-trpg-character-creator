@@ -1833,3 +1833,341 @@ body {
     border-color: rgba(242,199,68,0.6);
 }
 
+/* Stats/Skills renderer */
+.stats-skills-node {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.ss-section {
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: rgba(9,11,18,0.6);
+    padding: 12px 14px;
+}
+
+.ss-section-title {
+    font-weight: 800;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.ss-budgets {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.ss-budget {
+    background: rgba(9,11,18,0.95);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.ss-budget .label {
+    font-size: 10px;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ss-budget .value {
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.ss-budget.bad .value {
+    color: #ff7a7a;
+}
+
+.ss-radio-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ss-radio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(9,11,18,0.95);
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-main);
+}
+
+.ss-radio.active {
+    border-color: rgba(242,199,68,0.6);
+    background: rgba(242,199,68,0.08);
+}
+
+.ss-radio input {
+    accent-color: rgb(242,199,68);
+}
+
+.ss-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+@media (max-width: 900px) {
+    .ss-budgets {
+        grid-template-columns: 1fr;
+    }
+    .ss-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ss-stat-card {
+    background: rgba(9,11,18,0.95);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ss-stat-title {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ss-stat-row {
+    display: grid;
+    grid-template-columns: auto 60px 60px;
+    gap: 8px;
+    align-items: center;
+}
+
+.ss-pill {
+    font-size: 12px;
+    padding: 8px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.02);
+    color: var(--text-main);
+    text-align: center;
+}
+
+.ss-pill.wide {
+    text-align: left;
+    padding-left: 10px;
+}
+
+.ss-stepper {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    background: rgba(9,11,18,0.95);
+}
+
+.ss-stepper-input {
+    width: 34px;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-main);
+    font-size: 12px;
+    outline: none;
+}
+
+.ss-stepper-controls {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(255,255,255,0.06);
+}
+
+.ss-stepper-btn {
+    width: 26px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--text-soft);
+    cursor: pointer;
+}
+
+.ss-stepper-btn:hover:not(:disabled) {
+    color: var(--text-main);
+    background: rgba(255,255,255,0.04);
+}
+
+.ss-stepper-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.ss-skills-header {
+    display: grid;
+    grid-template-columns: 70px 46px 46px 70px 1fr;
+    gap: 8px;
+    align-items: end;
+    font-size: 10px;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+    padding: 0 2px;
+}
+
+.ss-groups-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+@media (max-width: 1100px) {
+    .ss-groups-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .ss-groups-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ss-skill-group {
+    break-inside: avoid;
+    margin-bottom: 14px;
+}
+
+.ss-skill-group-title {
+    font-size: 12px;
+    font-weight: 900;
+    color: #9fd0ff;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.ss-skill-row {
+    display: grid;
+    grid-template-columns: 70px 46px 46px 70px 1fr;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.ss-skill-name {
+    font-size: 12px;
+    color: var(--text-main);
+    padding-left: 2px;
+}
+
+.ss-pill.ss-pill-num {
+    padding: 6px 6px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ss-pill.ss-pill-base {
+    padding: 6px 6px;
+    font-variant-numeric: tabular-nums;
+}
+
+.ss-skill-row.pro-skill .ss-stepper {
+    background: rgba(180,83,9,0.18);
+    border-color: rgba(180,83,9,0.35);
+}
+
+.ss-skill-row.pro-skill .ss-stepper-controls {
+    border-left-color: rgba(180,83,9,0.25);
+}
+
+.ss-skill-row.pro-skill .ss-stepper-btn {
+    color: rgba(255,210,160,0.75);
+}
+
+.ss-skill-row.pro-skill .ss-pill {
+    background: rgba(180,83,9,0.12);
+    border-color: rgba(180,83,9,0.28);
+}
+
+.ss-skill-row.pro-skill .ss-skill-name {
+    color: rgba(255,210,160,0.92);
+}
+
+.ss-skill-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.ss-pro-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 900px) {
+    .ss-pro-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ss-pro-branch {
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: rgba(9,11,18,0.95);
+    overflow: hidden;
+}
+
+.ss-pro-branch.blue .ss-pro-title {
+    background: rgba(59,130,246,0.14);
+    border-bottom: 1px solid rgba(59,130,246,0.22);
+    color: #93c5fd;
+}
+
+.ss-pro-branch.green .ss-pro-title {
+    background: rgba(34,197,94,0.14);
+    border-bottom: 1px solid rgba(34,197,94,0.22);
+    color: #86efac;
+}
+
+.ss-pro-branch.red .ss-pro-title {
+    background: rgba(239,68,68,0.14);
+    border-bottom: 1px solid rgba(239,68,68,0.22);
+    color: #fca5a5;
+}
+
+.ss-pro-title {
+    font-size: 12px;
+    font-weight: 900;
+    padding: 10px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.ss-pro-list {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ss-pro-row {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.ss-pro-name {
+    font-size: 12px;
+    color: var(--text-main);
+}

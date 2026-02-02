@@ -1450,47 +1450,51 @@ FROM raw_data
 CROSS JOIN meta
 WHERE raw_data.group_id = 1 --AND raw_data.lang = 'en'
 UNION ALL
--- 3. Группа 2: Навыки интеллекта (+1 или +2 если новый)
+-- 3. Группа 2: Навыки интеллекта (cur = max(2, cur + 1))
 SELECT 'character', 'wcc_life_events_fortune_or_not_details_o' || to_char(2, 'FM00') || to_char(skill_mapping_group2.num, 'FM00'),
   jsonb_build_object(
-    'inc',
+    'set',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group2.skill_path || '.bonus'),
-      1
+      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group2.skill_path || '.cur'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'max', jsonb_build_array(
+            2,
+            jsonb_build_object(
+              '+', jsonb_build_array(
+                jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || skill_mapping_group2.skill_path || '.cur'), 0)),
+                1
+              )
+            )
+          )
+        )
+      )
     )
   )
 FROM skill_mapping_group2
 CROSS JOIN meta
 UNION ALL
-SELECT 'character', 'wcc_life_events_fortune_or_not_details_o' || to_char(2, 'FM00') || to_char(skill_mapping_group2.num, 'FM00'),
-  jsonb_build_object(
-    'inc',
-    jsonb_build_array(
-      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group2.skill_path || '.bonus_if_new'),
-      1
-    )
-  )
-FROM skill_mapping_group2
-CROSS JOIN meta
-UNION ALL
--- 4. Группа 4: Боевые навыки (+1 к bonus и +1 к bonus_if_new)
+-- 4. Группа 4: Боевые навыки (cur = max(2, cur + 1))
 SELECT 'character', 'wcc_life_events_fortune_or_not_details_o' || to_char(4, 'FM00') || to_char(skill_mapping_group4.num, 'FM00'),
   jsonb_build_object(
-    'inc',
+    'set',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group4.skill_path || '.bonus'),
-      1
-    )
-  )
-FROM skill_mapping_group4
-CROSS JOIN meta
-UNION ALL
-SELECT 'character', 'wcc_life_events_fortune_or_not_details_o' || to_char(4, 'FM00') || to_char(skill_mapping_group4.num, 'FM00'),
-  jsonb_build_object(
-    'inc',
-    jsonb_build_array(
-      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group4.skill_path || '.bonus_if_new'),
-      1
+      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group4.skill_path || '.cur'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'max', jsonb_build_array(
+            2,
+            jsonb_build_object(
+              '+', jsonb_build_array(
+                jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || skill_mapping_group4.skill_path || '.cur'), 0)),
+                1
+              )
+            )
+          )
+        )
+      )
     )
   )
 FROM skill_mapping_group4

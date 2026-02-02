@@ -5,6 +5,7 @@ import jsonLogic from "json-logic-js";
 import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
 import { ShopRenderer } from "../components/ShopRenderer";
+import { StatsSkillsRenderer } from "../components/StatsSkillsRenderer";
 
 // Custom JSON-Logic operations used by the survey engine
 // (needed here to correctly evaluate metadata expressions in the builder UI)
@@ -90,6 +91,11 @@ export default function BuilderPage() {
     if (questionMetadata.renderer !== "shop") return null;
     const shop = questionMetadata.shop;
     return shop && typeof shop === "object" && !Array.isArray(shop) ? (shop as any) : null;
+  }, [question, questionMetadata]);
+
+  const isStatsSkillsNode = useMemo(() => {
+    if (!question) return false;
+    return questionMetadata.renderer === "stats_skills";
   }, [question, questionMetadata]);
 
   const onlyCoveredByBudget = useMemo(() => {
@@ -1166,7 +1172,19 @@ export default function BuilderPage() {
                   />
                 )}
 
-                {!shopConfig && question.qtype === "value_string" && (
+                {isStatsSkillsNode && (
+                  <StatsSkillsRenderer
+                    questionId={question.id}
+                    lang={lang}
+                    state={state}
+                    disabled={loading}
+                    onSubmit={(payload) => {
+                      void submitValue({ type: "string", data: JSON.stringify(payload) });
+                    }}
+                  />
+                )}
+
+                {!shopConfig && !isStatsSkillsNode && question.qtype === "value_string" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", width: "100%" }}>
                     <input
                       type="text"
@@ -1193,7 +1211,7 @@ export default function BuilderPage() {
                   </div>
                 )}
 
-                {!shopConfig && question.qtype === "value_textbox" && (
+                {!shopConfig && !isStatsSkillsNode && question.qtype === "value_textbox" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", width: "100%" }}>
                     <textarea
                       value={valueString}
@@ -1229,7 +1247,7 @@ export default function BuilderPage() {
                   </div>
                 )}
 
-                {!shopConfig && question.qtype === "value_numeric" && (
+                {!shopConfig && !isStatsSkillsNode && question.qtype === "value_numeric" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", width: "100%" }}>
                     <div className="survey-value-numeric-container">
                       <input

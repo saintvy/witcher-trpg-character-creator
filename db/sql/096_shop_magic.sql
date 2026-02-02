@@ -128,7 +128,7 @@ SELECT meta.qu_id
                'is_default', false,
                'is_required', true,
                'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.novice_rituals_tokens.name')::text),
-               'coverage', jsonb_build_object('items', jsonb_build_array('MS104', 'MS105', 'MS106', 'MS107', 'MS108', 'MS109', 'MS110', 'MS111', 'MS112', 'MS212', 'MS213', 'MS214', 'MS215', 'MS233', 'MS234', 'MS235'))
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS104', 'MS105', 'MS106', 'MS107', 'MS108', 'MS109', 'MS110', 'MS111', 'MS112', 'MS212', 'MS213', 'MS214', 'MS215', 'MS240', 'MS241', 'MS242'))
              ),
              jsonb_build_object(
                'id', 'novice_hexes_tokens',

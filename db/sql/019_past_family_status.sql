@@ -309,6 +309,7 @@ UNION ALL
 -- Эффект: Добавление предметов в gear (кроме чертежей — для них выдаётся жетон)
 SELECT 'character', 'wcc_past_family_status_o' || to_char(gear_items.group_id, 'FM00') || to_char(gear_items.num, 'FM00'),
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'add',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.gear'),
@@ -335,6 +336,7 @@ UNION ALL
 -- Эффект: вместо чертежей в инвентарь — 1 жетон simple_blueprint_tokens (3 варианта: Семья мастеров / Артисты по группам)
 SELECT 'character', 'wcc_past_family_status_o' || to_char(blueprint_opt.group_id, 'FM00') || to_char(blueprint_opt.num, 'FM00'),
   jsonb_build_object(
+    'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'inc',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.money.simple_blueprint_tokens'),

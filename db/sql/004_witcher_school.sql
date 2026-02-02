@@ -109,26 +109,26 @@ vals AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
   VALUES
     -- Школа Волка (o01)
-    (ck_id('witcher_cc.wcc_witcher_school_o01.perks.description'), 'perks', 'description', 'ru', '<b><span style="color: #808080">Школа Волка</span></b>: Нет штрафов при сильной атаке.'),
-    (ck_id('witcher_cc.wcc_witcher_school_o01.perks.description'), 'perks', 'description', 'en', '<b><span style="color: #808080">The Wolf School</span></b>: No Penalty For Strong Strikes.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o01.perks.description'), 'perks', 'description', 'ru', '<b>Школа Волка</b>: Нет штрафов при сильной атаке.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o01.perks.description'), 'perks', 'description', 'en', '<b>The Wolf School</b>: No Penalty For Strong Strikes.'),
     -- Школа Грифона (o02)
-    (ck_id('witcher_cc.wcc_witcher_school_o02.perks.description'), 'perks', 'description', 'ru', '<b><span style="color: #4A9BD6">Школа Грифона</span></b>: [+2 к Энергии].'),
-    (ck_id('witcher_cc.wcc_witcher_school_o02.perks.description'), 'perks', 'description', 'en', '<b><span style="color: #4A9BD6">The Gryphon School</span></b>: [+2 to Vigor Threshold].'),
+    (ck_id('witcher_cc.wcc_witcher_school_o02.perks.description'), 'perks', 'description', 'ru', '<b>Школа Грифона</b>: [+2 к Энергии].'),
+    (ck_id('witcher_cc.wcc_witcher_school_o02.perks.description'), 'perks', 'description', 'en', '<b>The Gryphon School</b>: [+2 to Vigor Threshold].'),
     -- Школа Кота (o03)
-    (ck_id('witcher_cc.wcc_witcher_school_o03.perks.description'), 'perks', 'description', 'ru', '<b><span style="color: #E85A7F">Школа Кота</span></b>: Невосприимчивость ко всем немагическим попыткам обольщения.'),
-    (ck_id('witcher_cc.wcc_witcher_school_o03.perks.description'), 'perks', 'description', 'en', '<b><span style="color: #E85A7F">The Cat School</span></b>: Immune to Non-Magical Charm Attempts.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o03.perks.description'), 'perks', 'description', 'ru', '<b>Школа Кота</b>: Невосприимчивость ко всем немагическим попыткам обольщения.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o03.perks.description'), 'perks', 'description', 'en', '<b>The Cat School</b>: Immune to Non-Magical Charm Attempts.'),
     -- Школа Змеи (o04)
-    (ck_id('witcher_cc.wcc_witcher_school_o04.perks.description'), 'perks', 'description', 'ru', '<b><span style="color: #4EC04E">Школа Змеи</span></b>: Нет штрафов за парное оружие.'),
-    (ck_id('witcher_cc.wcc_witcher_school_o04.perks.description'), 'perks', 'description', 'en', '<b><span style="color: #4EC04E">The Viper School</span></b>: No Penalties for Dual Wielding.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o04.perks.description'), 'perks', 'description', 'ru', '<b>Школа Змеи</b>: Нет штрафов за парное оружие.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o04.perks.description'), 'perks', 'description', 'en', '<b>The Viper School</b>: No Penalties for Dual Wielding.'),
     -- Школа Медведя (o05)
-    (ck_id('witcher_cc.wcc_witcher_school_o05.perks.description'), 'perks', 'description', 'ru', '<b><span style="color: #A67C00">Школа Медведя</span></b>: -2 к Скованности Движений.'),
-    (ck_id('witcher_cc.wcc_witcher_school_o05.perks.description'), 'perks', 'description', 'en', '<b><span style="color: #A67C00">The Bear School</span></b>: -2 to Overall Armor Penalty.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o05.perks.description'), 'perks', 'description', 'ru', '<b>Школа Медведя</b>: -2 к Скованности Движений.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o05.perks.description'), 'perks', 'description', 'en', '<b>The Bear School</b>: -2 to Overall Armor Penalty.'),
     -- Школа Мантикоры (o06) [DLC]
-    (ck_id('witcher_cc.wcc_witcher_school_o06.perks.description'), 'perks', 'description', 'ru', '<b><span style="color: #FF8800">Школа Мантикоры</span></b>: Не требуется действие для извлечения/убирания щита, нет штрафов за парирование щитом, можно использовать руку со щитом для знаков, бомб и эликсиров.'),
-    (ck_id('witcher_cc.wcc_witcher_school_o06.perks.description'), 'perks', 'description', 'en', '<b><span style="color: #FF8800">The Manticore School</span></b>: No action required to draw/stow a shield; no penalties for parrying with a shield; you can use the shield hand for signs, bombs, and potions.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o06.perks.description'), 'perks', 'description', 'ru', '<b>Школа Мантикоры</b>: Не требуется действие для извлечения/убирания щита, нет штрафов за парирование щитом, можно использовать руку со щитом для знаков, бомб и эликсиров.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o06.perks.description'), 'perks', 'description', 'en', '<b>The Manticore School</b>: No action required to draw/stow a shield; no penalties for parrying with a shield; you can use the shield hand for signs, bombs, and potions.'),
     -- Школа Улитки (o07) [DLC]
-    (ck_id('witcher_cc.wcc_witcher_school_o07.perks.description'), 'perks', 'description', 'ru', '<b><span style="color: #8B8B5A">Школа Улитки</span></b>: -3 к проверке врага на захват, +3 к сопротивлению разоружению на 1 минуту за 1 Вын и 1 Действие (нельзя бросить оружие), слизь оставляет шелушащуюся корочку.'),
-    (ck_id('witcher_cc.wcc_witcher_school_o07.perks.description'), 'perks', 'description', 'en', '<b><span style="color: #8B8B5A">The Snail School</span></b>: -3 to enemy grapple checks; +3 to resist Disarm for 1 minute for 1 Stamina and 1 Action (you can''t drop your weapon); the slime leaves a flaky residue.')
+    (ck_id('witcher_cc.wcc_witcher_school_o07.perks.description'), 'perks', 'description', 'ru', '<b>Школа Улитки</b>: -3 к проверке врага на захват, +3 к сопротивлению разоружению на 1 минуту за 1 Вын и 1 Действие (нельзя бросить оружие), слизь оставляет шелушащуюся корочку.'),
+    (ck_id('witcher_cc.wcc_witcher_school_o07.perks.description'), 'perks', 'description', 'en', '<b>The Snail School</b>: -3 to enemy grapple checks; +3 to resist Disarm for 1 minute for 1 Stamina and 1 Action (you can''t drop your weapon); the slime leaves a flaky residue.')
   ON CONFLICT (id, lang) DO NOTHING
 )
 -- Создаем i18n записи для characterRaw.lore.school (литературное описание)

@@ -562,6 +562,48 @@ SELECT
   ) AS body
 FROM skill_mapping sm;
 
+-- Эффекты: добавление профессиональных навыков в characterRaw.skills.professional (skill_<ветка>_<позиция> -> { name: "<skill_id>" })
+WITH prof_skill_mapping (skill_id, branch_number, professional_number) AS ( VALUES
+  ('case_joint', 1, 1),
+  ('repeat_lockpick', 1, 2),
+  ('lay_low', 1, 3),
+  ('vulnerability', 2, 1),
+  ('take_note', 2, 2),
+  ('intimidating_presence', 2, 3),
+  ('smuggler', 3, 1),
+  ('false_identity', 3, 2),
+  ('black_market', 3, 3)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o07' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.professional.skill_' || sm.branch_number || '_' || sm.professional_number),
+      jsonb_build_object('id', sm.skill_id, 'name', ck_id('witcher_cc.wcc_skills.' || sm.skill_id || '.name')::text)
+    )
+  ) AS body
+FROM prof_skill_mapping sm;
+
+-- Эффекты: массив UUID названий веток professional.branches[] (порядок: ветка 1, 2, 3)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o07' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
+      jsonb_build_array(
+        ck_id('witcher_cc.wcc_skills.branch.вор.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.атаман.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.контрабандист.name')::text
+      )
+    )
+  ) AS body;
+
 -- i18n записи для названия профессии
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
