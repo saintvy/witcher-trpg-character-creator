@@ -1088,7 +1088,7 @@ SELECT
   jsonb_build_object(
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.general_gear'),
       jsonb_build_object(
         't_id', 'T041',
         'sourceId', 'general_gear',
@@ -1221,6 +1221,29 @@ SELECT
         ck_id('witcher_cc.wcc_skills.branch.мутант.name')::text,
         ck_id('witcher_cc.wcc_skills.branch.убийца.name')::text
       )
+    )
+  ) AS body
+FROM (VALUES
+  ('wcc_profession_o02'),
+  ('wcc_profession_o02_wt_wolf'),
+  ('wcc_profession_o02_wt_gryphon'),
+  ('wcc_profession_o02_wt_cat'),
+  ('wcc_profession_o02_wt_viper'),
+  ('wcc_profession_o02_wt_bear'),
+  ('wcc_profession_o02_wt_manticore'),
+  ('wcc_profession_o02_wt_snail')
+) AS v(an_id);
+
+-- Эффекты: добавление определяющего навыка в characterRaw.skills.defining
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  v.an_id AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.defining'),
+      jsonb_build_object('id', 'witcher_training', 'name', ck_id('witcher_cc.wcc_skills.witcher_training.name')::text)
     )
   ) AS body
 FROM (VALUES

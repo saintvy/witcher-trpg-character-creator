@@ -252,7 +252,7 @@ SELECT 'character', 'wcc_witcher_events_benefit_o' || to_char(event_items.num, '
   jsonb_build_object(
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.general_gear'),
       jsonb_build_object(
         'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(event_items.num, 'FM00') ||'.'|| 'gear_name')::text),
         'weight', 0

@@ -610,7 +610,7 @@ SELECT
   jsonb_build_object(
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.vehicles'),
       jsonb_build_object(
         'wt_id', 'WT005',
         'sourceId', 'vehicles',
@@ -626,7 +626,7 @@ SELECT
   jsonb_build_object(
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.vehicles'),
       jsonb_build_object(
         'wt_id', 'WT002',
         'sourceId', 'vehicles',
@@ -699,6 +699,19 @@ SELECT
         ck_id('witcher_cc.wcc_skills.branch.человек_со_связями.name')::text,
         ck_id('witcher_cc.wcc_skills.branch.торговец.name')::text
       )
+    )
+  ) AS body;
+
+-- Эффекты: добавление определяющего навыка в characterRaw.skills.defining
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o09' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.defining'),
+      jsonb_build_object('id', 'well_traveled', 'name', ck_id('witcher_cc.wcc_skills.well_traveled.name')::text)
     )
   ) AS body;
 

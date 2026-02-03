@@ -683,12 +683,45 @@ FROM raw_data
 CROSS JOIN meta
 WHERE raw_data.group_id = 1 AND raw_data.num != 7
 UNION ALL
+-- Лошадь (num=3) → vehicles
+SELECT DISTINCT
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(1, 'FM00') || to_char(3, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear.vehicles'),
+      jsonb_build_object(
+        'wt_id', 'WT004',
+        'sourceId', 'vehicles',
+        'amount', 1
+      )
+    )
+  )
+FROM meta
+UNION ALL
+-- Мул (num=10) → vehicles
+SELECT DISTINCT
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(1, 'FM00') || to_char(10, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear.vehicles'),
+      jsonb_build_object(
+        'wt_id', 'WT005',
+        'sourceId', 'vehicles',
+        'amount', 1
+      )
+    )
+  )
+FROM meta
+UNION ALL
+-- Остальное (кроме 3, 7, 10) → general_gear
 SELECT DISTINCT
   'character', 'wcc_witcher_events_benefit_details_o' || to_char(1, 'FM00') || to_char(raw_data.num, 'FM00'),
   jsonb_build_object(
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.general_gear'),
       jsonb_build_object(
         'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*1+raw_data.num, 'FM0000') ||'.'|| 'gear_name')::text),
         'weight', 0
@@ -697,7 +730,7 @@ SELECT DISTINCT
   )
 FROM raw_data
 CROSS JOIN meta
-WHERE raw_data.group_id = 1 AND raw_data.num != 7
+WHERE raw_data.group_id = 1 AND raw_data.num != 7 AND raw_data.num != 3 AND raw_data.num != 10
 UNION ALL
 -- Группа 2: lifeEvents (Отношения)
 SELECT DISTINCT
@@ -814,21 +847,66 @@ FROM raw_data
 CROSS JOIN meta
 WHERE raw_data.group_id = 5
 UNION ALL
+-- Группа 5: Алхимические формулы → жетоны для бюджетов
+-- Масло (num=1) → witcher_oil_formulae_tokens
 SELECT DISTINCT
-  'character', 'wcc_witcher_events_benefit_details_o' || to_char(5, 'FM00') || to_char(raw_data.num, 'FM00'),
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(5, 'FM00') || to_char(1, 'FM00'),
   jsonb_build_object(
-    'add',
+    'set',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.witcher_oil_formulae_tokens'),
       jsonb_build_object(
-        'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*5+raw_data.num, 'FM0000') ||'.'|| 'gear_name')::text),
-        'weight', 0
+        'jsonlogic_expression',
+        jsonb_build_object(
+          '+', jsonb_build_array(
+            jsonb_build_object('var', jsonb_build_array('characterRaw.professional_gear_options.witcher_oil_formulae_tokens', 0)),
+            1
+          )
+        )
       )
     )
   )
-FROM raw_data
-CROSS JOIN meta
-WHERE raw_data.group_id = 5
+FROM meta
+UNION ALL
+-- Эликсир (num=2) → witcher_potion_formulae_tokens
+SELECT DISTINCT
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(5, 'FM00') || to_char(2, 'FM00'),
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.witcher_potion_formulae_tokens'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          '+', jsonb_build_array(
+            jsonb_build_object('var', jsonb_build_array('characterRaw.professional_gear_options.witcher_potion_formulae_tokens', 0)),
+            1
+          )
+        )
+      )
+    )
+  )
+FROM meta
+UNION ALL
+-- Отвар (num=3) → witcher_decoction_formulae_tokens
+SELECT DISTINCT
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(5, 'FM00') || to_char(3, 'FM00'),
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.witcher_decoction_formulae_tokens'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          '+', jsonb_build_array(
+            jsonb_build_object('var', jsonb_build_array('characterRaw.professional_gear_options.witcher_decoction_formulae_tokens', 0)),
+            1
+          )
+        )
+      )
+    )
+  )
+FROM meta
 UNION ALL
 -- Группа 6: lifeEvents
 SELECT DISTINCT
@@ -898,21 +976,86 @@ FROM raw_data
 CROSS JOIN meta
 WHERE raw_data.group_id = 8
 UNION ALL
+-- Группа 8: Эльфийское усиление и оружие
+-- Эльфийский мессер (num=2) → weapons
 SELECT DISTINCT
-  'character', 'wcc_witcher_events_benefit_details_o' || to_char(8, 'FM00') || to_char(raw_data.num, 'FM00'),
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(8, 'FM00') || to_char(2, 'FM00'),
   jsonb_build_object(
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.weapons'),
       jsonb_build_object(
-        'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*8+raw_data.num, 'FM0000') ||'.'|| 'gear_name')::text),
-        'weight', 0
+        'w_id', 'W145',
+        'sourceId', 'weapons',
+        'amount', 1
       )
     )
   )
-FROM raw_data
-CROSS JOIN meta
-WHERE raw_data.group_id = 8
+FROM meta
+UNION ALL
+-- Гномий ручной арбалет (num=4) → weapons
+SELECT DISTINCT
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(8, 'FM00') || to_char(4, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear.weapons'),
+      jsonb_build_object(
+        'w_id', 'W009',
+        'sourceId', 'weapons',
+        'amount', 1
+      )
+    )
+  )
+FROM meta
+UNION ALL
+-- Эльфийское усиление (num=1) → upgrades
+SELECT DISTINCT
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(8, 'FM00') || to_char(1, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear.upgrades'),
+      jsonb_build_object(
+        'u_id', 'U030',
+        'sourceId', 'upgrades',
+        'amount', 1
+      )
+    )
+  )
+FROM meta
+UNION ALL
+-- Краснолюдское усиление (num=3) → upgrades
+SELECT DISTINCT
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(8, 'FM00') || to_char(3, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear.upgrades'),
+      jsonb_build_object(
+        'u_id', 'U029',
+        'sourceId', 'upgrades',
+        'amount', 1
+      )
+    )
+  )
+FROM meta
+UNION ALL
+-- Краснолюдский плащ (num=5) → armors
+SELECT DISTINCT
+  'character', 'wcc_witcher_events_benefit_details_o' || to_char(8, 'FM00') || to_char(5, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.gear.armors'),
+      jsonb_build_object(
+        'a_id', 'A040',
+        'sourceId', 'armors',
+        'amount', 1
+      )
+    )
+  )
+FROM meta
 UNION ALL
 -- Группа 10: lifeEvents + навык
 SELECT DISTINCT

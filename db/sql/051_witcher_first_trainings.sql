@@ -206,14 +206,7 @@ vals AS (
     (ck_id('witcher_cc.wcc_witcher_first_trainings_o10.event_desc'), 'character', 'event_desc', 'en', 'Spent time in libraries studying monsters. [+1 to Witcher Training]')
   ON CONFLICT (id, lang) DO NOTHING
 )
--- Создаем i18n записи для чертежа ведьмака (gear)
-, ins_gear_name AS (
-  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  VALUES
-    (ck_id('witcher_cc.wcc_witcher_first_trainings_o02.gear.name'), 'gear', 'name', 'ru', 'Ведьмачий чертёж'),
-    (ck_id('witcher_cc.wcc_witcher_first_trainings_o02.gear.name'), 'gear', 'name', 'en', 'Witcher Diagram')
-  ON CONFLICT (id, lang) DO NOTHING
-)
+-- Ведьмачий чертеж теперь добавляется как жетон в магазине (см. 094_shop.sql)
 -- Создаем i18n записи для союзника (вариант 8)
 , ins_ally_data AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -335,15 +328,13 @@ SELECT 'character', 'wcc_witcher_first_trainings_o02',
   )
 FROM meta
 UNION ALL
+-- Ведьмачий чертеж: добавляем жетон для бюджета чертежей
 SELECT 'character', 'wcc_witcher_first_trainings_o02',
   jsonb_build_object(
-    'add',
+    'set',
     jsonb_build_array(
-      jsonb_build_object('var', 'characterRaw.gear'),
-      jsonb_build_object(
-        'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o02.gear.name')::text),
-        'weight', 0
-      )
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.witcher_blueprint_tokens'),
+      1
     )
   )
 FROM meta

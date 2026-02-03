@@ -15,6 +15,7 @@ SELECT wiw.w_id
      , coalesce(wiw.price, 0) AS price
      , coalesce(wiw.hands, 0) AS hands
      , coalesce(wiw.reliability, 0) AS reliability
+     , coalesce(wiw.enhancements, 0) AS enhancements
      , iav.text AS availability
      , icb.text AS crafted_by
      , icon.text AS concealment

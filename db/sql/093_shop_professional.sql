@@ -80,7 +80,7 @@ SELECT meta.qu_id
                'langPath', 'characterRaw.lang',
                'groupColumn', 'weapon_class',
                'tooltipField', 'effect_descriptions',
-               'targetPath', 'characterRaw.gear',
+               'targetPath', 'characterRaw.gear.weapons',
                'filters', jsonb_build_object(
                  'in', jsonb_build_object(
                    'column', 'w_id',
@@ -116,7 +116,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'body_part',
               'tooltipField', 'effect_descriptions',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.armors',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
                   'column', 'a_id',
@@ -150,7 +150,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'upgrade_group',
               'tooltipField', 'effect_descriptions',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.upgrades',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
                   'column', 'u_id',
@@ -182,7 +182,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'group_name',
               'tooltipField', 'gear_description',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.general',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
                   'column', 't_id',
@@ -213,7 +213,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'recipe_group',
               'tooltipField', 'recipe_description',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.recipes',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
                   'column', 'r_id',
@@ -249,7 +249,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'potion_group',
               'tooltipField', 'effect',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.potions',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
                   'column', 'p_id',
@@ -314,7 +314,7 @@ SELECT meta.qu_id
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
               'groupColumn', 'blueprint_group',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.blueprints',
               'tooltipField', 'components',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
@@ -382,7 +382,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'subgroup_name',
               'orderBy', jsonb_build_object('column', 'vehicle_name', 'direction', 'asc'),
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.vehicles',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
                   'column', 'wt_id',
@@ -430,7 +430,7 @@ SELECT meta.qu_id
               'keyColumn', 'm_id',
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.mutagens',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
                   'column', 'm_id',
@@ -459,7 +459,7 @@ SELECT meta.qu_id
               'keyColumn', 'tr_id',
               'langColumn', 'lang',
               'langPath', 'characterRaw.lang',
-              'targetPath', 'characterRaw.gear',
+              'targetPath', 'characterRaw.gear.trophies',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
                   'column', 'tr_id',

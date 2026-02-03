@@ -264,7 +264,7 @@ SELECT 'character', 'wcc_life_events_fortune_o' || to_char(event_items.num, 'FM9
   jsonb_build_object(
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.general_gear'),
       (
         jsonb_build_object(
           'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(event_items.num, 'FM9900') ||'.'|| 'gear_name')::text),

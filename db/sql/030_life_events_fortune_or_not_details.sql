@@ -1506,7 +1506,7 @@ SELECT DISTINCT
   jsonb_build_object(
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.general_gear'),
       jsonb_build_object(
         'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*raw_data.group_id+raw_data.num, 'FM0000') ||'.'|| 'gear_name')::text),
         'weight', 0,
@@ -1524,7 +1524,7 @@ SELECT DISTINCT
   jsonb_build_object(
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.general_gear'),
       jsonb_build_object(
         'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| '10' ||'.'|| 'gear_name')::text),
         'weight', 0,

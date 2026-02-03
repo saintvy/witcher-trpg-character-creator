@@ -312,7 +312,7 @@ SELECT 'character', 'wcc_past_family_status_o' || to_char(gear_items.group_id, '
     'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.general_gear'),
       (
         jsonb_build_object(
           'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*gear_items.group_id+gear_items.num, 'FM0000') ||'.'|| 'gear' ||'.'|| gear_items.item_num ||'.'|| 'name')::text),

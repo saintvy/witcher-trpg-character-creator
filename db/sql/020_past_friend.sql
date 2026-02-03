@@ -355,7 +355,7 @@ SELECT 'character', 'wcc_past_friend_o' || to_char(gear_items.group_id, 'FM00') 
     'when', '{"!==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb,
     'add',
     jsonb_build_array(
-      jsonb_build_object('var','characterRaw.gear'),
+      jsonb_build_object('var','characterRaw.gear.general_gear'),
       jsonb_build_object(
         'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*gear_items.group_id+gear_items.num, 'FM0000') ||'.'|| 'gear' ||'.'|| 'name')::text),
         'weight', 0

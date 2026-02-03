@@ -556,6 +556,19 @@ SELECT
     )
   ) AS body;
 
+-- Эффекты: добавление определяющего навыка в characterRaw.skills.defining
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o08' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.defining'),
+      jsonb_build_object('id', 'quick_fix', 'name', ck_id('witcher_cc.wcc_skills.quick_fix.name')::text)
+    )
+  ) AS body;
+
 -- i18n записи для названия профессии
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
