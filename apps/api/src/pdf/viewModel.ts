@@ -50,6 +50,68 @@ export type CharacterPdfPage1Vm = {
       skills: { id: string; name: string; paramAbbr: string }[];
     }[];
   };
+  equipment: {
+    weapons: {
+      id: string;
+      qty: string;
+      name: string;
+      effects: string;
+      dmg: string;
+      dmgTypes: string;
+      reliability: string;
+      hands: string;
+      concealment: string;
+      enhancements: string;
+      weight: string;
+      price: string;
+    }[];
+    armors: {
+      id: string;
+      qty: string;
+      name: string;
+      effects: string;
+      sp: string;
+      enc: string;
+      enhancements: string;
+      weight: string;
+      price: string;
+    }[];
+    potions: { id: string; qty: string; name: string; toxicity: string; duration: string; effect: string; weight: string; price: string }[];
+  };
+};
+
+export type WeaponDetails = {
+  w_id: string;
+  weapon_name: string | null;
+  dmg: string | null;
+  dmg_types: string | null;
+  weight: string | null;
+  price: number | null;
+  hands: number | null;
+  reliability: number | null;
+  concealment: string | null;
+  effect_names: string | null;
+};
+
+export type ArmorDetails = {
+  a_id: string;
+  armor_name: string | null;
+  stopping_power: number | null;
+  encumbrance: number | null;
+  enhancements: number | null;
+  weight: string | null;
+  price: number | null;
+  effect_names: string | null;
+};
+
+export type PotionDetails = {
+  p_id: string;
+  potion_name: string | null;
+  toxicity: string | null;
+  time_effect: string | null;
+  effect: string | null;
+  weight: string | null;
+  price: number | null;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -132,10 +194,27 @@ function readStat(characterJson: unknown, statId: string): { cur: number | null;
   };
 }
 
+function formatValueWithBonuses(value: { cur: number | null; bonus: number | null; raceBonus: number | null }): string {
+  const parts: string[] = [];
+
+  if (value.cur !== null) parts.push(String(value.cur));
+  if (value.bonus !== null && value.bonus !== 0) parts.push(formatSigned(value.bonus));
+  if (value.raceBonus !== null && value.raceBonus !== 0) parts.push(formatSigned(value.raceBonus));
+
+  return parts.join('');
+}
+
 function readCalcCurString(characterJson: unknown, key: string): string {
   const calc = asRecord(getPath(characterJson, 'statistics.calculated')) ?? {};
   const rec = asRecord(calc[key]);
-  return asString(rec?.cur) ?? '';
+  const curRaw = rec?.cur;
+  const curStr = asString(curRaw) ?? '';
+  const curNum = asNumber(curRaw);
+  if (curNum === null) return curStr;
+
+  const bonus = asNumber(rec?.bonus);
+  const raceBonus = asNumber(rec?.race_bonus);
+  return formatValueWithBonuses({ cur: curNum, bonus, raceBonus });
 }
 
 function sumCarriedWeight(characterJson: unknown): number | null {
@@ -183,9 +262,24 @@ function buildSkillCatalogMaps(
   return { nameById, paramById, difficultById };
 }
 
+function normalizeEffectNames(value: string): string {
+  const raw = value.trim();
+  if (!raw) return '';
+  return raw
+    .split(/[,\n;|]+/g)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .join(', ');
+}
+
 export function mapCharacterJsonToPage1Vm(
   characterJson: unknown,
-  deps?: { skillsCatalog?: ReadonlyMap<string, SkillCatalogInfo> },
+  deps?: {
+    skillsCatalog?: ReadonlyMap<string, SkillCatalogInfo>;
+    weaponDetailsById?: ReadonlyMap<string, WeaponDetails>;
+    armorDetailsById?: ReadonlyMap<string, ArmorDetails>;
+    potionDetailsById?: ReadonlyMap<string, PotionDetails>;
+  },
 ): CharacterPdfPage1Vm {
   const skillsRoot = asRecord(getFirst(characterJson, ['skills', 'character.skills'])) ?? {};
   const common = asRecord(skillsRoot.common) ?? {};
@@ -219,7 +313,7 @@ export function mapCharacterJsonToPage1Vm(
     punch: readCalcCurString(characterJson, 'bonus_punch'),
     kick: readCalcCurString(characterJson, 'bonus_kick'),
     rest: readCalcCurString(characterJson, 'REC'),
-    vigor: asString(asRecord(getPath(characterJson, 'statistics.vigor'))?.cur) ?? '',
+    vigor: formatValueWithBonuses(readStat(characterJson, 'vigor')),
   };
 
   const mainStatOrder: { id: string; label: string }[] = [
@@ -359,6 +453,92 @@ export function mapCharacterJsonToPage1Vm(
     return { title, color, skills };
   });
 
+  const gearRoot = asRecord(getFirst(characterJson, ['gear', 'character.gear'])) ?? {};
+  const weaponsRaw = Array.isArray(gearRoot.weapons) ? (gearRoot.weapons as unknown[]) : [];
+  const armorsRaw = Array.isArray(gearRoot.armors) ? (gearRoot.armors as unknown[]) : [];
+  const potionsRaw = Array.isArray(gearRoot.potions) ? (gearRoot.potions as unknown[]) : [];
+
+  const weapons: CharacterPdfPage1Vm['equipment']['weapons'] = weaponsRaw
+    .map((w) => {
+      const rec = asRecord(w);
+      if (!rec) return null;
+      const id = asString(rec.w_id) ?? '';
+      if (!id) return null;
+      const d = deps?.weaponDetailsById?.get(id);
+      const qtyRaw = asNumber(rec.amount) ?? asNumber(rec.qty) ?? asNumber(rec.quantity);
+      const qty = qtyRaw !== null ? String(qtyRaw) : '';
+      const enhRaw = asNumber(rec.enhancements);
+      const enhancements = enhRaw !== null ? String(enhRaw) : '';
+      return {
+        id,
+        qty,
+        name: (d?.weapon_name ?? asString(rec.weapon_name) ?? id) || id,
+        effects: normalizeEffectNames(d?.effect_names ?? asString(rec.effect_names) ?? ''),
+        dmg: d?.dmg ?? asString(rec.dmg) ?? '',
+        dmgTypes: d?.dmg_types ?? asString(rec.dmg_types) ?? '',
+        reliability:
+          d?.reliability !== null && d?.reliability !== undefined ? String(d.reliability) : asString(rec.reliability) ?? '',
+        hands: d?.hands !== null && d?.hands !== undefined ? String(d.hands) : asString(rec.hands) ?? '',
+        concealment: d?.concealment ?? asString(rec.concealment) ?? '',
+        enhancements,
+        weight: d?.weight ?? asString(rec.weight) ?? '',
+        price: d?.price !== null && d?.price !== undefined ? String(d.price) : asString(rec.price) ?? '',
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => Boolean(x));
+
+  const armors: CharacterPdfPage1Vm['equipment']['armors'] = armorsRaw
+    .map((a) => {
+      const rec = asRecord(a);
+      if (!rec) return null;
+      const id = asString(rec.a_id) ?? '';
+      if (!id) return null;
+      const d = deps?.armorDetailsById?.get(id);
+      const qtyRaw = asNumber(rec.amount) ?? asNumber(rec.qty) ?? asNumber(rec.quantity);
+      const qty = qtyRaw !== null ? String(qtyRaw) : '';
+      const enhRaw = d?.enhancements !== null && d?.enhancements !== undefined ? d.enhancements : asNumber(rec.enhancements);
+      const enhancements = enhRaw !== null && enhRaw !== undefined ? String(enhRaw) : '';
+      const price = d?.price !== null && d?.price !== undefined ? String(d.price) : asString(rec.price) ?? '';
+      return {
+        id,
+        qty,
+        name: (d?.armor_name ?? asString(rec.armor_name) ?? id) || id,
+        effects: normalizeEffectNames(d?.effect_names ?? asString(rec.effect_names) ?? ''),
+        sp:
+          d?.stopping_power !== null && d?.stopping_power !== undefined
+            ? String(d.stopping_power)
+            : asString(rec.stopping_power) ?? '',
+        enc:
+          d?.encumbrance !== null && d?.encumbrance !== undefined ? String(d.encumbrance) : asString(rec.encumbrance) ?? '',
+        enhancements,
+        weight: d?.weight ?? asString(rec.weight) ?? '',
+        price,
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => Boolean(x));
+
+  const potions: CharacterPdfPage1Vm['equipment']['potions'] = potionsRaw
+    .map((p) => {
+      const rec = asRecord(p);
+      if (!rec) return null;
+      const id = asString(rec.p_id) ?? '';
+      if (!id) return null;
+      const d = deps?.potionDetailsById?.get(id);
+      const qtyRaw = asNumber(rec.amount) ?? asNumber(rec.qty) ?? asNumber(rec.quantity);
+      const qty = qtyRaw !== null ? String(qtyRaw) : '';
+      return {
+        id,
+        qty,
+        name: (d?.potion_name ?? asString(rec.potion_name) ?? id) || id,
+        toxicity: d?.toxicity ?? asString(rec.toxicity) ?? '',
+        duration: d?.time_effect ?? asString(rec.time_effect) ?? '',
+        effect: d?.effect ?? asString(rec.effect) ?? '',
+        weight: d?.weight ?? asString(rec.weight) ?? '',
+        price: d?.price !== null && d?.price !== undefined ? String(d.price) : asString(rec.price) ?? '',
+      };
+    })
+    .filter((x): x is NonNullable<typeof x> => Boolean(x));
+
   return {
     base,
     computed,
@@ -367,5 +547,6 @@ export function mapCharacterJsonToPage1Vm(
     avatar: { dataUrl: getFirstString(characterJson, ['avatarDataUrl', 'avatar.dataUrl']) || null },
     skillGroups,
     professional: { branches },
+    equipment: { weapons, armors, potions },
   };
 }
