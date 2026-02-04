@@ -77,6 +77,18 @@ export type CharacterPdfPage1Vm = {
       price: string;
     }[];
     potions: { id: string; qty: string; name: string; toxicity: string; duration: string; effect: string; weight: string; price: string }[];
+    magic: {
+      type: string; // 'Знак', 'Спелл', 'Инв.'
+      name: string;
+      element: string; // element для знаков/спеллов, cult_or_circle для инвокаций
+      staminaCast: string;
+      staminaKeeping: string;
+      damage: string;
+      effectTime: string;
+      distance: string;
+      zoneSize: string;
+      form: string;
+    }[];
   };
 };
 
@@ -539,6 +551,88 @@ export function mapCharacterJsonToPage1Vm(
     })
     .filter((x): x is NonNullable<typeof x> => Boolean(x));
 
+  // Read magic items
+  const magicRoot = asRecord(getFirst(characterJson, ['gear', 'character.gear'])) ?? {};
+  const magicRec = asRecord(magicRoot.magic) ?? {};
+  
+  // Check if we should show magic table: 
+  // Don't show if Vigor = 0 AND gear.magic is empty
+  const vigorStat = readStat(characterJson, 'vigor');
+  const hasVigor = (vigorStat.cur ?? 0) !== 0 || (vigorStat.bonus ?? 0) !== 0 || (vigorStat.raceBonus ?? 0) !== 0;
+  const hasMagic = magicRec && Object.keys(magicRec).length > 0;
+  const shouldShowMagic = hasVigor || hasMagic;
+  
+  const magicItems: CharacterPdfPage1Vm['equipment']['magic'] = [];
+  
+  if (shouldShowMagic) {
+    // Read spells
+    const spellsRaw = Array.isArray(magicRec.spells) ? (magicRec.spells as unknown[]) : [];
+    spellsRaw.forEach((s) => {
+      const rec = asRecord(s);
+      if (!rec) return;
+      const type = asString(rec.type) ?? 'Спелл';
+      const name = asString(rec.name) ?? asString(rec.spell_name) ?? '';
+      if (!name) return;
+      magicItems.push({
+        type: type === 'sign' ? 'Знак' : 'Спелл',
+        name,
+        element: asString(rec.element) ?? '',
+        staminaCast: asString(rec.stamina_cast) ?? '',
+        staminaKeeping: asString(rec.stamina_keeping) ?? '',
+        damage: asString(rec.damage) ?? '',
+        effectTime: asString(rec.effect_time) ?? '',
+        distance: asString(rec.distance) ?? '',
+        zoneSize: asString(rec.zone_size) ?? '',
+        form: asString(rec.form) ?? '',
+      });
+    });
+    
+    // Read signs
+    const signsRaw = Array.isArray(magicRec.signs) ? (magicRec.signs as unknown[]) : [];
+    signsRaw.forEach((s) => {
+      const rec = asRecord(s);
+      if (!rec) return;
+      const name = asString(rec.name) ?? asString(rec.spell_name) ?? '';
+      if (!name) return;
+      magicItems.push({
+        type: 'Знак',
+        name,
+        element: asString(rec.element) ?? '',
+        staminaCast: asString(rec.stamina_cast) ?? '',
+        staminaKeeping: asString(rec.stamina_keeping) ?? '',
+        damage: asString(rec.damage) ?? '',
+        effectTime: asString(rec.effect_time) ?? '',
+        distance: asString(rec.distance) ?? '',
+        zoneSize: asString(rec.zone_size) ?? '',
+        form: asString(rec.form) ?? '',
+      });
+    });
+    
+    // Read invocations
+    const invocationsRec = asRecord(magicRec.invocations) ?? {};
+    const druidRaw = Array.isArray(invocationsRec.druid) ? (invocationsRec.druid as unknown[]) : [];
+    const priestRaw = Array.isArray(invocationsRec.priest) ? (invocationsRec.priest as unknown[]) : [];
+    
+    [...druidRaw, ...priestRaw].forEach((i) => {
+      const rec = asRecord(i);
+      if (!rec) return;
+      const name = asString(rec.name) ?? asString(rec.invocation_name) ?? '';
+      if (!name) return;
+      magicItems.push({
+        type: 'Инв.',
+        name,
+        element: asString(rec.cult_or_circle) ?? '',
+        staminaCast: asString(rec.stamina_cast) ?? '',
+        staminaKeeping: asString(rec.stamina_keeping) ?? '',
+        damage: asString(rec.damage) ?? '',
+        effectTime: asString(rec.effect_time) ?? '',
+        distance: asString(rec.distance) ?? '',
+        zoneSize: asString(rec.zone_size) ?? '',
+        form: asString(rec.form) ?? '',
+      });
+    });
+  }
+
   return {
     base,
     computed,
@@ -547,6 +641,6 @@ export function mapCharacterJsonToPage1Vm(
     avatar: { dataUrl: getFirstString(characterJson, ['avatarDataUrl', 'avatar.dataUrl']) || null },
     skillGroups,
     professional: { branches },
-    equipment: { weapons, armors, potions },
+    equipment: { weapons, armors, potions, magic: magicItems },
   };
 }

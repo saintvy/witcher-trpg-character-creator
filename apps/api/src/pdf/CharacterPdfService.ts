@@ -179,6 +179,7 @@ export class CharacterPdfService {
     try {
       await page.setContent(html, { waitUntil: 'networkidle' });
       await page.emulateMedia({ media: 'print' });
+      await page.waitForFunction('window.__pdfReady === true', { timeout: 1000 }).catch(() => undefined);
 
       const pdf = await page.pdf({
         format: 'A4',

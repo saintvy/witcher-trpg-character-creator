@@ -1,4 +1,16 @@
+import { readFileSync } from 'node:fs';
 import type { CharacterPdfPage1Vm } from '../viewModel.js';
+
+const assetDataUrlCache = new Map<string, string>();
+
+function assetPngDataUrl(filename: string): string {
+  const cached = assetDataUrlCache.get(filename);
+  if (cached) return cached;
+  const buffer = readFileSync(new URL(`../assets/body_parts/${filename}`, import.meta.url));
+  const dataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
+  assetDataUrlCache.set(filename, dataUrl);
+  return dataUrl;
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -136,9 +148,9 @@ function renderParamsCombined(vm: CharacterPdfPage1Vm): string {
     ['бег', vm.computed.run],
     ['прыж.', vm.computed.leap],
     ['уст', vm.computed.stability],
-    ['уд.н.', vm.computed.kick],
     ['Отдых', vm.computed.rest],
     ['уд.р.', vm.computed.punch],
+    ['уд.н.', vm.computed.kick],
     ['Энергия', vm.computed.vigor],
   ];
   const cells = additionalItems.concat(new Array(Math.max(0, 8 - additionalItems.length)).fill(['', '']));
@@ -289,12 +301,19 @@ function renderProfessional(vm: CharacterPdfPage1Vm): string {
 
 function renderEquipment(vm: CharacterPdfPage1Vm): string {
   const weaponRowsWanted = Math.max(vm.equipment.weapons.length + 3, 3);
-  const armorRowsWanted = Math.max(vm.equipment.armors.length + 3, 3);
+  // Calculate armor rows: each filled row = 1 point (2 if has effects), empty rows = max(7 - X, 3)
+  const armorPoints = vm.equipment.armors.reduce((sum, armor) => {
+    return sum + (armor.effects ? 2 : 1);
+  }, 0);
+  const armorEmptyRows = Math.max(7 - armorPoints, 3);
+  const armorRowsWanted = vm.equipment.armors.length + armorEmptyRows;
   const potionRowsWanted = Math.max(vm.equipment.potions.length + 3, 3);
+  const magicRowsWanted = Math.max(vm.equipment.magic.length + 3, 3);
 
   const weaponRows = new Array(weaponRowsWanted).fill(null).map((_, i) => vm.equipment.weapons[i] ?? null);
   const armorRows = new Array(armorRowsWanted).fill(null).map((_, i) => vm.equipment.armors[i] ?? null);
   const potionRows = new Array(potionRowsWanted).fill(null).map((_, i) => vm.equipment.potions[i] ?? null);
+  const magicRows = new Array(magicRowsWanted).fill(null).map((_, i) => vm.equipment.magic[i] ?? null);
 
   return `
     <div class="equip-area">
@@ -371,76 +390,141 @@ function renderEquipment(vm: CharacterPdfPage1Vm): string {
         </tbody>
       </table>
 
-      <table class="equip-table equip-armors">
-        <colgroup>
-          <col class="equip-fit" />
-          <col class="equip-fit" />
-          <col />
-          <col class="equip-fit" />
-          <col class="equip-fit" />
-          <col class="equip-fit" />
-          <col class="equip-fit" />
-          <col class="equip-fit" />
-        </colgroup>
-        <thead>
-          <tr>
-            <th class="equip-fit equip-right">&#10003;</th>
-            <th class="equip-fit equip-right">#</th>
-            <th>Броня</th>
-            <th class="equip-fit equip-left">ПБ</th>
-            <th class="equip-fit equip-left">СД</th>
-            <th class="equip-fit equip-left">УБ</th>
-            <th class="equip-fit equip-left">Вес</th>
-            <th class="equip-fit equip-left">Цена</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${armorRows
-            .map((a) => {
-              if (!a) {
-                return `
-                  <tr>
-                    <td class="equip-fit equip-right">&nbsp;</td>
-                    <td class="equip-fit equip-right">&nbsp;</td>
-                    <td class="armor-name">&nbsp;</td>
-                    <td class="equip-fit equip-left">&nbsp;</td>
-                    <td class="equip-fit equip-left">&nbsp;</td>
-                    <td class="equip-fit equip-left">&nbsp;</td>
-                    <td class="equip-fit equip-left">&nbsp;</td>
-                    <td class="equip-fit equip-left">&nbsp;</td>
-                  </tr>
-                `;
-              }
-              const effects = a.effects ? `<div class="armor-effects"><i>${escapeHtml(a.effects)}</i></div>` : '';
-              return `
-                <tr>
-                  <td class="equip-fit equip-right"></td>
-                  <td class="equip-fit equip-right">${escapeHtml(a.qty || '')}</td>
-                  <td class="armor-name">
-                    <div class="armor-title">${escapeHtml(a.name || '')}</div>
-                    ${effects}
-                  </td>
-                  <td class="equip-fit equip-left">${escapeHtml(a.sp || '')}</td>
-                  <td class="equip-fit equip-left">${escapeHtml(a.enc || '')}</td>
-                  <td class="equip-fit equip-left">${escapeHtml(a.enhancements || '')}</td>
-                  <td class="equip-fit equip-left">${escapeHtml(a.weight || '')}</td>
-                  <td class="equip-fit equip-left">${escapeHtml(a.price || '')}</td>
-                </tr>
-              `;
-            })
-            .join('')}
-        </tbody>
-      </table>
+      <div class="equip-row">
+        <div class="equip-row-left">
+          <table class="equip-table equip-bricks">
+            <colgroup>
+              <col />
+              <col />
+              <col />
+              <col />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td class="brick-empty"></td>
+                <td class="brick-cell" colspan="2">
+                  <div class="brick-inner">
+                    <img class="brick-img" src="${assetPngDataUrl('head.png')}" alt="" />
+                    <div class="brick-spacer"></div>
+                  </div>
+                </td>
+                <td class="brick-empty"></td>
+              </tr>
+              <tr>
+                <td class="brick-cell" colspan="2">
+                  <div class="brick-inner">
+                    <img class="brick-img" src="${assetPngDataUrl('hand_left.png')}" alt="" />
+                    <div class="brick-spacer"></div>
+                  </div>
+                </td>
+                <td class="brick-cell" colspan="2">
+                  <div class="brick-inner">
+                    <img class="brick-img" src="${assetPngDataUrl('hand_right.png')}" alt="" />
+                    <div class="brick-spacer"></div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="brick-empty"></td>
+                <td class="brick-cell" colspan="2">
+                  <div class="brick-inner">
+                    <img class="brick-img" src="${assetPngDataUrl('chest.png')}" alt="" />
+                    <div class="brick-spacer"></div>
+                  </div>
+                </td>
+                <td class="brick-empty"></td>
+              </tr>
+              <tr>
+                <td class="brick-cell" colspan="2">
+                  <div class="brick-inner">
+                    <img class="brick-img" src="${assetPngDataUrl('leg_left.png')}" alt="" />
+                    <div class="brick-spacer"></div>
+                  </div>
+                </td>
+                <td class="brick-cell" colspan="2">
+                  <div class="brick-inner">
+                    <img class="brick-img" src="${assetPngDataUrl('leg_right.png')}" alt="" />
+                    <div class="brick-spacer"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="equip-row-right">
+          <table class="equip-table equip-armors">
+            <colgroup>
+              <col class="equip-fit" />
+              <col class="equip-fit" />
+              <col />
+              <col class="equip-fit" />
+              <col class="equip-fit" />
+              <col class="equip-fit" />
+              <col class="equip-fit" />
+              <col class="equip-fit" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="equip-fit equip-right">&#10003;</th>
+                <th class="equip-fit equip-right">#</th>
+                <th>Броня</th>
+                <th class="equip-fit equip-left">ПБ</th>
+                <th class="equip-fit equip-left">СД</th>
+                <th class="equip-fit equip-left">УБ</th>
+                <th class="equip-fit equip-left">Вес</th>
+                <th class="equip-fit equip-left">Цена</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${armorRows
+                .map((a) => {
+                  if (!a) {
+                    return `
+                      <tr>
+                        <td class="equip-fit equip-right">&nbsp;</td>
+                        <td class="equip-fit equip-right">&nbsp;</td>
+                        <td class="armor-name">&nbsp;</td>
+                        <td class="equip-fit equip-left">&nbsp;</td>
+                        <td class="equip-fit equip-left">&nbsp;</td>
+                        <td class="equip-fit equip-left">&nbsp;</td>
+                        <td class="equip-fit equip-left">&nbsp;</td>
+                        <td class="equip-fit equip-left">&nbsp;</td>
+                      </tr>
+                    `;
+                  }
+                  const effects = a.effects ? `<div class="armor-effects"><i>${escapeHtml(a.effects)}</i></div>` : '';
+                  return `
+                    <tr>
+                      <td class="equip-fit equip-right"></td>
+                      <td class="equip-fit equip-right">${escapeHtml(a.qty || '')}</td>
+                      <td class="armor-name">
+                        <div class="armor-title">${escapeHtml(a.name || '')}</div>
+                        ${effects}
+                      </td>
+                      <td class="equip-fit equip-left">${escapeHtml(a.sp || '')}</td>
+                      <td class="equip-fit equip-left">${escapeHtml(a.enc || '')}</td>
+                      <td class="equip-fit equip-left">${escapeHtml(a.enhancements || '')}</td>
+                      <td class="equip-fit equip-left">${escapeHtml(a.weight || '')}</td>
+                      <td class="equip-fit equip-left">${escapeHtml(a.price || '')}</td>
+                    </tr>
+                  `;
+                })
+                .join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <table class="equip-table equip-potions">
         <colgroup>
-          <col style="width:6mm" />
-          <col style="width:26mm" />
-          <col style="width:10mm" />
-          <col style="width:14mm" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
           <col />
-          <col style="width:10mm" />
-          <col style="width:12mm" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
         </colgroup>
         <thead>
           <tr>
@@ -484,6 +568,94 @@ function renderEquipment(vm: CharacterPdfPage1Vm): string {
             .join('')}
         </tbody>
       </table>
+
+      ${vm.equipment.magic.length > 0 ? `
+      <table class="equip-table equip-magic">
+        <colgroup>
+          <col class="equip-fit" />
+          <col />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="equip-fit equip-right">Тип</th>
+            <th>Название</th>
+            <th class="equip-fit equip-left">Элемент</th>
+            <th class="equip-fit equip-left">Вын</th>
+            <th class="equip-fit equip-left">Вын+</th>
+            <th class="equip-fit equip-left">Урон</th>
+            <th class="equip-fit equip-left">Время</th>
+            <th class="equip-fit equip-left">Дист</th>
+            <th class="equip-fit equip-left">Размер</th>
+            <th class="equip-fit equip-left">Форма</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${magicRows
+            .map((m) => {
+              if (!m) {
+                return `
+                  <tr>
+                    <td class="equip-fit equip-right">&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td class="equip-fit equip-left">&nbsp;</td>
+                    <td class="equip-fit equip-left">&nbsp;</td>
+                    <td class="equip-fit equip-left">&nbsp;</td>
+                    <td class="equip-fit equip-left">&nbsp;</td>
+                    <td class="equip-fit equip-left">&nbsp;</td>
+                    <td class="equip-fit equip-left">&nbsp;</td>
+                    <td class="equip-fit equip-left">&nbsp;</td>
+                    <td class="equip-fit equip-left">&nbsp;</td>
+                  </tr>
+                `;
+              }
+              return `
+                <tr>
+                  <td class="equip-fit equip-right">${escapeHtml(m.type || '')}</td>
+                  <td>${escapeHtml(m.name || '')}</td>
+                  <td class="equip-fit equip-left">${escapeHtml(m.element || '')}</td>
+                  <td class="equip-fit equip-left">${escapeHtml(m.staminaCast || '')}</td>
+                  <td class="equip-fit equip-left">${escapeHtml(m.staminaKeeping || '')}</td>
+                  <td class="equip-fit equip-left">${escapeHtml(m.damage || '')}</td>
+                  <td class="equip-fit equip-left">${escapeHtml(m.effectTime || '')}</td>
+                  <td class="equip-fit equip-left">${escapeHtml(m.distance || '')}</td>
+                  <td class="equip-fit equip-left">${escapeHtml(m.zoneSize || '')}</td>
+                  <td class="equip-fit equip-left">${escapeHtml(m.form || '')}</td>
+                </tr>
+              `;
+            })
+            .join('')}
+        </tbody>
+      </table>
+      ${renderNotes()}
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderNotes(): string {
+  return `
+    <div class="notes-wrapper" id="notes-wrapper" style="height:0; overflow:hidden;">
+      <div class="notes-grid">
+        ${new Array(3)
+          .fill(null)
+          .map(
+            () => `
+              <table class="notes-table">
+                <thead><tr><th>Заметки</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            `,
+          )
+          .join('')}
+      </div>
     </div>
   `;
 }
@@ -663,6 +835,9 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
       .prof-col-red { background: rgba(239,68,68,0.08); }
 
       .equip-area { display: flex; flex-direction: column; gap: 3mm; min-height: 0; }
+      .equip-row { display: flex; gap: 3mm; align-items: flex-start; }
+      .equip-row-left { flex: 0 0 auto; }
+      .equip-row-right { flex: 1 1 auto; min-width: 0; }
       .equip-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9.5px; }
       .equip-table th, .equip-table td { border: 1px solid #111827; padding: 2px 3px; }
       .equip-table thead th { font-weight: 900; text-transform: uppercase; font-size: 9px; letter-spacing: 0.06em; text-align: left; }
@@ -676,7 +851,7 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
       .equip-right { text-align: right; font-variant-numeric: tabular-nums; }
       .equip-weapons { table-layout: auto; }
       .equip-armors { table-layout: auto; }
-      .equip-potions { table-layout: fixed; }
+      .equip-potions { table-layout: auto; }
       .weapon-name { white-space: normal; }
       .weapon-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .weapon-effects { margin-top: 1px; font-size: 9px; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -689,6 +864,30 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
       .equip-weapons thead th { background: rgba(239,68,68,0.10); }
       .equip-armors thead th { background: rgba(59,130,246,0.10); }
       .equip-potions thead th { background: rgba(16,185,129,0.10); }
+      .equip-magic thead th { background: rgba(168,85,247,0.10); }
+      .equip-magic { table-layout: auto; }
+      .equip-bricks { width: 28mm; table-layout: fixed; margin-left: 0; }
+      .equip-bricks tbody tr { height: 6mm; }
+      .equip-bricks tbody td { padding: 1px; vertical-align: middle; text-align: center; border: 1px solid #111827; }
+      .brick-cell { min-width: 0; min-height: 0; padding: 0 !important; text-align: left; }
+      .brick-empty { border: none !important; padding: 0; background: transparent; }
+      .brick-inner { height: 100%; width: 100%; display: flex; align-items: stretch; }
+      .brick-img { height: 100%; width: auto; max-width: calc(100% - 6mm); display: block; object-fit: contain; }
+      .brick-spacer { width: 6mm; flex: 0 0 6mm; }
+
+      .notes-wrapper { flex: 1 1 auto; min-height: 0; }
+      .notes-grid { height: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+      .notes-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .notes-table th, .notes-table td { border: 1px solid #111827; padding: 2px 3px; }
+      .notes-table thead th {
+        background: rgba(180, 83, 9, 0.14);
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-align: left;
+      }
+      .notes-table tbody tr { height: 14px; }
     </style>
   </head>
   <body>
@@ -711,6 +910,65 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
         </div>
       </div>
     </div>
+
+    <script>
+      (() => {
+        const wrapper = document.getElementById('notes-wrapper');
+        if (!wrapper) { window.__pdfReady = true; return; }
+        const skills = document.querySelector('.skills-column');
+        if (!skills) { window.__pdfReady = true; return; }
+
+        const tables = Array.from(wrapper.querySelectorAll('table.notes-table'));
+        if (tables.length === 0) { window.__pdfReady = true; return; }
+
+        const fill = () => {
+          const skillsRect = skills.getBoundingClientRect();
+          const wrapperRect = wrapper.getBoundingClientRect();
+          const available = skillsRect.bottom - wrapperRect.top;
+          if (!Number.isFinite(available) || available <= 0) {
+            wrapper.style.display = 'none';
+            window.__pdfReady = true;
+            return;
+          }
+
+          const headH = tables[0].tHead ? tables[0].tHead.getBoundingClientRect().height : 0;
+          const tbody0 = tables[0].tBodies && tables[0].tBodies[0];
+          const probe = document.createElement('tr');
+          const probeCell = document.createElement('td');
+          probeCell.innerHTML = '&nbsp;';
+          probe.appendChild(probeCell);
+          tbody0.appendChild(probe);
+          const rowH = probe.getBoundingClientRect().height || 14;
+          tbody0.removeChild(probe);
+
+          const rows = Math.floor((available - headH - 2) / rowH);
+
+          if (!Number.isFinite(rows) || rows <= 0) {
+            wrapper.style.display = 'none';
+            window.__pdfReady = true;
+            return;
+          }
+
+          wrapper.style.display = '';
+          wrapper.style.height = String(Math.floor(headH + rows * rowH + 2)) + 'px';
+          for (const table of tables) {
+            const tbody = table.tBodies[0];
+            tbody.innerHTML = '';
+            for (let i = 0; i < rows; i += 1) {
+              const tr = document.createElement('tr');
+              const td = document.createElement('td');
+              td.innerHTML = '&nbsp;';
+              tr.appendChild(td);
+              tbody.appendChild(tr);
+            }
+          }
+          window.__pdfReady = true;
+        };
+
+        // allow layout to settle
+        requestAnimationFrame(() => requestAnimationFrame(fill));
+      })();
+    </script>
   </body>
 </html>`;
 }
