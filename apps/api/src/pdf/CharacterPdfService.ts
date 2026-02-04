@@ -3,9 +3,11 @@ import { mapCharacterJsonToPage1Vm, type SkillCatalogInfo, type WeaponDetails, t
 import { renderCharacterPage1Html } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
 import { db } from '../db/pool.js';
+import { loadCharacterPdfPage1I18n, type CharacterPdfPage1I18n } from './page1I18n.js';
 
 export class CharacterPdfService {
   private static browserPromise: Promise<Browser> | null = null;
+  private static page1I18nCache = new Map<string, CharacterPdfPage1I18n>();
 
   private static async getBrowser(): Promise<Browser> {
     if (!CharacterPdfService.browserPromise) {
@@ -65,8 +67,23 @@ export class CharacterPdfService {
     }
   }
 
+  private async getPage1I18n(lang: string): Promise<CharacterPdfPage1I18n> {
+    const cached = CharacterPdfService.page1I18nCache.get(lang);
+    if (cached) return cached;
+    const i18n = await this.withTimeout(loadCharacterPdfPage1I18n(lang), 2500);
+    CharacterPdfService.page1I18nCache.set(lang, i18n);
+    return i18n;
+  }
+
   async generatePdfBuffer(characterJson: unknown): Promise<Buffer> {
     const lang = this.detectLang(characterJson);
+    let page1I18n: CharacterPdfPage1I18n;
+    try {
+      page1I18n = await this.getPage1I18n(lang);
+    } catch (error) {
+      console.error('[pdf] i18n load failed', error);
+      page1I18n = await this.getPage1I18n('en');
+    }
 
     const skillsCatalog = new Map<string, SkillCatalogInfo>();
     try {
@@ -166,7 +183,14 @@ export class CharacterPdfService {
       console.error('[pdf] potions lookup failed', error);
     }
 
-    const vm = mapCharacterJsonToPage1Vm(characterJson, { skillsCatalog, weaponDetailsById, armorDetailsById, potionDetailsById });
+    const vm = mapCharacterJsonToPage1Vm(characterJson, {
+      lang,
+      i18n: page1I18n,
+      skillsCatalog,
+      weaponDetailsById,
+      armorDetailsById,
+      potionDetailsById,
+    });
     const html = renderCharacterPage1Html(vm);
 
     const browser = await CharacterPdfService.getBrowser();

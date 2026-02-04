@@ -51,12 +51,12 @@ function box(title: string, body: string, extraClass = ''): string {
 
 function renderBaseInfo(vm: CharacterPdfPage1Vm): string {
   const rows: Array<[string, string]> = [
-    ['Имя', vm.base.name],
-    ['Раса', vm.base.race],
-    ['Пол', vm.base.gender],
-    ['Возраст', vm.base.age],
-    ['Профессия', vm.base.profession],
-    ['Определяющий навык', vm.base.definingSkill],
+    [vm.i18n.base.name, vm.base.name],
+    [vm.i18n.base.race, vm.base.race],
+    [vm.i18n.base.gender, vm.base.gender],
+    [vm.i18n.base.age, vm.base.age],
+    [vm.i18n.base.profession, vm.base.profession],
+    [vm.i18n.base.definingSkill, vm.base.definingSkill],
   ];
 
   return `
@@ -72,39 +72,6 @@ function renderBaseInfo(vm: CharacterPdfPage1Vm): string {
             `,
           )
           .join('')}
-      </tbody>
-    </table>
-  `;
-}
-
-function renderComputed(vm: CharacterPdfPage1Vm): string {
-  const items: Array<[string, string]> = [
-    ['Бег', vm.computed.run],
-    ['Прыжок', vm.computed.leap],
-    ['Устойчивость', vm.computed.stability],
-    ['Удар рукой', vm.computed.punch],
-    ['Удар ногой', vm.computed.kick],
-    ['Отдых', vm.computed.rest],
-    ['Энергия (Vigor)', vm.computed.vigor],
-  ];
-
-  const cells = items.concat(new Array(Math.max(0, 8 - items.length)).fill(['', '']));
-  const row = (start: number) => `
-    <tr>
-      <td class="comp-k">${escapeHtml(cells[start][0] || '')}</td>
-      <td class="comp-v">${escapeHtml(cells[start][1] || '')}</td>
-      <td class="comp-k">${escapeHtml(cells[start + 1][0] || '')}</td>
-      <td class="comp-v">${escapeHtml(cells[start + 1][1] || '')}</td>
-    </tr>
-  `;
-
-  return `
-    <table class="computed-table">
-      <tbody>
-        ${row(0)}
-        ${row(2)}
-        ${row(4)}
-        ${row(6)}
       </tbody>
     </table>
   `;
@@ -145,13 +112,13 @@ function renderParamsCombined(vm: CharacterPdfPage1Vm): string {
   }
 
   const additionalItems: Array<[string, string]> = [
-    ['бег', vm.computed.run],
-    ['прыж.', vm.computed.leap],
-    ['уст', vm.computed.stability],
-    ['Отдых', vm.computed.rest],
-    ['уд.р.', vm.computed.punch],
-    ['уд.н.', vm.computed.kick],
-    ['Энергия', vm.computed.vigor],
+    [vm.i18n.derived.run, vm.computed.run],
+    [vm.i18n.derived.leap, vm.computed.leap],
+    [vm.i18n.derived.stability, vm.computed.stability],
+    [vm.i18n.derived.rest, vm.computed.rest],
+    [vm.i18n.derived.punch, vm.computed.punch],
+    [vm.i18n.derived.kick, vm.computed.kick],
+    [vm.i18n.derived.vigor, vm.computed.vigor],
   ];
   const cells = additionalItems.concat(new Array(Math.max(0, 8 - additionalItems.length)).fill(['', '']));
   const additionalRow = (start: number) => `
@@ -166,9 +133,9 @@ function renderParamsCombined(vm: CharacterPdfPage1Vm): string {
   return `
     <table class="params-table">
       <tbody>
-        <tr><td class="subhead" colspan="4">Основные параметры</td></tr>
+        <tr><td class="subhead" colspan="4">${escapeHtml(vm.i18n.section.mainParams)}</td></tr>
         ${mainRows.join('')}
-        <tr><td class="subhead" colspan="4">Доп. параметры</td></tr>
+        <tr><td class="subhead" colspan="4">${escapeHtml(vm.i18n.section.extraParams)}</td></tr>
         ${additionalRow(0)}
         ${additionalRow(2)}
         ${additionalRow(4)}
@@ -183,9 +150,9 @@ function renderConsumables(vm: CharacterPdfPage1Vm): string {
     <table class="consumables">
       <thead>
         <tr>
-          <th>Параметр</th>
-          <th class="narrow">MAX</th>
-          <th class="narrow">CUR</th>
+          <th>${escapeHtml(vm.i18n.consumables.colParameter)}</th>
+          <th class="narrow">${escapeHtml(vm.i18n.consumables.colMax)}</th>
+          <th class="narrow">${escapeHtml(vm.i18n.consumables.colCur)}</th>
         </tr>
       </thead>
       <tbody>
@@ -209,7 +176,7 @@ function renderAvatar(vm: CharacterPdfPage1Vm): string {
   if (vm.avatar.dataUrl) {
     return `<img class="avatar-img" src="${escapeHtml(vm.avatar.dataUrl)}" alt="avatar" />`;
   }
-  return `<div class="avatar-placeholder">Аватар</div>`;
+  return `<div class="avatar-placeholder">${escapeHtml(vm.i18n.avatarPlaceholder)}</div>`;
 }
 
 function renderSkillGroups(vm: CharacterPdfPage1Vm): string {
@@ -333,17 +300,17 @@ function renderEquipment(vm: CharacterPdfPage1Vm): string {
         </colgroup>
         <thead>
           <tr>
-            <th class="equip-fit equip-right">&#10003;</th>
-            <th class="equip-fit equip-right">#</th>
-            <th>Оружие</th>
-            <th class="equip-fit equip-left">Урон</th>
-            <th class="equip-fit equip-left">Тип</th>
-            <th class="equip-fit equip-left">Н</th>
-            <th class="equip-fit equip-left">Хват</th>
-            <th class="equip-fit equip-left">Скр</th>
-            <th class="equip-fit equip-left">УБ</th>
-            <th class="equip-fit equip-left">Вес</th>
-            <th class="equip-fit equip-left">Цена</th>
+            <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.weapons.colCheck)}</th>
+            <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.weapons.colQty)}</th>
+            <th>${escapeHtml(vm.i18n.tables.weapons.title)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.weapons.colDmg)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.weapons.colType)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.weapons.colReliability)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.weapons.colHands)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.weapons.colConcealment)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.weapons.colEnh)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.weapons.colWeight)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.weapons.colPrice)}</th>
           </tr>
         </thead>
         <tbody>
@@ -466,14 +433,14 @@ function renderEquipment(vm: CharacterPdfPage1Vm): string {
             </colgroup>
             <thead>
               <tr>
-                <th class="equip-fit equip-right">&#10003;</th>
-                <th class="equip-fit equip-right">#</th>
-                <th>Броня</th>
-                <th class="equip-fit equip-left">ПБ</th>
-                <th class="equip-fit equip-left">СД</th>
-                <th class="equip-fit equip-left">УБ</th>
-                <th class="equip-fit equip-left">Вес</th>
-                <th class="equip-fit equip-left">Цена</th>
+                <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.armors.colCheck)}</th>
+                <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.armors.colQty)}</th>
+                <th>${escapeHtml(vm.i18n.tables.armors.title)}</th>
+                <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.armors.colSp)}</th>
+                <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.armors.colEnc)}</th>
+                <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.armors.colEnh)}</th>
+                <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.armors.colWeight)}</th>
+                <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.armors.colPrice)}</th>
               </tr>
             </thead>
             <tbody>
@@ -528,13 +495,13 @@ function renderEquipment(vm: CharacterPdfPage1Vm): string {
         </colgroup>
         <thead>
           <tr>
-            <th class="equip-fit equip-right">#</th>
-            <th class="equip-fit equip-right">Алхимия</th>
-            <th class="equip-fit equip-right">Токс</th>
-            <th class="equip-fit equip-right">Время</th>
-            <th>Эффект</th>
-            <th class="equip-fit equip-left">Вес</th>
-            <th class="equip-fit equip-left">Цена</th>
+            <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.potions.colQty)}</th>
+            <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.potions.title)}</th>
+            <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.potions.colTox)}</th>
+            <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.potions.colTime)}</th>
+            <th>${escapeHtml(vm.i18n.tables.potions.colEffect)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.potions.colWeight)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.potions.colPrice)}</th>
           </tr>
         </thead>
         <tbody>
@@ -585,16 +552,16 @@ function renderEquipment(vm: CharacterPdfPage1Vm): string {
         </colgroup>
         <thead>
           <tr>
-            <th class="equip-fit equip-right">Тип</th>
-            <th>Название</th>
-            <th class="equip-fit equip-left">Элемент</th>
-            <th class="equip-fit equip-left">Вын</th>
-            <th class="equip-fit equip-left">Вын+</th>
-            <th class="equip-fit equip-left">Урон</th>
-            <th class="equip-fit equip-left">Время</th>
-            <th class="equip-fit equip-left">Дист</th>
-            <th class="equip-fit equip-left">Размер</th>
-            <th class="equip-fit equip-left">Форма</th>
+            <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.magic.colType)}</th>
+            <th>${escapeHtml(vm.i18n.tables.magic.colName)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.magic.colElement)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.magic.colVigor)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.magic.colVigorKeep)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.magic.colDamage)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.magic.colTime)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.magic.colDistance)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.magic.colSize)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.magic.colForm)}</th>
           </tr>
         </thead>
         <tbody>
@@ -634,13 +601,13 @@ function renderEquipment(vm: CharacterPdfPage1Vm): string {
             .join('')}
         </tbody>
       </table>
-      ${renderNotes()}
+      ${renderNotes(vm.i18n.tables.notes.title)}
       ` : ''}
     </div>
   `;
 }
 
-function renderNotes(): string {
+function renderNotes(title: string): string {
   return `
     <div class="notes-wrapper" id="notes-wrapper" style="height:0; overflow:hidden;">
       <div class="notes-grid">
@@ -649,7 +616,7 @@ function renderNotes(): string {
           .map(
             () => `
               <table class="notes-table">
-                <thead><tr><th>Заметки</th></tr></thead>
+                <thead><tr><th>${escapeHtml(title)}</th></tr></thead>
                 <tbody></tbody>
               </table>
             `,
@@ -666,7 +633,7 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(vm.base.name)} — Character Sheet</title>
+    <title>${escapeHtml(vm.base.name)} — ${escapeHtml(vm.i18n.titleSuffix)}</title>
     <style>
       @page { size: A4; margin: 0; }
       * { box-sizing: border-box; }
@@ -893,17 +860,17 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
   <body>
     <div class="page">
       <div class="grid-top">
-        <div class="pos-base">${box('Базовые данные', renderBaseInfo(vm))}</div>
+        <div class="pos-base">${box(vm.i18n.section.baseData, renderBaseInfo(vm))}</div>
         <div class="pos-main">${box('', renderParamsCombined(vm))}</div>
-        <div class="pos-consumables">${box('Расходуемые', renderConsumables(vm))}</div>
-        <div class="pos-avatar">${box('Аватар', renderAvatar(vm), 'avatar-box')}</div>
+        <div class="pos-consumables">${box(vm.i18n.section.consumables, renderConsumables(vm))}</div>
+        <div class="pos-avatar">${box(vm.i18n.section.avatar, renderAvatar(vm), 'avatar-box')}</div>
       </div>
 
       <div class="grid-bottom">
         <div class="skills-column">
           ${renderSkillGroups(vm)}
         </div>
-        <div class="prof-title-row">${escapeHtml('Профессиональные навыки')}</div>
+        <div class="prof-title-row">${escapeHtml(vm.i18n.section.professional)}</div>
         <div class="prof-area">
           ${renderProfessional(vm)}
           ${renderEquipment(vm)}

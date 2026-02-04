@@ -1,3 +1,5 @@
+import type { CharacterPdfPage1I18n } from './page1I18n.js';
+
 export type SkillCatalogInfo = {
   name: string;
   param: string | null;
@@ -5,6 +7,7 @@ export type SkillCatalogInfo = {
 };
 
 export type CharacterPdfPage1Vm = {
+  i18n: CharacterPdfPage1I18n;
   base: {
     name: string;
     race: string;
@@ -78,7 +81,7 @@ export type CharacterPdfPage1Vm = {
     }[];
     potions: { id: string; qty: string; name: string; toxicity: string; duration: string; effect: string; weight: string; price: string }[];
     magic: {
-      type: string; // 'Знак', 'Спелл', 'Инв.'
+      type: string;
       name: string;
       element: string; // element для знаков/спеллов, cult_or_circle для инвокаций
       staminaCast: string;
@@ -286,16 +289,26 @@ function normalizeEffectNames(value: string): string {
 
 export function mapCharacterJsonToPage1Vm(
   characterJson: unknown,
-  deps?: {
+  deps: {
+    lang: string;
+    i18n: CharacterPdfPage1I18n;
     skillsCatalog?: ReadonlyMap<string, SkillCatalogInfo>;
     weaponDetailsById?: ReadonlyMap<string, WeaponDetails>;
     armorDetailsById?: ReadonlyMap<string, ArmorDetails>;
     potionDetailsById?: ReadonlyMap<string, PotionDetails>;
   },
 ): CharacterPdfPage1Vm {
+  const lang = deps.lang;
+  const i18n = deps.i18n;
   const skillsRoot = asRecord(getFirst(characterJson, ['skills', 'character.skills'])) ?? {};
   const common = asRecord(skillsRoot.common) ?? {};
   const { nameById, paramById, difficultById } = buildSkillCatalogMaps(deps?.skillsCatalog);
+
+  const canonicalSkillId = (skillId: string): string => {
+    if (skillId === 'dodge') return 'dodge_escape';
+    if (skillId === 'staff') return 'staff_spear';
+    return skillId;
+  };
 
   const definingRaw = skillsRoot.defining;
   const definingRec = asRecord(definingRaw);
@@ -310,7 +323,7 @@ export function mapCharacterJsonToPage1Vm(
         : '';
 
   const base = {
-    name: getFirstString(characterJson, ['name', 'characterName', 'fullName']) || 'Персонаж',
+    name: getFirstString(characterJson, ['name', 'characterName', 'fullName']) || i18n.defaults.characterName,
     race: getFirstString(characterJson, ['race']) || '',
     gender: getFirstString(characterJson, ['gender']) || '',
     age: getFirstString(characterJson, ['age']) || '',
@@ -329,14 +342,14 @@ export function mapCharacterJsonToPage1Vm(
   };
 
   const mainStatOrder: { id: string; label: string }[] = [
-    { id: 'INT', label: 'ИНТ' },
-    { id: 'REF', label: 'РЕФ' },
-    { id: 'DEX', label: 'ЛОВ' },
-    { id: 'BODY', label: 'ТЕЛ' },
-    { id: 'SPD', label: 'СКР' },
-    { id: 'EMP', label: 'ЭМП' },
-    { id: 'CRA', label: 'РЕМ' },
-    { id: 'WILL', label: 'ВОЛ' },
+    { id: 'INT', label: i18n.stats.abbr.INT },
+    { id: 'REF', label: i18n.stats.abbr.REF },
+    { id: 'DEX', label: i18n.stats.abbr.DEX },
+    { id: 'BODY', label: i18n.stats.abbr.BODY },
+    { id: 'SPD', label: i18n.stats.abbr.SPD },
+    { id: 'EMP', label: i18n.stats.abbr.EMP },
+    { id: 'CRA', label: i18n.stats.abbr.CRA },
+    { id: 'WILL', label: i18n.stats.abbr.WILL },
   ];
 
   const mainStats = mainStatOrder.map(({ id, label }) => ({
@@ -350,24 +363,23 @@ export function mapCharacterJsonToPage1Vm(
   const carriedText = carried === null ? '' : carried.toFixed(1);
 
   const consumables: CharacterPdfPage1Vm['consumables'] = [
-    { id: 'carry', label: 'Переносимый вес', max: carryMax, current: carriedText },
-    { id: 'hp', label: 'Здоровье', max: readCalcCurString(characterJson, 'max_HP'), current: '' },
-    { id: 'sta', label: 'Выносливость', max: readCalcCurString(characterJson, 'STA'), current: '' },
-    { id: 'resolve', label: 'Решимость', max: '', current: '' },
-    { id: 'luck', label: 'Удача', max: asString(asRecord(getPath(characterJson, 'statistics.LUCK'))?.cur) ?? '', current: '' },
+    { id: 'carry', label: i18n.consumables.label.carry, max: carryMax, current: carriedText },
+    { id: 'hp', label: i18n.consumables.label.hp, max: readCalcCurString(characterJson, 'max_HP'), current: '' },
+    { id: 'sta', label: i18n.consumables.label.sta, max: readCalcCurString(characterJson, 'STA'), current: '' },
+    { id: 'resolve', label: i18n.consumables.label.resolve, max: '', current: '' },
+    { id: 'luck', label: i18n.consumables.label.luck, max: asString(asRecord(getPath(characterJson, 'statistics.LUCK'))?.cur) ?? '', current: '' },
   ];
 
   const groupLabels: Record<string, string> = {
-    INT: 'Интеллект',
-    REF: 'Рефлексы',
-    DEX: 'Ловкость',
-    BODY: 'Тело',
-    SPD: 'Скорость',
-    EMP: 'Эмпатия',
-    CRA: 'Ремесло',
-    WILL: 'Воля',
-    LUCK: 'Удача',
-    OTHER: 'Прочее',
+    INT: i18n.stats.name.INT,
+    REF: i18n.stats.name.REF,
+    DEX: i18n.stats.name.DEX,
+    BODY: i18n.stats.name.BODY,
+    SPD: i18n.stats.name.SPD,
+    EMP: i18n.stats.name.EMP,
+    CRA: i18n.stats.name.CRA,
+    WILL: i18n.stats.name.WILL,
+    OTHER: i18n.stats.name.OTHER,
   };
 
   const groups = new Map<string, CharacterPdfPage1Vm['skillGroups'][number]>();
@@ -399,18 +411,19 @@ export function mapCharacterJsonToPage1Vm(
     if (!skillId.startsWith('language_')) return null;
     const suffix = skillId.slice('language_'.length);
     const map: Record<string, string> = {
-      common_speech: 'Всеобщий',
-      elder_speech: 'Старшая речь',
-      dwarvish: 'Краснолюдский',
+      common_speech: i18n.skills.languageCommonSpeech,
+      elder_speech: i18n.skills.languageElderSpeech,
+      dwarvish: i18n.skills.languageDwarvish,
     };
     const display = map[suffix] ?? suffix.replaceAll('_', ' ');
-    return { name: `Язык: ${display}`, param: 'INT' };
+    return { name: `${i18n.skills.languagePrefix}${display}`, param: 'INT' };
   };
 
   for (const [skillId, value] of Object.entries(common)) {
+    const metaId = canonicalSkillId(skillId);
     const fallback = languageSkillFallback(skillId);
-    const name = nameById.get(skillId) ?? fallback?.name ?? skillId;
-    const param = paramById.get(skillId) ?? fallback?.param ?? paramFallbackBySkillId(skillId) ?? 'OTHER';
+    const name = nameById.get(metaId) ?? fallback?.name ?? skillId;
+    const param = paramById.get(metaId) ?? fallback?.param ?? paramFallbackBySkillId(metaId) ?? 'OTHER';
     const group = ensureGroup(param);
     const v = readSkillValue(value);
     group.skills.push({
@@ -419,7 +432,7 @@ export function mapCharacterJsonToPage1Vm(
       cur: v.cur,
       bonus: v.bonus,
       raceBonus: v.raceBonus,
-      isDifficult: difficultById.get(skillId) ?? false,
+      isDifficult: difficultById.get(metaId) ?? false,
     });
   }
 
@@ -428,7 +441,8 @@ export function mapCharacterJsonToPage1Vm(
     .map((id) => groups.get(id))
     .filter((g): g is NonNullable<typeof g> => Boolean(g))
     .map((g) => {
-      g.skills.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+      const locale = lang.toLowerCase().startsWith('ru') ? 'ru' : 'en';
+      g.skills.sort((a, b) => a.name.localeCompare(b.name, locale));
       return g;
     });
 
@@ -450,7 +464,8 @@ export function mapCharacterJsonToPage1Vm(
     return '';
   };
   const branches: CharacterPdfPage1Vm['professional']['branches'] = colors.map((color, index) => {
-    const title = branchTitles[index] ?? `Ветка ${index + 1}`;
+    const title =
+      branchTitles[index] ?? i18n.defaults.branchTitle.replace('{n}', String(index + 1));
     const skills: { id: string; name: string; paramAbbr: string }[] = [];
     for (let slot = 1; slot <= 3; slot += 1) {
       const key = `skill_${index + 1}_${slot}`;
@@ -570,11 +585,11 @@ export function mapCharacterJsonToPage1Vm(
     spellsRaw.forEach((s) => {
       const rec = asRecord(s);
       if (!rec) return;
-      const type = asString(rec.type) ?? 'Спелл';
+      const typeRaw = (asString(rec.type) ?? '').toLowerCase();
       const name = asString(rec.name) ?? asString(rec.spell_name) ?? '';
       if (!name) return;
       magicItems.push({
-        type: type === 'sign' ? 'Знак' : 'Спелл',
+        type: typeRaw === 'sign' ? i18n.magicType.sign : i18n.magicType.spell,
         name,
         element: asString(rec.element) ?? '',
         staminaCast: asString(rec.stamina_cast) ?? '',
@@ -595,7 +610,7 @@ export function mapCharacterJsonToPage1Vm(
       const name = asString(rec.name) ?? asString(rec.spell_name) ?? '';
       if (!name) return;
       magicItems.push({
-        type: 'Знак',
+        type: i18n.magicType.sign,
         name,
         element: asString(rec.element) ?? '',
         staminaCast: asString(rec.stamina_cast) ?? '',
@@ -619,7 +634,7 @@ export function mapCharacterJsonToPage1Vm(
       const name = asString(rec.name) ?? asString(rec.invocation_name) ?? '';
       if (!name) return;
       magicItems.push({
-        type: 'Инв.',
+        type: i18n.magicType.invocation,
         name,
         element: asString(rec.cult_or_circle) ?? '',
         staminaCast: asString(rec.stamina_cast) ?? '',
@@ -634,6 +649,7 @@ export function mapCharacterJsonToPage1Vm(
   }
 
   return {
+    i18n,
     base,
     computed,
     mainStats,
