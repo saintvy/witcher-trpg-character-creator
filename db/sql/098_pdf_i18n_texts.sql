@@ -1,4 +1,4 @@
-\echo '097_pdf_page1_i18n.sql'
+\echo '098_pdf_i18n_texts.sql'
 
 -- Page 1 PDF static labels (stored in i18n_text, id = ck_id(key))
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -259,4 +259,120 @@ VALUES
   (ck_id('witcher_cc.wcc_skills.branch.посредник.name'), 'wcc_skills', 'branch_name', 'en', 'The Middleman'),
   (ck_id('witcher_cc.wcc_skills.branch.человек_со_связями.name'), 'wcc_skills', 'branch_name', 'en', 'The Connected'),
   (ck_id('witcher_cc.wcc_skills.branch.торговец.name'), 'wcc_skills', 'branch_name', 'en', 'The Merchant')
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  -- sections
+  (ck_id('witcher_cc.pdf.page2.section.lore'), 'pdf', 'page2.section.lore', 'ru', 'Лор'),
+  (ck_id('witcher_cc.pdf.page2.section.lore'), 'pdf', 'page2.section.lore', 'en', 'Lore'),
+  (ck_id('witcher_cc.pdf.page2.section.lifePath'), 'pdf', 'page2.section.lifePath', 'ru', 'Жизненный путь'),
+  (ck_id('witcher_cc.pdf.page2.section.lifePath'), 'pdf', 'page2.section.lifePath', 'en', 'Life path'),
+  (ck_id('witcher_cc.pdf.page2.section.style'), 'pdf', 'page2.section.style', 'ru', 'Стиль'),
+  (ck_id('witcher_cc.pdf.page2.section.style'), 'pdf', 'page2.section.style', 'en', 'Style'),
+  (ck_id('witcher_cc.pdf.page2.section.values'), 'pdf', 'page2.section.values', 'ru', 'Ценности'),
+  (ck_id('witcher_cc.pdf.page2.section.values'), 'pdf', 'page2.section.values', 'en', 'Values'),
+  (ck_id('witcher_cc.pdf.page2.section.siblings'), 'pdf', 'page2.section.siblings', 'ru', 'Братья и сёстры'),
+  (ck_id('witcher_cc.pdf.page2.section.siblings'), 'pdf', 'page2.section.siblings', 'en', 'Siblings'),
+  (ck_id('witcher_cc.pdf.page2.section.allies'), 'pdf', 'page2.section.allies', 'ru', 'Союзники'),
+  (ck_id('witcher_cc.pdf.page2.section.allies'), 'pdf', 'page2.section.allies', 'en', 'Allies'),
+  (ck_id('witcher_cc.pdf.page2.section.enemies'), 'pdf', 'page2.section.enemies', 'ru', 'Враги'),
+  (ck_id('witcher_cc.pdf.page2.section.enemies'), 'pdf', 'page2.section.enemies', 'en', 'Enemies'),
+
+  -- lore labels
+  (ck_id('witcher_cc.pdf.page2.lore.homeland'), 'pdf', 'page2.lore.homeland', 'ru', 'Родина'),
+  (ck_id('witcher_cc.pdf.page2.lore.homeland'), 'pdf', 'page2.lore.homeland', 'en', 'Homeland'),
+  (ck_id('witcher_cc.pdf.page2.lore.homeLanguage'), 'pdf', 'page2.lore.homeLanguage', 'ru', 'Родной язык'),
+  (ck_id('witcher_cc.pdf.page2.lore.homeLanguage'), 'pdf', 'page2.lore.homeLanguage', 'en', 'Home language'),
+  (ck_id('witcher_cc.pdf.page2.lore.familyStatus'), 'pdf', 'page2.lore.familyStatus', 'ru', 'Статус семьи'),
+  (ck_id('witcher_cc.pdf.page2.lore.familyStatus'), 'pdf', 'page2.lore.familyStatus', 'en', 'Family status'),
+  (ck_id('witcher_cc.pdf.page2.lore.familyFate'), 'pdf', 'page2.lore.familyFate', 'ru', 'Судьба семьи'),
+  (ck_id('witcher_cc.pdf.page2.lore.familyFate'), 'pdf', 'page2.lore.familyFate', 'en', 'Family fate'),
+  (ck_id('witcher_cc.pdf.page2.lore.parentsFateWho'), 'pdf', 'page2.lore.parentsFateWho', 'ru', 'Родители'),
+  (ck_id('witcher_cc.pdf.page2.lore.parentsFateWho'), 'pdf', 'page2.lore.parentsFateWho', 'en', 'Parents'),
+  (ck_id('witcher_cc.pdf.page2.lore.parentsFate'), 'pdf', 'page2.lore.parentsFate', 'ru', 'Судьба родителей'),
+  (ck_id('witcher_cc.pdf.page2.lore.parentsFate'), 'pdf', 'page2.lore.parentsFate', 'en', 'Parents fate'),
+  (ck_id('witcher_cc.pdf.page2.lore.friend'), 'pdf', 'page2.lore.friend', 'ru', 'Друг'),
+  (ck_id('witcher_cc.pdf.page2.lore.friend'), 'pdf', 'page2.lore.friend', 'en', 'Friend'),
+  (ck_id('witcher_cc.pdf.page2.lore.school'), 'pdf', 'page2.lore.school', 'ru', 'Школа'),
+  (ck_id('witcher_cc.pdf.page2.lore.school'), 'pdf', 'page2.lore.school', 'en', 'School'),
+  (ck_id('witcher_cc.pdf.page2.lore.witcherInitiationMoment'), 'pdf', 'page2.lore.witcherInitiationMoment', 'ru', 'Становление ведьмаком'),
+  (ck_id('witcher_cc.pdf.page2.lore.witcherInitiationMoment'), 'pdf', 'page2.lore.witcherInitiationMoment', 'en', 'Becoming a witcher'),
+  (ck_id('witcher_cc.pdf.page2.lore.diseasesAndCurses'), 'pdf', 'page2.lore.diseasesAndCurses', 'ru', 'Болезни и проклятия'),
+  (ck_id('witcher_cc.pdf.page2.lore.diseasesAndCurses'), 'pdf', 'page2.lore.diseasesAndCurses', 'en', 'Diseases & curses'),
+  (ck_id('witcher_cc.pdf.page2.lore.style'), 'pdf', 'page2.lore.style', 'ru', 'Стиль'),
+  (ck_id('witcher_cc.pdf.page2.lore.style'), 'pdf', 'page2.lore.style', 'en', 'Style'),
+  (ck_id('witcher_cc.pdf.page2.lore.values'), 'pdf', 'page2.lore.values', 'ru', 'Ценности'),
+  (ck_id('witcher_cc.pdf.page2.lore.values'), 'pdf', 'page2.lore.values', 'en', 'Values'),
+
+  -- life events
+  (ck_id('witcher_cc.pdf.page2.tables.lifeEvents.col.period'), 'pdf', 'page2.tables.lifeEvents.col.period', 'ru', 'Период'),
+  (ck_id('witcher_cc.pdf.page2.tables.lifeEvents.col.period'), 'pdf', 'page2.tables.lifeEvents.col.period', 'en', 'Period'),
+  (ck_id('witcher_cc.pdf.page2.tables.lifeEvents.col.type'), 'pdf', 'page2.tables.lifeEvents.col.type', 'ru', 'Тип'),
+  (ck_id('witcher_cc.pdf.page2.tables.lifeEvents.col.type'), 'pdf', 'page2.tables.lifeEvents.col.type', 'en', 'Type'),
+  (ck_id('witcher_cc.pdf.page2.tables.lifeEvents.col.desc'), 'pdf', 'page2.tables.lifeEvents.col.desc', 'ru', 'Описание'),
+  (ck_id('witcher_cc.pdf.page2.tables.lifeEvents.col.desc'), 'pdf', 'page2.tables.lifeEvents.col.desc', 'en', 'Description'),
+
+  -- style
+  (ck_id('witcher_cc.pdf.page2.tables.style.col.clothing'), 'pdf', 'page2.tables.style.col.clothing', 'ru', 'Одежда'),
+  (ck_id('witcher_cc.pdf.page2.tables.style.col.clothing'), 'pdf', 'page2.tables.style.col.clothing', 'en', 'Clothing'),
+  (ck_id('witcher_cc.pdf.page2.tables.style.col.personality'), 'pdf', 'page2.tables.style.col.personality', 'ru', 'Характер'),
+  (ck_id('witcher_cc.pdf.page2.tables.style.col.personality'), 'pdf', 'page2.tables.style.col.personality', 'en', 'Personality'),
+  (ck_id('witcher_cc.pdf.page2.tables.style.col.hairStyle'), 'pdf', 'page2.tables.style.col.hairStyle', 'ru', 'Причёска'),
+  (ck_id('witcher_cc.pdf.page2.tables.style.col.hairStyle'), 'pdf', 'page2.tables.style.col.hairStyle', 'en', 'Hairstyle'),
+  (ck_id('witcher_cc.pdf.page2.tables.style.col.affectations'), 'pdf', 'page2.tables.style.col.affectations', 'ru', 'Украшения'),
+  (ck_id('witcher_cc.pdf.page2.tables.style.col.affectations'), 'pdf', 'page2.tables.style.col.affectations', 'en', 'Affectations'),
+  -- values
+  (ck_id('witcher_cc.pdf.page2.tables.values.col.valuedPerson'), 'pdf', 'page2.tables.values.col.valuedPerson', 'ru', 'Кого ценит'),
+  (ck_id('witcher_cc.pdf.page2.tables.values.col.valuedPerson'), 'pdf', 'page2.tables.values.col.valuedPerson', 'en', 'Valued person'),
+  (ck_id('witcher_cc.pdf.page2.tables.values.col.value'), 'pdf', 'page2.tables.values.col.value', 'ru', 'Что ценит'),
+  (ck_id('witcher_cc.pdf.page2.tables.values.col.value'), 'pdf', 'page2.tables.values.col.value', 'en', 'Value'),
+  (ck_id('witcher_cc.pdf.page2.tables.values.col.feelingsOnPeople'), 'pdf', 'page2.tables.values.col.feelingsOnPeople', 'ru', 'Мысли об окружающих'),
+  (ck_id('witcher_cc.pdf.page2.tables.values.col.feelingsOnPeople'), 'pdf', 'page2.tables.values.col.feelingsOnPeople', 'en', 'Feelings on people'),
+
+  -- siblings
+  (ck_id('witcher_cc.pdf.page2.tables.siblings.col.age'), 'pdf', 'page2.tables.siblings.col.age', 'ru', 'Возраст'),
+  (ck_id('witcher_cc.pdf.page2.tables.siblings.col.age'), 'pdf', 'page2.tables.siblings.col.age', 'en', 'Age'),
+  (ck_id('witcher_cc.pdf.page2.tables.siblings.col.gender'), 'pdf', 'page2.tables.siblings.col.gender', 'ru', 'Пол'),
+  (ck_id('witcher_cc.pdf.page2.tables.siblings.col.gender'), 'pdf', 'page2.tables.siblings.col.gender', 'en', 'Sex'),
+  (ck_id('witcher_cc.pdf.page2.tables.siblings.col.attitude'), 'pdf', 'page2.tables.siblings.col.attitude', 'ru', 'Отношение'),
+  (ck_id('witcher_cc.pdf.page2.tables.siblings.col.attitude'), 'pdf', 'page2.tables.siblings.col.attitude', 'en', 'Attitude'),
+  (ck_id('witcher_cc.pdf.page2.tables.siblings.col.personality'), 'pdf', 'page2.tables.siblings.col.personality', 'ru', 'Характер'),
+  (ck_id('witcher_cc.pdf.page2.tables.siblings.col.personality'), 'pdf', 'page2.tables.siblings.col.personality', 'en', 'Personality'),
+
+  -- allies
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.gender'), 'pdf', 'page2.tables.allies.col.gender', 'ru', 'Пол'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.gender'), 'pdf', 'page2.tables.allies.col.gender', 'en', 'Sex'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.position'), 'pdf', 'page2.tables.allies.col.position', 'ru', 'Кто'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.position'), 'pdf', 'page2.tables.allies.col.position', 'en', 'Who'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.where'), 'pdf', 'page2.tables.allies.col.where', 'ru', 'Где он сейчас'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.where'), 'pdf', 'page2.tables.allies.col.where', 'en', 'Where now'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.acquaintance'), 'pdf', 'page2.tables.allies.col.acquaintance', 'ru', 'Знакомство'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.acquaintance'), 'pdf', 'page2.tables.allies.col.acquaintance', 'en', 'Acquaintance'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.howMet'), 'pdf', 'page2.tables.allies.col.howMet', 'ru', 'Как встретились'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.howMet'), 'pdf', 'page2.tables.allies.col.howMet', 'en', 'How met'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.howClose'), 'pdf', 'page2.tables.allies.col.howClose', 'ru', 'Близость'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.howClose'), 'pdf', 'page2.tables.allies.col.howClose', 'en', 'Closeness'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.alive'), 'pdf', 'page2.tables.allies.col.alive', 'ru', 'Жив ли'),
+  (ck_id('witcher_cc.pdf.page2.tables.allies.col.alive'), 'pdf', 'page2.tables.allies.col.alive', 'en', 'Alive'),
+
+  -- enemies
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.gender'), 'pdf', 'page2.tables.enemies.col.gender', 'ru', 'Пол'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.gender'), 'pdf', 'page2.tables.enemies.col.gender', 'en', 'Sex'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.position'), 'pdf', 'page2.tables.enemies.col.position', 'ru', 'Кто'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.position'), 'pdf', 'page2.tables.enemies.col.position', 'en', 'Who'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.victim'), 'pdf', 'page2.tables.enemies.col.victim', 'ru', 'Жертва'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.victim'), 'pdf', 'page2.tables.enemies.col.victim', 'en', 'Victim'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.cause'), 'pdf', 'page2.tables.enemies.col.cause', 'ru', 'Причина'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.cause'), 'pdf', 'page2.tables.enemies.col.cause', 'en', 'Cause'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.power'), 'pdf', 'page2.tables.enemies.col.power', 'ru', 'Сила'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.power'), 'pdf', 'page2.tables.enemies.col.power', 'en', 'Power'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.level'), 'pdf', 'page2.tables.enemies.col.level', 'ru', 'Уровень силы'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.level'), 'pdf', 'page2.tables.enemies.col.level', 'en', 'Power level'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.result'), 'pdf', 'page2.tables.enemies.col.result', 'ru', 'Итог'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.result'), 'pdf', 'page2.tables.enemies.col.result', 'en', 'Result'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.alive'), 'pdf', 'page2.tables.enemies.col.alive', 'ru', 'Жив ли'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.alive'), 'pdf', 'page2.tables.enemies.col.alive', 'en', 'Alive'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.howFar'), 'pdf', 'page2.tables.enemies.col.howFar', 'ru', 'Насколько далеко'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.howFar'), 'pdf', 'page2.tables.enemies.col.howFar', 'en', 'How far')
 ON CONFLICT (id, lang) DO NOTHING;

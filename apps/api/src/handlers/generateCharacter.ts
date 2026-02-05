@@ -148,8 +148,9 @@ async function resolveI18nRecursive(
   if (typeof value === 'object' && value !== null) {
     const result: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(value)) {
-      // Skip logicFields
+      // Keep logicFields as-is (no i18n resolution needed; PDF and other consumers use them)
       if (key === 'logicFields') {
+        result[key] = val;
         continue;
       }
       result[key] = await resolveI18nRecursive(val, lang, resolveText);

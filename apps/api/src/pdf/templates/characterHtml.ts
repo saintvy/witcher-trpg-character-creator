@@ -1,12 +1,28 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { CharacterPdfPage1Vm } from '../viewModel.js';
+import type { CharacterPdfPage2Vm } from '../viewModelPage2.js';
 
 const assetDataUrlCache = new Map<string, string>();
 
 function assetPngDataUrl(filename: string): string {
   const cached = assetDataUrlCache.get(filename);
   if (cached) return cached;
-  const buffer = readFileSync(new URL(`../assets/body_parts/${filename}`, import.meta.url));
+  const primaryUrl = new URL(`../assets/body_parts/${filename}`, import.meta.url);
+  let buffer: Buffer;
+  try {
+    buffer = readFileSync(primaryUrl);
+  } catch {
+    // When running compiled output from `dist/`, assets are not automatically copied.
+    // Fallback to reading from `src/pdf/assets/...` relative to the current file location.
+    const currentFile = fileURLToPath(import.meta.url);
+    const fallbackPath = path.resolve(path.dirname(currentFile), '../../../src/pdf/assets/body_parts', filename);
+    if (!existsSync(fallbackPath)) {
+      throw new Error(`[pdf] missing body part asset: ${filename}`);
+    }
+    buffer = readFileSync(fallbackPath);
+  }
   const dataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
   assetDataUrlCache.set(filename, dataUrl);
   return dataUrl;
@@ -44,6 +60,15 @@ function box(title: string, body: string, extraClass = ''): string {
   return `
     <section class="box ${extraClass}">
       ${title ? `<div class="box-title">${escapeHtml(title)}</div>` : ''}
+      <div class="box-body">${body}</div>
+    </section>
+  `;
+}
+
+function boxRawTitle(titleHtml: string, body: string, extraClass = ''): string {
+  return `
+    <section class="box ${extraClass}">
+      ${titleHtml ? `<div class="box-title">${titleHtml}</div>` : ''}
       <div class="box-body">${body}</div>
     </section>
   `;
@@ -627,7 +652,450 @@ function renderNotes(title: string): string {
   `;
 }
 
-export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
+function renderPage1(vm: CharacterPdfPage1Vm): string {
+  return `
+    <div class="page page1">
+      <div class="grid-top">
+        <div class="pos-base">${box(vm.i18n.section.baseData, renderBaseInfo(vm))}</div>
+        <div class="pos-main">${box('', renderParamsCombined(vm))}</div>
+        <div class="pos-consumables">${box(vm.i18n.section.consumables, renderConsumables(vm))}</div>
+        <div class="pos-avatar">${box(vm.i18n.section.avatar, renderAvatar(vm), 'avatar-box')}</div>
+      </div>
+
+      <div class="grid-bottom">
+        <div class="skills-column">
+          ${renderSkillGroups(vm)}
+        </div>
+        <div class="prof-title-row">${escapeHtml(vm.i18n.section.professional)}</div>
+        <div class="prof-area">
+          ${renderProfessional(vm)}
+          ${renderEquipment(vm)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderLoreBlock(vm: CharacterPdfPage2Vm): string {
+  const body = vm.loreBlocks.length
+    ? `<div class="lore-paras">${vm.loreBlocks.map((b) => b.html).join('')}</div>`
+    : `<div class="muted">&nbsp;</div>`;
+  return box(vm.i18n.section.lore, body, 'lore-box');
+}
+
+function renderLifeEvents(vm: CharacterPdfPage2Vm): string {
+  const rows = vm.lifeEvents.length
+    ? vm.lifeEvents
+        .map(
+          (e) => `
+          <tr>
+            <td class="equip-fit equip-left">${escapeHtml(e.period)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.type)}</td>
+            <td class="equip-effect">${escapeHtml(e.description)}</td>
+          </tr>
+        `,
+        )
+        .join('')
+    : `
+        <tr>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-effect">&nbsp;</td>
+        </tr>
+      `;
+
+  return box(
+    vm.i18n.section.lifePath,
+    `
+      <table class="equip-table equip-life-events">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.lifeEvents.colPeriod)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.lifeEvents.colType)}</th>
+            <th>${escapeHtml(vm.i18n.tables.lifeEvents.colDesc)}</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `,
+    'life-box',
+  );
+}
+
+function renderStyleTable(vm: CharacterPdfPage2Vm): string {
+  const s = vm.styleTable;
+  return box(
+    vm.i18n.section.style,
+    `
+      <table class="equip-table equip-style">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+          <col class="equip-fit" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.style.colClothing)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.style.colPersonality)}</th>
+            <th>${escapeHtml(vm.i18n.tables.style.colHairStyle)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.style.colAffectations)}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="equip-fit equip-left">${escapeHtml(s.clothing)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(s.personality)}</td>
+            <td class="equip-effect">${escapeHtml(s.hairStyle)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(s.affectations)}</td>
+          </tr>
+        </tbody>
+      </table>
+    `,
+    'style-box',
+  );
+}
+
+function renderValuesTable(vm: CharacterPdfPage2Vm): string {
+  const v = vm.valuesTable;
+  return box(
+    vm.i18n.section.values,
+    `
+      <table class="equip-table equip-values">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.values.colValuedPerson)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.values.colValue)}</th>
+            <th>${escapeHtml(vm.i18n.tables.values.colFeelingsOnPeople)}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="equip-fit equip-left">${escapeHtml(v.valuedPerson)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(v.value)}</td>
+            <td class="equip-effect">${escapeHtml(v.feelingsOnPeople)}</td>
+          </tr>
+        </tbody>
+      </table>
+    `,
+    'values-box',
+  );
+}
+
+function renderSiblings(vm: CharacterPdfPage2Vm): string {
+  const rows = vm.siblings.length
+    ? vm.siblings
+        .map(
+          (s) => `
+          <tr>
+            <td class="equip-fit equip-left">${escapeHtml(s.age)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(s.gender)}</td>
+            <td class="equip-effect">${escapeHtml(s.attitude)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(s.personality)}</td>
+          </tr>
+        `,
+        )
+        .join('')
+    : `
+        <tr>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-effect">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+        </tr>
+      `;
+
+  return box(
+    vm.i18n.section.siblings,
+    `
+      <table class="equip-table equip-siblings">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+          <col class="equip-fit" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.siblings.colAge)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.siblings.colGender)}</th>
+            <th>${escapeHtml(vm.i18n.tables.siblings.colAttitude)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.siblings.colPersonality)}</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `,
+    'siblings-box',
+  );
+}
+
+function renderAllies(vm: CharacterPdfPage2Vm): string {
+  const isWitcher = vm.alliesIsWitcher;
+
+  const headerRow = isWitcher
+    ? `
+        <tr>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.allies.colGender)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.allies.colPosition)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.allies.colAcquaintance)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.allies.colHowClose)}</th>
+          <th>${escapeHtml(vm.i18n.tables.allies.colAlive)}</th>
+        </tr>
+      `
+    : `
+        <tr>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.allies.colGender)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.allies.colPosition)}</th>
+          <th>${escapeHtml(vm.i18n.tables.allies.colHowMet)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.allies.colHowClose)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.allies.colWhere)}</th>
+        </tr>
+      `;
+
+  const colgroup = isWitcher
+    ? `
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+        </colgroup>
+      `
+    : `
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+        </colgroup>
+      `;
+
+  const rows = vm.allies.length
+    ? vm.allies
+        .map((a) => {
+          if (isWitcher) {
+            return `
+          <tr>
+            <td class="equip-fit equip-left">${escapeHtml(a.gender)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(a.position)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(a.howMet)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(a.howClose)}</td>
+            <td class="equip-effect">${escapeHtml(a.isAlive)}</td>
+          </tr>
+        `;
+          }
+          return `
+          <tr>
+            <td class="equip-fit equip-left">${escapeHtml(a.gender)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(a.position)}</td>
+            <td class="equip-effect">${escapeHtml(a.howMet)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(a.howClose)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(a.where)}</td>
+          </tr>
+        `;
+        })
+        .join('')
+    : isWitcher
+      ? `
+        <tr>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-effect">&nbsp;</td>
+        </tr>
+      `
+      : `
+        <tr>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-effect">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+        </tr>
+      `;
+
+  return box(
+    vm.i18n.section.allies,
+    `
+      <table class="equip-table equip-allies">
+        ${colgroup}
+        <thead>${headerRow}</thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `,
+    'allies-box',
+  );
+}
+
+function renderEnemies(vm: CharacterPdfPage2Vm): string {
+  const isWitcher = vm.enemiesIsWitcher;
+
+  const headerRow = isWitcher
+    ? `
+        <tr>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colGender)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colPosition)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colPower)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colCause)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colResult)}</th>
+          <th>${escapeHtml(vm.i18n.tables.enemies.colAlive)}</th>
+        </tr>
+      `
+    : `
+        <tr>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colVictim)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colGender)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colPosition)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colCause)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colPower)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colLevel)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.enemies.colResult)}</th>
+        </tr>
+      `;
+
+  const colgroup = isWitcher
+    ? `
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+        </colgroup>
+      `
+    : `
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+        </colgroup>
+      `;
+
+  const rows = vm.enemies.length
+    ? vm.enemies
+        .map((e) => {
+          if (isWitcher) {
+            return `
+          <tr>
+            <td class="equip-fit equip-left">${escapeHtml(e.gender)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.position)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.power)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.cause)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.result)}</td>
+            <td class="equip-effect">${escapeHtml(e.alive)}</td>
+          </tr>
+        `;
+          }
+          return `
+          <tr>
+            <td class="equip-fit equip-left">${escapeHtml(e.victim)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.gender)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.position)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.cause)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.power)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.level)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(e.result)}</td>
+          </tr>
+        `;
+        })
+        .join('')
+    : isWitcher
+      ? `
+        <tr>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-effect">&nbsp;</td>
+        </tr>
+      `
+      : `
+        <tr>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+        </tr>
+      `;
+
+  return box(
+    vm.i18n.section.enemies,
+    `
+      <table class="equip-table equip-enemies">
+        ${colgroup}
+        <thead>${headerRow}</thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `,
+    'enemies-box',
+  );
+}
+
+function renderPage2(vm: CharacterPdfPage2Vm): string {
+  const loreHtml = renderLoreBlock(vm);
+  const lifePathHtml = renderLifeEvents(vm);
+  const styleHtml = renderStyleTable(vm);
+  const valuesHtml = renderValuesTable(vm);
+  const siblingsHtml = vm.siblings.length ? renderSiblings(vm) : '';
+
+  return `
+    <div class="page page2">
+      <div class="page2-layout" id="page2-layout">
+        <div class="page2-row1">
+          <div class="page2-cell page2-cell-left" id="page2-left">
+            ${lifePathHtml}
+          </div>
+          <div class="page2-cell page2-cell-right" id="page2-right">
+            <div class="page2-right-inner" id="page2-right-inner">
+              ${loreHtml}
+              <div class="page2-style-values" id="page2-style-values">
+                ${styleHtml}
+                ${valuesHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="page2-row2 page2-row2-hidden" id="page2-row2"></div>
+        <div class="page2-siblings-row page2-hidden" id="page2-siblings-full">
+          <div id="page2-siblings-col1"></div>
+          <div class="page2-siblings-col-empty"></div>
+        </div>
+        <div class="page2-allies-row">${renderAllies(vm)}</div>
+        <div class="page2-enemies-row">${renderEnemies(vm)}</div>
+      </div>
+      <template id="page2-siblings-tpl">${siblingsHtml}</template>
+      <template id="page2-style-tpl">${styleHtml}</template>
+      <template id="page2-values-tpl">${valuesHtml}</template>
+    </div>
+  `;
+}
+
+export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page2: CharacterPdfPage2Vm }): string {
+  const vm = input.page1;
+  const page2 = input.page2;
   return `<!doctype html>
 <html>
   <head>
@@ -648,12 +1116,34 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
 
       .page {
         width: 210mm;
-        height: 297mm;
         padding: 6mm;
+      }
+      .page1 {
+        height: 297mm;
         display: grid;
         grid-template-rows: auto 1fr;
         gap: 4mm;
       }
+      .page2 {
+        height: 297mm;
+        break-before: page;
+        page-break-before: always;
+      }
+      .page2-layout { display: flex; flex-direction: column; gap: 3mm; }
+      .page2-row1 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; align-items: start; }
+      .page2-cell { min-height: 0; display: flex; flex-direction: column; gap: 3mm; }
+      .page2-right-inner { display: flex; flex-direction: column; gap: 3mm; flex: 1; min-height: 0; }
+      .page2-style-values { display: flex; flex-direction: column; gap: 3mm; }
+      .page2-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+      .page2-row2-hidden { display: none !important; }
+      .page2-row2.page2-row2-visible { display: grid !important; }
+      .page2-hidden { display: none !important; }
+      .page2-siblings-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+      .page2-siblings-row.page2-visible { display: grid !important; }
+      .page2-allies-row, .page2-enemies-row { margin-top: 0; }
+      .t-auto { table-layout: auto; }
+      .t-fit-col { width: 1%; white-space: nowrap; }
+      .stack { display: grid; gap: 3mm; }
 
       .grid-top {
         display: grid;
@@ -678,6 +1168,9 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
         text-transform: uppercase;
         letter-spacing: 0.06em;
         background: #f3f4f6;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .box-body { padding: 3px; }
 
@@ -833,6 +1326,29 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
       .equip-potions thead th { background: rgba(16,185,129,0.10); }
       .equip-magic thead th { background: rgba(168,85,247,0.10); }
       .equip-magic { table-layout: auto; }
+      .equip-allies { table-layout: auto; }
+      .equip-allies tbody tr { height: auto; }
+      .equip-allies tbody td { vertical-align: top; }
+      .equip-allies .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; }
+      .equip-enemies { table-layout: auto; }
+      .equip-enemies tbody tr { height: auto; }
+      .equip-enemies tbody td { vertical-align: top; }
+      .equip-life-events { table-layout: auto; }
+      .equip-life-events tbody tr { height: auto; }
+      .equip-life-events tbody td { vertical-align: top; }
+      .equip-life-events .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; }
+      .equip-style { table-layout: auto; }
+      .equip-style tbody tr { height: auto; }
+      .equip-style tbody td { vertical-align: top; }
+      .equip-style .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; }
+      .equip-values { table-layout: auto; }
+      .equip-values tbody tr { height: auto; }
+      .equip-values tbody td { vertical-align: top; }
+      .equip-values .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; }
+      .equip-siblings { table-layout: auto; }
+      .equip-siblings tbody tr { height: auto; }
+      .equip-siblings tbody td { vertical-align: top; }
+      .equip-siblings .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; }
       .equip-bricks { width: 28mm; table-layout: fixed; margin-left: 0; }
       .equip-bricks tbody tr { height: 6mm; }
       .equip-bricks tbody td { padding: 1px; vertical-align: middle; text-align: center; border: 1px solid #111827; }
@@ -855,85 +1371,117 @@ export function renderCharacterPage1Html(vm: CharacterPdfPage1Vm): string {
         text-align: left;
       }
       .notes-table tbody tr { height: 14px; }
+
+      .lore-paras .p { margin: 0 0 2px 0; }
+      .p-k { font-weight: 800; }
+      .muted { color: #6b7280; }
+      .t { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      .t th, .t td { border: 1px solid #111827; padding: 2px 3px; vertical-align: top; }
+      .t thead th { background: #f3f4f6; font-weight: 900; text-transform: uppercase; font-size: 9px; letter-spacing: 0.06em; text-align: left; }
+      .t-fit { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .t-wrap { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
     </style>
   </head>
   <body>
-    <div class="page">
-      <div class="grid-top">
-        <div class="pos-base">${box(vm.i18n.section.baseData, renderBaseInfo(vm))}</div>
-        <div class="pos-main">${box('', renderParamsCombined(vm))}</div>
-        <div class="pos-consumables">${box(vm.i18n.section.consumables, renderConsumables(vm))}</div>
-        <div class="pos-avatar">${box(vm.i18n.section.avatar, renderAvatar(vm), 'avatar-box')}</div>
-      </div>
-
-      <div class="grid-bottom">
-        <div class="skills-column">
-          ${renderSkillGroups(vm)}
-        </div>
-        <div class="prof-title-row">${escapeHtml(vm.i18n.section.professional)}</div>
-        <div class="prof-area">
-          ${renderProfessional(vm)}
-          ${renderEquipment(vm)}
-        </div>
-      </div>
-    </div>
+    ${renderPage1(vm)}
+    ${renderPage2(page2)}
 
     <script>
       (() => {
-        const wrapper = document.getElementById('notes-wrapper');
-        if (!wrapper) { window.__pdfReady = true; return; }
-        const skills = document.querySelector('.skills-column');
-        if (!skills) { window.__pdfReady = true; return; }
-
-        const tables = Array.from(wrapper.querySelectorAll('table.notes-table'));
-        if (tables.length === 0) { window.__pdfReady = true; return; }
-
-        const fill = () => {
-          const skillsRect = skills.getBoundingClientRect();
-          const wrapperRect = wrapper.getBoundingClientRect();
-          const available = skillsRect.bottom - wrapperRect.top;
-          if (!Number.isFinite(available) || available <= 0) {
-            wrapper.style.display = 'none';
-            window.__pdfReady = true;
-            return;
-          }
-
-          const headH = tables[0].tHead ? tables[0].tHead.getBoundingClientRect().height : 0;
-          const tbody0 = tables[0].tBodies && tables[0].tBodies[0];
-          const probe = document.createElement('tr');
-          const probeCell = document.createElement('td');
-          probeCell.innerHTML = '&nbsp;';
-          probe.appendChild(probeCell);
-          tbody0.appendChild(probe);
-          const rowH = probe.getBoundingClientRect().height || 14;
-          tbody0.removeChild(probe);
-
-          const rows = Math.floor((available - headH - 2) / rowH);
-
-          if (!Number.isFinite(rows) || rows <= 0) {
-            wrapper.style.display = 'none';
-            window.__pdfReady = true;
-            return;
-          }
-
-          wrapper.style.display = '';
-          wrapper.style.height = String(Math.floor(headH + rows * rowH + 2)) + 'px';
-          for (const table of tables) {
-            const tbody = table.tBodies[0];
-            tbody.innerHTML = '';
-            for (let i = 0; i < rows; i += 1) {
-              const tr = document.createElement('tr');
-              const td = document.createElement('td');
-              td.innerHTML = '&nbsp;';
-              tr.appendChild(td);
-              tbody.appendChild(tr);
+        const run = () => {
+          const wrapper = document.getElementById('notes-wrapper');
+          if (wrapper) {
+            const skills = document.querySelector('.skills-column');
+            const tables = Array.from(wrapper.querySelectorAll('table.notes-table'));
+            if (skills && tables.length > 0) {
+              const skillsRect = skills.getBoundingClientRect();
+              const wrapperRect = wrapper.getBoundingClientRect();
+              const available = skillsRect.bottom - wrapperRect.top;
+              if (Number.isFinite(available) && available > 0) {
+                const headH = tables[0].tHead ? tables[0].tHead.getBoundingClientRect().height : 0;
+                const tbody0 = tables[0].tBodies && tables[0].tBodies[0];
+                const probe = document.createElement('tr');
+                probe.appendChild(document.createElement('td'));
+                tbody0.appendChild(probe);
+                const rowH = probe.getBoundingClientRect().height || 14;
+                tbody0.removeChild(probe);
+                const rows = Math.floor((available - headH - 2) / rowH);
+                if (rows > 0) {
+                  wrapper.style.display = '';
+                  wrapper.style.height = String(Math.floor(headH + rows * rowH + 2)) + 'px';
+                  for (const t of tables) {
+                    t.tBodies[0].innerHTML = '';
+                    for (let i = 0; i < rows; i++) {
+                      const tr = document.createElement('tr');
+                      tr.innerHTML = '<td>&nbsp;</td>';
+                      t.tBodies[0].appendChild(tr);
+                    }
+                  }
+                } else wrapper.style.display = 'none';
+              } else wrapper.style.display = 'none';
             }
           }
-          window.__pdfReady = true;
-        };
 
-        // allow layout to settle
-        requestAnimationFrame(() => requestAnimationFrame(fill));
+          const layout = document.getElementById('page2-layout');
+          if (layout) {
+            const left = document.getElementById('page2-left');
+            const rightInner = document.getElementById('page2-right-inner');
+            const styleValues = document.getElementById('page2-style-values');
+            const row2 = document.getElementById('page2-row2');
+            const styleTpl = document.getElementById('page2-style-tpl');
+            const valuesTpl = document.getElementById('page2-values-tpl');
+            const siblingsFull = document.getElementById('page2-siblings-full');
+            const siblingsTpl = document.getElementById('page2-siblings-tpl');
+
+            if (left && rightInner && styleValues && row2 && styleTpl && valuesTpl) {
+              const leftH = left.getBoundingClientRect().height;
+              const rightH = rightInner.getBoundingClientRect().height;
+              if (rightH > leftH) {
+                styleValues.remove();
+                const styleCol = document.createElement('div');
+                const valuesCol = document.createElement('div');
+                styleCol.innerHTML = styleTpl.innerHTML;
+                valuesCol.innerHTML = valuesTpl.innerHTML;
+                row2.appendChild(styleCol);
+                row2.appendChild(valuesCol);
+                row2.classList.add('page2-row2-visible');
+                row2.classList.remove('page2-row2-hidden');
+              }
+            }
+
+            if (siblingsTpl && siblingsTpl.innerHTML) {
+              const left = document.getElementById('page2-left');
+              const right = document.getElementById('page2-right');
+              const sibsHtml = siblingsTpl.innerHTML;
+              const leftH = left ? left.getBoundingClientRect().height : 0;
+              const rightH = right ? right.getBoundingClientRect().height : 0;
+              const probe = document.createElement('div');
+              probe.style.cssText = 'position:absolute;visibility:hidden;width:' + (right?.offsetWidth || 200) + 'px;';
+              probe.innerHTML = sibsHtml;
+              document.body.appendChild(probe);
+              const sibsH = probe.getBoundingClientRect().height;
+              probe.remove();
+              const addToLeft = leftH + sibsH <= rightH;
+              const addToRight = rightH + sibsH <= leftH;
+              if (addToLeft) {
+                left.insertAdjacentHTML('beforeend', sibsHtml);
+              } else if (addToRight) {
+                right.insertAdjacentHTML('beforeend', sibsHtml);
+              } else {
+                const col1 = document.getElementById('page2-siblings-col1');
+                if (col1) col1.innerHTML = sibsHtml;
+                siblingsFull.classList.add('page2-visible');
+                siblingsFull.classList.remove('page2-hidden');
+              }
+            }
+
+            document.querySelectorAll('template').forEach(t => t.remove());
+          }
+        };
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          run();
+          requestAnimationFrame(() => { window.__pdfReady = true; });
+        }));
       })();
     </script>
   </body>

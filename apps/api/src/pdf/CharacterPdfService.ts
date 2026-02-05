@@ -1,13 +1,16 @@
 import { chromium, type Browser } from 'playwright';
 import { mapCharacterJsonToPage1Vm, type SkillCatalogInfo, type WeaponDetails, type ArmorDetails, type PotionDetails } from './viewModel.js';
-import { renderCharacterPage1Html } from './templates/characterHtml.js';
+import { mapCharacterJsonToPage2Vm } from './viewModelPage2.js';
+import { renderCharacterPdfHtml } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
 import { db } from '../db/pool.js';
 import { loadCharacterPdfPage1I18n, type CharacterPdfPage1I18n } from './page1I18n.js';
+import { loadCharacterPdfPage2I18n, type CharacterPdfPage2I18n } from './page2I18n.js';
 
 export class CharacterPdfService {
   private static browserPromise: Promise<Browser> | null = null;
   private static page1I18nCache = new Map<string, CharacterPdfPage1I18n>();
+  private static page2I18nCache = new Map<string, CharacterPdfPage2I18n>();
 
   private static async getBrowser(): Promise<Browser> {
     if (!CharacterPdfService.browserPromise) {
@@ -75,6 +78,14 @@ export class CharacterPdfService {
     return i18n;
   }
 
+  private async getPage2I18n(lang: string): Promise<CharacterPdfPage2I18n> {
+    const cached = CharacterPdfService.page2I18nCache.get(lang);
+    if (cached) return cached;
+    const i18n = await this.withTimeout(loadCharacterPdfPage2I18n(lang), 2500);
+    CharacterPdfService.page2I18nCache.set(lang, i18n);
+    return i18n;
+  }
+
   async generatePdfBuffer(characterJson: unknown): Promise<Buffer> {
     const lang = this.detectLang(characterJson);
     let page1I18n: CharacterPdfPage1I18n;
@@ -83,6 +94,14 @@ export class CharacterPdfService {
     } catch (error) {
       console.error('[pdf] i18n load failed', error);
       page1I18n = await this.getPage1I18n('en');
+    }
+
+    let page2I18n: CharacterPdfPage2I18n;
+    try {
+      page2I18n = await this.getPage2I18n(lang);
+    } catch (error) {
+      console.error('[pdf] page2 i18n load failed', error);
+      page2I18n = await this.getPage2I18n('en');
     }
 
     const skillsCatalog = new Map<string, SkillCatalogInfo>();
@@ -183,7 +202,7 @@ export class CharacterPdfService {
       console.error('[pdf] potions lookup failed', error);
     }
 
-    const vm = mapCharacterJsonToPage1Vm(characterJson, {
+    const page1Vm = mapCharacterJsonToPage1Vm(characterJson, {
       lang,
       i18n: page1I18n,
       skillsCatalog,
@@ -191,7 +210,8 @@ export class CharacterPdfService {
       armorDetailsById,
       potionDetailsById,
     });
-    const html = renderCharacterPage1Html(vm);
+    const page2Vm = mapCharacterJsonToPage2Vm(characterJson, { i18n: page2I18n });
+    const html = renderCharacterPdfHtml({ page1: page1Vm, page2: page2Vm });
 
     const browser = await CharacterPdfService.getBrowser();
     const context = await browser.newContext({
