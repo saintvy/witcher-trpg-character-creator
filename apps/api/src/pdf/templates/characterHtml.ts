@@ -1064,6 +1064,7 @@ function renderPage2(vm: CharacterPdfPage2Vm): string {
   return `
     <div class="page page2">
       <div class="page2-layout" id="page2-layout">
+        <div class="page2-pack" id="page2-pack" data-cols="2" style="--page2-cols: 2;"></div>
         <div class="page2-row1">
           <div class="page2-cell page2-cell-left" id="page2-left">
             ${lifePathHtml}
@@ -1130,6 +1131,14 @@ export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page
         page-break-before: always;
       }
       .page2-layout { display: flex; flex-direction: column; gap: 3mm; }
+      .page2-pack { display: none; }
+      .page2-pack.page2-visible {
+        display: grid;
+        grid-template-columns: repeat(var(--page2-cols, 2), 1fr);
+        gap: 4mm;
+        align-items: start;
+      }
+      .page2-pack-col { min-height: 0; display: flex; flex-direction: column; gap: 3mm; }
       .page2-row1 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; align-items: start; }
       .page2-cell { min-height: 0; display: flex; flex-direction: column; gap: 3mm; }
       .page2-right-inner { display: flex; flex-direction: column; gap: 3mm; flex: 1; min-height: 0; }
@@ -1424,54 +1433,164 @@ export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page
 
           const layout = document.getElementById('page2-layout');
           if (layout) {
-            const left = document.getElementById('page2-left');
-            const rightInner = document.getElementById('page2-right-inner');
-            const styleValues = document.getElementById('page2-style-values');
-            const row2 = document.getElementById('page2-row2');
-            const styleTpl = document.getElementById('page2-style-tpl');
-            const valuesTpl = document.getElementById('page2-values-tpl');
-            const siblingsFull = document.getElementById('page2-siblings-full');
-            const siblingsTpl = document.getElementById('page2-siblings-tpl');
+            const pack = document.getElementById('page2-pack');
+            if (pack) {
+              const siblingsTpl = document.getElementById('page2-siblings-tpl');
 
-            if (left && rightInner && styleValues && row2 && styleTpl && valuesTpl) {
-              const leftH = left.getBoundingClientRect().height;
-              const rightH = rightInner.getBoundingClientRect().height;
-              if (rightH > leftH) {
-                styleValues.remove();
-                const styleCol = document.createElement('div');
-                const valuesCol = document.createElement('div');
-                styleCol.innerHTML = styleTpl.innerHTML;
-                valuesCol.innerHTML = valuesTpl.innerHTML;
-                row2.appendChild(styleCol);
-                row2.appendChild(valuesCol);
-                row2.classList.add('page2-row2-visible');
-                row2.classList.remove('page2-row2-hidden');
+              const blocks = [];
+              const priorityById = {
+                lore: 1,
+                lifePath: 2,
+                siblings: 3,
+                style: 4,
+                values: 5,
+              };
+              const add = (id, selector) => {
+                const el = layout.querySelector(selector);
+                if (el) blocks.push({ id, priority: priorityById[id] ?? 1000 + blocks.length, order: blocks.length, el });
+              };
+
+              // The group of half-width blocks we want to pack tightly on page 2.
+              add('lifePath', '.life-box');
+              add('lore', '.lore-box');
+              add('style', '.style-box');
+              add('values', '.values-box');
+
+              if (siblingsTpl && typeof siblingsTpl.innerHTML === 'string' && siblingsTpl.innerHTML.trim()) {
+                const wrap = document.createElement('div');
+                wrap.innerHTML = siblingsTpl.innerHTML.trim();
+                const sibEl = wrap.firstElementChild;
+                if (sibEl) blocks.push({ id: 'siblings', priority: priorityById.siblings ?? 1000 + blocks.length, order: blocks.length, el: sibEl });
               }
-            }
 
-            if (siblingsTpl && siblingsTpl.innerHTML) {
-              const left = document.getElementById('page2-left');
-              const right = document.getElementById('page2-right');
-              const sibsHtml = siblingsTpl.innerHTML;
-              const leftH = left ? left.getBoundingClientRect().height : 0;
-              const rightH = right ? right.getBoundingClientRect().height : 0;
-              const probe = document.createElement('div');
-              probe.style.cssText = 'position:absolute;visibility:hidden;width:' + (right?.offsetWidth || 200) + 'px;';
-              probe.innerHTML = sibsHtml;
-              document.body.appendChild(probe);
-              const sibsH = probe.getBoundingClientRect().height;
-              probe.remove();
-              const addToLeft = leftH + sibsH <= rightH;
-              const addToRight = rightH + sibsH <= leftH;
-              if (addToLeft) {
-                left.insertAdjacentHTML('beforeend', sibsHtml);
-              } else if (addToRight) {
-                right.insertAdjacentHTML('beforeend', sibsHtml);
-              } else {
-                const col1 = document.getElementById('page2-siblings-col1');
-                if (col1) col1.innerHTML = sibsHtml;
-                siblingsFull.classList.add('page2-visible');
-                siblingsFull.classList.remove('page2-hidden');
+              const parsePx = (value) => {
+                const n = Number.parseFloat(String(value || ''));
+                return Number.isFinite(n) ? n : 0;
+              };
+
+              const cols = (() => {
+                const raw = pack.getAttribute('data-cols') || pack.dataset.cols || '2';
+                const n = Number.parseInt(raw, 10);
+                return Number.isFinite(n) && n > 0 ? n : 2;
+              })();
+              pack.style.setProperty('--page2-cols', String(cols));
+
+              const measureHeights = (colWidthPx) => {
+                const probe = document.createElement('div');
+                probe.style.cssText = 'position:absolute;visibility:hidden;left:-10000px;top:-10000px;';
+                probe.style.width = String(Math.max(1, Math.floor(colWidthPx))) + 'px';
+                document.body.appendChild(probe);
+
+                try {
+                  return blocks.map((b) => {
+                    const clone = b.el.cloneNode(true);
+                    probe.appendChild(clone);
+                    const h = clone.getBoundingClientRect().height;
+                    probe.removeChild(clone);
+                    return { ...b, height: Number.isFinite(h) ? Math.max(0, h) : 0 };
+                  });
+                } finally {
+                  probe.remove();
+                }
+              };
+
+              const assignTwoColsOptimal = (items) => {
+                const weights = items.map((it) => Math.max(0, Math.round(it.height)));
+                const total = weights.reduce((a, b) => a + b, 0);
+                const prevIdx = new Int32Array(total + 1);
+                const prevSum = new Int32Array(total + 1);
+                for (let i = 0; i < prevIdx.length; i++) prevIdx[i] = -1;
+                prevIdx[0] = -2;
+
+                for (let i = 0; i < weights.length; i++) {
+                  const w = weights[i];
+                  for (let s = total - w; s >= 0; s--) {
+                    if (prevIdx[s] !== -1 && prevIdx[s + w] === -1) {
+                      prevIdx[s + w] = i;
+                      prevSum[s + w] = s;
+                    }
+                  }
+                }
+
+                let bestS = 0;
+                let bestMax = Number.POSITIVE_INFINITY;
+                let bestDiff = Number.POSITIVE_INFINITY;
+                for (let s = 0; s <= total; s++) {
+                  if (prevIdx[s] === -1) continue;
+                  const maxH = Math.max(s, total - s);
+                  const diff = Math.abs(total - 2 * s);
+                  if (maxH < bestMax || (maxH === bestMax && (diff < bestDiff || (diff === bestDiff && s < bestS)))) {
+                    bestMax = maxH;
+                    bestDiff = diff;
+                    bestS = s;
+                  }
+                }
+
+                const inLeft = new Array(items.length).fill(false);
+                let cur = bestS;
+                while (cur > 0) {
+                  const i = prevIdx[cur];
+                  if (i < 0) break;
+                  inLeft[i] = true;
+                  cur = prevSum[cur];
+                }
+
+                const out = [[], []];
+                for (let i = 0; i < items.length; i++) out[inLeft[i] ? 0 : 1].push(items[i]);
+                return out;
+              };
+
+              const assignGreedy = (items) => {
+                const byHeight = items
+                  .slice()
+                  .sort((a, b) => (b.height - a.height) || (a.order - b.order));
+                const heights = new Array(cols).fill(0);
+                const out = Array.from({ length: cols }, () => []);
+                for (const item of byHeight) {
+                  let bestCol = 0;
+                  for (let c = 1; c < cols; c++) if (heights[c] < heights[bestCol]) bestCol = c;
+                  out[bestCol].push(item);
+                  heights[bestCol] += item.height;
+                }
+                return out;
+              };
+
+              const buildPackedColumns = (itemsByCol) => {
+                pack.innerHTML = '';
+                const colEls = [];
+                for (let c = 0; c < cols; c++) {
+                  const colEl = document.createElement('div');
+                  colEl.className = 'page2-pack-col';
+                  colEls.push(colEl);
+                  pack.appendChild(colEl);
+                }
+
+                for (let c = 0; c < itemsByCol.length; c++) {
+                  const ordered = itemsByCol[c]
+                    .slice()
+                    .sort((a, b) => (a.priority - b.priority) || (a.order - b.order));
+                  for (const item of ordered) colEls[c].appendChild(item.el);
+                }
+              };
+
+              if (blocks.length > 0) {
+                pack.classList.add('page2-visible');
+                const packRect = pack.getBoundingClientRect();
+                const cs = getComputedStyle(pack);
+                const gapPx = parsePx(cs.columnGap || cs.gap || '0');
+                const colWidth = (packRect.width - gapPx * (cols - 1)) / cols;
+
+                const measured = measureHeights(colWidth);
+                const itemsByCol = cols === 2 && measured.length <= 18 ? assignTwoColsOptimal(measured) : assignGreedy(measured);
+                buildPackedColumns(itemsByCol);
+
+                // Remove legacy wrappers that contained the old branching layout logic.
+                const row1 = layout.querySelector('.page2-row1');
+                const row2 = document.getElementById('page2-row2');
+                const siblingsFull = document.getElementById('page2-siblings-full');
+                if (row1) row1.remove();
+                if (row2) row2.remove();
+                if (siblingsFull) siblingsFull.remove();
               }
             }
 
