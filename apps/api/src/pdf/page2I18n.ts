@@ -43,6 +43,7 @@ function page2Key(key: string): string {
 const PAGE2_KEYS = {
   section: {
     lore: page2Key('section.lore'),
+    socialStatus: page2Key('section.socialStatus'),
     lifePath: page2Key('section.lifePath'),
     style: page2Key('section.style'),
     values: page2Key('section.values'),
@@ -61,10 +62,21 @@ const PAGE2_KEYS = {
     school: page2Key('lore.school'),
     witcherInitiationMoment: page2Key('lore.witcherInitiationMoment'),
     diseasesAndCurses: page2Key('lore.diseasesAndCurses'),
+    mostImportantEvent: page2Key('lore.mostImportantEvent'),
+    trainings: page2Key('lore.trainings'),
+    currentSituation: page2Key('lore.currentSituation'),
     style: page2Key('lore.style'),
     values: page2Key('lore.values'),
   },
   tables: {
+    socialStatus: {
+      statusEqual: page2Key('tables.socialStatus.status.equal'),
+      statusTolerated: page2Key('tables.socialStatus.status.tolerated'),
+      statusHated: page2Key('tables.socialStatus.status.hated'),
+      statusFeared: page2Key('tables.socialStatus.status.feared'),
+      and: page2Key('tables.socialStatus.and'),
+      reputationLabel: page2Key('tables.socialStatus.reputationLabel'),
+    },
     lifeEvents: {
       colPeriod: page2Key('tables.lifeEvents.col.period'),
       colType: page2Key('tables.lifeEvents.col.type'),
@@ -112,6 +124,7 @@ const PAGE2_KEYS = {
 
 const PAGE2_FALLBACK: Record<string, { ru: string; en: string }> = {
   'witcher_cc.pdf.page2.section.lore': { ru: 'Лор', en: 'Lore' },
+  'witcher_cc.pdf.page2.section.socialStatus': { ru: 'Социальный статус', en: 'Social status' },
   'witcher_cc.pdf.page2.section.lifePath': { ru: 'Жизненный путь', en: 'Life path' },
   'witcher_cc.pdf.page2.section.style': { ru: 'Стиль', en: 'Style' },
   'witcher_cc.pdf.page2.section.values': { ru: 'Ценности', en: 'Values' },
@@ -129,6 +142,9 @@ const PAGE2_FALLBACK: Record<string, { ru: string; en: string }> = {
   'witcher_cc.pdf.page2.lore.school': { ru: 'Школа', en: 'School' },
   'witcher_cc.pdf.page2.lore.witcherInitiationMoment': { ru: 'Становление ведьмаком', en: 'Becoming a witcher' },
   'witcher_cc.pdf.page2.lore.diseasesAndCurses': { ru: 'Болезни и проклятия', en: 'Diseases & curses' },
+  'witcher_cc.pdf.page2.lore.mostImportantEvent': { ru: 'Самое важное событие', en: 'Most important event' },
+  'witcher_cc.pdf.page2.lore.trainings': { ru: 'Обучение', en: 'Trainings' },
+  'witcher_cc.pdf.page2.lore.currentSituation': { ru: 'Текущая ситуация', en: 'Current situation' },
   'witcher_cc.pdf.page2.lore.style': { ru: 'Стиль', en: 'Style' },
   'witcher_cc.pdf.page2.lore.values': { ru: 'Ценности', en: 'Values' },
 
@@ -162,15 +178,21 @@ const PAGE2_FALLBACK: Record<string, { ru: string; en: string }> = {
   'witcher_cc.pdf.page2.tables.enemies.col.victim': { ru: 'Жертва', en: 'Victim' },
   'witcher_cc.pdf.page2.tables.enemies.col.cause': { ru: 'Причина', en: 'Cause' },
   'witcher_cc.pdf.page2.tables.enemies.col.power': { ru: 'Сила', en: 'Power' },
-  'witcher_cc.pdf.page2.tables.enemies.col.level': { ru: 'Уровень силы', en: 'Power level' },
+  'witcher_cc.pdf.page2.tables.enemies.col.level': { ru: 'Мощь', en: 'Level' },
   'witcher_cc.pdf.page2.tables.enemies.col.result': { ru: 'Итог', en: 'Result' },
   'witcher_cc.pdf.page2.tables.enemies.col.alive': { ru: 'Жив ли', en: 'Alive' },
   'witcher_cc.pdf.page2.tables.enemies.col.howFar': { ru: 'Насколько далеко', en: 'How far' },
+  'witcher_cc.pdf.page2.tables.socialStatus.status.equal': { ru: 'Равенство', en: 'Equal' },
+  'witcher_cc.pdf.page2.tables.socialStatus.status.tolerated': { ru: 'Терпимость', en: 'Tolerated' },
+  'witcher_cc.pdf.page2.tables.socialStatus.status.hated': { ru: 'Ненависть', en: 'Hated' },
+  'witcher_cc.pdf.page2.tables.socialStatus.status.feared': { ru: 'Опасение', en: 'Feared' },
+  'witcher_cc.pdf.page2.tables.socialStatus.and': { ru: ' и ', en: ' and ' },
+  'witcher_cc.pdf.page2.tables.socialStatus.reputationLabel': { ru: 'Репутация', en: 'Reputation' },
 };
 
 export type CharacterPdfPage2I18n = {
   lang: string;
-  section: { lore: string; lifePath: string; style: string; values: string; siblings: string; allies: string; enemies: string };
+  section: { lore: string; socialStatus: string; lifePath: string; style: string; values: string; siblings: string; allies: string; enemies: string };
   lore: {
     homeland: string;
     homeLanguage: string;
@@ -182,10 +204,14 @@ export type CharacterPdfPage2I18n = {
     school: string;
     witcherInitiationMoment: string;
     diseasesAndCurses: string;
+    mostImportantEvent: string;
+    trainings: string;
+    currentSituation: string;
     style: string;
     values: string;
   };
   tables: {
+    socialStatus: { statusEqual: string; statusTolerated: string; statusHated: string; statusFeared: string; and: string; reputationLabel: string };
     lifeEvents: { colPeriod: string; colType: string; colDesc: string };
     style: { colClothing: string; colPersonality: string; colHairStyle: string; colAffectations: string };
     values: { colValuedPerson: string; colValue: string; colFeelingsOnPeople: string };

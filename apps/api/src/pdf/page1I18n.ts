@@ -114,6 +114,10 @@ const PAGE1_KEYS = {
   },
   avatarPlaceholder: page1Key('avatar.placeholder'),
   tables: {
+    perks: {
+      colPerk: page1Key('tables.perks.col.perk'),
+      colEffect: page1Key('tables.perks.col.effect'),
+    },
     weapons: {
       title: page1Key('tables.weapons.title'),
       colCheck: page1Key('tables.weapons.col.check'),
@@ -197,6 +201,7 @@ export type CharacterPdfPage1I18n = {
   skills: { languagePrefix: string; languageCommonSpeech: string; languageElderSpeech: string; languageDwarvish: string };
   avatarPlaceholder: string;
   tables: {
+    perks: { colPerk: string; colEffect: string };
     weapons: {
       title: string;
       colCheck: string;

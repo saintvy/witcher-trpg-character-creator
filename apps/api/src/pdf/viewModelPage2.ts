@@ -11,9 +11,12 @@ export type EnemyRow = {
   alive: string;
 };
 
+export type SocialStatusGroup = { groupName: string; statusLabel: string; isFeared: boolean };
+
 export type CharacterPdfPage2Vm = {
   i18n: CharacterPdfPage2I18n;
   loreBlocks: Array<{ label: string; html: string }>;
+  socialStatusTable: { groups: SocialStatusGroup[]; reputation: number };
   styleTable: { clothing: string; personality: string; hairStyle: string; affectations: string };
   valuesTable: { valuedPerson: string; value: string; feelingsOnPeople: string };
   lifeEvents: Array<{ period: string; type: string; description: string }>;
@@ -39,6 +42,16 @@ function asString(value: unknown): string {
   } catch {
     return '';
   }
+}
+
+function asNumber(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
 }
 
 function getPath(root: unknown, path: string): unknown {
@@ -137,6 +150,9 @@ export function mapCharacterJsonToPage2Vm(
   add(paragraph(i18n.lore.school, school));
   add(paragraph(i18n.lore.witcherInitiationMoment, witcherInitiationMoment));
   add(paragraph(i18n.lore.diseasesAndCurses, diseasesAndCurses));
+  add(paragraph(i18n.lore.mostImportantEvent, asString(lore.most_important_event)));
+  add(paragraph(i18n.lore.trainings, asString(lore.trainings)));
+  add(paragraph(i18n.lore.currentSituation, asString(lore.current_situation)));
 
   blocks.push(...joinParagraphs(paragraphs));
 
@@ -182,6 +198,33 @@ export function mapCharacterJsonToPage2Vm(
   const root = asRecord(characterJson);
   const logicFields = asRecord(root?.logicFields ?? getPath(characterJson, 'characterRaw.logicFields'));
   const isWitcher = asString(logicFields?.race) === 'Witcher';
+
+  const socialStatusRaw = Array.isArray(root?.social_status)
+    ? root.social_status
+    : Array.isArray(getPath(characterJson, 'characterRaw.social_status'))
+      ? getPath(characterJson, 'characterRaw.social_status')
+      : [];
+  const repVal = getPath(characterJson, 'reputation') ?? root?.reputation ?? getPath(characterJson, 'characterRaw.reputation');
+  const reputation = asNumber(repVal) ?? 0;
+  const statusLabels = [
+    i18n.tables.socialStatus.statusHated,
+    i18n.tables.socialStatus.statusTolerated,
+    i18n.tables.socialStatus.statusEqual,
+  ];
+  const socialStatusTable = {
+    groups: (socialStatusRaw as unknown[])
+      .map((s) => {
+        const rec = asRecord(s) ?? {};
+        const groupName = asString(rec.group_name);
+        const st = asNumber(rec.group_status);
+        const isFeared = rec.group_is_feared === true || asString(rec.group_is_feared) === 'true';
+        const idx = st === 1 ? 0 : st === 2 ? 1 : 2;
+        const statusLabel = statusLabels[idx] ?? statusLabels[2];
+        return { groupName, statusLabel, isFeared };
+      })
+      .filter((g) => g.groupName),
+    reputation: Number.isFinite(reputation) ? reputation : 0,
+  };
 
   const alliesRoot = Array.isArray(root?.allies)
     ? root.allies
@@ -254,5 +297,5 @@ export function mapCharacterJsonToPage2Vm(
         )
     : [];
 
-  return { i18n, loreBlocks: blocks, styleTable, valuesTable, lifeEvents, siblings, allies, alliesIsWitcher: isWitcher, enemiesIsWitcher: isWitcher, enemies };
+  return { i18n, loreBlocks: blocks, socialStatusTable, styleTable, valuesTable, lifeEvents, siblings, allies, alliesIsWitcher: isWitcher, enemiesIsWitcher: isWitcher, enemies };
 }

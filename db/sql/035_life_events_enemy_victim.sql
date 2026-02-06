@@ -50,10 +50,10 @@ WITH
                 , 'label' AS entity_field)
 , vals AS (
   SELECT v.*
-  FROM (VALUES ('ru', 1, 'Ваш персонаж — потерпевшая сторона.'),
-               ('ru', 2, 'Враг — потерпевшая сторона.'),
-               ('en', 1, 'You were the one who was wronged.'),
-               ('en', 2, 'You wronged someone else.')
+  FROM (VALUES ('ru', 1, 'Ваш персонаж'),
+               ('ru', 2, 'Враг'),
+               ('en', 1, 'You'),
+               ('en', 2, 'Someone else')
          ) AS v(lang, num, text)
 )
 , ins_label AS (

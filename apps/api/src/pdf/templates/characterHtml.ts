@@ -37,6 +37,12 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#039;');
 }
 
+/** Escapes HTML but allows <b> and </b> tags for bold formatting. */
+function escapeHtmlAllowBold(value: string): string {
+  const escaped = escapeHtml(value);
+  return escaped.replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>');
+}
+
 function formatSigned(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`;
 }
@@ -287,6 +293,37 @@ function renderProfessional(vm: CharacterPdfPage1Vm): string {
           `;
         })
         .join('')}
+    </div>
+  `;
+}
+
+function renderPerksTable(vm: CharacterPdfPage1Vm): string {
+  if (!vm.perks.length) return '';
+  const rows = vm.perks
+    .map(
+      (p) => `
+      <tr>
+        <td class="equip-fit equip-left">${escapeHtmlAllowBold(p.perk)}</td>
+        <td class="equip-effect">${escapeHtml(p.effect)}</td>
+      </tr>
+    `,
+    )
+    .join('');
+  return `
+    <div class="perks-box">
+      <table class="perks-table">
+        <colgroup>
+          <col class="equip-fit" />
+          <col />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="equip-fit equip-left">${escapeHtml(vm.i18n.tables.perks.colPerk)}</th>
+            <th>${escapeHtml(vm.i18n.tables.perks.colEffect)}</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
     </div>
   `;
 }
@@ -669,6 +706,7 @@ function renderPage1(vm: CharacterPdfPage1Vm): string {
         <div class="prof-title-row">${escapeHtml(vm.i18n.section.professional)}</div>
         <div class="prof-area">
           ${renderProfessional(vm)}
+          ${renderPerksTable(vm)}
           ${renderEquipment(vm)}
         </div>
       </div>
@@ -681,6 +719,35 @@ function renderLoreBlock(vm: CharacterPdfPage2Vm): string {
     ? `<div class="lore-paras">${vm.loreBlocks.map((b) => b.html).join('')}</div>`
     : `<div class="muted">&nbsp;</div>`;
   return box(vm.i18n.section.lore, body, 'lore-box');
+}
+
+function renderSocialStatusTable(vm: CharacterPdfPage2Vm): string {
+  const { groups, reputation } = vm.socialStatusTable;
+  const titleText = vm.i18n.section.socialStatus;
+  const repLabel = vm.i18n.tables.socialStatus.reputationLabel;
+  const titleHtml = `${escapeHtml(titleText)} - (${escapeHtml(repLabel)} <span class="reputation-muted">${escapeHtml(String(reputation))}</span> )`;
+  const headerCells = groups
+    .map((g) => `<th class="equip-fit equip-left">${escapeHtml(g.groupName)}</th>`)
+    .join('');
+  const valueCells = groups
+    .map((g) => {
+      const and = vm.i18n.tables.socialStatus.and;
+      const val = g.isFeared ? `${g.statusLabel}${and}${vm.i18n.tables.socialStatus.statusFeared}` : g.statusLabel;
+      return `<td class="equip-fit equip-left">${escapeHtml(val)}</td>`;
+    })
+    .join('');
+  const colgroup = groups.map(() => '<col class="equip-fit" />').join('');
+  const body =
+    groups.length > 0
+      ? `
+      <table class="equip-table equip-social-status">
+        <colgroup>${colgroup}</colgroup>
+        <thead><tr>${headerCells}</tr></thead>
+        <tbody><tr>${valueCells}</tr></tbody>
+      </table>
+    `
+      : '<div class="muted">&nbsp;</div>';
+  return boxRawTitle(titleHtml, body, 'social-status-box');
 }
 
 function renderLifeEvents(vm: CharacterPdfPage2Vm): string {
@@ -928,13 +995,17 @@ function renderAllies(vm: CharacterPdfPage2Vm): string {
         </tr>
       `;
 
+  const emptyRowAllies = isWitcher
+    ? `<tr><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-effect">&nbsp;</td></tr>`
+    : `<tr><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-effect">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td></tr>`;
+
   return box(
     vm.i18n.section.allies,
     `
       <table class="equip-table equip-allies">
         ${colgroup}
         <thead>${headerRow}</thead>
-        <tbody>${rows}</tbody>
+        <tbody>${rows}${emptyRowAllies}</tbody>
       </table>
     `,
     'allies-box',
@@ -1041,13 +1112,17 @@ function renderEnemies(vm: CharacterPdfPage2Vm): string {
         </tr>
       `;
 
+  const emptyRowEnemies = isWitcher
+    ? `<tr><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-effect">&nbsp;</td></tr>`
+    : `<tr><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td><td class="equip-fit equip-left">&nbsp;</td></tr>`;
+
   return box(
     vm.i18n.section.enemies,
     `
       <table class="equip-table equip-enemies">
         ${colgroup}
         <thead>${headerRow}</thead>
-        <tbody>${rows}</tbody>
+        <tbody>${rows}${emptyRowEnemies}</tbody>
       </table>
     `,
     'enemies-box',
@@ -1056,6 +1131,7 @@ function renderEnemies(vm: CharacterPdfPage2Vm): string {
 
 function renderPage2(vm: CharacterPdfPage2Vm): string {
   const loreHtml = renderLoreBlock(vm);
+  const socialStatusHtml = renderSocialStatusTable(vm);
   const lifePathHtml = renderLifeEvents(vm);
   const styleHtml = renderStyleTable(vm);
   const valuesHtml = renderValuesTable(vm);
@@ -1072,6 +1148,7 @@ function renderPage2(vm: CharacterPdfPage2Vm): string {
           <div class="page2-cell page2-cell-right" id="page2-right">
             <div class="page2-right-inner" id="page2-right-inner">
               ${loreHtml}
+              ${socialStatusHtml}
               <div class="page2-style-values" id="page2-style-values">
                 ${styleHtml}
                 ${valuesHtml}
@@ -1384,6 +1461,20 @@ export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page
       .lore-paras .p { margin: 0 0 2px 0; }
       .p-k { font-weight: 800; }
       .muted { color: #6b7280; }
+      .reputation-muted { color: #e5e7eb; }
+      .equip-social-status { table-layout: auto; }
+      .social-status-box .box-title { background: rgba(249, 115, 22, 0.14); }
+      .perks-box .perks-table { width: 100%; border-collapse: collapse; table-layout: auto; }
+      .perks-box .perks-table th, .perks-box .perks-table td { border: 1px solid #111827; padding: 2px 3px; vertical-align: top; }
+      .perks-box .perks-table thead th { background: rgba(249, 115, 22, 0.2); font-weight: 900; text-transform: uppercase; font-size: 9px; letter-spacing: 0.06em; }
+      .perks-box .perks-table .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; }
+      .lore-box .box-title,
+      .life-box .box-title,
+      .style-box .box-title,
+      .values-box .box-title { background: rgba(59, 130, 246, 0.12); }
+      .siblings-box .box-title { background: rgba(20, 184, 166, 0.14); }
+      .allies-box .box-title { background: rgba(34, 197, 94, 0.14); }
+      .enemies-box .box-title { background: rgba(239, 68, 68, 0.14); }
       .t { width: 100%; border-collapse: collapse; table-layout: fixed; }
       .t th, .t td { border: 1px solid #111827; padding: 2px 3px; vertical-align: top; }
       .t thead th { background: #f3f4f6; font-weight: 900; text-transform: uppercase; font-size: 9px; letter-spacing: 0.06em; text-align: left; }
@@ -1400,12 +1491,13 @@ export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page
         const run = () => {
           const wrapper = document.getElementById('notes-wrapper');
           if (wrapper) {
-            const skills = document.querySelector('.skills-column');
             const tables = Array.from(wrapper.querySelectorAll('table.notes-table'));
-            if (skills && tables.length > 0) {
-              const skillsRect = skills.getBoundingClientRect();
+            if (tables.length > 0) {
+              const gridBottom = wrapper.closest('.grid-bottom') ?? document.querySelector('.grid-bottom');
               const wrapperRect = wrapper.getBoundingClientRect();
-              const available = skillsRect.bottom - wrapperRect.top;
+              const bottomRect = gridBottom ? gridBottom.getBoundingClientRect() : null;
+              const bottomY = bottomRect ? bottomRect.bottom : wrapperRect.bottom;
+              const available = bottomY - wrapperRect.top;
               if (Number.isFinite(available) && available > 0) {
                 const headH = tables[0].tHead ? tables[0].tHead.getBoundingClientRect().height : 0;
                 const tbody0 = tables[0].tBodies && tables[0].tBodies[0];
@@ -1417,7 +1509,8 @@ export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page
                 const rows = Math.floor((available - headH - 2) / rowH);
                 if (rows > 0) {
                   wrapper.style.display = '';
-                  wrapper.style.height = String(Math.floor(headH + rows * rowH + 2)) + 'px';
+                  // Use ceil to avoid clipping the last row due to fractional pixel rounding (print/PDF).
+                  wrapper.style.height = String(Math.ceil(headH + rows * rowH + 2)) + 'px';
                   for (const t of tables) {
                     t.tBodies[0].innerHTML = '';
                     for (let i = 0; i < rows; i++) {
@@ -1439,11 +1532,12 @@ export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page
 
               const blocks = [];
               const priorityById = {
-                lore: 1,
-                lifePath: 2,
-                siblings: 3,
-                style: 4,
-                values: 5,
+                socialStatus: 1,
+                lore: 2,
+                lifePath: 3,
+                siblings: 4,
+                style: 5,
+                values: 6,
               };
               const add = (id, selector) => {
                 const el = layout.querySelector(selector);
@@ -1453,6 +1547,7 @@ export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page
               // The group of half-width blocks we want to pack tightly on page 2.
               add('lifePath', '.life-box');
               add('lore', '.lore-box');
+              add('socialStatus', '.social-status-box');
               add('style', '.style-box');
               add('values', '.values-box');
 

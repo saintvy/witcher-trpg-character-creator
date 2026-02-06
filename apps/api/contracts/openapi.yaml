@@ -224,7 +224,7 @@ components:
                     example: "С причудами"
                 required: [gender]
 
-            alies:
+            allies:
               type: array
               description: "Союзники."
               items:
@@ -793,7 +793,7 @@ components:
                     example: "С причудами"
                 required: [gender]
 
-            alies:
+            allies:
               type: array
               description: "Союзники."
               items:

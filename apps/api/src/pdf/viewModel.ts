@@ -53,6 +53,7 @@ export type CharacterPdfPage1Vm = {
       skills: { id: string; name: string; paramAbbr: string }[];
     }[];
   };
+  perks: Array<{ perk: string; effect: string }>;
   equipment: {
     weapons: {
       id: string;
@@ -480,6 +481,19 @@ export function mapCharacterJsonToPage1Vm(
     return { title, color, skills };
   });
 
+  const perksRaw = Array.isArray(getFirst(characterJson, ['perks', 'characterRaw.perks']))
+    ? (getFirst(characterJson, ['perks', 'characterRaw.perks']) as unknown[])
+    : [];
+  const perks: CharacterPdfPage1Vm['perks'] = perksRaw
+    .filter((p): p is string => typeof p === 'string')
+    .map((s) => {
+      const idx = s.indexOf(':');
+      const perk = idx >= 0 ? s.slice(0, idx).trim() : s.trim();
+      const effect = idx >= 0 ? s.slice(idx + 1).trim() : '';
+      return { perk, effect };
+    })
+    .filter((p) => p.perk || p.effect);
+
   const gearRoot = asRecord(getFirst(characterJson, ['gear', 'character.gear'])) ?? {};
   const weaponsRaw = Array.isArray(gearRoot.weapons) ? (gearRoot.weapons as unknown[]) : [];
   const armorsRaw = Array.isArray(gearRoot.armors) ? (gearRoot.armors as unknown[]) : [];
@@ -657,6 +671,7 @@ export function mapCharacterJsonToPage1Vm(
     avatar: { dataUrl: getFirstString(characterJson, ['avatarDataUrl', 'avatar.dataUrl']) || null },
     skillGroups,
     professional: { branches },
+    perks,
     equipment: { weapons, armors, potions, magic: magicItems },
   };
 }

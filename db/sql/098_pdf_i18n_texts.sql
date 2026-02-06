@@ -128,6 +128,11 @@ VALUES
   (ck_id('witcher_cc.pdf.page1.avatar.placeholder'), 'pdf', 'page1.avatar.placeholder', 'en', 'Avatar'),
 
   -- equipment tables
+  (ck_id('witcher_cc.pdf.page1.tables.perks.col.perk'), 'pdf', 'page1.tables.perks.col.perk', 'ru', 'Перк'),
+  (ck_id('witcher_cc.pdf.page1.tables.perks.col.perk'), 'pdf', 'page1.tables.perks.col.perk', 'en', 'Perk'),
+  (ck_id('witcher_cc.pdf.page1.tables.perks.col.effect'), 'pdf', 'page1.tables.perks.col.effect', 'ru', 'Эффект'),
+  (ck_id('witcher_cc.pdf.page1.tables.perks.col.effect'), 'pdf', 'page1.tables.perks.col.effect', 'en', 'Effect'),
+
   (ck_id('witcher_cc.pdf.page1.tables.weapons.title'), 'pdf', 'page1.tables.weapons.title', 'ru', 'Оружие'),
   (ck_id('witcher_cc.pdf.page1.tables.weapons.title'), 'pdf', 'page1.tables.weapons.title', 'en', 'Weapon'),
   (ck_id('witcher_cc.pdf.page1.tables.weapons.col.check'), 'pdf', 'page1.tables.weapons.col.check', 'ru', '✓'),
@@ -266,6 +271,8 @@ VALUES
   -- sections
   (ck_id('witcher_cc.pdf.page2.section.lore'), 'pdf', 'page2.section.lore', 'ru', 'Лор'),
   (ck_id('witcher_cc.pdf.page2.section.lore'), 'pdf', 'page2.section.lore', 'en', 'Lore'),
+  (ck_id('witcher_cc.pdf.page2.section.socialStatus'), 'pdf', 'page2.section.socialStatus', 'ru', 'Социальный статус'),
+  (ck_id('witcher_cc.pdf.page2.section.socialStatus'), 'pdf', 'page2.section.socialStatus', 'en', 'Social status'),
   (ck_id('witcher_cc.pdf.page2.section.lifePath'), 'pdf', 'page2.section.lifePath', 'ru', 'Жизненный путь'),
   (ck_id('witcher_cc.pdf.page2.section.lifePath'), 'pdf', 'page2.section.lifePath', 'en', 'Life path'),
   (ck_id('witcher_cc.pdf.page2.section.style'), 'pdf', 'page2.section.style', 'ru', 'Стиль'),
@@ -300,6 +307,12 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.lore.witcherInitiationMoment'), 'pdf', 'page2.lore.witcherInitiationMoment', 'en', 'Becoming a witcher'),
   (ck_id('witcher_cc.pdf.page2.lore.diseasesAndCurses'), 'pdf', 'page2.lore.diseasesAndCurses', 'ru', 'Болезни и проклятия'),
   (ck_id('witcher_cc.pdf.page2.lore.diseasesAndCurses'), 'pdf', 'page2.lore.diseasesAndCurses', 'en', 'Diseases & curses'),
+  (ck_id('witcher_cc.pdf.page2.lore.mostImportantEvent'), 'pdf', 'page2.lore.mostImportantEvent', 'ru', 'Самое важное событие'),
+  (ck_id('witcher_cc.pdf.page2.lore.mostImportantEvent'), 'pdf', 'page2.lore.mostImportantEvent', 'en', 'Most important event'),
+  (ck_id('witcher_cc.pdf.page2.lore.trainings'), 'pdf', 'page2.lore.trainings', 'ru', 'Обучение'),
+  (ck_id('witcher_cc.pdf.page2.lore.trainings'), 'pdf', 'page2.lore.trainings', 'en', 'Trainings'),
+  (ck_id('witcher_cc.pdf.page2.lore.currentSituation'), 'pdf', 'page2.lore.currentSituation', 'ru', 'Текущая ситуация'),
+  (ck_id('witcher_cc.pdf.page2.lore.currentSituation'), 'pdf', 'page2.lore.currentSituation', 'en', 'Current situation'),
   (ck_id('witcher_cc.pdf.page2.lore.style'), 'pdf', 'page2.lore.style', 'ru', 'Стиль'),
   (ck_id('witcher_cc.pdf.page2.lore.style'), 'pdf', 'page2.lore.style', 'en', 'Style'),
   (ck_id('witcher_cc.pdf.page2.lore.values'), 'pdf', 'page2.lore.values', 'ru', 'Ценности'),
@@ -329,6 +342,18 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.tables.values.col.value'), 'pdf', 'page2.tables.values.col.value', 'en', 'Value'),
   (ck_id('witcher_cc.pdf.page2.tables.values.col.feelingsOnPeople'), 'pdf', 'page2.tables.values.col.feelingsOnPeople', 'ru', 'Мысли об окружающих'),
   (ck_id('witcher_cc.pdf.page2.tables.values.col.feelingsOnPeople'), 'pdf', 'page2.tables.values.col.feelingsOnPeople', 'en', 'Feelings on people'),
+
+  -- social status
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.status.equal'), 'pdf', 'page2.tables.socialStatus.status.equal', 'ru', 'Равенство'),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.status.equal'), 'pdf', 'page2.tables.socialStatus.status.equal', 'en', 'Equal'),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.status.tolerated'), 'pdf', 'page2.tables.socialStatus.status.tolerated', 'ru', 'Терпимость'),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.status.tolerated'), 'pdf', 'page2.tables.socialStatus.status.tolerated', 'en', 'Tolerated'),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.status.hated'), 'pdf', 'page2.tables.socialStatus.status.hated', 'ru', 'Ненависть'),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.status.hated'), 'pdf', 'page2.tables.socialStatus.status.hated', 'en', 'Hated'),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.status.feared'), 'pdf', 'page2.tables.socialStatus.status.feared', 'ru', 'Опасение'),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.status.feared'), 'pdf', 'page2.tables.socialStatus.status.feared', 'en', 'Feared'),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.and'), 'pdf', 'page2.tables.socialStatus.and', 'ru', ' и '),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.and'), 'pdf', 'page2.tables.socialStatus.and', 'en', ' and '),
 
   -- siblings
   (ck_id('witcher_cc.pdf.page2.tables.siblings.col.age'), 'pdf', 'page2.tables.siblings.col.age', 'ru', 'Возраст'),
@@ -367,8 +392,8 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.tables.enemies.col.cause'), 'pdf', 'page2.tables.enemies.col.cause', 'en', 'Cause'),
   (ck_id('witcher_cc.pdf.page2.tables.enemies.col.power'), 'pdf', 'page2.tables.enemies.col.power', 'ru', 'Сила'),
   (ck_id('witcher_cc.pdf.page2.tables.enemies.col.power'), 'pdf', 'page2.tables.enemies.col.power', 'en', 'Power'),
-  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.level'), 'pdf', 'page2.tables.enemies.col.level', 'ru', 'Уровень силы'),
-  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.level'), 'pdf', 'page2.tables.enemies.col.level', 'en', 'Power level'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.level'), 'pdf', 'page2.tables.enemies.col.level', 'ru', 'Мощь'),
+  (ck_id('witcher_cc.pdf.page2.tables.enemies.col.level'), 'pdf', 'page2.tables.enemies.col.level', 'en', 'Level'),
   (ck_id('witcher_cc.pdf.page2.tables.enemies.col.result'), 'pdf', 'page2.tables.enemies.col.result', 'ru', 'Итог'),
   (ck_id('witcher_cc.pdf.page2.tables.enemies.col.result'), 'pdf', 'page2.tables.enemies.col.result', 'en', 'Result'),
   (ck_id('witcher_cc.pdf.page2.tables.enemies.col.alive'), 'pdf', 'page2.tables.enemies.col.alive', 'ru', 'Жив ли'),
