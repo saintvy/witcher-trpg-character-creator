@@ -1,11 +1,17 @@
 import { chromium, type Browser } from 'playwright';
 import { mapCharacterJsonToPage1Vm, type SkillCatalogInfo, type WeaponDetails, type ArmorDetails, type PotionDetails } from './viewModel.js';
-import { mapCharacterJsonToPage2Vm } from './viewModelPage2.js';
+import {
+  mapCharacterJsonToPage2Vm,
+  type VehicleDetails,
+  type RecipeDetails,
+} from './viewModelPage2.js';
 import { renderCharacterPdfHtml } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
 import { db } from '../db/pool.js';
 import { loadCharacterPdfPage1I18n, type CharacterPdfPage1I18n } from './page1I18n.js';
 import { loadCharacterPdfPage2I18n, type CharacterPdfPage2I18n } from './page2I18n.js';
+
+export type PdfOptions = { alchemy_style?: 'w1' | 'w2' };
 
 export class CharacterPdfService {
   private static browserPromise: Promise<Browser> | null = null;
@@ -19,42 +25,11 @@ export class CharacterPdfService {
     return CharacterPdfService.browserPromise;
   }
 
-  private detectLang(characterJson: unknown): string {
-    const containsCyrillic = (value: unknown): boolean => {
-      if (typeof value === 'string') return /[А-Яа-яЁё]/.test(value);
-      if (Array.isArray(value)) return value.some(containsCyrillic);
-      if (typeof value === 'object' && value !== null) return Object.values(value as Record<string, unknown>).some(containsCyrillic);
-      return false;
-    };
-
+  private getLangFromCharacter(characterJson: unknown): string {
     const record =
       characterJson && typeof characterJson === 'object' && !Array.isArray(characterJson) ? (characterJson as Record<string, unknown>) : null;
-
-    const tryReadLang = (value: unknown): string | null => {
-      if (!value) return null;
-      if (typeof value === 'object' && !Array.isArray(value)) {
-        const rec = value as Record<string, unknown>;
-        const lang = rec.lang;
-        if (typeof lang === 'string' && lang) return lang;
-      }
-      if (Array.isArray(value)) {
-        for (const x of value) {
-          const found = tryReadLang(x);
-          if (found) return found;
-        }
-      } else if (typeof value === 'object' && value !== null) {
-        for (const v of Object.values(value as Record<string, unknown>)) {
-          const found = tryReadLang(v);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-
-    const explicitLang = tryReadLang(record);
-    if (explicitLang) return explicitLang;
-
-    return containsCyrillic(characterJson) ? 'ru' : 'en';
+    const lang = record?.lang;
+    return typeof lang === 'string' && lang.trim().length > 0 ? lang.trim() : 'en';
   }
 
   private async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -86,8 +61,8 @@ export class CharacterPdfService {
     return i18n;
   }
 
-  async generatePdfBuffer(characterJson: unknown): Promise<Buffer> {
-    const lang = this.detectLang(characterJson);
+  async generatePdfBuffer(characterJson: unknown, options: PdfOptions = {}): Promise<Buffer> {
+    const lang = this.getLangFromCharacter(characterJson);
     let page1I18n: CharacterPdfPage1I18n;
     try {
       page1I18n = await this.getPage1I18n(lang);
@@ -138,6 +113,18 @@ export class CharacterPdfService {
     const potionIds = Array.isArray(gearRec?.potions)
       ? (gearRec!.potions as unknown[])
           .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).p_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
+    const vehicleIds = Array.isArray(gearRec?.vehicles)
+      ? (gearRec!.vehicles as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).wt_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
+    const recipeIds = Array.isArray(gearRec?.recipes)
+      ? (gearRec!.recipes as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).r_id ?? '') : ''))
           .filter((x) => x.length > 0)
       : [];
 
@@ -202,6 +189,48 @@ export class CharacterPdfService {
       console.error('[pdf] potions lookup failed', error);
     }
 
+    const vehicleDetailsById = new Map<string, VehicleDetails>();
+    try {
+      if (vehicleIds.length > 0) {
+        const { rows } = await this.withTimeout(
+          db.query<VehicleDetails>(
+            `
+              SELECT wt_id, vehicle_name, subgroup_name, base, control_modifier, speed, occupancy, hp, weight, price
+              FROM wcc_item_vehicles_v
+              WHERE lang = $1 AND wt_id = ANY($2::text[])
+            `,
+            [lang, Array.from(new Set(vehicleIds))],
+          ),
+          2500,
+        );
+        rows.forEach((r) => vehicleDetailsById.set(r.wt_id, r));
+      }
+    } catch (error) {
+      console.error('[pdf] vehicles lookup failed', error);
+    }
+
+    const recipeDetailsById = new Map<string, RecipeDetails>();
+    try {
+      if (recipeIds.length > 0) {
+        const { rows } = await this.withTimeout(
+          db.query<RecipeDetails>(
+            `
+              SELECT r_id, recipe_name, recipe_group, craft_level, complexity, time_craft, formula_en,
+                     price_formula, minimal_ingredients_cost, time_effect, toxicity, recipe_description,
+                     weight_potion, price_potion
+              FROM wcc_item_recipes_v
+              WHERE lang = $1 AND r_id = ANY($2::text[])
+            `,
+            [lang, Array.from(new Set(recipeIds))],
+          ),
+          2500,
+        );
+        rows.forEach((r) => recipeDetailsById.set(r.r_id, r));
+      }
+    } catch (error) {
+      console.error('[pdf] recipes lookup failed', error);
+    }
+
     const page1Vm = mapCharacterJsonToPage1Vm(characterJson, {
       lang,
       i18n: page1I18n,
@@ -210,8 +239,12 @@ export class CharacterPdfService {
       armorDetailsById,
       potionDetailsById,
     });
-    const page2Vm = mapCharacterJsonToPage2Vm(characterJson, { i18n: page2I18n });
-    const html = renderCharacterPdfHtml({ page1: page1Vm, page2: page2Vm });
+    const page2Vm = mapCharacterJsonToPage2Vm(characterJson, {
+      i18n: page2I18n,
+      vehicleDetailsById,
+      recipeDetailsById,
+    });
+    const html = renderCharacterPdfHtml({ page1: page1Vm, page2: page2Vm, options });
 
     const browser = await CharacterPdfService.getBrowser();
     const context = await browser.newContext({

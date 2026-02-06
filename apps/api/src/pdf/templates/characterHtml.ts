@@ -5,6 +5,21 @@ import type { CharacterPdfPage1Vm } from '../viewModel.js';
 import type { CharacterPdfPage2Vm } from '../viewModelPage2.js';
 
 const assetDataUrlCache = new Map<string, string>();
+const assetFormulaIngredientCache = new Map<string, string>();
+
+const FORMULA_INGREDIENT_NAMES = [
+  'Aether',
+  'Caelum',
+  'Fulgur',
+  'Hydragenum',
+  'Quebrith',
+  'Rebis',
+  'Sol',
+  'Vermilion',
+  'Vitriol',
+  'Mutagen',
+  'Spirits',
+] as const;
 
 function assetPngDataUrl(filename: string): string {
   const cached = assetDataUrlCache.get(filename);
@@ -26,6 +41,44 @@ function assetPngDataUrl(filename: string): string {
   const dataUrl = `data:image/png;base64,${buffer.toString('base64')}`;
   assetDataUrlCache.set(filename, dataUrl);
   return dataUrl;
+}
+
+function assetFormulaIngredientUrl(englishName: string, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
+  const cacheKey = `${alchemyStyle}:${englishName}`;
+  const cached = assetFormulaIngredientCache.get(cacheKey);
+  if (cached) return cached;
+  const filename = `${englishName}.webp`;
+  const subdir = alchemyStyle;
+  const primaryUrl = new URL(`../assets/formula_ingredients/${subdir}/${filename}`, import.meta.url);
+  let buffer: Buffer;
+  try {
+    buffer = readFileSync(primaryUrl);
+  } catch {
+    const currentFile = fileURLToPath(import.meta.url);
+    const fallbackPath = path.resolve(path.dirname(currentFile), '../../../src/pdf/assets/formula_ingredients', subdir, filename);
+    if (!existsSync(fallbackPath)) {
+      return '';
+    }
+    buffer = readFileSync(fallbackPath);
+  }
+  const dataUrl = `data:image/webp;base64,${buffer.toString('base64')}`;
+  assetFormulaIngredientCache.set(cacheKey, dataUrl);
+  return dataUrl;
+}
+
+function renderFormulaAsImages(formulaEn: string, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
+  if (!formulaEn.trim()) return '&nbsp;';
+  const tokens = formulaEn.trim().split(/\s+/);
+  return tokens
+    .map((token) => {
+      const name = token.trim();
+      if (!name) return '';
+      const url = assetFormulaIngredientUrl(name, alchemyStyle);
+      if (!url) return escapeHtml(name);
+      return `<img class="formula-ingredient-img" src="${url}" alt="${escapeHtml(name)}" />`;
+    })
+    .filter(Boolean)
+    .join(' ');
 }
 
 function escapeHtml(value: string): string {
@@ -732,8 +785,11 @@ function renderSocialStatusTable(vm: CharacterPdfPage2Vm): string {
   const valueCells = groups
     .map((g) => {
       const and = vm.i18n.tables.socialStatus.and;
-      const val = g.isFeared ? `${g.statusLabel}${and}${vm.i18n.tables.socialStatus.statusFeared}` : g.statusLabel;
-      return `<td class="equip-fit equip-left">${escapeHtml(val)}</td>`;
+      const statusFeared = vm.i18n.tables.socialStatus.statusFeared;
+      const valHtml = g.isFeared
+        ? `${escapeHtml(g.statusLabel)}<br>${escapeHtml(and)}${escapeHtml(statusFeared)}`
+        : escapeHtml(g.statusLabel);
+      return `<td class="equip-fit equip-left social-status-cell">${valHtml}</td>`;
     })
     .join('');
   const colgroup = groups.map(() => '<col class="equip-fit" />').join('');
@@ -1129,7 +1185,189 @@ function renderEnemies(vm: CharacterPdfPage2Vm): string {
   );
 }
 
-function renderPage2(vm: CharacterPdfPage2Vm): string {
+/** Escapes HTML but allows <br> and <br/> in string (for header line breaks). */
+function escapeHtmlAllowBr(value: string): string {
+  const escaped = escapeHtml(value);
+  return escaped.replace(/&lt;br\s*\/?&gt;/gi, '<br>');
+}
+
+function renderVehiclesTable(vm: CharacterPdfPage2Vm): string {
+  const showOccupancy = vm.vehicles.some((v) => v.occupancy.trim() !== '');
+  const t = vm.i18n.tables.vehicles;
+  const headerCells = [
+    `<th class="equip-fit equip-right">${escapeHtml(t.colQty)}</th>`,
+    `<th class="equip-fit equip-left">${escapeHtml(t.colType)}</th>`,
+    `<th>${escapeHtml(t.colVehicle)}</th>`,
+    `<th class="equip-fit equip-left">${escapeHtml(t.colSkill)}</th>`,
+    `<th class="equip-fit equip-left">${escapeHtml(t.colMod)}</th>`,
+    `<th class="equip-fit equip-left">${escapeHtml(t.colSpeed)}</th>`,
+    `<th class="equip-fit equip-left">${escapeHtml(t.colHp)}</th>`,
+    `<th class="equip-fit equip-left">${escapeHtml(t.colWeight)}</th>`,
+    `<th class="equip-fit equip-left">${escapeHtml(t.colPrice)}</th>`,
+  ];
+  if (showOccupancy) headerCells.push(`<th class="equip-fit equip-left">${escapeHtml(t.colOccupancy)}</th>`);
+  const emptyRowCells = [
+    '<td class="equip-fit equip-right">&nbsp;</td>',
+    '<td class="equip-fit equip-left">&nbsp;</td>',
+    '<td>&nbsp;</td>',
+    '<td class="equip-fit equip-left">&nbsp;</td>',
+    '<td class="equip-fit equip-left">&nbsp;</td>',
+    '<td class="equip-fit equip-left">&nbsp;</td>',
+    '<td class="equip-fit equip-left">&nbsp;</td>',
+    '<td class="equip-fit equip-left">&nbsp;</td>',
+    '<td class="equip-fit equip-left">&nbsp;</td>',
+  ];
+  if (showOccupancy) emptyRowCells.push('<td class="equip-fit equip-left">&nbsp;</td>');
+  const emptyRow = `<tr>${emptyRowCells.join('')}</tr>`;
+  const rows =
+    vm.vehicles.length > 0
+      ? vm.vehicles
+          .map((v) => {
+            const occCell = showOccupancy ? `<td class="equip-fit equip-left">${escapeHtml(v.occupancy)}</td>` : '';
+            return `
+          <tr>
+            <td class="equip-fit equip-right">${escapeHtml(v.amount)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(v.subgroupName)}</td>
+            <td class="equip-vehicle-name">${escapeHtml(v.vehicleName)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(v.base)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(v.controlModifier)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(v.speed)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(v.hp)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(v.weight)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(v.price)}</td>
+            ${occCell}
+          </tr>
+        `;
+          })
+          .join('')
+      : emptyRow;
+  const colgroup = [
+    '<col class="equip-fit" />',
+    '<col class="equip-fit" />',
+    '<col />',
+    '<col class="equip-fit" />',
+    '<col class="equip-fit" />',
+    '<col class="equip-fit" />',
+    '<col class="equip-fit" />',
+    '<col class="equip-fit" />',
+    '<col class="equip-fit" />',
+  ];
+  if (showOccupancy) colgroup.push('<col class="equip-fit" />');
+  return box(
+    vm.i18n.section.vehicles,
+    `
+      <table class="equip-table equip-vehicles table-header-pale-gray">
+        <colgroup>${colgroup.join('')}</colgroup>
+        <thead><tr>${headerCells.join('')}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `,
+    'vehicles-box',
+  );
+}
+
+function renderRecipesTable(vm: CharacterPdfPage2Vm, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
+  const t = vm.i18n.tables.recipes;
+  const leg = vm.i18n.formulaLegend;
+  const headerRow = `
+    <tr>
+      <th class="equip-fit equip-right">${escapeHtmlAllowBr(t.colQty)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colRecipeGroup)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colRecipeName)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colComplexity)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colTimeCraft)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colFormula)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colPriceFormula)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colMinimalIngredientsCost)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colTimeEffect)}</th>
+      <th class="equip-fit equip-left recipes-cell-toxicity">${escapeHtmlAllowBr(t.colToxicity)}</th>
+      <th>${escapeHtmlAllowBr(t.colRecipeDescription)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colWeightPotion)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colPricePotion)}</th>
+    </tr>
+  `;
+  const emptyRecipeRow = `
+        <tr>
+          <td class="equip-fit equip-right">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left formula-cell">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left recipes-cell-toxicity">&nbsp;</td>
+          <td class="equip-effect">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+          <td class="equip-fit equip-left">&nbsp;</td>
+        </tr>
+      `;
+  const dataRows =
+    vm.recipes.length > 0
+      ? vm.recipes
+          .map((r) => `
+          <tr>
+            <td class="equip-fit equip-right">${escapeHtml(r.amount)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.recipeGroup)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.recipeName)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.complexity)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.timeCraft)}</td>
+            <td class="equip-fit equip-left formula-cell">${renderFormulaAsImages(r.formulaEn, alchemyStyle)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.priceFormula)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.minimalIngredientsCost)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.timeEffect)}</td>
+            <td class="equip-fit equip-left recipes-cell-toxicity">${escapeHtml(r.toxicity)}</td>
+            <td class="equip-effect">${escapeHtml(r.recipeDescription)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.weightPotion)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.pricePotion)}</td>
+          </tr>
+        `)
+          .join('')
+      : '';
+  const rows =
+    vm.recipes.length > 0
+      ? dataRows + emptyRecipeRow + emptyRecipeRow + emptyRecipeRow
+      : emptyRecipeRow;
+  const legendPairs = FORMULA_INGREDIENT_NAMES.map((name) => {
+    const url = assetFormulaIngredientUrl(name, alchemyStyle);
+    const label = escapeHtml((leg as Record<string, string>)[name] ?? name);
+    if (!url) return label;
+    return `<img class="formula-legend-img" src="${url}" alt="${escapeHtml(name)}" /> - ${label}`;
+  }).join(', ');
+  const legendRow = `
+    <tr class="recipes-legend-row">
+      <td colspan="13" class="recipes-legend-cell">${legendPairs}</td>
+    </tr>
+  `;
+  return box(
+    vm.i18n.section.recipes,
+    `
+      <table class="equip-table equip-recipes table-header-pale-brown">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+        </colgroup>
+        <thead>${headerRow}</thead>
+        <tbody>${rows}${legendRow}</tbody>
+      </table>
+    `,
+    'recipes-box',
+  );
+}
+
+function renderPage2(vm: CharacterPdfPage2Vm, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
   const loreHtml = renderLoreBlock(vm);
   const socialStatusHtml = renderSocialStatusTable(vm);
   const lifePathHtml = renderLifeEvents(vm);
@@ -1163,6 +1401,11 @@ function renderPage2(vm: CharacterPdfPage2Vm): string {
         </div>
         <div class="page2-allies-row">${renderAllies(vm)}</div>
         <div class="page2-enemies-row">${renderEnemies(vm)}</div>
+        <div class="page2-separator" aria-hidden="true"><span class="page2-separator-line"></span></div>
+        <div class="page2-vehicles-recipes-row">
+          <div class="page2-vehicles-cell">${renderVehiclesTable(vm)}</div>
+          <div class="page2-recipes-cell">${renderRecipesTable(vm, alchemyStyle)}</div>
+        </div>
       </div>
       <template id="page2-siblings-tpl">${siblingsHtml}</template>
       <template id="page2-style-tpl">${styleHtml}</template>
@@ -1171,9 +1414,14 @@ function renderPage2(vm: CharacterPdfPage2Vm): string {
   `;
 }
 
-export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page2: CharacterPdfPage2Vm }): string {
+export function renderCharacterPdfHtml(input: {
+  page1: CharacterPdfPage1Vm;
+  page2: CharacterPdfPage2Vm;
+  options?: { alchemy_style?: 'w1' | 'w2' };
+}): string {
   const vm = input.page1;
   const page2 = input.page2;
+  const alchemyStyle = input.options?.alchemy_style ?? 'w2';
   return `<!doctype html>
 <html>
   <head>
@@ -1227,6 +1475,40 @@ export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page
       .page2-siblings-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
       .page2-siblings-row.page2-visible { display: grid !important; }
       .page2-allies-row, .page2-enemies-row { margin-top: 0; }
+      .page2-separator { margin: 4mm 0; text-align: center; }
+      .page2-separator-line {
+        display: block;
+        height: 4px;
+        border: none;
+        border-top: 1px solid #b8b8b8;
+        border-bottom: 1px solid #b8b8b8;
+        background: repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent 3px,
+          #a0a0a0 3px,
+          #a0a0a0 4px
+        );
+        background-position: 0 50%;
+      }
+      .page2-vehicles-recipes-row {
+        display: flex;
+        flex-direction: column;
+        gap: 3mm;
+      }
+      .page2-vehicles-cell { width: 50%; max-width: 50%; }
+      .page2-recipes-cell { width: 100%; }
+      .table-header-pale-gray thead th { background: rgba(0,0,0,0.06); }
+      .table-header-pale-brown thead th { background: rgba(139,90,43,0.12); }
+      .recipes-cell-toxicity { border-right: 3px solid black; }
+      .formula-ingredient-img { width: 14px; height: 14px; vertical-align: middle; object-fit: contain; }
+      .formula-legend-img { width: 14px; height: 14px; vertical-align: middle; object-fit: contain; }
+      .recipes-legend-row td { border: none !important; border-top: 1px solid #666 !important; }
+      .recipes-legend-cell { font-size: 9px; padding: 2px 4px; }
+      .equip-table.equip-vehicles { table-layout: auto; width: auto; }
+      .equip-table.equip-recipes { table-layout: auto; width: 100%; }
+      .equip-recipes .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+      .social-status-cell { vertical-align: top; }
       .t-auto { table-layout: auto; }
       .t-fit-col { width: 1%; white-space: nowrap; }
       .stack { display: grid; gap: 3mm; }
@@ -1484,7 +1766,7 @@ export function renderCharacterPdfHtml(input: { page1: CharacterPdfPage1Vm; page
   </head>
   <body>
     ${renderPage1(vm)}
-    ${renderPage2(page2)}
+    ${renderPage2(page2, alchemyStyle)}
 
     <script>
       (() => {

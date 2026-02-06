@@ -227,5 +227,5 @@ export async function generateCharacter(c: Context): Promise<Character> {
   // Remove logicFields and resolve i18n objects
   const character = (await resolveI18nRecursive(characterRaw, lang, resolveText)) as Character;
 
-  return character;
+  return { ...character, lang };
 }

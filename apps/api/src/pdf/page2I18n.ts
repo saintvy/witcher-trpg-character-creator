@@ -41,6 +41,19 @@ function page2Key(key: string): string {
 }
 
 const PAGE2_KEYS = {
+  formulaLegend: {
+    Aether: page2Key('formulaLegend.Aether'),
+    Caelum: page2Key('formulaLegend.Caelum'),
+    Fulgur: page2Key('formulaLegend.Fulgur'),
+    Hydragenum: page2Key('formulaLegend.Hydragenum'),
+    Quebrith: page2Key('formulaLegend.Quebrith'),
+    Rebis: page2Key('formulaLegend.Rebis'),
+    Sol: page2Key('formulaLegend.Sol'),
+    Vermilion: page2Key('formulaLegend.Vermilion'),
+    Vitriol: page2Key('formulaLegend.Vitriol'),
+    Mutagen: page2Key('formulaLegend.Mutagen'),
+    Spirits: page2Key('formulaLegend.Spirits'),
+  },
   section: {
     lore: page2Key('section.lore'),
     socialStatus: page2Key('section.socialStatus'),
@@ -50,6 +63,8 @@ const PAGE2_KEYS = {
     siblings: page2Key('section.siblings'),
     allies: page2Key('section.allies'),
     enemies: page2Key('section.enemies'),
+    vehicles: page2Key('section.vehicles'),
+    recipes: page2Key('section.recipes'),
   },
   lore: {
     homeland: page2Key('lore.homeland'),
@@ -119,6 +134,34 @@ const PAGE2_KEYS = {
       colAlive: page2Key('tables.enemies.col.alive'),
       colHowFar: page2Key('tables.enemies.col.howFar'),
     },
+    vehicles: {
+      colQty: page2Key('tables.vehicles.col.qty'),
+      colType: page2Key('tables.vehicles.col.type'),
+      colVehicle: page2Key('tables.vehicles.col.vehicle'),
+      colSkill: page2Key('tables.vehicles.col.skill'),
+      colMod: page2Key('tables.vehicles.col.mod'),
+      colSpeed: page2Key('tables.vehicles.col.speed'),
+      colHp: page2Key('tables.vehicles.col.hp'),
+      colWeight: page2Key('tables.vehicles.col.weight'),
+      colPrice: page2Key('tables.vehicles.col.price'),
+      colOccupancy: page2Key('tables.vehicles.col.occupancy'),
+    },
+    recipes: {
+      colQty: page2Key('tables.recipes.col.qty'),
+      colRecipeGroup: page2Key('tables.recipes.col.recipeGroup'),
+      colRecipeName: page2Key('tables.recipes.col.recipeName'),
+      colCraftLevel: page2Key('tables.recipes.col.craftLevel'),
+      colComplexity: page2Key('tables.recipes.col.complexity'),
+      colTimeCraft: page2Key('tables.recipes.col.timeCraft'),
+      colFormula: page2Key('tables.recipes.col.formula'),
+      colPriceFormula: page2Key('tables.recipes.col.priceFormula'),
+      colMinimalIngredientsCost: page2Key('tables.recipes.col.minimalIngredientsCost'),
+      colTimeEffect: page2Key('tables.recipes.col.timeEffect'),
+      colToxicity: page2Key('tables.recipes.col.toxicity'),
+      colRecipeDescription: page2Key('tables.recipes.col.recipeDescription'),
+      colWeightPotion: page2Key('tables.recipes.col.weightPotion'),
+      colPricePotion: page2Key('tables.recipes.col.pricePotion'),
+    },
   },
 } satisfies DeepKeyTree;
 
@@ -131,6 +174,19 @@ const PAGE2_FALLBACK: Record<string, { ru: string; en: string }> = {
   'witcher_cc.pdf.page2.section.siblings': { ru: 'Братья и сёстры', en: 'Siblings' },
   'witcher_cc.pdf.page2.section.allies': { ru: 'Союзники', en: 'Allies' },
   'witcher_cc.pdf.page2.section.enemies': { ru: 'Враги', en: 'Enemies' },
+  'witcher_cc.pdf.page2.section.vehicles': { ru: 'Транспорт', en: 'Vehicles' },
+  'witcher_cc.pdf.page2.section.recipes': { ru: 'Рецепты', en: 'Recipes' },
+  'witcher_cc.pdf.page2.formulaLegend.Aether': { ru: 'Эфир', en: 'Aether' },
+  'witcher_cc.pdf.page2.formulaLegend.Caelum': { ru: 'Аер', en: 'Caelum' },
+  'witcher_cc.pdf.page2.formulaLegend.Fulgur': { ru: 'Фульгор', en: 'Fulgur' },
+  'witcher_cc.pdf.page2.formulaLegend.Hydragenum': { ru: 'Гидраген', en: 'Hydragenum' },
+  'witcher_cc.pdf.page2.formulaLegend.Quebrith': { ru: 'Квебрит', en: 'Quebrith' },
+  'witcher_cc.pdf.page2.formulaLegend.Rebis': { ru: 'Ребис', en: 'Rebis' },
+  'witcher_cc.pdf.page2.formulaLegend.Sol': { ru: 'Солнце', en: 'Sol' },
+  'witcher_cc.pdf.page2.formulaLegend.Vermilion': { ru: 'Киноварь', en: 'Vermilion' },
+  'witcher_cc.pdf.page2.formulaLegend.Vitriol': { ru: 'Купорос', en: 'Vitriol' },
+  'witcher_cc.pdf.page2.formulaLegend.Mutagen': { ru: 'Мутаген', en: 'Mutagen' },
+  'witcher_cc.pdf.page2.formulaLegend.Spirits': { ru: 'Крепкий алкоголь', en: 'Spirits' },
 
   'witcher_cc.pdf.page2.lore.homeland': { ru: 'Родина', en: 'Homeland' },
   'witcher_cc.pdf.page2.lore.homeLanguage': { ru: 'Родной язык', en: 'Home language' },
@@ -182,6 +238,30 @@ const PAGE2_FALLBACK: Record<string, { ru: string; en: string }> = {
   'witcher_cc.pdf.page2.tables.enemies.col.result': { ru: 'Итог', en: 'Result' },
   'witcher_cc.pdf.page2.tables.enemies.col.alive': { ru: 'Жив ли', en: 'Alive' },
   'witcher_cc.pdf.page2.tables.enemies.col.howFar': { ru: 'Насколько далеко', en: 'How far' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.qty': { ru: '#', en: '#' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.type': { ru: 'Тип', en: 'Type' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.vehicle': { ru: 'Транспорт', en: 'Vehicle' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.skill': { ru: 'Навык', en: 'Skill' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.mod': { ru: 'Мод.', en: 'Mod.' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.speed': { ru: 'Скор.', en: 'Speed' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.hp': { ru: 'ПЗ', en: 'HP' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.weight': { ru: 'Вес', en: 'Weight' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.price': { ru: 'Цена', en: 'Price' },
+  'witcher_cc.pdf.page2.tables.vehicles.col.occupancy': { ru: 'Места', en: 'Seats' },
+  'witcher_cc.pdf.page2.tables.recipes.col.qty': { ru: '#', en: '#' },
+  'witcher_cc.pdf.page2.tables.recipes.col.recipeGroup': { ru: 'Группа', en: 'Group' },
+  'witcher_cc.pdf.page2.tables.recipes.col.recipeName': { ru: 'Рецепт', en: 'Recipe' },
+  'witcher_cc.pdf.page2.tables.recipes.col.craftLevel': { ru: 'уровень', en: 'level' },
+  'witcher_cc.pdf.page2.tables.recipes.col.complexity': { ru: 'СЛ', en: 'DC' },
+  'witcher_cc.pdf.page2.tables.recipes.col.timeCraft': { ru: 'Время<br>крафта', en: 'Craft<br>time' },
+  'witcher_cc.pdf.page2.tables.recipes.col.formula': { ru: 'Формула', en: 'Formula' },
+  'witcher_cc.pdf.page2.tables.recipes.col.priceFormula': { ru: 'Цена<br>формулы', en: 'Formula<br>price' },
+  'witcher_cc.pdf.page2.tables.recipes.col.minimalIngredientsCost': { ru: 'Мин.<br>цена<br>ингр.', en: 'Min.<br>ingr.<br>cost' },
+  'witcher_cc.pdf.page2.tables.recipes.col.timeEffect': { ru: 'Время<br>эффекта', en: 'Effect<br>time' },
+  'witcher_cc.pdf.page2.tables.recipes.col.toxicity': { ru: 'токс.', en: 'Tox.' },
+  'witcher_cc.pdf.page2.tables.recipes.col.recipeDescription': { ru: 'эффект', en: 'Effect' },
+  'witcher_cc.pdf.page2.tables.recipes.col.weightPotion': { ru: 'Вес', en: 'Weight' },
+  'witcher_cc.pdf.page2.tables.recipes.col.pricePotion': { ru: 'Цена', en: 'Price' },
   'witcher_cc.pdf.page2.tables.socialStatus.status.equal': { ru: 'Равенство', en: 'Equal' },
   'witcher_cc.pdf.page2.tables.socialStatus.status.tolerated': { ru: 'Терпимость', en: 'Tolerated' },
   'witcher_cc.pdf.page2.tables.socialStatus.status.hated': { ru: 'Ненависть', en: 'Hated' },
@@ -192,7 +272,8 @@ const PAGE2_FALLBACK: Record<string, { ru: string; en: string }> = {
 
 export type CharacterPdfPage2I18n = {
   lang: string;
-  section: { lore: string; socialStatus: string; lifePath: string; style: string; values: string; siblings: string; allies: string; enemies: string };
+  formulaLegend: { Aether: string; Caelum: string; Fulgur: string; Hydragenum: string; Quebrith: string; Rebis: string; Sol: string; Vermilion: string; Vitriol: string; Mutagen: string; Spirits: string };
+  section: { lore: string; socialStatus: string; lifePath: string; style: string; values: string; siblings: string; allies: string; enemies: string; vehicles: string; recipes: string };
   lore: {
     homeland: string;
     homeLanguage: string;
@@ -218,6 +299,8 @@ export type CharacterPdfPage2I18n = {
     siblings: { colAge: string; colGender: string; colAttitude: string; colPersonality: string };
     allies: { colGender: string; colPosition: string; colWhere: string; colAcquaintance: string; colHowMet: string; colHowClose: string; colAlive: string };
     enemies: { colGender: string; colPosition: string; colVictim: string; colCause: string; colPower: string; colLevel: string; colResult: string; colAlive: string; colHowFar: string };
+    vehicles: { colQty: string; colType: string; colVehicle: string; colSkill: string; colMod: string; colSpeed: string; colHp: string; colWeight: string; colPrice: string; colOccupancy: string };
+    recipes: { colQty: string; colRecipeGroup: string; colRecipeName: string; colCraftLevel: string; colComplexity: string; colTimeCraft: string; colFormula: string; colPriceFormula: string; colMinimalIngredientsCost: string; colTimeEffect: string; colToxicity: string; colRecipeDescription: string; colWeightPotion: string; colPricePotion: string };
   };
 };
 

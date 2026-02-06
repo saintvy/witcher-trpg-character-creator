@@ -15,8 +15,12 @@ export async function characterPdf(c: Context) {
     return c.json({ error: 'Expected character JSON object' }, 400);
   }
 
+  const bodyObj = body as Record<string, unknown>;
+  const character = bodyObj.character !== undefined ? bodyObj.character : body;
+  const options = (typeof bodyObj.options === 'object' && bodyObj.options !== null ? bodyObj.options : {}) as import('../pdf/CharacterPdfService.js').PdfOptions;
+
   try {
-    const pdfBuffer = await pdfService.generatePdfBuffer(body);
+    const pdfBuffer = await pdfService.generatePdfBuffer(character, options);
     const pdfBytes = new Uint8Array(pdfBuffer);
     return c.body(pdfBytes, 200, {
       'Content-Type': 'application/pdf',

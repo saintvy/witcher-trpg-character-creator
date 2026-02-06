@@ -957,7 +957,9 @@ export default function BuilderPage() {
     }
   }, [getCharacterJson, avatarDataUrl]);
 
-  const downloadPdf = useCallback(async () => {
+  type PdfOptions = { alchemy_style?: "w1" | "w2" };
+
+  const downloadPdf = useCallback(async (options: PdfOptions = {}) => {
     setLoadingGeneratePdf(true);
     setGeneratePdfError(null);
     try {
@@ -970,7 +972,7 @@ export default function BuilderPage() {
       const res = await fetch(`${API_URL}/character/pdf`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(characterJson),
+        body: JSON.stringify({ character: characterJson, options }),
       });
 
       if (!res.ok) {
@@ -1215,12 +1217,21 @@ export default function BuilderPage() {
               </button>
               <button
                 type="button"
-                onClick={() => void downloadPdf()}
+                onClick={() => void downloadPdf({ alchemy_style: "w2" })}
                 className="debug-btn"
                 disabled={loadingGeneratePdf || loadingGenerateResult}
-                title={displayLang === "ru" ? "Скачать PDF чарника" : "Download character PDF"}
+                title={displayLang === "ru" ? "Скачать PDF чарника (w2)" : "Download character PDF (w2)"}
               >
-                {loadingGeneratePdf ? "⏳" : "PDF"} {displayLang === "ru" ? "Generate PDF" : "Generate PDF"}
+                {loadingGeneratePdf ? "⏳" : "PDF"} w2
+              </button>
+              <button
+                type="button"
+                onClick={() => void downloadPdf({ alchemy_style: "w1" })}
+                className="debug-btn"
+                disabled={loadingGeneratePdf || loadingGenerateResult}
+                title={displayLang === "ru" ? "Скачать PDF чарника (w1)" : "Download character PDF (w1)"}
+              >
+                {loadingGeneratePdf ? "⏳" : "PDF"} w1
               </button>
             </div>
             {generatePdfError && (

@@ -390,7 +390,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'group_name',
               'tooltipField', 'gear_description',
-              'targetPath', 'characterRaw.gear.general',
+              'targetPath', 'characterRaw.gear.general_gear',
               'columns', jsonb_build_array(
                 jsonb_build_object('field', 'gear_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                 jsonb_build_object('field', 'group_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),

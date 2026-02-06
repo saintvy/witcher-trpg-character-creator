@@ -31,6 +31,7 @@ SELECT ir.r_id
        END AS time_effect
      , ir.toxicity
      , formula_ingredients.formula_text AS formula
+     , formula_en_ingredients.formula_en_text AS formula_en
      , iav.text AS availability
      , idesc.text AS recipe_description
      , iname.lang
@@ -55,6 +56,16 @@ SELECT ir.r_id
      WHERE ir2.formula IS NOT NULL
      GROUP BY ir2.r_id, i18n.lang
   ) formula_ingredients ON ir.r_id = formula_ingredients.r_id AND formula_ingredients.lang = iname.lang
+  LEFT JOIN (
+    -- Same as formula_ingredients but always English, space-separated (for PDF formula images)
+    SELECT ir2.r_id
+         , string_agg(i18n.text, ' ' ORDER BY pos) AS formula_en_text
+      FROM wcc_item_recipes ir2
+      CROSS JOIN LATERAL unnest(ir2.formula) WITH ORDINALITY AS formula_entry(formula_uuid, pos)
+      JOIN i18n_text i18n ON i18n.id = formula_entry.formula_uuid AND i18n.entity = 'items' AND i18n.entity_field = 'dict' AND i18n.lang = 'en'
+     WHERE ir2.formula IS NOT NULL
+     GROUP BY ir2.r_id
+  ) formula_en_ingredients ON ir.r_id = formula_en_ingredients.r_id
  WHERE ir.group_id != ck_id('reciples.group.medicine') OR ir.group_id IS NULL
  ORDER BY iname.text;
 

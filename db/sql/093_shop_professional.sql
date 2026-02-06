@@ -182,7 +182,7 @@ SELECT meta.qu_id
               'langPath', 'characterRaw.lang',
               'groupColumn', 'group_name',
               'tooltipField', 'gear_description',
-              'targetPath', 'characterRaw.gear.general',
+              'targetPath', 'characterRaw.gear.general_gear',
               'filters', jsonb_build_object(
                 'in', jsonb_build_object(
                   'column', 't_id',
