@@ -57,11 +57,23 @@ type NextQuestionResponse = {
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const RUN_SEED_STORAGE_KEY = "wcc_builder_run_seed";
 
 export default function BuilderPage() {
   const { lang, mounted } = useLanguage();
   // Use default language until mounted to avoid hydration mismatch
   const displayLang = mounted ? lang : "en";
+  const [runSeed] = useState(() => {
+    try {
+      const existing = sessionStorage.getItem(RUN_SEED_STORAGE_KEY);
+      if (existing && existing.trim().length > 0) return existing;
+      const next = crypto.randomUUID();
+      sessionStorage.setItem(RUN_SEED_STORAGE_KEY, next);
+      return next;
+    } catch {
+      return crypto.randomUUID();
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<AnswerInput[]>([]);
@@ -279,7 +291,7 @@ export default function BuilderPage() {
         const response = await fetch(`${API_URL}/survey/next`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ answers, lang }),
+          body: JSON.stringify({ answers, lang, seed: runSeed }),
         });
 
         if (!response.ok) {
@@ -303,7 +315,7 @@ export default function BuilderPage() {
         setLoading(false);
       }
     },
-    [lang],
+    [lang, runSeed],
   );
 
   // Инициализация опроса только при первом монтировании
@@ -924,7 +936,7 @@ export default function BuilderPage() {
     // Prefer sending answers so API recomputes characterRaw (ensures shop 094, magic 096 and other dynamic nodes are applied)
     const payload =
       history.length > 0
-        ? { answers: history, lang }
+        ? { answers: history, lang, seed: runSeed }
         : state && typeof state === "object" && !Array.isArray(state) && "characterRaw" in (state as any)
           ? (state as any).characterRaw
           : state;
@@ -941,7 +953,7 @@ export default function BuilderPage() {
     }
 
     return response.json();
-  }, [state, history, lang]);
+  }, [state, history, lang, runSeed]);
 
   const loadGenerateResult = useCallback(async () => {
     setLoadingGenerateResult(true);

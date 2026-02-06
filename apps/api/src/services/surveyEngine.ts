@@ -16,12 +16,84 @@ function rollDie(sides: number): number {
   return Math.floor(Math.random() * safeSides) + 1;
 }
 
+const WCC_RNG_PROP = '__wcc_rng';
+type WccRngState = { seed: Buffer; index: number };
+
+function buildDeterministicDiceSeedMaterial(
+  surveyId: string,
+  answers: AnswerInput[],
+  seedOverride?: string,
+): string {
+  const seed = typeof seedOverride === 'string' ? seedOverride.trim() : '';
+  if (seed.length > 0) {
+    return `${surveyId}|seed:${seed}`;
+  }
+
+  // Backward-compatible fallback (no client-provided seed):
+  // tie all dice rolls to the *first* answer only, so adding/changing later answers (e.g. shop purchases)
+  // does not cause rerolls when the state is recomputed from scratch.
+  const first = answers[0];
+  if (!first) {
+    return `${surveyId}|seed:<empty>`;
+  }
+
+  const answerIds = [...first.answerIds].sort().join(',');
+  const valuePart = first.value ? `${first.value.type}:${String(first.value.data)}` : '';
+  return `${surveyId}|seed:first:${first.questionId}|${answerIds}|${valuePart}`;
+}
+
+function initDeterministicDiceRng(
+  state: SurveyState,
+  seedMaterial: string,
+) {
+  if ((state as any)[WCC_RNG_PROP]) return;
+  const seed = crypto.createHash('sha256').update(seedMaterial).digest();
+  const rng: WccRngState = { seed, index: 0 };
+  Object.defineProperty(state, WCC_RNG_PROP, {
+    value: rng,
+    enumerable: false,
+    writable: false,
+    configurable: false,
+  });
+}
+
+function getDeterministicDiceRng(state: SurveyState): WccRngState | null {
+  const candidate = (state as any)[WCC_RNG_PROP] as unknown;
+  if (!candidate || typeof candidate !== 'object') return null;
+  const seed = (candidate as any).seed;
+  const index = (candidate as any).index;
+  if (!Buffer.isBuffer(seed) || !Number.isFinite(index)) return null;
+  return candidate as WccRngState;
+}
+
+function rollDieDeterministic(state: SurveyState, sides: number): number {
+  const safeSides = Number.isFinite(sides) && sides > 0 ? Math.floor(sides) : 1;
+  const rng = getDeterministicDiceRng(state);
+  if (!rng) return rollDie(safeSides);
+
+  const index = Math.trunc(rng.index);
+  rng.index = index + 1;
+
+  const digest = crypto
+    .createHash('sha256')
+    .update(rng.seed)
+    .update('|')
+    .update(String(index))
+    .update('|')
+    .update(String(safeSides))
+    .digest();
+
+  const n = digest.readUInt32BE(0);
+  return (n % safeSides) + 1;
+}
+
 type AnswerValue = { type: "number"; data: number } | { type: "string"; data: string };
 type AnswerInput = { questionId: string; answerIds: string[]; value?: AnswerValue };
 
 type NextQuestionRequest = {
   surveyId?: string;
   lang?: string;
+  seed?: string;
   answers?: AnswerInput[];
 };
 
@@ -576,8 +648,8 @@ jsonLogic.add_operation('ck_id', (src: unknown): string => {
 });
 
 // Dice operations: random integer 1..6 and 1..10
-jsonLogic.add_operation('d6', () => rollDie(6));
-jsonLogic.add_operation('d10', () => rollDie(10));
+jsonLogic.add_operation('d6', () => currentJsonLogicState ? rollDieDeterministic(currentJsonLogicState, 6) : rollDie(6));
+jsonLogic.add_operation('d10', () => currentJsonLogicState ? rollDieDeterministic(currentJsonLogicState, 10) : rollDie(10));
 
 // Register cat_array operation in jsonLogic
 // Extracts values from nested arrays using a path with [] syntax
@@ -806,6 +878,7 @@ async function loadStateData(
           FROM effects e
           WHERE e.an_an_id = ANY($1::text[])
             AND e.an_an_id IS NOT NULL
+          ORDER BY e.ctid
         `,
         [answerIdsArray],
       )
@@ -819,6 +892,7 @@ async function loadStateData(
           FROM effects e
           WHERE e.qu_qu_id = ANY($1::text[])
             AND e.qu_qu_id IS NOT NULL
+          ORDER BY e.ctid
         `,
         [questionIdsArray],
       )
@@ -1001,6 +1075,7 @@ async function loadMinimalSurveyData(
           FROM effects e
           WHERE e.an_an_id = ANY($1::text[])
             AND e.an_an_id IS NOT NULL
+          ORDER BY e.ctid
         `,
         [uniqueAnswerIds],
       )
@@ -1014,6 +1089,7 @@ async function loadMinimalSurveyData(
           FROM effects e
           WHERE e.qu_qu_id = ANY($1::text[])
             AND e.qu_qu_id IS NOT NULL
+          ORDER BY e.ctid
         `,
         [questionIdsArray],
       )
@@ -1243,6 +1319,7 @@ async function loadSurveyData(surveyId: string, lang: string): Promise<SurveyDat
           FROM effects e
           WHERE e.an_an_id = ANY($1::text[])
             AND e.an_an_id IS NOT NULL
+          ORDER BY e.ctid
         `,
         [answerIds],
       )
@@ -1256,6 +1333,7 @@ async function loadSurveyData(surveyId: string, lang: string): Promise<SurveyDat
           FROM effects e
           WHERE e.qu_qu_id = ANY($1::text[])
             AND e.qu_qu_id IS NOT NULL
+          ORDER BY e.ctid
         `,
         [questionIds],
       )
@@ -1405,10 +1483,11 @@ export async function getCharacterRawFromAnswers(
   surveyId: string,
   lang: string,
   answers: AnswerInput[],
+  seed?: string,
 ): Promise<Record<string, unknown>> {
   const historyAnswers = normaliseAnswers(answers);
   const stateData = await loadStateData(surveyId, historyAnswers);
-  const { state } = deriveStateFromStateData(historyAnswers, lang, stateData);
+  const { state } = deriveStateFromStateData(historyAnswers, lang, surveyId, seed, stateData);
   await applyDynamicNodes(historyAnswers, stateData.questionMetadata, state);
   const raw = (state as Record<string, unknown>).characterRaw;
   return (raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}) as Record<string, unknown>;
@@ -1417,6 +1496,7 @@ export async function getCharacterRawFromAnswers(
 export async function getNextQuestion(payload: NextQuestionRequest): Promise<NextQuestionResponse> {
   const surveyId = payload.surveyId ?? DEFAULT_SURVEY_ID;
   const lang = payload.lang ?? DEFAULT_LANG;
+  const seed = payload.seed;
   const historyAnswers = normaliseAnswers(payload.answers);
 
   // Step 1: Load only minimal data for state computation
@@ -1424,7 +1504,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
   const stateData = await loadStateData(surveyId, historyAnswers);
 
   // Step 2: Compute state using minimal data
-  const { state } = deriveStateFromStateData(historyAnswers, lang, stateData);
+  const { state } = deriveStateFromStateData(historyAnswers, lang, surveyId, seed, stateData);
   const allowedDlcs = getAllowedDlcs(state);
 
   // Step 2a: Apply "smart" nodes requiring DB access (e.g., shop renderer)
@@ -2072,6 +2152,8 @@ function resolveNextQuestionId(
 function deriveStateFromStateData(
   answers: AnswerInput[],
   lang: string,
+  surveyId: string,
+  seed: string | undefined,
   stateData: {
     questionMetadata: Map<string, Record<string, unknown>>;
     answerMetadata: Map<string, Record<string, unknown>>;
@@ -2102,6 +2184,7 @@ function deriveStateFromStateData(
   };
   const valuesIndex = state.values as { byQuestion: Record<string, AnswerValue | undefined> };
   getCounters(state);
+  initDeterministicDiceRng(state, buildDeterministicDiceSeedMaterial(surveyId, answers, seed));
 
   // Apply answers one by one, computing state at each step
   for (const entry of answers) {
@@ -3648,10 +3731,10 @@ function evaluate(
     return Math.max(...values);
   }
   if ('d6' in node) {
-    return rollDie(6);
+    return rollDieDeterministic(state, 6);
   }
   if ('d10' in node) {
-    return rollDie(10);
+    return rollDieDeterministic(state, 10);
   }
   if ('ck_id' in node) {
     // jsonLogic передает аргументы как массив, но может быть и одно значение

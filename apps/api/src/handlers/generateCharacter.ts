@@ -211,7 +211,10 @@ export async function generateCharacter(c: Context): Promise<Character> {
     const surveyId = (body && typeof body === 'object' && typeof (body as Record<string, unknown>).surveyId === 'string')
       ? ((body as Record<string, unknown>).surveyId as string)
       : DEFAULT_SURVEY_ID;
-    characterRaw = (await getCharacterRawFromAnswers(surveyId, lang, answers)) as CharacterRaw;
+    const seed = (body && typeof body === 'object' && typeof (body as Record<string, unknown>).seed === 'string')
+      ? ((body as Record<string, unknown>).seed as string)
+      : undefined;
+    characterRaw = (await getCharacterRawFromAnswers(surveyId, lang, answers, seed)) as CharacterRaw;
   } else {
     characterRaw =
       body && typeof body === 'object' && !Array.isArray(body) && 'characterRaw' in (body as Record<string, unknown>)
