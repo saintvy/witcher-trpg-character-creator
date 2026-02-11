@@ -2480,6 +2480,7 @@ async function applyShopNode(
   })();
 
   const parsed = parseShopAnswerValue(rawValue);
+  const ignoreWarnings = parsed?.ignoreWarnings === true;
   const purchases = Array.isArray(parsed?.purchases) ? parsed!.purchases! : [];
   const selectedBundleIds = (() => {
     const bundlesRaw = (parsed as any)?.bundles;
@@ -2917,17 +2918,31 @@ async function applyShopNode(
       }
 
       if (remainingCost > 0) {
-        throw new Error(
-          `Insufficient money for purchase (source: ${sourceId}, id: ${entry.purchase.id}). ` +
-          `Need ${price * entry.purchase.qty} crowns, short by ${remainingCost}. ` +
-          `Spend in order of budget priority; no budget may go negative.`
-        );
+        if (!ignoreWarnings) {
+          throw new Error(
+            `Insufficient money for purchase (source: ${sourceId}, id: ${entry.purchase.id}). ` +
+            `Need ${price * entry.purchase.qty} crowns, short by ${remainingCost}. ` +
+            `Spend in order of budget priority; no budget may go negative.`
+          );
+        }
+
+        // In "ignore warnings" mode we still allow the purchase:
+        // force the remainder onto a money budget (prefer default), then later clamp saved value to 0.
+        const moneyApplicable = applicableBudgets.filter((b) => b.type === 'money');
+        const defaultMoney = moneyApplicable.find((b) => b.is_default)
+          ?? budgets.find((b) => b.type === 'money' && b.is_default)
+          ?? moneyApplicable[0]
+          ?? budgets.find((b) => b.type === 'money');
+        if (defaultMoney) {
+          const current = budgetStates.get(defaultMoney.id) ?? 0;
+          budgetStates.set(defaultMoney.id, current - remainingCost);
+          remainingCost = 0;
+        }
       }
   }
 
   // Professional bundles: 1 token per bundle (not per item/quantity)
   if (isProfessionalShop && selectedBundleIds.length > 0) {
-    const ignoreWarnings = parsed?.ignoreWarnings === true;
     const tokenBudgets = budgets
       .filter((b) => b.type === 'tokens')
       .sort((a, b) => b.priority - a.priority);
@@ -2948,7 +2963,6 @@ async function applyShopNode(
   }
 
   // Check for exceeded budgets (but allow if user ignored warnings - save as 0)
-  const ignoreWarnings = parsed?.ignoreWarnings === true;
   for (const [budgetId, remaining] of budgetStates.entries()) {
     const budget = budgets.find(b => b.id === budgetId);
     if (!budget) continue;

@@ -16,7 +16,6 @@ export type PdfOptions = { alchemy_style?: 'w1' | 'w2' };
 
 export class CharacterPdfService {
   private static browserPromise: Promise<Browser> | null = null;
-  private static i18nCache = new Map<string, CharacterPdfI18n>();
 
   private static async getBrowser(): Promise<Browser> {
     if (!CharacterPdfService.browserPromise) {
@@ -46,11 +45,7 @@ export class CharacterPdfService {
   }
 
   private async getPdfI18n(lang: string): Promise<CharacterPdfI18n> {
-    const cached = CharacterPdfService.i18nCache.get(lang);
-    if (cached) return cached;
-    const i18n = await this.withTimeout(loadCharacterPdfI18n(lang), 2500);
-    CharacterPdfService.i18nCache.set(lang, i18n);
-    return i18n;
+    return this.withTimeout(loadCharacterPdfI18n(lang), 2500);
   }
 
   async generatePdfBuffer(characterJson: unknown, options: PdfOptions = {}): Promise<Buffer> {
@@ -233,7 +228,7 @@ export class CharacterPdfService {
         const { rows } = await this.withTimeout(
           db.query<GeneralGearDetails>(
             `
-              SELECT t_id, gear_name, group_name, subgroup_name, concealment, weight, price
+              SELECT t_id, gear_name, group_name, subgroup_name, gear_description, concealment, weight, price
               FROM wcc_item_general_gear_v
               WHERE lang = $1 AND t_id = ANY($2::text[])
             `,
@@ -253,7 +248,7 @@ export class CharacterPdfService {
         const { rows } = await this.withTimeout(
           db.query<UpgradeDetails>(
             `
-              SELECT u_id, upgrade_name, upgrade_group, effect_names, slots, weight, price
+              SELECT u_id, upgrade_name, upgrade_group, target, effect_names, slots, weight, price
               FROM wcc_item_upgrades_v
               WHERE lang = $1 AND u_id = ANY($2::text[])
             `,

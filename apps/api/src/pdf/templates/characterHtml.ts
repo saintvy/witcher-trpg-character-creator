@@ -20,7 +20,18 @@ const FORMULA_INGREDIENT_NAMES = [
   'Vitriol',
   'Mutagen',
   'Spirits',
+  'Dog Tallow',
 ] as const;
+
+/** Multi-word ingredient names (formula_en is space-separated). */
+const MULTI_WORD_FORMULA_INGREDIENTS = new Set<string>(['Dog Tallow']);
+
+/** Override asset filename when it differs from English name (e.g. dog_tallow.webp for "Dog Tallow"). */
+const FORMULA_INGREDIENT_FILENAME_OVERRIDE: Record<string, string> = {
+  'Dog Tallow': 'dog_tallow',
+};
+
+const SHOW_GENERAL_GEAR_DESCRIPTION = true;
 
 function assetPngDataUrl(filename: string): string {
   const cached = assetDataUrlCache.get(filename);
@@ -48,7 +59,8 @@ function assetFormulaIngredientUrl(englishName: string, alchemyStyle: 'w1' | 'w2
   const cacheKey = `${alchemyStyle}:${englishName}`;
   const cached = assetFormulaIngredientCache.get(cacheKey);
   if (cached) return cached;
-  const filename = `${englishName}.webp`;
+  const filenameBase = FORMULA_INGREDIENT_FILENAME_OVERRIDE[englishName] ?? englishName;
+  const filename = `${filenameBase}.webp`;
   const subdir = alchemyStyle;
   const primaryUrl = new URL(`../assets/formula_ingredients/${subdir}/${filename}`, import.meta.url);
   let buffer: Buffer;
@@ -69,10 +81,22 @@ function assetFormulaIngredientUrl(englishName: string, alchemyStyle: 'w1' | 'w2
 
 function renderFormulaAsImages(formulaEn: string, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
   if (!formulaEn.trim()) return '&nbsp;';
-  const tokens = formulaEn.trim().split(/\s+/);
+  const rawTokens = formulaEn.trim().split(/\s+/);
+  const tokens: string[] = [];
+  for (let i = 0; i < rawTokens.length; ) {
+    const two =
+      i + 1 < rawTokens.length ? `${rawTokens[i]} ${rawTokens[i + 1]}`.trim() : null;
+    if (two && MULTI_WORD_FORMULA_INGREDIENTS.has(two)) {
+      tokens.push(two);
+      i += 2;
+    } else {
+      tokens.push(rawTokens[i].trim());
+      i += 1;
+    }
+  }
   return tokens
     .map((token) => {
-      const name = token.trim();
+      const name = token;
       if (!name) return '';
       const url = assetFormulaIngredientUrl(name, alchemyStyle);
       if (!url) return escapeHtml(name);
@@ -1369,13 +1393,8 @@ function renderRecipesTable(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' =
 }
 
 function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
-  const isRu = vm.i18n.lang === 'ru';
-  const title = isRu ? 'Общее снаряжение' : 'General Gear';
-  const colGroup = isRu ? 'Группа / Подгруппа' : 'Group / Subgroup';
-  const colName = isRu ? 'Имя' : 'Name';
-  const colCon = isRu ? 'Скр.' : 'Con.';
-  const colWeight = isRu ? 'Вес' : 'Weight';
-  const colPrice = isRu ? 'Цена' : 'Price';
+  const title = vm.i18n.section.generalGear;
+  const t = vm.i18n.tables.generalGear;
   const rows =
     vm.generalGear.length > 0
       ? vm.generalGear
@@ -1383,8 +1402,11 @@ function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
             (g) => `
           <tr>
             <td class="equip-fit equip-right">${escapeHtml(g.amount)}</td>
-            <td class="equip-fit equip-left">${escapeHtml(g.groupAndSubgroup)}</td>
-            <td>${escapeHtml(g.name)}</td>
+            <td class="equip-left">
+              ${g.group ? `<div class="cell-subtle">${escapeHtml(g.group)}</div>` : ''}
+              <div>${escapeHtml(g.name)}</div>
+              ${SHOW_GENERAL_GEAR_DESCRIPTION && g.description ? `<div class="cell-subtle">${escapeHtml(g.description)}</div>` : ''}
+            </td>
             <td class="equip-fit equip-left">${escapeHtml(g.concealment)}</td>
             <td class="equip-fit equip-left">${escapeHtml(g.weight)}</td>
             <td class="equip-fit equip-left">${escapeHtml(g.price)}</td>
@@ -1395,7 +1417,6 @@ function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
       : `
           <tr>
             <td class="equip-fit equip-right">&nbsp;</td>
-            <td class="equip-fit equip-left">&nbsp;</td>
             <td>&nbsp;</td>
             <td class="equip-fit equip-left">&nbsp;</td>
             <td class="equip-fit equip-left">&nbsp;</td>
@@ -1408,7 +1429,6 @@ function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
       <table class="equip-table equip-general-gear table-header-pale-gray">
         <colgroup>
           <col class="equip-fit" />
-          <col class="equip-fit" />
           <col />
           <col class="equip-fit" />
           <col class="equip-fit" />
@@ -1417,11 +1437,10 @@ function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
         <thead>
           <tr>
             <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.vehicles.colQty)}</th>
-            <th class="equip-fit equip-left">${escapeHtml(colGroup)}</th>
-            <th>${escapeHtml(colName)}</th>
-            <th class="equip-fit equip-left">${escapeHtml(colCon)}</th>
-            <th class="equip-fit equip-left">${escapeHtml(colWeight)}</th>
-            <th class="equip-fit equip-left">${escapeHtml(colPrice)}</th>
+            <th>${escapeHtml(t.colName)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(t.colConcealment)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(t.colWeight)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(t.colPrice)}</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -1432,11 +1451,9 @@ function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
 }
 
 function renderMoneyTable(vm: CharacterPdfPage3Vm): string {
-  const isRu = vm.i18n.lang === 'ru';
-  const title = isRu ? 'Валюта' : 'Money';
-  const headers = isRu
-    ? ['Кроны', 'Орены', 'Флорены', 'Дукаты', 'Бизанты', 'Линтары']
-    : ['Crowns', 'Orens', 'Florens', 'Ducats', 'Bizants', 'Lintars'];
+  const title = vm.i18n.section.money;
+  const t = vm.i18n.tables.money;
+  const headers = [t.colCrowns, t.colOrens, t.colFlorens, t.colDucats, t.colBizants, t.colLintars];
   return box(
     title,
     `
@@ -1462,48 +1479,32 @@ function renderMoneyTable(vm: CharacterPdfPage3Vm): string {
 }
 
 function renderUpgradesTable(vm: CharacterPdfPage3Vm): string {
-  const isRu = vm.i18n.lang === 'ru';
-  const title = isRu ? 'Улучшения' : 'Upgrades';
-  const colGroup = isRu ? 'Группа' : 'Group';
-  const colName = isRu ? 'Имя' : 'Name';
-  const colEffects = isRu ? 'Эффекты' : 'Effects';
-  const colSlots = isRu ? 'Слоты' : 'Slots';
-  const colWeight = isRu ? 'Вес' : 'Weight';
-  const colPrice = isRu ? 'Цена' : 'Price';
-  const rows =
-    vm.upgrades.length > 0
-      ? vm.upgrades
-          .map(
-            (u) => `
+  if (vm.upgrades.length === 0) return '';
+  const title = vm.i18n.section.upgrades;
+  const t = vm.i18n.tables.upgrades;
+  const rows = vm.upgrades
+    .map(
+      (u) => `
           <tr>
             <td class="equip-fit equip-right">${escapeHtml(u.amount)}</td>
-            <td class="equip-fit equip-left">${escapeHtml(u.group)}</td>
-            <td class="equip-fit equip-left">${escapeHtml(u.name)}</td>
+            <td class="equip-fit equip-left">
+              ${u.group ? `<div class="cell-subtle">${escapeHtml(u.group)}</div>` : ''}
+              <div>${escapeHtml(u.name)}</div>
+              ${u.target ? `<div class="cell-subtle">${escapeHtml(u.target)}</div>` : ''}
+            </td>
             <td class="equip-effect">${escapeHtml(u.effects)}</td>
             <td class="equip-fit equip-left">${escapeHtml(u.slots)}</td>
             <td class="equip-fit equip-left">${escapeHtml(u.weight)}</td>
             <td class="equip-fit equip-left">${escapeHtml(u.price)}</td>
           </tr>
         `,
-          )
-          .join('')
-      : `
-          <tr>
-            <td class="equip-fit equip-right">&nbsp;</td>
-            <td class="equip-fit equip-left">&nbsp;</td>
-            <td class="equip-fit equip-left">&nbsp;</td>
-            <td class="equip-effect">&nbsp;</td>
-            <td class="equip-fit equip-left">&nbsp;</td>
-            <td class="equip-fit equip-left">&nbsp;</td>
-            <td class="equip-fit equip-left">&nbsp;</td>
-          </tr>
-        `;
+    )
+    .join('');
   return box(
     title,
     `
       <table class="equip-table equip-upgrades table-header-pale-gray">
         <colgroup>
-          <col class="equip-fit" />
           <col class="equip-fit" />
           <col class="equip-fit" />
           <col />
@@ -1514,12 +1515,11 @@ function renderUpgradesTable(vm: CharacterPdfPage3Vm): string {
         <thead>
           <tr>
             <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.vehicles.colQty)}</th>
-            <th class="equip-fit equip-left">${escapeHtml(colGroup)}</th>
-            <th class="equip-fit equip-left">${escapeHtml(colName)}</th>
-            <th>${escapeHtml(colEffects)}</th>
-            <th class="equip-fit equip-left">${escapeHtml(colSlots)}</th>
-            <th class="equip-fit equip-left">${escapeHtml(colWeight)}</th>
-            <th class="equip-fit equip-left">${escapeHtml(colPrice)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(t.colName)}</th>
+            <th>${escapeHtml(t.colEffects)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(t.colSlots)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(t.colWeight)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(t.colPrice)}</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -1580,7 +1580,7 @@ function renderPage3(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
         <div class="page3-support-group">
           <div class="page3-support-item">${renderMoneyTable(vm)}</div>
           <div class="page3-support-item">${renderVehiclesTable(vm)}</div>
-          <div class="page3-support-item">${renderUpgradesTable(vm)}</div>
+          ${vm.upgrades.length > 0 ? `<div class="page3-support-item">${renderUpgradesTable(vm)}</div>` : ''}
           <div class="page3-support-item">${renderGeneralGearTable(vm)}</div>
         </div>
       </div>
@@ -1695,6 +1695,8 @@ export function renderCharacterPdfHtml(input: {
       .equip-table.equip-money { table-layout: fixed; width: 100%; }
       .equip-table.equip-upgrades { table-layout: auto; width: 100%; }
       .equip-upgrades .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; }
+      .cell-subtle { color: #6b7280; font-size: 9px; line-height: 1.1; }
+      .equip-general-gear .cell-subtle, .equip-upgrades .cell-subtle { color: #9ca3af; }
       .social-status-cell { vertical-align: top; }
       .t-auto { table-layout: auto; }
       .t-fit-col { width: 1%; white-space: nowrap; }
@@ -2171,3 +2173,4 @@ export function renderCharacterPdfHtml(input: {
   </body>
 </html>`;
 }
+

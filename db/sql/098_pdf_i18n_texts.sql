@@ -289,6 +289,12 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.section.vehicles'), 'pdf', 'page2.section.vehicles', 'en', 'Vehicles'),
   (ck_id('witcher_cc.pdf.page2.section.recipes'), 'pdf', 'page2.section.recipes', 'ru', 'Рецепты'),
   (ck_id('witcher_cc.pdf.page2.section.recipes'), 'pdf', 'page2.section.recipes', 'en', 'Recipes'),
+  (ck_id('witcher_cc.pdf.page2.section.money'), 'pdf', 'page2.section.money', 'ru', 'Валюта'),
+  (ck_id('witcher_cc.pdf.page2.section.money'), 'pdf', 'page2.section.money', 'en', 'Money'),
+  (ck_id('witcher_cc.pdf.page2.section.generalGear'), 'pdf', 'page2.section.generalGear', 'ru', 'Общее снаряжение'),
+  (ck_id('witcher_cc.pdf.page2.section.generalGear'), 'pdf', 'page2.section.generalGear', 'en', 'General Gear'),
+  (ck_id('witcher_cc.pdf.page2.section.upgrades'), 'pdf', 'page2.section.upgrades', 'ru', 'Улучшения'),
+  (ck_id('witcher_cc.pdf.page2.section.upgrades'), 'pdf', 'page2.section.upgrades', 'en', 'Upgrades'),
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Aether'), 'pdf', 'page2.formulaLegend.Aether', 'ru', 'Эфир'),
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Aether'), 'pdf', 'page2.formulaLegend.Aether', 'en', 'Aether'),
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Caelum'), 'pdf', 'page2.formulaLegend.Caelum', 'ru', 'Аер'),
@@ -309,8 +315,10 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Vitriol'), 'pdf', 'page2.formulaLegend.Vitriol', 'en', 'Vitriol'),
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Mutagen'), 'pdf', 'page2.formulaLegend.Mutagen', 'ru', 'Мутаген'),
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Mutagen'), 'pdf', 'page2.formulaLegend.Mutagen', 'en', 'Mutagen'),
-  (ck_id('witcher_cc.pdf.page2.formulaLegend.Spirits'), 'pdf', 'page2.formulaLegend.Spirits', 'ru', 'Крепкий алкоголь'),
+  (ck_id('witcher_cc.pdf.page2.formulaLegend.Spirits'), 'pdf', 'page2.formulaLegend.Spirits', 'ru', 'Алкоголь'),
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Spirits'), 'pdf', 'page2.formulaLegend.Spirits', 'en', 'Spirits'),
+  (ck_id('witcher_cc.pdf.page2.formulaLegend.DogTallow'), 'pdf', 'page2.formulaLegend.DogTallow', 'ru', 'Собачье сало'),
+  (ck_id('witcher_cc.pdf.page2.formulaLegend.DogTallow'), 'pdf', 'page2.formulaLegend.DogTallow', 'en', 'Dog Tallow'),
 
   -- lore labels
   (ck_id('witcher_cc.pdf.page2.lore.homeland'), 'pdf', 'page2.lore.homeland', 'ru', 'Родина'),
@@ -479,5 +487,43 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.tables.recipes.col.weightPotion'), 'pdf', 'page2.tables.recipes.col.weightPotion', 'ru', 'Вес'),
   (ck_id('witcher_cc.pdf.page2.tables.recipes.col.weightPotion'), 'pdf', 'page2.tables.recipes.col.weightPotion', 'en', 'Weight'),
   (ck_id('witcher_cc.pdf.page2.tables.recipes.col.pricePotion'), 'pdf', 'page2.tables.recipes.col.pricePotion', 'ru', 'Цена'),
-  (ck_id('witcher_cc.pdf.page2.tables.recipes.col.pricePotion'), 'pdf', 'page2.tables.recipes.col.pricePotion', 'en', 'Price')
+  (ck_id('witcher_cc.pdf.page2.tables.recipes.col.pricePotion'), 'pdf', 'page2.tables.recipes.col.pricePotion', 'en', 'Price'),
+
+  -- money
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.crowns'), 'pdf', 'page2.tables.money.col.crowns', 'ru', 'Кроны'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.crowns'), 'pdf', 'page2.tables.money.col.crowns', 'en', 'Crowns'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.orens'), 'pdf', 'page2.tables.money.col.orens', 'ru', 'Орены'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.orens'), 'pdf', 'page2.tables.money.col.orens', 'en', 'Orens'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.florens'), 'pdf', 'page2.tables.money.col.florens', 'ru', 'Флорены'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.florens'), 'pdf', 'page2.tables.money.col.florens', 'en', 'Florens'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.ducats'), 'pdf', 'page2.tables.money.col.ducats', 'ru', 'Дукаты'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.ducats'), 'pdf', 'page2.tables.money.col.ducats', 'en', 'Ducats'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.bizants'), 'pdf', 'page2.tables.money.col.bizants', 'ru', 'Бизанты'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.bizants'), 'pdf', 'page2.tables.money.col.bizants', 'en', 'Bizants'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.lintars'), 'pdf', 'page2.tables.money.col.lintars', 'ru', 'Линтары'),
+  (ck_id('witcher_cc.pdf.page2.tables.money.col.lintars'), 'pdf', 'page2.tables.money.col.lintars', 'en', 'Lintars'),
+
+  -- general gear
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.group'), 'pdf', 'page2.tables.generalGear.col.group', 'ru', 'Группа'),
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.group'), 'pdf', 'page2.tables.generalGear.col.group', 'en', 'Group'),
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.name'), 'pdf', 'page2.tables.generalGear.col.name', 'ru', 'Имя'),
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.name'), 'pdf', 'page2.tables.generalGear.col.name', 'en', 'Name'),
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.concealment'), 'pdf', 'page2.tables.generalGear.col.concealment', 'ru', 'Скр.'),
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.concealment'), 'pdf', 'page2.tables.generalGear.col.concealment', 'en', 'Con.'),
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.weight'), 'pdf', 'page2.tables.generalGear.col.weight', 'ru', 'Вес'),
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.weight'), 'pdf', 'page2.tables.generalGear.col.weight', 'en', 'Weight'),
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.price'), 'pdf', 'page2.tables.generalGear.col.price', 'ru', 'Цена'),
+  (ck_id('witcher_cc.pdf.page2.tables.generalGear.col.price'), 'pdf', 'page2.tables.generalGear.col.price', 'en', 'Price'),
+
+  -- upgrades
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.name'), 'pdf', 'page2.tables.upgrades.col.name', 'ru', 'Имя'),
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.name'), 'pdf', 'page2.tables.upgrades.col.name', 'en', 'Name'),
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.effects'), 'pdf', 'page2.tables.upgrades.col.effects', 'ru', 'Эффекты'),
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.effects'), 'pdf', 'page2.tables.upgrades.col.effects', 'en', 'Effects'),
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.slots'), 'pdf', 'page2.tables.upgrades.col.slots', 'ru', 'Сл.'),
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.slots'), 'pdf', 'page2.tables.upgrades.col.slots', 'en', 'Sl.'),
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.weight'), 'pdf', 'page2.tables.upgrades.col.weight', 'ru', 'Вес'),
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.weight'), 'pdf', 'page2.tables.upgrades.col.weight', 'en', 'Weight'),
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.price'), 'pdf', 'page2.tables.upgrades.col.price', 'ru', 'Цена'),
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.price'), 'pdf', 'page2.tables.upgrades.col.price', 'en', 'Price')
 ON CONFLICT (id, lang) DO NOTHING;

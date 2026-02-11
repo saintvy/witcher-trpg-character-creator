@@ -46,6 +46,7 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('ingredients.aether',     'Эфир',                          'Aether'),
   ('ingredients.mutagen',    'Мутаген',                       'Mutagen'),
   ('ingredients.spirits',    'Крепкий алкоголь',              'Spirits'),
+  ('ingredients.dog_tallow', 'Собачье сало',                  'Dog Tallow'),
 
   -- Crafted by
   ('crafted_by.humans',      'Люди',                          'Humans'),

@@ -36,6 +36,7 @@ export type GeneralGearDetails = {
   gear_name: string | null;
   group_name: string | null;
   subgroup_name: string | null;
+  gear_description: string | null;
   concealment: string | null;
   weight: string | number | null;
   price: number | null;
@@ -45,6 +46,7 @@ export type UpgradeDetails = {
   u_id: string;
   upgrade_name: string | null;
   upgrade_group: string | null;
+  target: string | null;
   effect_names: string | null;
   slots: number | null;
   weight: string | number | null;
@@ -82,8 +84,10 @@ export type RecipeRow = {
 
 export type GeneralGearRow = {
   amount: string;
-  groupAndSubgroup: string;
+  group: string;
+  subgroup: string;
   name: string;
+  description: string;
   concealment: string;
   weight: string;
   price: string;
@@ -93,6 +97,7 @@ export type UpgradeRow = {
   amount: string;
   group: string;
   name: string;
+  target: string;
   effects: string;
   slots: string;
   weight: string;
@@ -216,21 +221,23 @@ export function mapCharacterJsonToPage3Vm(
     .map((g) => {
       const rec = asRecord(g) ?? {};
       const tId = asString(rec.t_id);
-      const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? 1;
+      const amountDefault = tId ? 1 : 0;
+      const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? amountDefault;
       const details = tId ? generalGearDetailsById.get(tId) : null;
       const group = (details?.group_name ?? asString(rec.group_name) ?? '').trim();
       const subgroup = (details?.subgroup_name ?? asString(rec.subgroup_name) ?? '').trim();
-      const groupAndSubgroup = subgroup ? `${group} / ${subgroup}` : group;
       return {
         amount: String(amount),
-        groupAndSubgroup,
+        group,
+        subgroup,
         name: details?.gear_name ?? asString(rec.name) ?? asString(rec.gear_name) ?? tId ?? '',
+        description: details?.gear_description ?? asString(rec.gear_description) ?? '',
         concealment: details?.concealment ?? asString(rec.concealment) ?? '',
         weight: details?.weight != null ? String(details.weight) : asString(rec.weight) ?? '',
         price: details?.price != null ? String(details.price) : asString(rec.price) ?? '',
       };
     })
-    .filter((g) => g.name || g.groupAndSubgroup || g.amount);
+    .filter((g) => g.name || g.group || g.subgroup || g.description || g.amount);
 
   const upgradesRaw = Array.isArray(gearRoot.upgrades) ? (gearRoot.upgrades as unknown[]) : [];
   const upgrades: UpgradeRow[] = upgradesRaw
@@ -243,6 +250,7 @@ export function mapCharacterJsonToPage3Vm(
         amount: String(amount),
         group: details?.upgrade_group ?? '',
         name: details?.upgrade_name ?? uId,
+        target: details?.target ?? '',
         effects: details?.effect_names ?? '',
         slots: details?.slots != null ? String(details.slots) : '',
         weight: details?.weight != null ? String(details.weight) : '',
