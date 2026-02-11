@@ -8,6 +8,7 @@ import {
   type RecipeDetails,
   type GeneralGearDetails,
   type UpgradeDetails,
+  type BlueprintDetails,
   type CharacterPdfPage3Vm,
 } from './pages/viewModelPage3.js';
 import {
@@ -35,6 +36,7 @@ export type BuildCharacterPdfViewModelDeps = {
   potionDetailsById?: ReadonlyMap<string, PotionDetails>;
   vehicleDetailsById?: ReadonlyMap<string, VehicleDetails>;
   recipeDetailsById?: ReadonlyMap<string, RecipeDetails>;
+  blueprintDetailsById?: ReadonlyMap<string, BlueprintDetails>;
   generalGearDetailsById?: ReadonlyMap<string, GeneralGearDetails>;
   upgradeDetailsById?: ReadonlyMap<string, UpgradeDetails>;
 };
@@ -59,6 +61,7 @@ export function buildCharacterPdfViewModel(
     i18n: deps.i18n.page2,
     vehicleDetailsById: deps.vehicleDetailsById,
     recipeDetailsById: deps.recipeDetailsById,
+    blueprintDetailsById: deps.blueprintDetailsById,
     generalGearDetailsById: deps.generalGearDetailsById,
     upgradeDetailsById: deps.upgradeDetailsById,
   });

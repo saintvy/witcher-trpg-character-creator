@@ -66,6 +66,7 @@ const PAGE2_KEYS = {
     enemies: page2Key('section.enemies'),
     vehicles: page2Key('section.vehicles'),
     recipes: page2Key('section.recipes'),
+    blueprints: page2Key('section.blueprints'),
     money: page2Key('section.money'),
     generalGear: page2Key('section.generalGear'),
     upgrades: page2Key('section.upgrades'),
@@ -166,6 +167,19 @@ const PAGE2_KEYS = {
       colWeightPotion: page2Key('tables.recipes.col.weightPotion'),
       colPricePotion: page2Key('tables.recipes.col.pricePotion'),
     },
+    blueprints: {
+      colQty: page2Key('tables.blueprints.col.qty'),
+      colName: page2Key('tables.blueprints.col.name'),
+      colGroup: page2Key('tables.blueprints.col.group'),
+      colCraftLevel: page2Key('tables.blueprints.col.craftLevel'),
+      colDifficultyCheck: page2Key('tables.blueprints.col.difficultyCheck'),
+      colTimeCraft: page2Key('tables.blueprints.col.timeCraft'),
+      colComponents: page2Key('tables.blueprints.col.components'),
+      colItemDesc: page2Key('tables.blueprints.col.itemDesc'),
+      colPriceComponents: page2Key('tables.blueprints.col.priceComponents'),
+      colPrice: page2Key('tables.blueprints.col.price'),
+      colPriceItem: page2Key('tables.blueprints.col.priceItem'),
+    },
     money: {
       colCrowns: page2Key('tables.money.col.crowns'),
       colOrens: page2Key('tables.money.col.orens'),
@@ -205,6 +219,7 @@ export type CharacterPdfPage2I18n = {
     enemies: string;
     vehicles: string;
     recipes: string;
+    blueprints: string;
     money: string;
     generalGear: string;
     upgrades: string;
@@ -236,6 +251,7 @@ export type CharacterPdfPage2I18n = {
     enemies: { colGender: string; colPosition: string; colVictim: string; colCause: string; colPower: string; colLevel: string; colResult: string; colAlive: string; colHowFar: string };
     vehicles: { colQty: string; colType: string; colVehicle: string; colSkill: string; colMod: string; colSpeed: string; colHp: string; colWeight: string; colPrice: string; colOccupancy: string };
     recipes: { colQty: string; colRecipeGroup: string; colRecipeName: string; colCraftLevel: string; colComplexity: string; colTimeCraft: string; colFormula: string; colPriceFormula: string; colMinimalIngredientsCost: string; colTimeEffect: string; colToxicity: string; colRecipeDescription: string; colWeightPotion: string; colPricePotion: string };
+    blueprints: { colQty: string; colName: string; colGroup: string; colCraftLevel: string; colDifficultyCheck: string; colTimeCraft: string; colComponents: string; colItemDesc: string; colPriceComponents: string; colPrice: string; colPriceItem: string };
     money: { colCrowns: string; colOrens: string; colFlorens: string; colDucats: string; colBizants: string; colLintars: string };
     generalGear: { colGroup: string; colName: string; colConcealment: string; colWeight: string; colPrice: string };
     upgrades: { colName: string; colEffects: string; colSlots: string; colWeight: string; colPrice: string };
@@ -283,5 +299,3 @@ export async function loadCharacterPdfPage2I18n(lang: string): Promise<Character
   const translated = mapLeafStrings(PAGE2_KEYS, resolve) as Omit<CharacterPdfPage2I18n, 'lang'>;
   return { lang, ...(translated as any) };
 }
-
-

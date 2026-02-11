@@ -5,6 +5,7 @@ import {
   type RecipeDetails,
   type GeneralGearDetails,
   type UpgradeDetails,
+  type BlueprintDetails,
 } from './pages/viewModelPage3.js';
 import { renderCharacterPdfHtml } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
@@ -104,6 +105,12 @@ export class CharacterPdfService {
     const recipeIds = Array.isArray(gearRec?.recipes)
       ? (gearRec!.recipes as unknown[])
           .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).r_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
+    const blueprintIds = Array.isArray(gearRec?.blueprints)
+      ? (gearRec!.blueprints as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).b_id ?? '') : ''))
           .filter((x) => x.length > 0)
       : [];
 
@@ -222,6 +229,27 @@ export class CharacterPdfService {
       console.error('[pdf] recipes lookup failed', error);
     }
 
+    const blueprintDetailsById = new Map<string, BlueprintDetails>();
+    try {
+      if (blueprintIds.length > 0) {
+        const { rows } = await this.withTimeout(
+          db.query<BlueprintDetails>(
+            `
+              SELECT b_id, blueprint_name, blueprint_group, craft_level, difficulty_check, time_craft,
+                     components, item_desc, price_components, price, price_item
+              FROM wcc_item_blueprints_v
+              WHERE lang = $1 AND b_id = ANY($2::text[])
+            `,
+            [lang, Array.from(new Set(blueprintIds))],
+          ),
+          2500,
+        );
+        rows.forEach((r) => blueprintDetailsById.set(r.b_id, r));
+      }
+    } catch (error) {
+      console.error('[pdf] blueprints lookup failed', error);
+    }
+
     const generalGearDetailsById = new Map<string, GeneralGearDetails>();
     try {
       if (generalGearIds.length > 0) {
@@ -271,6 +299,7 @@ export class CharacterPdfService {
       potionDetailsById,
       vehicleDetailsById,
       recipeDetailsById,
+      blueprintDetailsById,
       generalGearDetailsById,
       upgradeDetailsById,
     });

@@ -1392,6 +1392,86 @@ function renderRecipesTable(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' =
   );
 }
 
+function renderBlueprintsTable(vm: CharacterPdfPage3Vm): string {
+  const t = vm.i18n.tables.blueprints;
+  const headerRow = `
+    <tr>
+      <th class="equip-fit equip-right">${escapeHtmlAllowBr(t.colQty)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colName)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colCraftLevel)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colDifficultyCheck)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colTimeCraft)}</th>
+      <th>${escapeHtmlAllowBr(t.colComponents)}</th>
+      <th>${escapeHtmlAllowBr(t.colItemDesc)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colPriceComponents)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colPrice)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colPriceItem)}</th>
+    </tr>
+  `;
+  const emptyRow = `
+    <tr>
+      <td class="equip-fit equip-right">&nbsp;</td>
+      <td class="equip-fit equip-left">&nbsp;</td>
+      <td class="equip-fit equip-left">&nbsp;</td>
+      <td class="equip-fit equip-left">&nbsp;</td>
+      <td class="equip-fit equip-left">&nbsp;</td>
+      <td class="equip-components">&nbsp;</td>
+      <td class="equip-item-desc">&nbsp;</td>
+      <td class="equip-fit equip-left">&nbsp;</td>
+      <td class="equip-fit equip-left">&nbsp;</td>
+      <td class="equip-fit equip-left">&nbsp;</td>
+    </tr>
+  `;
+  const dataRows =
+    vm.blueprints.length > 0
+      ? vm.blueprints
+          .map(
+            (b) => `
+          <tr>
+            <td class="equip-fit equip-right">${escapeHtml(b.amount)}</td>
+            <td class="equip-left">
+              <div>${escapeHtml(b.name)}</div>
+              ${b.group ? `<div class="cell-subtle">${escapeHtml(b.group)}</div>` : ''}
+            </td>
+            <td class="equip-fit equip-left">${escapeHtml(b.craftLevel)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(b.difficultyCheck)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(b.timeCraft)}</td>
+            <td class="equip-components">${escapeHtml(b.components)}</td>
+            <td class="equip-item-desc">${escapeHtml(b.itemDesc)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(b.priceComponents)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(b.price)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(b.priceItem)}</td>
+          </tr>
+        `,
+          )
+          .join('')
+      : '';
+  const rows = vm.blueprints.length > 0 ? dataRows + emptyRow : emptyRow;
+
+  return box(
+    vm.i18n.section.blueprints,
+    `
+      <table class="equip-table equip-blueprints table-header-pale-gray">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+          <col />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+        </colgroup>
+        <thead>${headerRow}</thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `,
+    'blueprints-box',
+  );
+}
+
 function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
   const title = vm.i18n.section.generalGear;
   const t = vm.i18n.tables.generalGear;
@@ -1577,6 +1657,7 @@ function renderPage3(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
       <div class="page3-layout">
         <div class="page2-separator" aria-hidden="true"><span class="page2-separator-line"></span></div>
         <div class="page3-recipes-row">${renderRecipesTable(vm, alchemyStyle)}</div>
+        <div class="page3-blueprints-row">${renderBlueprintsTable(vm)}</div>
         <div class="page3-support-group">
           <div class="page3-support-item">${renderMoneyTable(vm)}</div>
           <div class="page3-support-item">${renderVehiclesTable(vm)}</div>
@@ -1690,6 +1771,9 @@ export function renderCharacterPdfHtml(input: {
       .recipes-legend-cell { font-size: 9px; padding: 2px 4px; }
       .equip-table.equip-vehicles { table-layout: auto; width: 100%; }
       .equip-table.equip-recipes { table-layout: auto; width: 100%; }
+      .equip-table.equip-blueprints { table-layout: auto; width: 100%; }
+      .equip-blueprints .equip-components { white-space: pre-line; overflow-wrap: anywhere; word-break: break-word; }
+      .equip-blueprints .equip-item-desc { white-space: pre-line; overflow-wrap: anywhere; word-break: break-word; }
       .equip-recipes .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
       .equip-table.equip-general-gear { table-layout: auto; width: 100%; }
       .equip-table.equip-money { table-layout: fixed; width: 100%; }
@@ -2173,4 +2257,3 @@ export function renderCharacterPdfHtml(input: {
   </body>
 </html>`;
 }
-

@@ -53,6 +53,20 @@ export type UpgradeDetails = {
   price: number | null;
 };
 
+export type BlueprintDetails = {
+  b_id: string;
+  blueprint_name: string | null;
+  blueprint_group: string | null;
+  craft_level: string | null;
+  difficulty_check: number | null;
+  time_craft: string | null;
+  components: string | null;
+  item_desc: string | null;
+  price_components: number | null;
+  price: number | null;
+  price_item: number | null;
+};
+
 export type VehicleRow = {
   amount: string;
   subgroupName: string;
@@ -104,9 +118,24 @@ export type UpgradeRow = {
   price: string;
 };
 
+export type BlueprintRow = {
+  amount: string;
+  name: string;
+  group: string;
+  craftLevel: string;
+  difficultyCheck: string;
+  timeCraft: string;
+  components: string;
+  itemDesc: string;
+  priceComponents: string;
+  price: string;
+  priceItem: string;
+};
+
 export type CharacterPdfPage3Vm = {
   i18n: CharacterPdfPage2I18n;
   recipes: RecipeRow[];
+  blueprints: BlueprintRow[];
   vehicles: VehicleRow[];
   generalGear: GeneralGearRow[];
   upgrades: UpgradeRow[];
@@ -156,6 +185,7 @@ export function mapCharacterJsonToPage3Vm(
   deps: {
     i18n: CharacterPdfPage2I18n;
     recipeDetailsById?: ReadonlyMap<string, RecipeDetails>;
+    blueprintDetailsById?: ReadonlyMap<string, BlueprintDetails>;
     vehicleDetailsById?: ReadonlyMap<string, VehicleDetails>;
     generalGearDetailsById?: ReadonlyMap<string, GeneralGearDetails>;
     upgradeDetailsById?: ReadonlyMap<string, UpgradeDetails>;
@@ -163,6 +193,7 @@ export function mapCharacterJsonToPage3Vm(
 ): CharacterPdfPage3Vm {
   const i18n = deps.i18n;
   const recipeDetailsById = deps.recipeDetailsById ?? new Map();
+  const blueprintDetailsById = deps.blueprintDetailsById ?? new Map();
   const vehicleDetailsById = deps.vehicleDetailsById ?? new Map();
   const generalGearDetailsById = deps.generalGearDetailsById ?? new Map();
   const upgradeDetailsById = deps.upgradeDetailsById ?? new Map();
@@ -193,6 +224,31 @@ export function mapCharacterJsonToPage3Vm(
       };
     })
     .filter((r) => r.recipeName || r.amount);
+
+  const blueprintsRaw = Array.isArray(gearRoot.blueprints) ? (gearRoot.blueprints as unknown[]) : [];
+  const blueprints: BlueprintRow[] = blueprintsRaw
+    .map((b) => {
+      const rec = asRecord(b) ?? {};
+      const bId = asString(rec.b_id);
+      if (!bId) return null;
+      const details = bId ? blueprintDetailsById.get(bId) : null;
+      const amount = 1;
+      return {
+        amount: String(amount),
+        name: details?.blueprint_name ?? bId ?? '',
+        group: details?.blueprint_group ?? '',
+        craftLevel: details?.craft_level ?? '',
+        difficultyCheck: details?.difficulty_check != null ? String(details.difficulty_check) : '',
+        timeCraft: details?.time_craft ?? '',
+        components: details?.components ?? '',
+        itemDesc: details?.item_desc ?? '',
+        priceComponents: details?.price_components != null ? String(details.price_components) : '',
+        price: details?.price != null ? String(details.price) : '',
+        priceItem: details?.price_item != null ? String(details.price_item) : '',
+      };
+    })
+    .filter((b): b is BlueprintRow => Boolean(b))
+    .filter((b) => b.name || b.group || b.amount);
 
   const vehiclesRaw = Array.isArray(gearRoot.vehicles) ? (gearRoot.vehicles as unknown[]) : [];
   const vehicles: VehicleRow[] = vehiclesRaw
@@ -265,6 +321,7 @@ export function mapCharacterJsonToPage3Vm(
   return {
     i18n,
     recipes,
+    blueprints,
     vehicles,
     generalGear,
     upgrades,

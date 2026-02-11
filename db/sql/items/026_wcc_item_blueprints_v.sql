@@ -53,6 +53,91 @@ SELECT b.b_id
          ELSE NULL
        END AS time_craft
      , cp.components
+     , CASE
+         WHEN b.item_id LIKE 'W%' AND w.w_id IS NOT NULL THEN
+           replace(
+             replace(
+               replace(
+                 replace(
+                   replace(
+                     replace(
+                       replace(
+                         coalesce(tpl_w.text, ''),
+                         '{dmg}', coalesce(w.dmg::text, '')
+                       ),
+                       '{reliability}', coalesce(w.reliability::text, '')
+                     ),
+                     '{hands}', coalesce(w.hands::text, '')
+                   ),
+                   '{concealment}', coalesce(w.concealment::text, '')
+                 ),
+                 '{enhancements}', coalesce(w.enhancements::text, '')
+               ),
+               '{effect_names}', coalesce(w.effect_names::text, '')
+             ),
+             '{price}', coalesce(w.price::text, '')
+           )
+         WHEN b.item_id LIKE 'A%' AND a.a_id IS NOT NULL THEN
+           replace(
+             replace(
+               replace(
+                 replace(
+                   replace(
+                     coalesce(tpl_a.text, ''),
+                     '{stopping_power}', coalesce(a.stopping_power::text, '')
+                   ),
+                   '{encumbrance}', coalesce(a.encumbrance::text, '')
+                 ),
+                 '{enhancements}', coalesce(a.enhancements::text, '')
+               ),
+               '{effect_names}', coalesce(a.effect_names::text, '')
+             ),
+             '{price}', coalesce(a.price::text, '')
+           )
+         WHEN b.item_id LIKE 'I%' AND ing.i_id IS NOT NULL THEN
+           replace(
+             replace(
+               coalesce(tpl_i.text, ''),
+               '{weight}', coalesce(ing.weight::text, '')
+             ),
+             '{price}', coalesce(ing.price::text, '')
+           )
+         WHEN b.item_id LIKE 'T%' AND gg.t_id IS NOT NULL THEN
+           replace(
+             replace(
+               replace(
+                 replace(
+                   replace(
+                     coalesce(tpl_t.text, ''),
+                     '{group_name}', coalesce(gg.group_name::text, '')
+                   ),
+                   '{gear_description}', coalesce(gg.gear_description::text, '')
+                 ),
+                 '{concealment}', coalesce(gg.concealment::text, '')
+               ),
+               '{weight}', coalesce(gg.weight::text, '')
+             ),
+             '{price}', coalesce(gg.price::text, '')
+           )
+         WHEN b.item_id LIKE 'U%' AND upg.u_id IS NOT NULL THEN
+           replace(
+             replace(
+               replace(
+                 replace(
+                   replace(
+                     coalesce(tpl_u.text, ''),
+                     '{upgrade_group}', coalesce(upg.upgrade_group::text, '')
+                   ),
+                   '{target}', coalesce(upg.target::text, '')
+                 ),
+                 '{effect_names}', coalesce(upg.effect_names::text, '')
+               ),
+               '{slots}', coalesce(upg.slots::text, '')
+             ),
+             '{price}', coalesce(upg.price::text, '')
+           )
+         ELSE NULL
+       END AS item_desc
      , COALESCE(b.price_components, 0) AS price_components
      , COALESCE(b.price_blueprint, 0) AS price
      , COALESCE(b.price_item, 0) AS price_item
@@ -68,6 +153,16 @@ SELECT b.b_id
   LEFT JOIN i18n_text icl ON icl.id = b.craft_level_id AND icl.lang = l.lang
   LEFT JOIN i18n_text itcu ON itcu.id = b.time_unit_id AND itcu.lang = l.lang
   LEFT JOIN components_pretty cp ON cp.b_id = b.b_id AND cp.lang = l.lang
+  LEFT JOIN wcc_item_weapons_v w ON w.w_id = b.item_id AND w.lang = l.lang
+  LEFT JOIN wcc_item_armors_v a ON a.a_id = b.item_id AND a.lang = l.lang
+  LEFT JOIN wcc_item_ingredients_v ing ON ing.i_id = b.item_id AND ing.lang = l.lang
+  LEFT JOIN wcc_item_general_gear_v gg ON gg.t_id = b.item_id AND gg.lang = l.lang
+  LEFT JOIN wcc_item_upgrades_v upg ON upg.u_id = b.item_id AND upg.lang = l.lang
+  LEFT JOIN i18n_text tpl_w ON tpl_w.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.weapon') AND tpl_w.lang = l.lang
+  LEFT JOIN i18n_text tpl_a ON tpl_a.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor') AND tpl_a.lang = l.lang
+  LEFT JOIN i18n_text tpl_i ON tpl_i.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.ingredient') AND tpl_i.lang = l.lang
+  LEFT JOIN i18n_text tpl_t ON tpl_t.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.general_gear') AND tpl_t.lang = l.lang
+  LEFT JOIN i18n_text tpl_u ON tpl_u.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.upgrade') AND tpl_u.lang = l.lang
  ORDER BY blueprint_name;
 
 -- Helpful indexes for shop queries

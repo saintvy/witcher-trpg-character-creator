@@ -379,6 +379,52 @@ ins_i18n_blueprint_groups AS (
       AND rd.group_key <> ''
   ) gk
   ON CONFLICT (id, lang) DO NOTHING
+),
+ins_i18n_blueprint_item_desc_tpl AS (
+  -- Templates for item description formatting in wcc_item_blueprints_v (use replace on placeholders).
+  -- One row per language and per item type.
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT * FROM (
+    -- weapon
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.weapon'), 'items', 'blueprint_item_desc_tpl', 'ru',
+      E'Урон: {dmg}\nНадежность: {reliability}\nХват: {hands}\nСкрытность: {concealment}\nУБ: {enhancements}\nЭффекты: {effect_names}\nЦена: {price}'
+    UNION ALL
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.weapon'), 'items', 'blueprint_item_desc_tpl', 'en',
+      E'DMG: {dmg}\nReliability: {reliability}\nHands: {hands}\nConcealment: {concealment}\nEnh.: {enhancements}\nEffects: {effect_names}\nPrice: {price}'
+
+    UNION ALL
+    -- armor
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor'), 'items', 'blueprint_item_desc_tpl', 'ru',
+      E'ПБ: {stopping_power}\nСкованность: {encumbrance}\nУБ: {enhancements}\nЭффекты: {effect_names}\nЦена: {price}'
+    UNION ALL
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor'), 'items', 'blueprint_item_desc_tpl', 'en',
+      E'SP: {stopping_power}\nEnc.: {encumbrance}\nEnh.: {enhancements}\nEffects: {effect_names}\nPrice: {price}'
+
+    UNION ALL
+    -- ingredient (craft)
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.ingredient'), 'items', 'blueprint_item_desc_tpl', 'ru',
+      E'Ингредиент для крафта\nВес: {weight}\nЦена: {price}'
+    UNION ALL
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.ingredient'), 'items', 'blueprint_item_desc_tpl', 'en',
+      E'Craft ingredient\nWeight: {weight}\nPrice: {price}'
+
+    UNION ALL
+    -- general gear
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.general_gear'), 'items', 'blueprint_item_desc_tpl', 'ru',
+      E'Группа: {group_name}\nОписание: {gear_description}\nСкрытность: {concealment}\nВес: {weight}\nЦена: {price}'
+    UNION ALL
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.general_gear'), 'items', 'blueprint_item_desc_tpl', 'en',
+      E'Group: {group_name}\nDesc: {gear_description}\nConcealment: {concealment}\nWeight: {weight}\nPrice: {price}'
+
+    UNION ALL
+    -- upgrade
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.upgrade'), 'items', 'blueprint_item_desc_tpl', 'ru',
+      E'Группа: {upgrade_group}\nЦель: {target}\nЭффекты: {effect_names}\nСлоты: {slots}\nЦена: {price}'
+    UNION ALL
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.upgrade'), 'items', 'blueprint_item_desc_tpl', 'en',
+      E'Group: {upgrade_group}\nTarget: {target}\nEffects: {effect_names}\nSlots: {slots}\nPrice: {price}'
+  ) foo
+  ON CONFLICT (id, lang) DO UPDATE SET text = EXCLUDED.text
 )
 INSERT INTO wcc_item_blueprints (
   b_id, item_id, dlc_dlc_id,
@@ -525,4 +571,3 @@ SET
   price_components = EXCLUDED.price_components,
   price_blueprint = EXCLUDED.price_blueprint,
   price_item = EXCLUDED.price_item;
-
