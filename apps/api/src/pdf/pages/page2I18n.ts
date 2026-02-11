@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { db } from '../db/pool.js';
+import { db } from '../../db/pool.js';
 
 type DeepKeyTree = { [k: string]: string | DeepKeyTree };
 
@@ -165,111 +165,6 @@ const PAGE2_KEYS = {
   },
 } satisfies DeepKeyTree;
 
-const PAGE2_FALLBACK: Record<string, { ru: string; en: string }> = {
-  'witcher_cc.pdf.page2.section.lore': { ru: 'Лор', en: 'Lore' },
-  'witcher_cc.pdf.page2.section.socialStatus': { ru: 'Социальный статус', en: 'Social status' },
-  'witcher_cc.pdf.page2.section.lifePath': { ru: 'Жизненный путь', en: 'Life path' },
-  'witcher_cc.pdf.page2.section.style': { ru: 'Стиль', en: 'Style' },
-  'witcher_cc.pdf.page2.section.values': { ru: 'Ценности', en: 'Values' },
-  'witcher_cc.pdf.page2.section.siblings': { ru: 'Братья и сёстры', en: 'Siblings' },
-  'witcher_cc.pdf.page2.section.allies': { ru: 'Союзники', en: 'Allies' },
-  'witcher_cc.pdf.page2.section.enemies': { ru: 'Враги', en: 'Enemies' },
-  'witcher_cc.pdf.page2.section.vehicles': { ru: 'Транспорт', en: 'Vehicles' },
-  'witcher_cc.pdf.page2.section.recipes': { ru: 'Рецепты', en: 'Recipes' },
-  'witcher_cc.pdf.page2.formulaLegend.Aether': { ru: 'Эфир', en: 'Aether' },
-  'witcher_cc.pdf.page2.formulaLegend.Caelum': { ru: 'Аер', en: 'Caelum' },
-  'witcher_cc.pdf.page2.formulaLegend.Fulgur': { ru: 'Фульгор', en: 'Fulgur' },
-  'witcher_cc.pdf.page2.formulaLegend.Hydragenum': { ru: 'Гидраген', en: 'Hydragenum' },
-  'witcher_cc.pdf.page2.formulaLegend.Quebrith': { ru: 'Квебрит', en: 'Quebrith' },
-  'witcher_cc.pdf.page2.formulaLegend.Rebis': { ru: 'Ребис', en: 'Rebis' },
-  'witcher_cc.pdf.page2.formulaLegend.Sol': { ru: 'Солнце', en: 'Sol' },
-  'witcher_cc.pdf.page2.formulaLegend.Vermilion': { ru: 'Киноварь', en: 'Vermilion' },
-  'witcher_cc.pdf.page2.formulaLegend.Vitriol': { ru: 'Купорос', en: 'Vitriol' },
-  'witcher_cc.pdf.page2.formulaLegend.Mutagen': { ru: 'Мутаген', en: 'Mutagen' },
-  'witcher_cc.pdf.page2.formulaLegend.Spirits': { ru: 'Крепкий алкоголь', en: 'Spirits' },
-
-  'witcher_cc.pdf.page2.lore.homeland': { ru: 'Родина', en: 'Homeland' },
-  'witcher_cc.pdf.page2.lore.homeLanguage': { ru: 'Родной язык', en: 'Home language' },
-  'witcher_cc.pdf.page2.lore.familyStatus': { ru: 'Статус семьи', en: 'Family status' },
-  'witcher_cc.pdf.page2.lore.familyFate': { ru: 'Судьба семьи', en: 'Family fate' },
-  'witcher_cc.pdf.page2.lore.parentsFateWho': { ru: 'Родители', en: 'Parents' },
-  'witcher_cc.pdf.page2.lore.parentsFate': { ru: 'Судьба родителей', en: 'Parents fate' },
-  'witcher_cc.pdf.page2.lore.friend': { ru: 'Друг', en: 'Friend' },
-  'witcher_cc.pdf.page2.lore.school': { ru: 'Школа', en: 'School' },
-  'witcher_cc.pdf.page2.lore.witcherInitiationMoment': { ru: 'Становление ведьмаком', en: 'Becoming a witcher' },
-  'witcher_cc.pdf.page2.lore.diseasesAndCurses': { ru: 'Болезни и проклятия', en: 'Diseases & curses' },
-  'witcher_cc.pdf.page2.lore.mostImportantEvent': { ru: 'Самое важное событие', en: 'Most important event' },
-  'witcher_cc.pdf.page2.lore.trainings': { ru: 'Обучение', en: 'Trainings' },
-  'witcher_cc.pdf.page2.lore.currentSituation': { ru: 'Текущая ситуация', en: 'Current situation' },
-  'witcher_cc.pdf.page2.lore.style': { ru: 'Стиль', en: 'Style' },
-  'witcher_cc.pdf.page2.lore.values': { ru: 'Ценности', en: 'Values' },
-
-  'witcher_cc.pdf.page2.tables.lifeEvents.col.period': { ru: 'Период', en: 'Period' },
-  'witcher_cc.pdf.page2.tables.lifeEvents.col.type': { ru: 'Тип', en: 'Type' },
-  'witcher_cc.pdf.page2.tables.lifeEvents.col.desc': { ru: 'Описание', en: 'Description' },
-
-  'witcher_cc.pdf.page2.tables.style.col.clothing': { ru: 'Одежда', en: 'Clothing' },
-  'witcher_cc.pdf.page2.tables.style.col.personality': { ru: 'Характер', en: 'Personality' },
-  'witcher_cc.pdf.page2.tables.style.col.hairStyle': { ru: 'Причёска', en: 'Hairstyle' },
-  'witcher_cc.pdf.page2.tables.style.col.affectations': { ru: 'Украшения', en: 'Affectations' },
-  'witcher_cc.pdf.page2.tables.values.col.valuedPerson': { ru: 'Кого ценит', en: 'Valued person' },
-  'witcher_cc.pdf.page2.tables.values.col.value': { ru: 'Что ценит', en: 'Value' },
-  'witcher_cc.pdf.page2.tables.values.col.feelingsOnPeople': { ru: 'Мысли об окружающих', en: 'Feelings on people' },
-
-  'witcher_cc.pdf.page2.tables.siblings.col.age': { ru: 'Возраст', en: 'Age' },
-  'witcher_cc.pdf.page2.tables.siblings.col.gender': { ru: 'Пол', en: 'Sex' },
-  'witcher_cc.pdf.page2.tables.siblings.col.attitude': { ru: 'Отношение', en: 'Attitude' },
-  'witcher_cc.pdf.page2.tables.siblings.col.personality': { ru: 'Характер', en: 'Personality' },
-
-  'witcher_cc.pdf.page2.tables.allies.col.gender': { ru: 'Пол', en: 'Sex' },
-  'witcher_cc.pdf.page2.tables.allies.col.position': { ru: 'Кто', en: 'Who' },
-  'witcher_cc.pdf.page2.tables.allies.col.where': { ru: 'Где он сейчас', en: 'Where now' },
-  'witcher_cc.pdf.page2.tables.allies.col.acquaintance': { ru: 'Знакомство', en: 'Acquaintance' },
-  'witcher_cc.pdf.page2.tables.allies.col.howMet': { ru: 'Как встретились', en: 'How met' },
-  'witcher_cc.pdf.page2.tables.allies.col.howClose': { ru: 'Близость', en: 'Closeness' },
-  'witcher_cc.pdf.page2.tables.allies.col.alive': { ru: 'Жив ли', en: 'Alive' },
-
-  'witcher_cc.pdf.page2.tables.enemies.col.gender': { ru: 'Пол', en: 'Sex' },
-  'witcher_cc.pdf.page2.tables.enemies.col.position': { ru: 'Кто', en: 'Who' },
-  'witcher_cc.pdf.page2.tables.enemies.col.victim': { ru: 'Жертва', en: 'Victim' },
-  'witcher_cc.pdf.page2.tables.enemies.col.cause': { ru: 'Причина', en: 'Cause' },
-  'witcher_cc.pdf.page2.tables.enemies.col.power': { ru: 'Сила', en: 'Power' },
-  'witcher_cc.pdf.page2.tables.enemies.col.level': { ru: 'Мощь', en: 'Level' },
-  'witcher_cc.pdf.page2.tables.enemies.col.result': { ru: 'Итог', en: 'Result' },
-  'witcher_cc.pdf.page2.tables.enemies.col.alive': { ru: 'Жив ли', en: 'Alive' },
-  'witcher_cc.pdf.page2.tables.enemies.col.howFar': { ru: 'Насколько далеко', en: 'How far' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.qty': { ru: '#', en: '#' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.type': { ru: 'Тип', en: 'Type' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.vehicle': { ru: 'Транспорт', en: 'Vehicle' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.skill': { ru: 'Навык', en: 'Skill' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.mod': { ru: 'Мод.', en: 'Mod.' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.speed': { ru: 'Скор.', en: 'Speed' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.hp': { ru: 'ПЗ', en: 'HP' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.weight': { ru: 'Вес', en: 'Weight' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.price': { ru: 'Цена', en: 'Price' },
-  'witcher_cc.pdf.page2.tables.vehicles.col.occupancy': { ru: 'Места', en: 'Seats' },
-  'witcher_cc.pdf.page2.tables.recipes.col.qty': { ru: '#', en: '#' },
-  'witcher_cc.pdf.page2.tables.recipes.col.recipeGroup': { ru: 'Группа', en: 'Group' },
-  'witcher_cc.pdf.page2.tables.recipes.col.recipeName': { ru: 'Рецепт', en: 'Recipe' },
-  'witcher_cc.pdf.page2.tables.recipes.col.craftLevel': { ru: 'уровень', en: 'level' },
-  'witcher_cc.pdf.page2.tables.recipes.col.complexity': { ru: 'СЛ', en: 'DC' },
-  'witcher_cc.pdf.page2.tables.recipes.col.timeCraft': { ru: 'Время<br>крафта', en: 'Craft<br>time' },
-  'witcher_cc.pdf.page2.tables.recipes.col.formula': { ru: 'Формула', en: 'Formula' },
-  'witcher_cc.pdf.page2.tables.recipes.col.priceFormula': { ru: 'Цена<br>формулы', en: 'Formula<br>price' },
-  'witcher_cc.pdf.page2.tables.recipes.col.minimalIngredientsCost': { ru: 'Мин.<br>цена<br>ингр.', en: 'Min.<br>ingr.<br>cost' },
-  'witcher_cc.pdf.page2.tables.recipes.col.timeEffect': { ru: 'Время<br>эффекта', en: 'Effect<br>time' },
-  'witcher_cc.pdf.page2.tables.recipes.col.toxicity': { ru: 'токс.', en: 'Tox.' },
-  'witcher_cc.pdf.page2.tables.recipes.col.recipeDescription': { ru: 'эффект', en: 'Effect' },
-  'witcher_cc.pdf.page2.tables.recipes.col.weightPotion': { ru: 'Вес', en: 'Weight' },
-  'witcher_cc.pdf.page2.tables.recipes.col.pricePotion': { ru: 'Цена', en: 'Price' },
-  'witcher_cc.pdf.page2.tables.socialStatus.status.equal': { ru: 'Равенство', en: 'Equal' },
-  'witcher_cc.pdf.page2.tables.socialStatus.status.tolerated': { ru: 'Терпимость', en: 'Tolerated' },
-  'witcher_cc.pdf.page2.tables.socialStatus.status.hated': { ru: 'Ненависть', en: 'Hated' },
-  'witcher_cc.pdf.page2.tables.socialStatus.status.feared': { ru: 'Опасение', en: 'Feared' },
-  'witcher_cc.pdf.page2.tables.socialStatus.and': { ru: ' и ', en: ' and ' },
-  'witcher_cc.pdf.page2.tables.socialStatus.reputationLabel': { ru: 'Репутация', en: 'Reputation' },
-};
-
 export type CharacterPdfPage2I18n = {
   lang: string;
   formulaLegend: { Aether: string; Caelum: string; Fulgur: string; Hydragenum: string; Quebrith: string; Rebis: string; Sol: string; Vermilion: string; Vitriol: string; Mutagen: string; Spirits: string };
@@ -339,11 +234,11 @@ export async function loadCharacterPdfPage2I18n(lang: string): Promise<Character
     const rec = byId.get(id);
     if (rec?.[lang]) return rec[lang];
     if (lang !== 'en' && rec?.['en']) return rec['en'];
-    const fb = PAGE2_FALLBACK[key];
-    if (fb) return lang === 'ru' ? fb.ru : fb.en;
     return key;
   };
 
   const translated = mapLeafStrings(PAGE2_KEYS, resolve) as Omit<CharacterPdfPage2I18n, 'lang'>;
   return { lang, ...(translated as any) };
 }
+
+

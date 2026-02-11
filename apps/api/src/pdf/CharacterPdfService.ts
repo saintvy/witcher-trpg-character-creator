@@ -1,22 +1,20 @@
 import { chromium, type Browser } from 'playwright';
-import { mapCharacterJsonToPage1Vm, type SkillCatalogInfo, type WeaponDetails, type ArmorDetails, type PotionDetails } from './viewModel.js';
+import { type SkillCatalogInfo, type WeaponDetails, type ArmorDetails, type PotionDetails } from './pages/viewModelPage1.js';
 import {
-  mapCharacterJsonToPage2Vm,
   type VehicleDetails,
   type RecipeDetails,
-} from './viewModelPage2.js';
+} from './pages/viewModelPage3.js';
 import { renderCharacterPdfHtml } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
 import { db } from '../db/pool.js';
-import { loadCharacterPdfPage1I18n, type CharacterPdfPage1I18n } from './page1I18n.js';
-import { loadCharacterPdfPage2I18n, type CharacterPdfPage2I18n } from './page2I18n.js';
+import { loadCharacterPdfI18n, type CharacterPdfI18n } from './i18n.js';
+import { buildCharacterPdfViewModel } from './pdfViewModel.js';
 
 export type PdfOptions = { alchemy_style?: 'w1' | 'w2' };
 
 export class CharacterPdfService {
   private static browserPromise: Promise<Browser> | null = null;
-  private static page1I18nCache = new Map<string, CharacterPdfPage1I18n>();
-  private static page2I18nCache = new Map<string, CharacterPdfPage2I18n>();
+  private static i18nCache = new Map<string, CharacterPdfI18n>();
 
   private static async getBrowser(): Promise<Browser> {
     if (!CharacterPdfService.browserPromise) {
@@ -45,38 +43,22 @@ export class CharacterPdfService {
     }
   }
 
-  private async getPage1I18n(lang: string): Promise<CharacterPdfPage1I18n> {
-    const cached = CharacterPdfService.page1I18nCache.get(lang);
+  private async getPdfI18n(lang: string): Promise<CharacterPdfI18n> {
+    const cached = CharacterPdfService.i18nCache.get(lang);
     if (cached) return cached;
-    const i18n = await this.withTimeout(loadCharacterPdfPage1I18n(lang), 2500);
-    CharacterPdfService.page1I18nCache.set(lang, i18n);
-    return i18n;
-  }
-
-  private async getPage2I18n(lang: string): Promise<CharacterPdfPage2I18n> {
-    const cached = CharacterPdfService.page2I18nCache.get(lang);
-    if (cached) return cached;
-    const i18n = await this.withTimeout(loadCharacterPdfPage2I18n(lang), 2500);
-    CharacterPdfService.page2I18nCache.set(lang, i18n);
+    const i18n = await this.withTimeout(loadCharacterPdfI18n(lang), 2500);
+    CharacterPdfService.i18nCache.set(lang, i18n);
     return i18n;
   }
 
   async generatePdfBuffer(characterJson: unknown, options: PdfOptions = {}): Promise<Buffer> {
     const lang = this.getLangFromCharacter(characterJson);
-    let page1I18n: CharacterPdfPage1I18n;
+    let i18n: CharacterPdfI18n;
     try {
-      page1I18n = await this.getPage1I18n(lang);
+      i18n = await this.getPdfI18n(lang);
     } catch (error) {
       console.error('[pdf] i18n load failed', error);
-      page1I18n = await this.getPage1I18n('en');
-    }
-
-    let page2I18n: CharacterPdfPage2I18n;
-    try {
-      page2I18n = await this.getPage2I18n(lang);
-    } catch (error) {
-      console.error('[pdf] page2 i18n load failed', error);
-      page2I18n = await this.getPage2I18n('en');
+      i18n = await this.getPdfI18n('en');
     }
 
     const skillsCatalog = new Map<string, SkillCatalogInfo>();
@@ -231,20 +213,17 @@ export class CharacterPdfService {
       console.error('[pdf] recipes lookup failed', error);
     }
 
-    const page1Vm = mapCharacterJsonToPage1Vm(characterJson, {
+    const pdfVm = buildCharacterPdfViewModel(characterJson, {
       lang,
-      i18n: page1I18n,
+      i18n,
       skillsCatalog,
       weaponDetailsById,
       armorDetailsById,
       potionDetailsById,
-    });
-    const page2Vm = mapCharacterJsonToPage2Vm(characterJson, {
-      i18n: page2I18n,
       vehicleDetailsById,
       recipeDetailsById,
     });
-    const html = renderCharacterPdfHtml({ page1: page1Vm, page2: page2Vm, options });
+    const html = renderCharacterPdfHtml({ page1: pdfVm.page1, page2: pdfVm.page2, page3: pdfVm.page3, options });
 
     const browser = await CharacterPdfService.getBrowser();
     const context = await browser.newContext({

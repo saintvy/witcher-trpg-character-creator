@@ -380,6 +380,8 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.tables.socialStatus.status.feared'), 'pdf', 'page2.tables.socialStatus.status.feared', 'en', 'Feared'),
   (ck_id('witcher_cc.pdf.page2.tables.socialStatus.and'), 'pdf', 'page2.tables.socialStatus.and', 'ru', ' и '),
   (ck_id('witcher_cc.pdf.page2.tables.socialStatus.and'), 'pdf', 'page2.tables.socialStatus.and', 'en', ' and '),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.reputationLabel'), 'pdf', 'page2.tables.socialStatus.reputationLabel', 'ru', 'Репутация'),
+  (ck_id('witcher_cc.pdf.page2.tables.socialStatus.reputationLabel'), 'pdf', 'page2.tables.socialStatus.reputationLabel', 'en', 'Reputation'),
 
   -- siblings
   (ck_id('witcher_cc.pdf.page2.tables.siblings.col.age'), 'pdf', 'page2.tables.siblings.col.age', 'ru', 'Возраст'),

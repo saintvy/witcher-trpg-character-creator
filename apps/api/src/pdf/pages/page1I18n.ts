@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { db } from '../db/pool.js';
+import { db } from '../../db/pool.js';
 
 type DeepKeyTree = { [k: string]: string | DeepKeyTree };
 
@@ -275,4 +275,3 @@ export async function loadCharacterPdfPage1I18n(lang: string): Promise<Character
   const translated = mapLeafStrings(PAGE1_KEYS, resolve) as Omit<CharacterPdfPage1I18n, 'lang'>;
   return { lang, ...(translated as any) };
 }
-

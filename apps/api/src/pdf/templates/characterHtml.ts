@@ -1,8 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { CharacterPdfPage1Vm } from '../viewModel.js';
-import type { CharacterPdfPage2Vm } from '../viewModelPage2.js';
+import type { CharacterPdfPage1Vm } from '../pages/viewModelPage1.js';
+import type { CharacterPdfPage2Vm } from '../pages/viewModelPage2.js';
+import type { CharacterPdfPage3Vm } from '../pages/viewModelPage3.js';
 
 const assetDataUrlCache = new Map<string, string>();
 const assetFormulaIngredientCache = new Map<string, string>();
@@ -1191,7 +1192,7 @@ function escapeHtmlAllowBr(value: string): string {
   return escaped.replace(/&lt;br\s*\/?&gt;/gi, '<br>');
 }
 
-function renderVehiclesTable(vm: CharacterPdfPage2Vm): string {
+function renderVehiclesTable(vm: CharacterPdfPage3Vm): string {
   const showOccupancy = vm.vehicles.some((v) => v.occupancy.trim() !== '');
   const t = vm.i18n.tables.vehicles;
   const headerCells = [
@@ -1266,7 +1267,7 @@ function renderVehiclesTable(vm: CharacterPdfPage2Vm): string {
   );
 }
 
-function renderRecipesTable(vm: CharacterPdfPage2Vm, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
+function renderRecipesTable(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
   const t = vm.i18n.tables.recipes;
   const leg = vm.i18n.formulaLegend;
   const headerRow = `
@@ -1367,7 +1368,7 @@ function renderRecipesTable(vm: CharacterPdfPage2Vm, alchemyStyle: 'w1' | 'w2' =
   );
 }
 
-function renderPage2(vm: CharacterPdfPage2Vm, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
+function renderPage2(vm: CharacterPdfPage2Vm): string {
   const loreHtml = renderLoreBlock(vm);
   const socialStatusHtml = renderSocialStatusTable(vm);
   const lifePathHtml = renderLifeEvents(vm);
@@ -1401,11 +1402,6 @@ function renderPage2(vm: CharacterPdfPage2Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
         </div>
         <div class="page2-allies-row">${renderAllies(vm)}</div>
         <div class="page2-enemies-row">${renderEnemies(vm)}</div>
-        <div class="page2-separator" aria-hidden="true"><span class="page2-separator-line"></span></div>
-        <div class="page2-vehicles-recipes-row">
-          <div class="page2-vehicles-cell">${renderVehiclesTable(vm)}</div>
-          <div class="page2-recipes-cell">${renderRecipesTable(vm, alchemyStyle)}</div>
-        </div>
       </div>
       <template id="page2-siblings-tpl">${siblingsHtml}</template>
       <template id="page2-style-tpl">${styleHtml}</template>
@@ -1414,13 +1410,29 @@ function renderPage2(vm: CharacterPdfPage2Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
   `;
 }
 
+function renderPage3(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
+  return `
+    <div class="page page3">
+      <div class="page3-layout">
+        <div class="page2-separator" aria-hidden="true"><span class="page2-separator-line"></span></div>
+        <div class="page2-vehicles-recipes-row">
+          <div class="page2-vehicles-cell">${renderVehiclesTable(vm)}</div>
+          <div class="page2-recipes-cell">${renderRecipesTable(vm, alchemyStyle)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 export function renderCharacterPdfHtml(input: {
   page1: CharacterPdfPage1Vm;
   page2: CharacterPdfPage2Vm;
+  page3: CharacterPdfPage3Vm;
   options?: { alchemy_style?: 'w1' | 'w2' };
 }): string {
   const vm = input.page1;
   const page2 = input.page2;
+  const page3 = input.page3;
   const alchemyStyle = input.options?.alchemy_style ?? 'w2';
   return `<!doctype html>
 <html>
@@ -1455,7 +1467,13 @@ export function renderCharacterPdfHtml(input: {
         break-before: page;
         page-break-before: always;
       }
+      .page3 {
+        height: 297mm;
+        break-before: page;
+        page-break-before: always;
+      }
       .page2-layout { display: flex; flex-direction: column; gap: 3mm; }
+      .page3-layout { display: flex; flex-direction: column; gap: 3mm; }
       .page2-pack { display: none; }
       .page2-pack.page2-visible {
         display: grid;
@@ -1766,7 +1784,8 @@ export function renderCharacterPdfHtml(input: {
   </head>
   <body>
     ${renderPage1(vm)}
-    ${renderPage2(page2, alchemyStyle)}
+    ${renderPage2(page2)}
+    ${renderPage3(page3, alchemyStyle)}
 
     <script>
       (() => {
