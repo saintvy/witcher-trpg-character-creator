@@ -145,7 +145,7 @@ raw_data (b_id, item_id, name_ru, name_en, dlc_id, group_key, craft_level_key, d
   , ('B105', 'U044', 'Сияние', 'Shining', 'exp_toc', 'upgrades.glyphword', 'craft.level.journeyman', NULL, 1, 'time.unit.hour', 'U036 (1), U033 (1)', 875, 1750, 875,'availability.R')
   , ('B106', 'U045', 'Тяжесть', 'Heft', 'exp_toc', 'upgrades.glyphword', 'craft.level.journeyman', NULL, 1, 'time.unit.hour', 'U034 (1), U031 (1)', 550, 1100, 550,'availability.R')
   , ('B107', 'U046', 'Щит', 'Protection', 'exp_toc', 'upgrades.glyphword', 'craft.level.master', NULL, 1, 'time.unit.hour', 'U037 (1), U035 (1), U033 (1)', 1450, 2900, 1450,'availability.R')
-  , ('B108', 'U047', 'Доп. слот для улучшения на броне/оружии', 'Additional upgrade slot on armor/weapon', 'core', 'upgrades.armor', 'craft.level.master', 25, 4, 'time.unit.hour', 'I040 (4), I089 (2)', 684, 1368, NULL,NULL)
+  , ('B108', 'U047', 'Доп. слот для улучшения на броне/оружии', 'Additional upgrade slot on armor/weapon', 'core', 'upgrades.armor', 'craft.level.master', 25, 4, 'time.unit.hour', 'I040 (4), I089 (2)', 684, 1368, 684,NULL)
   , ('B109', 'W001', 'Арбалет', 'Crossbow', 'core', 'weapons.wt_crossbow', 'craft.level.journeyman', 17, 9, 'time.unit.hour', 'I006 (4), I011 (5), I013 (1), I009 (2), I043 (3), I019 (1), I025 (2), I028 (2), I037 (1)', 343, 682, 455,'availability.E')
   , ('B110', 'W002', 'Арбалет охотника на чудовищ', 'Monster Hunter''s Crossbow', 'core', 'weapons.wt_crossbow', 'craft.level.master', 24, 12, 'time.unit.hour', 'I006 (6), I032 (4), I011 (6), I019 (3), I009 (4), I025 (2), I013 (3), I028 (4), I031 (3), I014 (4)', 844, 1686, 1125,'availability.R')
   , ('B111', 'W003', 'Арбалет школы Волка', 'Wolven Crossbow', 'hb', 'weapons.wt_crossbow', 'craft.level.master', 17, 8, 'time.unit.hour', 'I006 (2), I137 (2), I013 (2), I009 (2), I031 (1), I019 (1), I025 (2), I028 (2), I032 (1), I014 (2)', 346, 0, NULL,'availability.R')
@@ -276,17 +276,17 @@ raw_data (b_id, item_id, name_ru, name_en, dlc_id, group_key, craft_level_key, d
   , ('B236', 'W146', 'Эсбода', 'Esboda', 'core', 'weapons.wt_sword', 'craft.level.journeyman', 17, 9, 'time.unit.hour', 'I006 (2), I043 (3), I032 (2), I019 (2), I024 (1)', 481, 974, 650,'availability.P')
   , ('B237', 'W154', 'Гномий посох', 'Gnomish Staff', 'core', 'weapons.wt_staff', 'craft.level.master', 22, 11, 'time.unit.hour', 'I006 (6), I027 (5), I032 (1), I023 (3), I004 (1)', 685, 1364, 910,'availability.R')
   , ('B238', 'W155', 'Железный посох', 'Iron Staff', 'core', 'weapons.wt_staff', 'craft.level.master', 20, 10, 'time.unit.hour', 'I031 (4), I032 (1), I027 (2), I020 (1), I026 (4), I006 (1)', 506, 1012, 675,'availability.P')
-  , ('B239', 'W156', 'Истинный связывающий посох', 'True Staff of Binding', 'exp_toc', 'weapons.wt_staff', 'craft.level.grand_master', 25, 13, 'time.unit.hour', 'I128 (4), I027 (5), I001 (1), I025 (1), I024 (3), I028 (5), I034 (1), I040 (3), I085 (2) ИЛИ W160 (1), I040 (3), I085 (2)', 1160, 2320, 335,'availability.R')
-  , ('B240', 'W157', 'Посох', 'Staff', 'core', 'weapons.wt_staff', 'craft.level.journeyman', 18, 9, 'time.unit.hour', 'I012 (6), I043 (1), I027 (2), I025 (2), I013 (2)', 250, 502, 835,'availability.C')
-  , ('B241', 'W158', 'Посох с кристаллом', 'Crystal Staff', 'core', 'weapons.wt_staff', 'craft.level.master', 25, 13, 'time.unit.hour', 'I012 (6), I043 (2), I027 (4), I034 (1), I025 (3), I013 (2), I026 (4), I024 (1)', 623, 1296, 550,'availability.R')
-  , ('B242', 'W159', 'Посох с крюком', 'Hooked Staff', 'core', 'weapons.wt_staff', 'craft.level.journeyman', 18, 9, 'time.unit.hour', 'I012 (6), I043 (1), I027 (2), I025 (2), I013 (3), I043 (2), I026 (2), I019 (1), I011 (4)', 412, 824, NULL,'availability.P')
-  , ('B243', 'W160', 'Связывающий посох', 'Staff of Binding', 'exp_toc', 'weapons.wt_staff', 'craft.level.master', 19, 12, 'time.unit.hour', 'I012 (4), I027 (5), I001 (1), I025 (1), I024 (3), I028 (5), I034 (1)', 666, 1332, 975,'availability.R')
-  , ('B244', 'W161', 'Эльфский дорожный посох', 'Elven Walking Staff', 'core', 'weapons.wt_staff', 'craft.level.grand_master', 25, 13, 'time.unit.hour', 'I006 (6), I036 (1), I025 (6), I010 (1), I022 (2), I032 (1), I027 (3), I034 (1)', 735, 1470, NULL,'availability.R')
-  , ('B245', 'W163', 'Боевой топор', 'Battle Axe', 'core', 'weapons.wt_axe', 'craft.level.journeyman', 17, 9, 'time.unit.hour', 'I006 (4), I043 (3), I020 (3), I025 (4), I028 (4), I041 (5)', 389, 786, 910,'availability.C')
-  , ('B246', 'W164', 'Гномий чёрный топор', 'Gnomish Black Axe', 'core', 'weapons.wt_axe', 'craft.level.grand_master', 25, 13, 'time.unit.hour', 'I006 (4), I019 (2), I033 (1), I032 (3), I028 (1), I029 (1)', 688, 1376, 740,'availability.R')
-  , ('B247', 'W165', 'Краснолюдский топор', 'Dwarven Axe', 'core', 'weapons.wt_axe', 'craft.level.master', 24, 12, 'time.unit.hour', 'I039 (3), I006 (4), I019 (2), I026 (4), I029 (1), I041 (2), I002 (3)', 555, 1110, 205,'availability.R')
-  , ('B248', 'W166', 'Топор', 'Hand Axe', 'core', 'weapons.wt_axe', 'craft.level.novice', 10, 3, 'time.unit.hour', 'I006 (1), I043 (1), I019 (1), I020 (1), I009 (4)', 148, 306, 960,'availability.E')
-  , ('B249', 'W167', 'Топор берсерка', 'Berserker''s Axe', 'core', 'weapons.wt_axe', 'craft.level.master', 25, 13, 'time.unit.hour', 'I039 (4), I006 (5), I019 (1), I043 (2), I009 (1), I029 (1), I025 (1)', 772, 1440, NULL,'availability.P')
+  , ('B239', 'W156', 'Истинный связывающий посох', 'True Staff of Binding', 'exp_toc', 'weapons.wt_staff', 'craft.level.grand_master', 25, 13, 'time.unit.hour', 'I128 (4), I027 (5), I001 (1), I025 (1), I024 (3), I028 (5), I034 (1), I040 (3), I085 (2) ИЛИ W160 (1), I040 (3), I085 (2)', 1160, 2320, 0,'availability.R')
+  , ('B240', 'W157', 'Посох', 'Staff', 'core', 'weapons.wt_staff', 'craft.level.journeyman', 18, 9, 'time.unit.hour', 'I012 (6), I043 (1), I027 (2), I025 (2), I013 (2)', 250, 502, 335,'availability.C')
+  , ('B241', 'W158', 'Посох с кристаллом', 'Crystal Staff', 'core', 'weapons.wt_staff', 'craft.level.master', 25, 13, 'time.unit.hour', 'I012 (6), I043 (2), I027 (4), I034 (1), I025 (3), I013 (2), I026 (4), I024 (1)', 623, 1296, 835,'availability.R')
+  , ('B242', 'W159', 'Посох с крюком', 'Hooked Staff', 'core', 'weapons.wt_staff', 'craft.level.journeyman', 18, 9, 'time.unit.hour', 'I012 (6), I043 (1), I027 (2), I025 (2), I013 (3), I043 (2), I026 (2), I019 (1), I011 (4)', 412, 824, 550,'availability.P')
+  , ('B243', 'W160', 'Связывающий посох', 'Staff of Binding', 'exp_toc', 'weapons.wt_staff', 'craft.level.master', 19, 12, 'time.unit.hour', 'I012 (4), I027 (5), I001 (1), I025 (1), I024 (3), I028 (5), I034 (1)', 666, 1332, 0,'availability.R')
+  , ('B244', 'W161', 'Эльфский дорожный посох', 'Elven Walking Staff', 'core', 'weapons.wt_staff', 'craft.level.grand_master', 25, 13, 'time.unit.hour', 'I006 (6), I036 (1), I025 (6), I010 (1), I022 (2), I032 (1), I027 (3), I034 (1)', 735, 1470, 975,'availability.R')
+  , ('B245', 'W163', 'Боевой топор', 'Battle Axe', 'core', 'weapons.wt_axe', 'craft.level.journeyman', 17, 9, 'time.unit.hour', 'I006 (4), I043 (3), I020 (3), I025 (4), I028 (4), I041 (5)', 389, 786, 525,'availability.C')
+  , ('B246', 'W164', 'Гномий чёрный топор', 'Gnomish Black Axe', 'core', 'weapons.wt_axe', 'craft.level.grand_master', 25, 13, 'time.unit.hour', 'I006 (4), I019 (2), I033 (1), I032 (3), I028 (1), I029 (1)', 688, 1376, 910,'availability.R')
+  , ('B247', 'W165', 'Краснолюдский топор', 'Dwarven Axe', 'core', 'weapons.wt_axe', 'craft.level.master', 24, 12, 'time.unit.hour', 'I039 (3), I006 (4), I019 (2), I026 (4), I029 (1), I041 (2), I002 (3)', 555, 1110, 740,'availability.R')
+  , ('B248', 'W166', 'Топор', 'Hand Axe', 'core', 'weapons.wt_axe', 'craft.level.novice', 10, 3, 'time.unit.hour', 'I006 (1), I043 (1), I019 (1), I020 (1), I009 (4)', 148, 306, 205,'availability.E')
+  , ('B249', 'W167', 'Топор берсерка', 'Berserker''s Axe', 'core', 'weapons.wt_axe', 'craft.level.master', 25, 13, 'time.unit.hour', 'I039 (4), I006 (5), I019 (1), I043 (2), I009 (1), I029 (1), I025 (1)', 772, 1440, 960,'availability.P')
   , ('B250', 'W169', 'Стальной меч школы Улитки', 'Gastropod Steel Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 18, 13, 'time.unit.hour', 'I006 (3), I020 (2), I040 (1), I043 (7), I037 (1), I029 (2), I026 (2), I025 (2), I011 (1), I002 (1)', 656, 0, NULL,'availability.R')
   , ('B251', 'W170', 'Серебряный меч школы Улитки', 'Gastropod Silver Sword', 'dlc_sch_snail', 'weapons.wt_sword', 'craft.level.master', 19, 15, 'time.unit.hour', 'I006 (3), I020 (2), I042 (2), I043 (2), I037 (4), I029 (2), I026 (1), I025 (2), I002 (1), I041 (10)', 597, 0, NULL,'availability.R')
   , ('B252', 'A064', 'Броня школы Улитки', 'Gastropod Armor', 'dlc_sch_snail', 'bodypart.full', 'craft.level.master', 18, 24, 'time.unit.hour', 'I004 (10), I011 (10), I037 (10), I043 (10), I040 (2), I025 (10), I028 (10), I089 (1), I002 (20), I041 (30)', 1538, 0, NULL,'availability.R')
@@ -387,42 +387,42 @@ ins_i18n_blueprint_item_desc_tpl AS (
   SELECT * FROM (
     -- weapon
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.weapon'), 'items', 'blueprint_item_desc_tpl', 'ru',
-      E'Урон: {dmg}\nНадежность: {reliability}\nХват: {hands}\nСкрытность: {concealment}\nУБ: {enhancements}\nЭффекты: {effect_names}\nЦена: {price}'
+      E'Урон: {dmg}\nНадежность: {reliability}\nХват: {hands}\nСкрытность: {concealment}\nУБ: {enhancements}\nЭффекты: {effect_names}'
     UNION ALL
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.weapon'), 'items', 'blueprint_item_desc_tpl', 'en',
-      E'DMG: {dmg}\nReliability: {reliability}\nHands: {hands}\nConcealment: {concealment}\nEnh.: {enhancements}\nEffects: {effect_names}\nPrice: {price}'
+      E'DMG: {dmg}\nReliability: {reliability}\nHands: {hands}\nConcealment: {concealment}\nEnh.: {enhancements}\nEffects: {effect_names}'
 
     UNION ALL
     -- armor
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor'), 'items', 'blueprint_item_desc_tpl', 'ru',
-      E'ПБ: {stopping_power}\nСкованность: {encumbrance}\nУБ: {enhancements}\nЭффекты: {effect_names}\nЦена: {price}'
+      E'ПБ: {stopping_power}\nСкованность: {encumbrance}\nУБ: {enhancements}\nЭффекты: {effect_names}'
     UNION ALL
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor'), 'items', 'blueprint_item_desc_tpl', 'en',
-      E'SP: {stopping_power}\nEnc.: {encumbrance}\nEnh.: {enhancements}\nEffects: {effect_names}\nPrice: {price}'
+      E'SP: {stopping_power}\nEnc.: {encumbrance}\nEnh.: {enhancements}\nEffects: {effect_names}'
 
     UNION ALL
     -- ingredient (craft)
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.ingredient'), 'items', 'blueprint_item_desc_tpl', 'ru',
-      E'Ингредиент для крафта\nВес: {weight}\nЦена: {price}'
+      E'Ингредиент для крафта\nВес: {weight}'
     UNION ALL
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.ingredient'), 'items', 'blueprint_item_desc_tpl', 'en',
-      E'Craft ingredient\nWeight: {weight}\nPrice: {price}'
+      E'Craft ingredient\nWeight: {weight}'
 
     UNION ALL
     -- general gear
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.general_gear'), 'items', 'blueprint_item_desc_tpl', 'ru',
-      E'Группа: {group_name}\nОписание: {gear_description}\nСкрытность: {concealment}\nВес: {weight}\nЦена: {price}'
+      E'Группа: {group_name}\nОписание: {gear_description}\nСкрытность: {concealment}\nВес: {weight}'
     UNION ALL
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.general_gear'), 'items', 'blueprint_item_desc_tpl', 'en',
-      E'Group: {group_name}\nDesc: {gear_description}\nConcealment: {concealment}\nWeight: {weight}\nPrice: {price}'
+      E'Group: {group_name}\nDesc: {gear_description}\nConcealment: {concealment}\nWeight: {weight}'
 
     UNION ALL
     -- upgrade
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.upgrade'), 'items', 'blueprint_item_desc_tpl', 'ru',
-      E'Группа: {upgrade_group}\nЦель: {target}\nЭффекты: {effect_names}\nСлоты: {slots}\nЦена: {price}'
+      E'Группа: {upgrade_group}\nЦель: {target}\nЭффекты: {effect_names}\nСлоты: {slots}'
     UNION ALL
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.upgrade'), 'items', 'blueprint_item_desc_tpl', 'en',
-      E'Group: {upgrade_group}\nTarget: {target}\nEffects: {effect_names}\nSlots: {slots}\nPrice: {price}'
+      E'Group: {upgrade_group}\nTarget: {target}\nEffects: {effect_names}\nSlots: {slots}'
   ) foo
   ON CONFLICT (id, lang) DO UPDATE SET text = EXCLUDED.text
 )

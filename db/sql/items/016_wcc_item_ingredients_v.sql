@@ -14,6 +14,7 @@ SELECT ii.i_id
      , igrp.text AS ingredient_group
      , iav.text AS availability
      , iingr.text AS alchemy_substance
+     , iingr_en.text AS alchemy_substance_en
      , coalesce(ii.harvesting_complexity, 0) AS harvesting_complexity
      , coalesce(ii.weight, 0) AS weight
      , coalesce(ii.price, 0) AS price
@@ -25,6 +26,7 @@ SELECT ii.i_id
   LEFT JOIN i18n_text igrp ON igrp.id = ii.group_id AND igrp.lang = iname.lang
   LEFT JOIN i18n_text iav ON iav.id = ii.availability_id AND iav.lang = iname.lang
   LEFT JOIN i18n_text iingr ON iingr.id = ii.ingredient_id AND iingr.lang = iname.lang
+  LEFT JOIN i18n_text iingr_en ON iingr_en.id = ii.ingredient_id AND iingr_en.lang = 'en'
  ORDER BY iname.text;
 
 -- Helpful indexes for shop queries
