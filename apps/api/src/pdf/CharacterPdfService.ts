@@ -3,6 +3,8 @@ import { type SkillCatalogInfo, type WeaponDetails, type ArmorDetails, type Poti
 import {
   type VehicleDetails,
   type RecipeDetails,
+  type GeneralGearDetails,
+  type UpgradeDetails,
 } from './pages/viewModelPage3.js';
 import { renderCharacterPdfHtml } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
@@ -110,6 +112,18 @@ export class CharacterPdfService {
           .filter((x) => x.length > 0)
       : [];
 
+    const generalGearIds = Array.isArray(gearRec?.general_gear)
+      ? (gearRec!.general_gear as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).t_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
+    const upgradeIds = Array.isArray(gearRec?.upgrades)
+      ? (gearRec!.upgrades as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).u_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
     const weaponDetailsById = new Map<string, WeaponDetails>();
     const armorDetailsById = new Map<string, ArmorDetails>();
     const potionDetailsById = new Map<string, PotionDetails>();
@@ -213,6 +227,46 @@ export class CharacterPdfService {
       console.error('[pdf] recipes lookup failed', error);
     }
 
+    const generalGearDetailsById = new Map<string, GeneralGearDetails>();
+    try {
+      if (generalGearIds.length > 0) {
+        const { rows } = await this.withTimeout(
+          db.query<GeneralGearDetails>(
+            `
+              SELECT t_id, gear_name, group_name, subgroup_name, concealment, weight, price
+              FROM wcc_item_general_gear_v
+              WHERE lang = $1 AND t_id = ANY($2::text[])
+            `,
+            [lang, Array.from(new Set(generalGearIds))],
+          ),
+          2500,
+        );
+        rows.forEach((r) => generalGearDetailsById.set(r.t_id, r));
+      }
+    } catch (error) {
+      console.error('[pdf] general gear lookup failed', error);
+    }
+
+    const upgradeDetailsById = new Map<string, UpgradeDetails>();
+    try {
+      if (upgradeIds.length > 0) {
+        const { rows } = await this.withTimeout(
+          db.query<UpgradeDetails>(
+            `
+              SELECT u_id, upgrade_name, upgrade_group, effect_names, slots, weight, price
+              FROM wcc_item_upgrades_v
+              WHERE lang = $1 AND u_id = ANY($2::text[])
+            `,
+            [lang, Array.from(new Set(upgradeIds))],
+          ),
+          2500,
+        );
+        rows.forEach((r) => upgradeDetailsById.set(r.u_id, r));
+      }
+    } catch (error) {
+      console.error('[pdf] upgrades lookup failed', error);
+    }
+
     const pdfVm = buildCharacterPdfViewModel(characterJson, {
       lang,
       i18n,
@@ -222,6 +276,8 @@ export class CharacterPdfService {
       potionDetailsById,
       vehicleDetailsById,
       recipeDetailsById,
+      generalGearDetailsById,
+      upgradeDetailsById,
     });
     const html = renderCharacterPdfHtml({ page1: pdfVm.page1, page2: pdfVm.page2, page3: pdfVm.page3, options });
 

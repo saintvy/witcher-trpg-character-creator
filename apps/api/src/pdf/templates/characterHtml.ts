@@ -1368,6 +1368,167 @@ function renderRecipesTable(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' =
   );
 }
 
+function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
+  const isRu = vm.i18n.lang === 'ru';
+  const title = isRu ? 'Общее снаряжение' : 'General Gear';
+  const colGroup = isRu ? 'Группа / Подгруппа' : 'Group / Subgroup';
+  const colName = isRu ? 'Имя' : 'Name';
+  const colCon = isRu ? 'Скр.' : 'Con.';
+  const colWeight = isRu ? 'Вес' : 'Weight';
+  const colPrice = isRu ? 'Цена' : 'Price';
+  const rows =
+    vm.generalGear.length > 0
+      ? vm.generalGear
+          .map(
+            (g) => `
+          <tr>
+            <td class="equip-fit equip-right">${escapeHtml(g.amount)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(g.groupAndSubgroup)}</td>
+            <td>${escapeHtml(g.name)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(g.concealment)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(g.weight)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(g.price)}</td>
+          </tr>
+        `,
+          )
+          .join('')
+      : `
+          <tr>
+            <td class="equip-fit equip-right">&nbsp;</td>
+            <td class="equip-fit equip-left">&nbsp;</td>
+            <td>&nbsp;</td>
+            <td class="equip-fit equip-left">&nbsp;</td>
+            <td class="equip-fit equip-left">&nbsp;</td>
+            <td class="equip-fit equip-left">&nbsp;</td>
+          </tr>
+        `;
+  return box(
+    title,
+    `
+      <table class="equip-table equip-general-gear table-header-pale-gray">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.vehicles.colQty)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(colGroup)}</th>
+            <th>${escapeHtml(colName)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(colCon)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(colWeight)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(colPrice)}</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `,
+    'general-gear-box',
+  );
+}
+
+function renderMoneyTable(vm: CharacterPdfPage3Vm): string {
+  const isRu = vm.i18n.lang === 'ru';
+  const title = isRu ? 'Валюта' : 'Money';
+  const headers = isRu
+    ? ['Кроны', 'Орены', 'Флорены', 'Дукаты', 'Бизанты', 'Линтары']
+    : ['Crowns', 'Orens', 'Florens', 'Ducats', 'Bizants', 'Lintars'];
+  return box(
+    title,
+    `
+      <table class="equip-table equip-money table-header-pale-gray">
+        <colgroup>
+          <col /><col /><col /><col /><col /><col />
+        </colgroup>
+        <thead><tr>${headers.map((h) => `<th class="equip-fit equip-left">${escapeHtml(h)}</th>`).join('')}</tr></thead>
+        <tbody>
+          <tr>
+            <td class="equip-fit equip-left">${escapeHtml(vm.money.crowns)}</td>
+            <td class="equip-fit equip-left"></td>
+            <td class="equip-fit equip-left"></td>
+            <td class="equip-fit equip-left"></td>
+            <td class="equip-fit equip-left"></td>
+            <td class="equip-fit equip-left"></td>
+          </tr>
+        </tbody>
+      </table>
+    `,
+    'money-box',
+  );
+}
+
+function renderUpgradesTable(vm: CharacterPdfPage3Vm): string {
+  const isRu = vm.i18n.lang === 'ru';
+  const title = isRu ? 'Улучшения' : 'Upgrades';
+  const colGroup = isRu ? 'Группа' : 'Group';
+  const colName = isRu ? 'Имя' : 'Name';
+  const colEffects = isRu ? 'Эффекты' : 'Effects';
+  const colSlots = isRu ? 'Слоты' : 'Slots';
+  const colWeight = isRu ? 'Вес' : 'Weight';
+  const colPrice = isRu ? 'Цена' : 'Price';
+  const rows =
+    vm.upgrades.length > 0
+      ? vm.upgrades
+          .map(
+            (u) => `
+          <tr>
+            <td class="equip-fit equip-right">${escapeHtml(u.amount)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(u.group)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(u.name)}</td>
+            <td class="equip-effect">${escapeHtml(u.effects)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(u.slots)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(u.weight)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(u.price)}</td>
+          </tr>
+        `,
+          )
+          .join('')
+      : `
+          <tr>
+            <td class="equip-fit equip-right">&nbsp;</td>
+            <td class="equip-fit equip-left">&nbsp;</td>
+            <td class="equip-fit equip-left">&nbsp;</td>
+            <td class="equip-effect">&nbsp;</td>
+            <td class="equip-fit equip-left">&nbsp;</td>
+            <td class="equip-fit equip-left">&nbsp;</td>
+            <td class="equip-fit equip-left">&nbsp;</td>
+          </tr>
+        `;
+  return box(
+    title,
+    `
+      <table class="equip-table equip-upgrades table-header-pale-gray">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="equip-fit equip-right">${escapeHtml(vm.i18n.tables.vehicles.colQty)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(colGroup)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(colName)}</th>
+            <th>${escapeHtml(colEffects)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(colSlots)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(colWeight)}</th>
+            <th class="equip-fit equip-left">${escapeHtml(colPrice)}</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `,
+    'upgrades-box',
+  );
+}
+
 function renderPage2(vm: CharacterPdfPage2Vm): string {
   const loreHtml = renderLoreBlock(vm);
   const socialStatusHtml = renderSocialStatusTable(vm);
@@ -1415,9 +1576,12 @@ function renderPage3(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
     <div class="page page3">
       <div class="page3-layout">
         <div class="page2-separator" aria-hidden="true"><span class="page2-separator-line"></span></div>
-        <div class="page2-vehicles-recipes-row">
-          <div class="page2-vehicles-cell">${renderVehiclesTable(vm)}</div>
-          <div class="page2-recipes-cell">${renderRecipesTable(vm, alchemyStyle)}</div>
+        <div class="page3-recipes-row">${renderRecipesTable(vm, alchemyStyle)}</div>
+        <div class="page3-support-group">
+          <div class="page3-support-item">${renderMoneyTable(vm)}</div>
+          <div class="page3-support-item">${renderVehiclesTable(vm)}</div>
+          <div class="page3-support-item">${renderUpgradesTable(vm)}</div>
+          <div class="page3-support-item">${renderGeneralGearTable(vm)}</div>
         </div>
       </div>
     </div>
@@ -1509,13 +1673,14 @@ export function renderCharacterPdfHtml(input: {
         );
         background-position: 0 50%;
       }
-      .page2-vehicles-recipes-row {
-        display: flex;
-        flex-direction: column;
+      .page3-recipes-row { min-width: 0; }
+      .page3-support-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 3mm;
+        align-items: start;
       }
-      .page2-vehicles-cell { width: 50%; max-width: 50%; }
-      .page2-recipes-cell { width: 100%; }
+      .page3-support-item { min-width: 0; }
       .table-header-pale-gray thead th { background: rgba(0,0,0,0.06); }
       .table-header-pale-brown thead th { background: rgba(139,90,43,0.12); }
       .recipes-cell-toxicity { border-right: 3px solid black; }
@@ -1523,9 +1688,13 @@ export function renderCharacterPdfHtml(input: {
       .formula-legend-img { width: 14px; height: 14px; vertical-align: middle; object-fit: contain; }
       .recipes-legend-row td { border: none !important; border-top: 1px solid #666 !important; }
       .recipes-legend-cell { font-size: 9px; padding: 2px 4px; }
-      .equip-table.equip-vehicles { table-layout: auto; width: auto; }
+      .equip-table.equip-vehicles { table-layout: auto; width: 100%; }
       .equip-table.equip-recipes { table-layout: auto; width: 100%; }
       .equip-recipes .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
+      .equip-table.equip-general-gear { table-layout: auto; width: 100%; }
+      .equip-table.equip-money { table-layout: fixed; width: 100%; }
+      .equip-table.equip-upgrades { table-layout: auto; width: 100%; }
+      .equip-upgrades .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; }
       .social-status-cell { vertical-align: top; }
       .t-auto { table-layout: auto; }
       .t-fit-col { width: 1%; white-space: nowrap; }

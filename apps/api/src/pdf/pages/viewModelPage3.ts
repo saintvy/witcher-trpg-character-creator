@@ -31,6 +31,26 @@ export type RecipeDetails = {
   price_potion: number | null;
 };
 
+export type GeneralGearDetails = {
+  t_id: string;
+  gear_name: string | null;
+  group_name: string | null;
+  subgroup_name: string | null;
+  concealment: string | null;
+  weight: string | number | null;
+  price: number | null;
+};
+
+export type UpgradeDetails = {
+  u_id: string;
+  upgrade_name: string | null;
+  upgrade_group: string | null;
+  effect_names: string | null;
+  slots: number | null;
+  weight: string | number | null;
+  price: number | null;
+};
+
 export type VehicleRow = {
   amount: string;
   subgroupName: string;
@@ -60,10 +80,32 @@ export type RecipeRow = {
   pricePotion: string;
 };
 
+export type GeneralGearRow = {
+  amount: string;
+  groupAndSubgroup: string;
+  name: string;
+  concealment: string;
+  weight: string;
+  price: string;
+};
+
+export type UpgradeRow = {
+  amount: string;
+  group: string;
+  name: string;
+  effects: string;
+  slots: string;
+  weight: string;
+  price: string;
+};
+
 export type CharacterPdfPage3Vm = {
   i18n: CharacterPdfPage2I18n;
-  vehicles: VehicleRow[];
   recipes: RecipeRow[];
+  vehicles: VehicleRow[];
+  generalGear: GeneralGearRow[];
+  upgrades: UpgradeRow[];
+  money: { crowns: string };
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -108,37 +150,19 @@ export function mapCharacterJsonToPage3Vm(
   characterJson: unknown,
   deps: {
     i18n: CharacterPdfPage2I18n;
-    vehicleDetailsById?: ReadonlyMap<string, VehicleDetails>;
     recipeDetailsById?: ReadonlyMap<string, RecipeDetails>;
+    vehicleDetailsById?: ReadonlyMap<string, VehicleDetails>;
+    generalGearDetailsById?: ReadonlyMap<string, GeneralGearDetails>;
+    upgradeDetailsById?: ReadonlyMap<string, UpgradeDetails>;
   },
 ): CharacterPdfPage3Vm {
   const i18n = deps.i18n;
-  const vehicleDetailsById = deps.vehicleDetailsById ?? new Map();
   const recipeDetailsById = deps.recipeDetailsById ?? new Map();
+  const vehicleDetailsById = deps.vehicleDetailsById ?? new Map();
+  const generalGearDetailsById = deps.generalGearDetailsById ?? new Map();
+  const upgradeDetailsById = deps.upgradeDetailsById ?? new Map();
 
   const gearRoot = asRecord(getPath(characterJson, 'gear')) ?? {};
-  const vehiclesRaw = Array.isArray(gearRoot.vehicles) ? (gearRoot.vehicles as unknown[]) : [];
-  const vehicles: VehicleRow[] = vehiclesRaw
-    .map((v) => {
-      const rec = asRecord(v) ?? {};
-      const wtId = asString(rec.wt_id);
-      const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? 1;
-      const details = wtId ? vehicleDetailsById.get(wtId) : null;
-      return {
-        amount: String(amount),
-        subgroupName: asString(rec.subgroup_name) ?? details?.subgroup_name ?? '',
-        vehicleName: asString(rec.vehicle_name) ?? details?.vehicle_name ?? wtId ?? '',
-        base: asString(rec.base) ?? (details?.base != null ? String(details.base) : ''),
-        controlModifier: asString(rec.control_modifier) ?? (details?.control_modifier != null ? String(details.control_modifier) : ''),
-        speed: asString(rec.speed) ?? details?.speed ?? '',
-        hp: asString(rec.hp) ?? (details?.hp != null ? String(details.hp) : ''),
-        weight: asString(rec.weight) ?? (details?.weight != null ? String(details.weight) : ''),
-        occupancy: asString(rec.occupancy) ?? details?.occupancy ?? '',
-        price: details?.price != null ? String(details.price) : asString(rec.price) ?? '',
-      };
-    })
-    .filter((r) => r.vehicleName || r.amount);
-
   const recipesRaw = Array.isArray(gearRoot.recipes) ? (gearRoot.recipes as unknown[]) : [];
   const recipes: RecipeRow[] = recipesRaw
     .map((r) => {
@@ -165,10 +189,77 @@ export function mapCharacterJsonToPage3Vm(
     })
     .filter((r) => r.recipeName || r.amount);
 
+  const vehiclesRaw = Array.isArray(gearRoot.vehicles) ? (gearRoot.vehicles as unknown[]) : [];
+  const vehicles: VehicleRow[] = vehiclesRaw
+    .map((v) => {
+      const rec = asRecord(v) ?? {};
+      const wtId = asString(rec.wt_id);
+      const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? 1;
+      const details = wtId ? vehicleDetailsById.get(wtId) : null;
+      return {
+        amount: String(amount),
+        subgroupName: asString(rec.subgroup_name) ?? details?.subgroup_name ?? '',
+        vehicleName: asString(rec.vehicle_name) ?? details?.vehicle_name ?? wtId ?? '',
+        base: asString(rec.base) ?? (details?.base != null ? String(details.base) : ''),
+        controlModifier: asString(rec.control_modifier) ?? (details?.control_modifier != null ? String(details.control_modifier) : ''),
+        speed: asString(rec.speed) ?? details?.speed ?? '',
+        hp: asString(rec.hp) ?? (details?.hp != null ? String(details.hp) : ''),
+        weight: asString(rec.weight) ?? (details?.weight != null ? String(details.weight) : ''),
+        occupancy: asString(rec.occupancy) ?? details?.occupancy ?? '',
+        price: details?.price != null ? String(details.price) : asString(rec.price) ?? '',
+      };
+    })
+    .filter((r) => r.vehicleName || r.amount);
+
+  const generalGearRaw = Array.isArray(gearRoot.general_gear) ? (gearRoot.general_gear as unknown[]) : [];
+  const generalGear: GeneralGearRow[] = generalGearRaw
+    .map((g) => {
+      const rec = asRecord(g) ?? {};
+      const tId = asString(rec.t_id);
+      const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? 1;
+      const details = tId ? generalGearDetailsById.get(tId) : null;
+      const group = (details?.group_name ?? asString(rec.group_name) ?? '').trim();
+      const subgroup = (details?.subgroup_name ?? asString(rec.subgroup_name) ?? '').trim();
+      const groupAndSubgroup = subgroup ? `${group} / ${subgroup}` : group;
+      return {
+        amount: String(amount),
+        groupAndSubgroup,
+        name: details?.gear_name ?? asString(rec.name) ?? asString(rec.gear_name) ?? tId ?? '',
+        concealment: details?.concealment ?? asString(rec.concealment) ?? '',
+        weight: details?.weight != null ? String(details.weight) : asString(rec.weight) ?? '',
+        price: details?.price != null ? String(details.price) : asString(rec.price) ?? '',
+      };
+    })
+    .filter((g) => g.name || g.groupAndSubgroup || g.amount);
+
+  const upgradesRaw = Array.isArray(gearRoot.upgrades) ? (gearRoot.upgrades as unknown[]) : [];
+  const upgrades: UpgradeRow[] = upgradesRaw
+    .map((u) => {
+      const rec = asRecord(u) ?? {};
+      const uId = asString(rec.u_id);
+      const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? 1;
+      const details = uId ? upgradeDetailsById.get(uId) : null;
+      return {
+        amount: String(amount),
+        group: details?.upgrade_group ?? '',
+        name: details?.upgrade_name ?? uId,
+        effects: details?.effect_names ?? '',
+        slots: details?.slots != null ? String(details.slots) : '',
+        weight: details?.weight != null ? String(details.weight) : '',
+        price: details?.price != null ? String(details.price) : '',
+      };
+    })
+    .filter((u) => u.name || u.group || u.amount);
+
+  const moneyRoot = asRecord(getPath(characterJson, 'money')) ?? {};
+  const crowns = asNumber(moneyRoot.crowns);
+
   return {
     i18n,
-    vehicles,
     recipes,
+    vehicles,
+    generalGear,
+    upgrades,
+    money: { crowns: crowns != null ? String(crowns) : '' },
   };
 }
-
