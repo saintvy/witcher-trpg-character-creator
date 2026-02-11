@@ -1686,7 +1686,7 @@ export function renderCharacterPdfHtml(input: {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escapeHtml(vm.base.name)} — ${escapeHtml(vm.i18n.titleSuffix)}</title>
     <style>
-      @page { size: A4; margin: 0; }
+      @page { size: A4; margin: 6mm; }
       * { box-sizing: border-box; }
       html, body { padding: 0; margin: 0; }
       body {
@@ -1698,22 +1698,23 @@ export function renderCharacterPdfHtml(input: {
       }
 
       .page {
-        width: 210mm;
-        padding: 6mm;
+        width: 100%;
+        padding: 0;
+        min-height: 285mm;
       }
       .page1 {
-        height: 297mm;
+        min-height: 285mm;
         display: grid;
         grid-template-rows: auto 1fr;
         gap: 4mm;
       }
       .page2 {
-        height: 297mm;
+        min-height: 285mm;
         break-before: page;
         page-break-before: always;
       }
       .page3 {
-        height: 297mm;
+        min-height: 285mm;
         break-before: page;
         page-break-before: always;
       }
@@ -1800,7 +1801,8 @@ export function renderCharacterPdfHtml(input: {
       .pos-consumables { grid-column: 3; grid-row: 1; }
       .pos-avatar { grid-column: 4; grid-row: 1; }
 
-      .box { border: 1px solid #111827; background: #fff; height: 100%; }
+      .box { border: 1px solid #111827; background: #fff; }
+      .page1 .box { height: 100%; }
       .box-title {
         padding: 2px 4px;
         border-bottom: 1px solid #111827;
@@ -1847,7 +1849,7 @@ export function renderCharacterPdfHtml(input: {
       .t-right { text-align: right; font-variant-numeric: tabular-nums; }
 
       .avatar-box { height: 100%; }
-      .avatar-box .box-body { height: calc(100% - 18px); }
+      .page1 .avatar-box .box-body { height: calc(100% - 18px); }
       .avatar-placeholder {
         height: 100%;
         min-height: 0;
@@ -1942,6 +1944,8 @@ export function renderCharacterPdfHtml(input: {
       .equip-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9.5px; }
       .equip-table th, .equip-table td { border: 1px solid #111827; padding: 2px 3px; }
       .equip-table thead th { font-weight: 900; text-transform: uppercase; font-size: 9px; letter-spacing: 0.06em; text-align: left; }
+      .equip-table thead { display: table-header-group; }
+      .equip-table tr { break-inside: avoid; page-break-inside: avoid; }
       .equip-table tbody tr { height: 14px; }
       .equip-check { text-align: center; }
       .equip-num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -2247,6 +2251,7 @@ export function renderCharacterPdfHtml(input: {
 
             document.querySelectorAll('template').forEach(t => t.remove());
           }
+
         };
         requestAnimationFrame(() => requestAnimationFrame(() => {
           run();
