@@ -67,6 +67,31 @@ export type BlueprintDetails = {
   price_item: number | null;
 };
 
+export type IngredientDetails = {
+  i_id: string;
+  ingredient_name: string | null;
+  alchemy_substance: string | null;
+  alchemy_substance_en: string | null;
+  harvesting_complexity: number | null;
+  weight: string | number | null;
+  price: number | null;
+};
+
+export type MutagenDetails = {
+  m_id: string;
+  mutagen_name: string | null;
+  mutagen_color: string | null;
+  effect: string | null;
+  alchemy_dc: number | null;
+  minor_mutation: string | null;
+};
+
+export type TrophyDetails = {
+  tr_id: string;
+  trophy_name: string | null;
+  effect: string | null;
+};
+
 export type VehicleRow = {
   amount: string;
   subgroupName: string;
@@ -132,10 +157,37 @@ export type BlueprintRow = {
   priceItem: string;
 };
 
+export type ComponentRow = {
+  amount: string;
+  substanceEn: string;
+  name: string;
+  harvestingComplexity: string;
+  weight: string;
+  price: string;
+};
+
+export type MutagenRow = {
+  amount: string;
+  name: string;
+  color: string;
+  alchemyDc: string;
+  effect: string;
+  minorMutation: string;
+};
+
+export type TrophyRow = {
+  amount: string;
+  name: string;
+  effect: string;
+};
+
 export type CharacterPdfPage3Vm = {
   i18n: CharacterPdfPage2I18n;
   recipes: RecipeRow[];
   blueprints: BlueprintRow[];
+  componentsTables: Array<{ rows: ComponentRow[] }>;
+  mutagens: MutagenRow[];
+  trophies: TrophyRow[];
   vehicles: VehicleRow[];
   generalGear: GeneralGearRow[];
   upgrades: UpgradeRow[];
@@ -186,6 +238,9 @@ export function mapCharacterJsonToPage3Vm(
     i18n: CharacterPdfPage2I18n;
     recipeDetailsById?: ReadonlyMap<string, RecipeDetails>;
     blueprintDetailsById?: ReadonlyMap<string, BlueprintDetails>;
+    ingredientDetailsById?: ReadonlyMap<string, IngredientDetails>;
+    mutagenDetailsById?: ReadonlyMap<string, MutagenDetails>;
+    trophyDetailsById?: ReadonlyMap<string, TrophyDetails>;
     vehicleDetailsById?: ReadonlyMap<string, VehicleDetails>;
     generalGearDetailsById?: ReadonlyMap<string, GeneralGearDetails>;
     upgradeDetailsById?: ReadonlyMap<string, UpgradeDetails>;
@@ -194,6 +249,9 @@ export function mapCharacterJsonToPage3Vm(
   const i18n = deps.i18n;
   const recipeDetailsById = deps.recipeDetailsById ?? new Map();
   const blueprintDetailsById = deps.blueprintDetailsById ?? new Map();
+  const ingredientDetailsById = deps.ingredientDetailsById ?? new Map();
+  const mutagenDetailsById = deps.mutagenDetailsById ?? new Map();
+  const trophyDetailsById = deps.trophyDetailsById ?? new Map();
   const vehicleDetailsById = deps.vehicleDetailsById ?? new Map();
   const generalGearDetailsById = deps.generalGearDetailsById ?? new Map();
   const upgradeDetailsById = deps.upgradeDetailsById ?? new Map();
@@ -250,6 +308,76 @@ export function mapCharacterJsonToPage3Vm(
     .filter((b): b is BlueprintRow => Boolean(b))
     .filter((b) => b.name || b.group || b.amount);
 
+  const ingredientsRoot = asRecord(gearRoot.ingredients) ?? {};
+  const ingAlchemyRaw = Array.isArray(ingredientsRoot.alchemy) ? (ingredientsRoot.alchemy as unknown[]) : [];
+  const ingCraftRaw = Array.isArray(ingredientsRoot.craft) ? (ingredientsRoot.craft as unknown[]) : [];
+  const componentRowsAll: ComponentRow[] = [...ingAlchemyRaw, ...ingCraftRaw]
+    .map((x) => {
+      const rec = asRecord(x) ?? {};
+      const iId = asString(rec.i_id);
+      if (!iId) return null;
+      const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? 1;
+      const details = ingredientDetailsById.get(iId);
+      return {
+        amount: String(amount),
+        substanceEn: details?.alchemy_substance_en ?? '',
+        name: details?.ingredient_name ?? iId,
+        harvestingComplexity:
+          details?.harvesting_complexity != null ? String(details.harvesting_complexity) : '',
+        weight: details?.weight != null ? String(details.weight) : '',
+        price: details?.price != null ? String(details.price) : '',
+      };
+    })
+    .filter((r): r is ComponentRow => Boolean(r));
+
+  const rowsPerTable = Math.max(3, Math.ceil(componentRowsAll.length / 3) + 3);
+  const componentRowsByTable: ComponentRow[][] = [[], [], []];
+  for (let i = 0; i < componentRowsAll.length; i++) {
+    componentRowsByTable[i % 3]!.push(componentRowsAll[i]!);
+  }
+  const componentsTables: Array<{ rows: ComponentRow[] }> = componentRowsByTable.map((rows) => {
+    const out = rows.slice(0, rowsPerTable);
+    while (out.length < rowsPerTable) out.push({ amount: '', substanceEn: '', name: '', harvestingComplexity: '', weight: '', price: '' });
+    return { rows: out };
+  });
+
+  const mutagensRaw = Array.isArray(gearRoot.mutagens) ? (gearRoot.mutagens as unknown[]) : [];
+  const mutagens: MutagenRow[] = mutagensRaw
+    .map((m) => {
+      const rec = asRecord(m) ?? {};
+      const mId = asString(rec.m_id);
+      if (!mId) return null;
+      const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? 1;
+      const details = mutagenDetailsById.get(mId);
+      return {
+        amount: String(amount),
+        name: details?.mutagen_name ?? mId,
+        color: details?.mutagen_color ?? '',
+        alchemyDc: details?.alchemy_dc != null ? String(details.alchemy_dc) : '',
+        effect: details?.effect ?? '',
+        minorMutation: details?.minor_mutation ?? '',
+      };
+    })
+    .filter((m): m is MutagenRow => Boolean(m))
+    .filter((m) => m.name || m.amount);
+
+  const trophiesRaw = Array.isArray(gearRoot.trophies) ? (gearRoot.trophies as unknown[]) : [];
+  const trophies: TrophyRow[] = trophiesRaw
+    .map((t) => {
+      const rec = asRecord(t) ?? {};
+      const trId = asString(rec.tr_id);
+      if (!trId) return null;
+      const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? 1;
+      const details = trophyDetailsById.get(trId);
+      return {
+        amount: String(amount),
+        name: details?.trophy_name ?? trId,
+        effect: details?.effect ?? '',
+      };
+    })
+    .filter((t): t is TrophyRow => Boolean(t))
+    .filter((t) => t.name || t.amount);
+
   const vehiclesRaw = Array.isArray(gearRoot.vehicles) ? (gearRoot.vehicles as unknown[]) : [];
   const vehicles: VehicleRow[] = vehiclesRaw
     .map((v) => {
@@ -277,7 +405,20 @@ export function mapCharacterJsonToPage3Vm(
     .map((g) => {
       const rec = asRecord(g) ?? {};
       const tId = asString(rec.t_id);
-      const amountDefault = tId ? 1 : 0;
+      const hasInlineDetails =
+        !tId &&
+        Boolean(
+          asString(rec.name) ||
+            asString(rec.gear_name) ||
+            asString(rec.group_name) ||
+            asString(rec.subgroup_name) ||
+            asString(rec.gear_description) ||
+            asString(rec.description) ||
+            asString(rec.concealment) ||
+            asString(rec.weight) ||
+            asString(rec.price),
+        );
+      const amountDefault = tId || hasInlineDetails ? 1 : 0;
       const amount = asNumber(rec.amount) ?? asNumber(rec.qty) ?? amountDefault;
       const details = tId ? generalGearDetailsById.get(tId) : null;
       const group = (details?.group_name ?? asString(rec.group_name) ?? '').trim();
@@ -322,6 +463,9 @@ export function mapCharacterJsonToPage3Vm(
     i18n,
     recipes,
     blueprints,
+    componentsTables,
+    mutagens,
+    trophies,
     vehicles,
     generalGear,
     upgrades,

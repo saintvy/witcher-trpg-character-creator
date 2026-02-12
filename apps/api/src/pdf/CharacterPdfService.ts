@@ -6,6 +6,9 @@ import {
   type GeneralGearDetails,
   type UpgradeDetails,
   type BlueprintDetails,
+  type IngredientDetails,
+  type MutagenDetails,
+  type TrophyDetails,
 } from './pages/viewModelPage3.js';
 import { renderCharacterPdfHtml } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
@@ -23,6 +26,18 @@ export class CharacterPdfService {
       CharacterPdfService.browserPromise = chromium.launch({ headless: true });
     }
     return CharacterPdfService.browserPromise;
+  }
+
+  static async shutdown(): Promise<void> {
+    if (!CharacterPdfService.browserPromise) return;
+    const p = CharacterPdfService.browserPromise;
+    CharacterPdfService.browserPromise = null;
+    try {
+      const browser = await p;
+      await browser.close().catch(() => undefined);
+    } catch {
+      // ignore (e.g. launch failed)
+    }
   }
 
   private getLangFromCharacter(characterJson: unknown): string {
@@ -105,6 +120,37 @@ export class CharacterPdfService {
     const recipeIds = Array.isArray(gearRec?.recipes)
       ? (gearRec!.recipes as unknown[])
           .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).r_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
+    const ingredientsRec =
+      gearRec?.ingredients && typeof gearRec.ingredients === 'object' && gearRec.ingredients !== null && !Array.isArray(gearRec.ingredients)
+        ? (gearRec.ingredients as Record<string, unknown>)
+        : null;
+
+    const ingredientAlchemyIds = Array.isArray(ingredientsRec?.alchemy)
+      ? (ingredientsRec!.alchemy as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).i_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
+    const ingredientCraftIds = Array.isArray(ingredientsRec?.craft)
+      ? (ingredientsRec!.craft as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).i_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
+    const ingredientIds = [...ingredientAlchemyIds, ...ingredientCraftIds];
+
+    const mutagenIds = Array.isArray(gearRec?.mutagens)
+      ? (gearRec!.mutagens as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).m_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
+    const trophyIds = Array.isArray(gearRec?.trophies)
+      ? (gearRec!.trophies as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).tr_id ?? '') : ''))
           .filter((x) => x.length > 0)
       : [];
 
@@ -229,6 +275,66 @@ export class CharacterPdfService {
       console.error('[pdf] recipes lookup failed', error);
     }
 
+    const ingredientDetailsById = new Map<string, IngredientDetails>();
+    try {
+      if (ingredientIds.length > 0) {
+        const { rows } = await this.withTimeout(
+          db.query<IngredientDetails>(
+            `
+              SELECT i_id, ingredient_name, alchemy_substance, alchemy_substance_en, harvesting_complexity, weight, price
+              FROM wcc_item_ingredients_v
+              WHERE lang = $1 AND i_id = ANY($2::text[])
+            `,
+            [lang, Array.from(new Set(ingredientIds))],
+          ),
+          2500,
+        );
+        rows.forEach((r) => ingredientDetailsById.set(r.i_id, r));
+      }
+    } catch (error) {
+      console.error('[pdf] ingredients lookup failed', error);
+    }
+
+    const mutagenDetailsById = new Map<string, MutagenDetails>();
+    try {
+      if (mutagenIds.length > 0) {
+        const { rows } = await this.withTimeout(
+          db.query<MutagenDetails>(
+            `
+              SELECT m_id, mutagen_name, mutagen_color, effect, alchemy_dc, minor_mutation
+              FROM wcc_item_mutagens_v
+              WHERE lang = $1 AND m_id = ANY($2::text[])
+            `,
+            [lang, Array.from(new Set(mutagenIds))],
+          ),
+          2500,
+        );
+        rows.forEach((r) => mutagenDetailsById.set(r.m_id, r));
+      }
+    } catch (error) {
+      console.error('[pdf] mutagens lookup failed', error);
+    }
+
+    const trophyDetailsById = new Map<string, TrophyDetails>();
+    try {
+      if (trophyIds.length > 0) {
+        const { rows } = await this.withTimeout(
+          db.query<TrophyDetails>(
+            `
+              SELECT tr_id, trophy_name, effect
+              FROM wcc_item_trophies_v
+              WHERE lang = $1 AND tr_id = ANY($2::text[])
+            `,
+            [lang, Array.from(new Set(trophyIds))],
+          ),
+          2500,
+        );
+        rows.forEach((r) => trophyDetailsById.set(r.tr_id, r));
+      }
+    } catch (error) {
+      console.error('[pdf] trophies lookup failed', error);
+    }
+
     const blueprintDetailsById = new Map<string, BlueprintDetails>();
     try {
       if (blueprintIds.length > 0) {
@@ -300,6 +406,9 @@ export class CharacterPdfService {
       vehicleDetailsById,
       recipeDetailsById,
       blueprintDetailsById,
+      ingredientDetailsById,
+      mutagenDetailsById,
+      trophyDetailsById,
       generalGearDetailsById,
       upgradeDetailsById,
     });

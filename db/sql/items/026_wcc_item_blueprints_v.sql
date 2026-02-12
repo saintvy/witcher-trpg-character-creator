@@ -61,80 +61,65 @@ SELECT b.b_id
                  replace(
                    replace(
                      replace(
-                       replace(
-                         coalesce(tpl_w.text, ''),
-                         '{dmg}', coalesce(w.dmg::text, '')
-                       ),
-                       '{reliability}', coalesce(w.reliability::text, '')
+                       coalesce(tpl_w.text, ''),
+                       '{dmg}', coalesce(w.dmg::text, '')
                      ),
-                     '{hands}', coalesce(w.hands::text, '')
+                     '{reliability}', coalesce(w.reliability::text, '')
                    ),
-                   '{concealment}', coalesce(w.concealment::text, '')
+                   '{hands}', coalesce(w.hands::text, '')
                  ),
-                 '{enhancements}', coalesce(w.enhancements::text, '')
+                 '{concealment}', coalesce(w.concealment::text, '')
                ),
-               '{effect_names}', coalesce(w.effect_names::text, '')
+               '{enhancements}', coalesce(w.enhancements::text, '')
              ),
-             '{price}', coalesce(w.price::text, '')
+             '{effect_names}', coalesce(w.effect_names::text, '')
            )
          WHEN b.item_id LIKE 'A%' AND a.a_id IS NOT NULL THEN
            replace(
              replace(
                replace(
                  replace(
-                   replace(
-                     coalesce(tpl_a.text, ''),
-                     '{stopping_power}', coalesce(a.stopping_power::text, '')
-                   ),
-                   '{encumbrance}', coalesce(a.encumbrance::text, '')
+                   coalesce(tpl_a.text, ''),
+                   '{stopping_power}', coalesce(a.stopping_power::text, '')
                  ),
-                 '{enhancements}', coalesce(a.enhancements::text, '')
+                 '{encumbrance}', coalesce(a.encumbrance::text, '')
                ),
-               '{effect_names}', coalesce(a.effect_names::text, '')
+               '{enhancements}', coalesce(a.enhancements::text, '')
              ),
-             '{price}', coalesce(a.price::text, '')
+             '{effect_names}', coalesce(a.effect_names::text, '')
            )
          WHEN b.item_id LIKE 'I%' AND ing.i_id IS NOT NULL THEN
            replace(
-             replace(
-               coalesce(tpl_i.text, ''),
-               '{weight}', coalesce(ing.weight::text, '')
-             ),
-             '{price}', coalesce(ing.price::text, '')
+             coalesce(tpl_i.text, ''),
+             '{weight}', coalesce(ing.weight::text, '')
            )
          WHEN b.item_id LIKE 'T%' AND gg.t_id IS NOT NULL THEN
            replace(
              replace(
                replace(
                  replace(
-                   replace(
-                     coalesce(tpl_t.text, ''),
-                     '{group_name}', coalesce(gg.group_name::text, '')
-                   ),
-                   '{gear_description}', coalesce(gg.gear_description::text, '')
+                   coalesce(tpl_t.text, ''),
+                   '{group_name}', coalesce(gg.group_name::text, '')
                  ),
-                 '{concealment}', coalesce(gg.concealment::text, '')
+                 '{gear_description}', coalesce(gg.gear_description::text, '')
                ),
-               '{weight}', coalesce(gg.weight::text, '')
+               '{concealment}', coalesce(gg.concealment::text, '')
              ),
-             '{price}', coalesce(gg.price::text, '')
+             '{weight}', coalesce(gg.weight::text, '')
            )
          WHEN b.item_id LIKE 'U%' AND upg.u_id IS NOT NULL THEN
            replace(
              replace(
                replace(
                  replace(
-                   replace(
-                     coalesce(tpl_u.text, ''),
-                     '{upgrade_group}', coalesce(upg.upgrade_group::text, '')
-                   ),
-                   '{target}', coalesce(upg.target::text, '')
+                   coalesce(tpl_u.text, ''),
+                   '{upgrade_group}', coalesce(upg.upgrade_group::text, '')
                  ),
-                 '{effect_names}', coalesce(upg.effect_names::text, '')
+                 '{target}', coalesce(upg.target::text, '')
                ),
-               '{slots}', coalesce(upg.slots::text, '')
+               '{effect_names}', coalesce(upg.effect_names::text, '')
              ),
-             '{price}', coalesce(upg.price::text, '')
+             '{slots}', coalesce(upg.slots::text, '')
            )
          ELSE NULL
        END AS item_desc

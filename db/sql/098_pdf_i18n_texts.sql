@@ -297,6 +297,10 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.section.generalGear'), 'pdf', 'page2.section.generalGear', 'en', 'General Gear'),
   (ck_id('witcher_cc.pdf.page2.section.upgrades'), 'pdf', 'page2.section.upgrades', 'ru', 'Улучшения'),
   (ck_id('witcher_cc.pdf.page2.section.upgrades'), 'pdf', 'page2.section.upgrades', 'en', 'Upgrades'),
+  (ck_id('witcher_cc.pdf.page2.section.mutagens'), 'pdf', 'page2.section.mutagens', 'ru', 'Мутагены'),
+  (ck_id('witcher_cc.pdf.page2.section.mutagens'), 'pdf', 'page2.section.mutagens', 'en', 'Mutagens'),
+  (ck_id('witcher_cc.pdf.page2.section.trophies'), 'pdf', 'page2.section.trophies', 'ru', 'Трофеи'),
+  (ck_id('witcher_cc.pdf.page2.section.trophies'), 'pdf', 'page2.section.trophies', 'en', 'Trophies'),
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Aether'), 'pdf', 'page2.formulaLegend.Aether', 'ru', 'Эфир'),
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Aether'), 'pdf', 'page2.formulaLegend.Aether', 'en', 'Aether'),
   (ck_id('witcher_cc.pdf.page2.formulaLegend.Caelum'), 'pdf', 'page2.formulaLegend.Caelum', 'ru', 'Аер'),
@@ -515,6 +519,20 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.tables.blueprints.col.priceItem'), 'pdf', 'page2.tables.blueprints.col.priceItem', 'ru', 'Цена<br>вещи'),
   (ck_id('witcher_cc.pdf.page2.tables.blueprints.col.priceItem'), 'pdf', 'page2.tables.blueprints.col.priceItem', 'en', 'Item<br>cost'),
 
+  -- components (ingredients)
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.qty'), 'pdf', 'page2.tables.components.col.qty', 'ru', '#'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.qty'), 'pdf', 'page2.tables.components.col.qty', 'en', '#'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.sub'), 'pdf', 'page2.tables.components.col.sub', 'ru', 'C'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.sub'), 'pdf', 'page2.tables.components.col.sub', 'en', 'S'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.name'), 'pdf', 'page2.tables.components.col.name', 'ru', 'Имя'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.name'), 'pdf', 'page2.tables.components.col.name', 'en', 'Name'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.harvestingComplexity'), 'pdf', 'page2.tables.components.col.harvestingComplexity', 'ru', 'СЛ'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.harvestingComplexity'), 'pdf', 'page2.tables.components.col.harvestingComplexity', 'en', 'DC'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.weight'), 'pdf', 'page2.tables.components.col.weight', 'ru', 'Вес'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.weight'), 'pdf', 'page2.tables.components.col.weight', 'en', 'Weight'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.price'), 'pdf', 'page2.tables.components.col.price', 'ru', 'Ц'),
+  (ck_id('witcher_cc.pdf.page2.tables.components.col.price'), 'pdf', 'page2.tables.components.col.price', 'en', 'Pr'),
+
   -- money
   (ck_id('witcher_cc.pdf.page2.tables.money.col.crowns'), 'pdf', 'page2.tables.money.col.crowns', 'ru', 'Кроны'),
   (ck_id('witcher_cc.pdf.page2.tables.money.col.crowns'), 'pdf', 'page2.tables.money.col.crowns', 'en', 'Crowns'),
@@ -551,5 +569,27 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.weight'), 'pdf', 'page2.tables.upgrades.col.weight', 'ru', 'Вес'),
   (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.weight'), 'pdf', 'page2.tables.upgrades.col.weight', 'en', 'Weight'),
   (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.price'), 'pdf', 'page2.tables.upgrades.col.price', 'ru', 'Цена'),
-  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.price'), 'pdf', 'page2.tables.upgrades.col.price', 'en', 'Price')
+  (ck_id('witcher_cc.pdf.page2.tables.upgrades.col.price'), 'pdf', 'page2.tables.upgrades.col.price', 'en', 'Price'),
+
+  -- mutagens
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.qty'), 'pdf', 'page2.tables.mutagens.col.qty', 'ru', '#'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.qty'), 'pdf', 'page2.tables.mutagens.col.qty', 'en', '#'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.name'), 'pdf', 'page2.tables.mutagens.col.name', 'ru', 'Имя'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.name'), 'pdf', 'page2.tables.mutagens.col.name', 'en', 'Name'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.color'), 'pdf', 'page2.tables.mutagens.col.color', 'ru', 'Цв'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.color'), 'pdf', 'page2.tables.mutagens.col.color', 'en', 'Clr'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.alchemyDc'), 'pdf', 'page2.tables.mutagens.col.alchemyDc', 'ru', 'СЛ'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.alchemyDc'), 'pdf', 'page2.tables.mutagens.col.alchemyDc', 'en', 'DC'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.effect'), 'pdf', 'page2.tables.mutagens.col.effect', 'ru', 'Эффект'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.effect'), 'pdf', 'page2.tables.mutagens.col.effect', 'en', 'Effect'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.minorMutation'), 'pdf', 'page2.tables.mutagens.col.minorMutation', 'ru', 'Мал.<br>мутация'),
+  (ck_id('witcher_cc.pdf.page2.tables.mutagens.col.minorMutation'), 'pdf', 'page2.tables.mutagens.col.minorMutation', 'en', 'Minor<br>mutation'),
+
+  -- trophies
+  (ck_id('witcher_cc.pdf.page2.tables.trophies.col.qty'), 'pdf', 'page2.tables.trophies.col.qty', 'ru', '#'),
+  (ck_id('witcher_cc.pdf.page2.tables.trophies.col.qty'), 'pdf', 'page2.tables.trophies.col.qty', 'en', '#'),
+  (ck_id('witcher_cc.pdf.page2.tables.trophies.col.name'), 'pdf', 'page2.tables.trophies.col.name', 'ru', 'Имя'),
+  (ck_id('witcher_cc.pdf.page2.tables.trophies.col.name'), 'pdf', 'page2.tables.trophies.col.name', 'en', 'Name'),
+  (ck_id('witcher_cc.pdf.page2.tables.trophies.col.effect'), 'pdf', 'page2.tables.trophies.col.effect', 'ru', 'Эффект'),
+  (ck_id('witcher_cc.pdf.page2.tables.trophies.col.effect'), 'pdf', 'page2.tables.trophies.col.effect', 'en', 'Effect')
 ON CONFLICT (id, lang) DO NOTHING;

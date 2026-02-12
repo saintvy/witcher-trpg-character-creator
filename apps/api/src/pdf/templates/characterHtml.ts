@@ -1281,7 +1281,7 @@ function renderVehiclesTable(vm: CharacterPdfPage3Vm): string {
   return box(
     vm.i18n.section.vehicles,
     `
-      <table class="equip-table equip-vehicles table-header-pale-gray">
+      <table class="equip-table equip-vehicles">
         <colgroup>${colgroup.join('')}</colgroup>
         <thead><tr>${headerCells.join('')}</tr></thead>
         <tbody>${rows}</tbody>
@@ -1350,10 +1350,7 @@ function renderRecipesTable(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' =
         `)
           .join('')
       : '';
-  const rows =
-    vm.recipes.length > 0
-      ? dataRows + emptyRecipeRow + emptyRecipeRow + emptyRecipeRow
-      : emptyRecipeRow;
+  const rows = dataRows + emptyRecipeRow + emptyRecipeRow + emptyRecipeRow;
   const legendPairs = FORMULA_INGREDIENT_NAMES.map((name) => {
     const url = assetFormulaIngredientUrl(name, alchemyStyle);
     const label = escapeHtml((leg as Record<string, string>)[name] ?? name);
@@ -1368,7 +1365,7 @@ function renderRecipesTable(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' =
   return box(
     vm.i18n.section.recipes,
     `
-      <table class="equip-table equip-recipes table-header-pale-brown">
+      <table class="equip-table equip-recipes">
         <colgroup>
           <col class="equip-fit" />
           <col class="equip-fit" />
@@ -1446,12 +1443,12 @@ function renderBlueprintsTable(vm: CharacterPdfPage3Vm): string {
           )
           .join('')
       : '';
-  const rows = vm.blueprints.length > 0 ? dataRows + emptyRow : emptyRow;
+  const rows = dataRows + emptyRow + emptyRow;
 
   return box(
     vm.i18n.section.blueprints,
     `
-      <table class="equip-table equip-blueprints table-header-pale-gray">
+      <table class="equip-table equip-blueprints">
         <colgroup>
           <col class="equip-fit" />
           <col class="equip-fit" />
@@ -1469,6 +1466,158 @@ function renderBlueprintsTable(vm: CharacterPdfPage3Vm): string {
       </table>
     `,
     'blueprints-box',
+  );
+}
+
+function renderComponentsTables(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'): string {
+  const t = vm.i18n.tables.components;
+
+  const renderSubstanceCell = (substanceEn: string): string => {
+    const url = substanceEn ? assetFormulaIngredientUrl(substanceEn, alchemyStyle) : null;
+    if (url) return `<img class="formula-ingredient-img" src="${url}" alt="${escapeHtml(substanceEn)}" />`;
+    return '&nbsp;&nbsp;&nbsp;';
+  };
+
+  const renderTable = (rows: CharacterPdfPage3Vm['componentsTables'][number]['rows']): string => `
+    <table class="equip-table equip-components">
+      <colgroup>
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="equip-fit equip-right">${escapeHtmlAllowBr(t.colQty)}</th>
+          <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colSub)}</th>
+          <th>${escapeHtmlAllowBr(t.colName)}</th>
+          <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colHarvestingComplexity)}</th>
+          <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colWeight)}</th>
+          <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colPrice)}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map(
+            (r) => `
+          <tr>
+            <td class="equip-fit equip-right">${escapeHtml(r.amount)}</td>
+            <td class="equip-fit equip-left">${renderSubstanceCell(r.substanceEn)}</td>
+            <td class="equip-left">${escapeHtml(r.name)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.harvestingComplexity)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.weight)}</td>
+            <td class="equip-fit equip-left">${escapeHtml(r.price)}</td>
+          </tr>
+        `,
+          )
+          .join('')}
+      </tbody>
+    </table>
+  `;
+
+  const tables = vm.componentsTables.map((tvm) => box('', renderTable(tvm.rows), 'components-box')).join('');
+  return `<div class="page3-components-group">${tables}</div>`;
+}
+
+function mutagenColorKey(raw: string): 'b' | 'r' | 'g' | '' {
+  const s = (raw ?? '').toLowerCase();
+  if (!s) return '';
+  if (s.includes('крас') || s.includes('red')) return 'r';
+  if (s.includes('зел') || s.includes('green')) return 'g';
+  if (s.includes('голуб') || s.includes('син') || s.includes('blue')) return 'b';
+  return '';
+}
+
+function renderMutagensTable(vm: CharacterPdfPage3Vm): string {
+  const t = vm.i18n.tables.mutagens;
+  const lang = vm.i18n.lang;
+
+  const headerRow = `
+    <tr>
+      <th class="equip-fit equip-right">${escapeHtmlAllowBr(t.colQty)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colName)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colColor)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colAlchemyDc)}</th>
+      <th>${escapeHtmlAllowBr(t.colEffect)}</th>
+      <th>${escapeHtmlAllowBr(t.colMinorMutation)}</th>
+    </tr>
+  `;
+
+  const dataRows = vm.mutagens
+    .map((m) => {
+      const key = mutagenColorKey(m.color);
+      const letter = key === 'b' ? (lang === 'ru' ? 'С' : 'B') : key === 'r' ? (lang === 'ru' ? 'К' : 'R') : key === 'g' ? (lang === 'ru' ? 'З' : 'G') : '';
+      const cls = key ? `mutagen-color mutagen-color-${key}` : 'mutagen-color';
+      return `
+        <tr>
+          <td class="equip-fit equip-right">${escapeHtml(m.amount)}</td>
+          <td class="equip-fit equip-left">${escapeHtml(m.name)}</td>
+          <td class="equip-fit equip-left"><span class="${cls}">${escapeHtml(letter)}</span></td>
+          <td class="equip-fit equip-left">${escapeHtml(m.alchemyDc)}</td>
+          <td>${escapeHtml(m.effect)}</td>
+          <td>${escapeHtml(m.minorMutation)}</td>
+        </tr>
+      `;
+    })
+    .join('');
+
+  return box(
+    vm.i18n.section.mutagens,
+    `
+      <table class="equip-table equip-mutagens">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+          <col />
+        </colgroup>
+        <thead>${headerRow}</thead>
+        <tbody>${dataRows}</tbody>
+      </table>
+    `,
+    'mutagens-box',
+  );
+}
+
+function renderTrophiesTable(vm: CharacterPdfPage3Vm): string {
+  const t = vm.i18n.tables.trophies;
+  const headerRow = `
+    <tr>
+      <th class="equip-fit equip-right">${escapeHtmlAllowBr(t.colQty)}</th>
+      <th class="equip-fit equip-left">${escapeHtmlAllowBr(t.colName)}</th>
+      <th>${escapeHtmlAllowBr(t.colEffect)}</th>
+    </tr>
+  `;
+  const dataRows = vm.trophies
+    .map(
+      (tr) => `
+        <tr>
+          <td class="equip-fit equip-right">${escapeHtml(tr.amount)}</td>
+          <td class="equip-fit equip-left">${escapeHtml(tr.name)}</td>
+          <td>${escapeHtml(tr.effect)}</td>
+        </tr>
+      `,
+    )
+    .join('');
+
+  return box(
+    vm.i18n.section.trophies,
+    `
+      <table class="equip-table equip-trophies">
+        <colgroup>
+          <col class="equip-fit" />
+          <col class="equip-fit" />
+          <col />
+        </colgroup>
+        <thead>${headerRow}</thead>
+        <tbody>${dataRows}</tbody>
+      </table>
+    `,
+    'trophies-box',
   );
 }
 
@@ -1506,7 +1655,7 @@ function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
   return box(
     title,
     `
-      <table class="equip-table equip-general-gear table-header-pale-gray">
+      <table class="equip-table equip-general-gear">
         <colgroup>
           <col class="equip-fit" />
           <col />
@@ -1537,7 +1686,7 @@ function renderMoneyTable(vm: CharacterPdfPage3Vm): string {
   return box(
     title,
     `
-      <table class="equip-table equip-money table-header-pale-gray">
+      <table class="equip-table equip-money">
         <colgroup>
           <col /><col /><col /><col /><col /><col />
         </colgroup>
@@ -1583,7 +1732,7 @@ function renderUpgradesTable(vm: CharacterPdfPage3Vm): string {
   return box(
     title,
     `
-      <table class="equip-table equip-upgrades table-header-pale-gray">
+      <table class="equip-table equip-upgrades">
         <colgroup>
           <col class="equip-fit" />
           <col class="equip-fit" />
@@ -1655,14 +1804,20 @@ function renderPage3(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
   return `
     <div class="page page3">
       <div class="page3-layout">
-        <div class="page2-separator" aria-hidden="true"><span class="page2-separator-line"></span></div>
         <div class="page3-recipes-row">${renderRecipesTable(vm, alchemyStyle)}</div>
         <div class="page3-blueprints-row">${renderBlueprintsTable(vm)}</div>
-        <div class="page3-support-group">
-          <div class="page3-support-item">${renderMoneyTable(vm)}</div>
-          <div class="page3-support-item">${renderVehiclesTable(vm)}</div>
-          ${vm.upgrades.length > 0 ? `<div class="page3-support-item">${renderUpgradesTable(vm)}</div>` : ''}
-          <div class="page3-support-item">${renderGeneralGearTable(vm)}</div>
+        <div class="page3-components-row">${renderComponentsTables(vm, alchemyStyle)}</div>
+        <div class="page3-support-group" id="page3-support-group">
+          <div class="page3-support-col" id="page3-support-col1"></div>
+          <div class="page3-support-col" id="page3-support-col2"></div>
+          <div class="page3-support-stash" id="page3-support-stash">
+            ${renderMoneyTable(vm)}
+            ${renderVehiclesTable(vm)}
+            ${vm.upgrades.length > 0 ? renderUpgradesTable(vm) : ''}
+            ${vm.mutagens.length > 0 ? renderMutagensTable(vm) : ''}
+            ${vm.trophies.length > 0 ? renderTrophiesTable(vm) : ''}
+            ${renderGeneralGearTable(vm)}
+          </div>
         </div>
       </div>
     </div>
@@ -1717,9 +1872,10 @@ export function renderCharacterPdfHtml(input: {
         min-height: 285mm;
         break-before: page;
         page-break-before: always;
+        height: 285mm;
       }
       .page2-layout { display: flex; flex-direction: column; gap: 3mm; }
-      .page3-layout { display: flex; flex-direction: column; gap: 3mm; }
+      .page3-layout { display: flex; flex-direction: column; gap: 3mm; height: 100%; }
       .page2-pack { display: none; }
       .page2-pack.page2-visible {
         display: grid;
@@ -1756,15 +1912,36 @@ export function renderCharacterPdfHtml(input: {
         background-position: 0 50%;
       }
       .page3-recipes-row { min-width: 0; }
+      .page3-components-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 3mm;
+        align-items: start;
+      }
       .page3-support-group {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 3mm;
-        align-items: start;
+        align-items: stretch;
+        flex: 1;
+        min-height: 0;
       }
-      .page3-support-item { min-width: 0; }
-      .table-header-pale-gray thead th { background: rgba(0,0,0,0.06); }
-      .table-header-pale-brown thead th { background: rgba(139,90,43,0.12); }
+      .page3-support-col { min-width: 0; display: flex; flex-direction: column; gap: 3mm; min-height: 0; }
+      .page3-support-stash { display: none; }
+      .mutagen-color {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 14px;
+        height: 14px;
+        border: 1px solid #111827;
+        font-weight: 900;
+        font-size: 9px;
+        line-height: 1;
+      }
+      .mutagen-color-r { background: rgba(220,38,38,0.25); color: #111827; }
+      .mutagen-color-g { background: rgba(34,197,94,0.25); color: #111827; }
+      .mutagen-color-b { background: rgba(59,130,246,0.25); color: #111827; }
       .recipes-cell-toxicity { border-right: 3px solid black; }
       .formula-ingredient-img { width: 14px; height: 14px; vertical-align: middle; object-fit: contain; }
       .formula-legend-img { width: 14px; height: 14px; vertical-align: middle; object-fit: contain; }
@@ -1773,6 +1950,9 @@ export function renderCharacterPdfHtml(input: {
       .equip-table.equip-vehicles { table-layout: auto; width: 100%; }
       .equip-table.equip-recipes { table-layout: auto; width: 100%; }
       .equip-table.equip-blueprints { table-layout: auto; width: 100%; }
+      .equip-table.equip-components { table-layout: auto; width: 100%; }
+      .equip-table.equip-mutagens { table-layout: auto; width: 100%; }
+      .equip-table.equip-trophies { table-layout: auto; width: 100%; }
       .equip-blueprints .equip-components { white-space: pre-line; overflow-wrap: anywhere; word-break: break-word; }
       .equip-blueprints .equip-item-desc { white-space: pre-line; overflow-wrap: anywhere; word-break: break-word; }
       .equip-recipes .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
@@ -2034,6 +2214,12 @@ export function renderCharacterPdfHtml(input: {
       .siblings-box .box-title { background: rgba(20, 184, 166, 0.14); }
       .allies-box .box-title { background: rgba(34, 197, 94, 0.14); }
       .enemies-box .box-title { background: rgba(239, 68, 68, 0.14); }
+      .recipes-box .box-title { background: rgba(34,197,94,0.14); }
+      .blueprints-box .box-title { background: rgba(139,90,43,0.12); }
+      .money-box .box-title { background: rgba(249,115,22,0.14); }
+      .upgrades-box .box-title { background: rgba(59,130,246,0.14); }
+      .mutagens-box .box-title,
+      .trophies-box .box-title { background: rgba(220,38,38,0.14); }
       .t { width: 100%; border-collapse: collapse; table-layout: fixed; }
       .t th, .t td { border: 1px solid #111827; padding: 2px 3px; vertical-align: top; }
       .t thead th { background: #f3f4f6; font-weight: 900; text-transform: uppercase; font-size: 9px; letter-spacing: 0.06em; text-align: left; }
@@ -2066,11 +2252,13 @@ export function renderCharacterPdfHtml(input: {
                 tbody0.appendChild(probe);
                 const rowH = probe.getBoundingClientRect().height || 14;
                 tbody0.removeChild(probe);
-                const rows = Math.floor((available - headH - 2) / rowH);
+                const SAFE_PX = 3; // be conservative to avoid clipping/overflow in print/PDF rounding
+                const rows = Math.floor((available - headH - SAFE_PX) / rowH);
                 if (rows > 0) {
                   wrapper.style.display = '';
-                  // Use ceil to avoid clipping the last row due to fractional pixel rounding (print/PDF).
-                  wrapper.style.height = String(Math.ceil(headH + rows * rowH + 2)) + 'px';
+                  const desired = headH + rows * rowH;
+                  const clamped = Math.max(0, Math.floor(Math.min(available, desired)));
+                  wrapper.style.height = String(clamped) + 'px';
                   for (const t of tables) {
                     t.tBodies[0].innerHTML = '';
                     for (let i = 0; i < rows; i++) {
@@ -2250,6 +2438,150 @@ export function renderCharacterPdfHtml(input: {
             }
 
             document.querySelectorAll('template').forEach(t => t.remove());
+          }
+
+          const page3SupportGroup = document.getElementById('page3-support-group');
+          if (page3SupportGroup) {
+            const stash = document.getElementById('page3-support-stash');
+            const col1 = document.getElementById('page3-support-col1');
+            const col2 = document.getElementById('page3-support-col2');
+
+            if (stash && col1 && col2) {
+              const EPS = 18; // be conservative to avoid spilling due to fractional print rounding
+
+              const boundaryBottom = () => {
+                const r = page3SupportGroup.getBoundingClientRect();
+                return r.bottom - EPS;
+              };
+
+              const colContentBottom = (colEl) => {
+                const last = colEl.lastElementChild;
+                if (last) return last.getBoundingClientRect().bottom;
+                return colEl.getBoundingClientRect().top;
+              };
+
+              const fitsLastChild = (colEl) => {
+                const last = colEl.lastElementChild;
+                if (!last) return true;
+                return last.getBoundingClientRect().bottom <= boundaryBottom();
+              };
+
+              const buildGeneralGearEmptyRow = () => {
+                const tr = document.createElement('tr');
+                tr.innerHTML =
+                  '<td class="equip-fit equip-right">&nbsp;</td>' +
+                  '<td>&nbsp;</td>' +
+                  '<td class="equip-fit equip-left">&nbsp;</td>' +
+                  '<td class="equip-fit equip-left">&nbsp;</td>' +
+                  '<td class="equip-fit equip-left">&nbsp;</td>';
+                return tr;
+              };
+
+              const padGeneralGearToBottom = (gearBox) => {
+                const table = gearBox && gearBox.querySelector && gearBox.querySelector('table.equip-general-gear');
+                const tbody = table && table.tBodies && table.tBodies[0];
+                if (!tbody) return;
+
+                // Ensure there's at least one row to measure/pad from.
+                if (tbody.rows.length === 0) tbody.appendChild(buildGeneralGearEmptyRow());
+
+                const measureRowHeight = () => {
+                  const before = gearBox.getBoundingClientRect().bottom;
+                  const probe = buildGeneralGearEmptyRow();
+                  tbody.appendChild(probe);
+                  const after = gearBox.getBoundingClientRect().bottom;
+                  tbody.removeChild(probe);
+                  const h = after - before;
+                  return Number.isFinite(h) && h > 0 ? h : 14;
+                };
+
+                const rowH = measureRowHeight();
+                const remaining = boundaryBottom() - gearBox.getBoundingClientRect().bottom;
+                const SAFE_PX = 14;
+                const rowsToAdd = Math.max(0, Math.floor((remaining - SAFE_PX) / rowH) - 1);
+
+                for (let i = 0; i < rowsToAdd; i++) tbody.appendChild(buildGeneralGearEmptyRow());
+
+                // Final safeguard for fractional rounding: remove extra rows if we still spill.
+                for (let i = 0; i < 20; i++) {
+                  if (gearBox.getBoundingClientRect().bottom <= boundaryBottom()) break;
+                  if (tbody.rows.length <= 1) break;
+                  tbody.deleteRow(tbody.rows.length - 1);
+                }
+              };
+
+              const pick = (selector) => stash.querySelector(selector);
+              const firstColumnOrder = [
+                '.money-box',
+                '.vehicles-box',
+                '.upgrades-box',
+                '.mutagens-box',
+                '.trophies-box',
+              ];
+
+              let useCol2 = false;
+              for (const sel of firstColumnOrder) {
+                const el = pick(sel);
+                if (!el) continue;
+                if (!useCol2) {
+                  col1.appendChild(el);
+                  if (!fitsLastChild(col1)) {
+                    col1.removeChild(el);
+                    useCol2 = true;
+                    col2.appendChild(el);
+                  }
+                } else {
+                  col2.appendChild(el);
+                }
+              }
+
+              const gearBox = pick('.general-gear-box');
+              if (gearBox) {
+                col2.appendChild(gearBox);
+                padGeneralGearToBottom(gearBox);
+
+                // Add an extra empty-only General Gear table to col1 if it fits (to fill remaining space).
+                const clone = gearBox.cloneNode(true);
+                const cloneTable = clone.querySelector && clone.querySelector('table.equip-general-gear');
+                const cloneTbody = cloneTable && cloneTable.tBodies && cloneTable.tBodies[0];
+                if (cloneTbody) {
+                  cloneTbody.innerHTML = '';
+                  cloneTbody.appendChild(buildGeneralGearEmptyRow());
+                }
+                const measureMinHeight = (el, widthPx) => {
+                  const probe = document.createElement('div');
+                  probe.style.cssText = 'position:absolute;visibility:hidden;left:-10000px;top:-10000px;';
+                  probe.style.width = String(Math.max(1, Math.floor(widthPx))) + 'px';
+                  document.body.appendChild(probe);
+                  try {
+                    probe.appendChild(el);
+                    const h = el.getBoundingClientRect().height;
+                    probe.removeChild(el);
+                    return Number.isFinite(h) ? h : 0;
+                  } finally {
+                    probe.remove();
+                  }
+                };
+
+                const col1Width = col1.getBoundingClientRect().width || page3SupportGroup.getBoundingClientRect().width / 2;
+                const remainingCol1 = boundaryBottom() - colContentBottom(col1);
+                const minH = measureMinHeight(clone, col1Width);
+
+                const SAFE_MIN_PX = 16;
+                if (remainingCol1 >= minH + SAFE_MIN_PX) {
+                  col1.appendChild(clone);
+                  if (!fitsLastChild(col1)) {
+                    col1.removeChild(clone);
+                  } else {
+                    padGeneralGearToBottom(clone);
+                    if (!fitsLastChild(col1)) col1.removeChild(clone);
+                  }
+                }
+              }
+
+              // Cleanup the stash (kept hidden in case something relies on it).
+              stash.innerHTML = '';
+            }
           }
 
         };

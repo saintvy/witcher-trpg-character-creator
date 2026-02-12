@@ -619,27 +619,30 @@ WHERE NOT EXISTS (
     AND t.to_qu_qu_id = 'wcc_shop'
 );
 
--- Связи (приоритетные): для ведьмака с включенным dlc_wt (фиксированное школьное снаряжение)
--- пропускаем профессиональный магазин и идём сразу в обычный магазин.
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
+-- Правило: ведьмак с выбранной школой (logicFields.witcher_school) ИЛИ раса Witcher + DLC dlc_wt
+-- используется для перехода из wcc_values_feelings_on_people сразу в wcc_shop (мимо профессионального магазина).
+INSERT INTO rules (ru_id, name, body)
+VALUES (
+  ck_id('witcher_cc.rules.wcc_shop.witcher_skip_professional'),
+  'witcher_skip_professional_shop',
+  '{"or":[{"var":"characterRaw.logicFields.witcher_school"},{"and":[{"==":[{"var":"characterRaw.logicFields.race"},"Witcher"]},{"in":["dlc_wt",{"var":["dlcs",[]]}]}]}]}'::jsonb
+)
+ON CONFLICT (ru_id) DO UPDATE SET body = EXCLUDED.body;
+
+-- Связи (приоритетные): из wcc_values_feelings_on_people в магазин — если правило witcher_skip_professional_shop:
+-- наличие witcher_school в logicFields либо раса Witcher и dlc_wt в dlcs (пропуск профессионального магазина).
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
 SELECT
-  'wcc_profession' AS from_qu_qu_id,
+  'wcc_values_feelings_on_people' AS from_qu_qu_id,
   'wcc_shop' AS to_qu_qu_id,
-  v.an_id AS via_an_an_id,
+  r.ru_id AS ru_ru_id,
   1 AS priority
-FROM (VALUES
-        ('wcc_profession_o02_wt_wolf'),
-        ('wcc_profession_o02_wt_gryphon'),
-        ('wcc_profession_o02_wt_cat'),
-        ('wcc_profession_o02_wt_viper'),
-        ('wcc_profession_o02_wt_bear'),
-        ('wcc_profession_o02_wt_manticore'),
-        ('wcc_profession_o02_wt_snail')
-     ) AS v(an_id)
-WHERE NOT EXISTS (
-  SELECT 1
-  FROM transitions t
-  WHERE t.from_qu_qu_id = 'wcc_profession'
-    AND t.to_qu_qu_id = 'wcc_shop'
-    AND t.via_an_an_id = v.an_id
-);
+FROM rules r
+WHERE r.name = 'witcher_skip_professional_shop'
+  AND NOT EXISTS (
+    SELECT 1
+    FROM transitions t
+    WHERE t.from_qu_qu_id = 'wcc_values_feelings_on_people'
+      AND t.to_qu_qu_id = 'wcc_shop'
+      AND t.ru_ru_id = r.ru_id
+  );

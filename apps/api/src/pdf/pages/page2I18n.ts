@@ -70,6 +70,8 @@ const PAGE2_KEYS = {
     money: page2Key('section.money'),
     generalGear: page2Key('section.generalGear'),
     upgrades: page2Key('section.upgrades'),
+    mutagens: page2Key('section.mutagens'),
+    trophies: page2Key('section.trophies'),
   },
   lore: {
     homeland: page2Key('lore.homeland'),
@@ -180,6 +182,14 @@ const PAGE2_KEYS = {
       colPrice: page2Key('tables.blueprints.col.price'),
       colPriceItem: page2Key('tables.blueprints.col.priceItem'),
     },
+    components: {
+      colQty: page2Key('tables.components.col.qty'),
+      colSub: page2Key('tables.components.col.sub'),
+      colName: page2Key('tables.components.col.name'),
+      colHarvestingComplexity: page2Key('tables.components.col.harvestingComplexity'),
+      colWeight: page2Key('tables.components.col.weight'),
+      colPrice: page2Key('tables.components.col.price'),
+    },
     money: {
       colCrowns: page2Key('tables.money.col.crowns'),
       colOrens: page2Key('tables.money.col.orens'),
@@ -202,6 +212,19 @@ const PAGE2_KEYS = {
       colWeight: page2Key('tables.upgrades.col.weight'),
       colPrice: page2Key('tables.upgrades.col.price'),
     },
+    mutagens: {
+      colQty: page2Key('tables.mutagens.col.qty'),
+      colName: page2Key('tables.mutagens.col.name'),
+      colColor: page2Key('tables.mutagens.col.color'),
+      colAlchemyDc: page2Key('tables.mutagens.col.alchemyDc'),
+      colEffect: page2Key('tables.mutagens.col.effect'),
+      colMinorMutation: page2Key('tables.mutagens.col.minorMutation'),
+    },
+    trophies: {
+      colQty: page2Key('tables.trophies.col.qty'),
+      colName: page2Key('tables.trophies.col.name'),
+      colEffect: page2Key('tables.trophies.col.effect'),
+    },
   },
 } satisfies DeepKeyTree;
 
@@ -223,6 +246,8 @@ export type CharacterPdfPage2I18n = {
     money: string;
     generalGear: string;
     upgrades: string;
+    mutagens: string;
+    trophies: string;
   };
   lore: {
     homeland: string;
@@ -252,9 +277,12 @@ export type CharacterPdfPage2I18n = {
     vehicles: { colQty: string; colType: string; colVehicle: string; colSkill: string; colMod: string; colSpeed: string; colHp: string; colWeight: string; colPrice: string; colOccupancy: string };
     recipes: { colQty: string; colRecipeGroup: string; colRecipeName: string; colCraftLevel: string; colComplexity: string; colTimeCraft: string; colFormula: string; colPriceFormula: string; colMinimalIngredientsCost: string; colTimeEffect: string; colToxicity: string; colRecipeDescription: string; colWeightPotion: string; colPricePotion: string };
     blueprints: { colQty: string; colName: string; colGroup: string; colCraftLevel: string; colDifficultyCheck: string; colTimeCraft: string; colComponents: string; colItemDesc: string; colPriceComponents: string; colPrice: string; colPriceItem: string };
+    components: { colQty: string; colSub: string; colName: string; colHarvestingComplexity: string; colWeight: string; colPrice: string };
     money: { colCrowns: string; colOrens: string; colFlorens: string; colDucats: string; colBizants: string; colLintars: string };
     generalGear: { colGroup: string; colName: string; colConcealment: string; colWeight: string; colPrice: string };
     upgrades: { colName: string; colEffects: string; colSlots: string; colWeight: string; colPrice: string };
+    mutagens: { colQty: string; colName: string; colColor: string; colAlchemyDc: string; colEffect: string; colMinorMutation: string };
+    trophies: { colQty: string; colName: string; colEffect: string };
   };
 };
 

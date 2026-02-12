@@ -58,6 +58,7 @@ type NextQuestionResponse = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const RUN_SEED_STORAGE_KEY = "wcc_builder_run_seed";
+const RUN_PROGRESS_STORAGE_PREFIX = "wcc_builder_progress";
 
 export default function BuilderPage() {
   const { lang, mounted } = useLanguage();
@@ -99,6 +100,51 @@ export default function BuilderPage() {
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
   const [copyGenerateSuccess, setCopyGenerateSuccess] = useState(false);
   const historyContainerRef = useRef<HTMLDivElement>(null);
+  const didInitRef = useRef(false);
+  const lastLangRef = useRef<string | null>(null);
+
+  const progressStorageKey = useMemo(() => `${RUN_PROGRESS_STORAGE_PREFIX}:${runSeed}`, [runSeed]);
+
+  const loadSavedAnswers = useCallback((): AnswerInput[] | null => {
+    try {
+      const raw = sessionStorage.getItem(progressStorageKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { answers?: unknown };
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+      const answers = (parsed as any).answers;
+      if (!Array.isArray(answers)) return null;
+      return answers.filter((a): a is AnswerInput => {
+        if (!a || typeof a !== "object" || Array.isArray(a)) return false;
+        const rec = a as any;
+        return typeof rec.questionId === "string" && Array.isArray(rec.answerIds);
+      });
+    } catch {
+      return null;
+    }
+  }, [progressStorageKey]);
+
+  const saveAnswers = useCallback(
+    (answers: AnswerInput[]) => {
+      try {
+        if (!answers || answers.length === 0) {
+          sessionStorage.removeItem(progressStorageKey);
+          return;
+        }
+        sessionStorage.setItem(progressStorageKey, JSON.stringify({ v: 1, answers, ts: Date.now() }));
+      } catch {
+        // ignore storage failures
+      }
+    },
+    [progressStorageKey],
+  );
+
+  const clearSavedAnswers = useCallback(() => {
+    try {
+      sessionStorage.removeItem(progressStorageKey);
+    } catch {
+      // ignore
+    }
+  }, [progressStorageKey]);
 
   const questionMetadata = useMemo(() => (question?.metadata ?? {}) as Record<string, unknown>, [question]);
   const shopConfig = useMemo(() => {
@@ -302,8 +348,10 @@ export default function BuilderPage() {
         const payload: NextQuestionResponse = JSON.parse(responseText);
         
         // Сохраняем отформатированный JSON для debug
+        const nextAnswers = payload.historyAnswers ?? answers;
+        saveAnswers(nextAnswers);
         setLastResponseJson(JSON.stringify(payload, null, 2));
-        setHistory(payload.historyAnswers ?? answers);
+        setHistory(nextAnswers);
         setHistoryQuestions(payload.historyQuestions ?? []);
         setState(payload.state ?? {});
         setDone(Boolean(payload.done));
@@ -315,24 +363,30 @@ export default function BuilderPage() {
         setLoading(false);
       }
     },
-    [lang, runSeed],
+    [lang, runSeed, saveAnswers],
   );
 
   // Инициализация опроса только при первом монтировании
   useEffect(() => {
-    void fetchNext([]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!mounted) return;
+    if (didInitRef.current) return;
+    didInitRef.current = true;
+    lastLangRef.current = lang;
+
+    const saved = loadSavedAnswers();
+    void fetchNext(saved && saved.length > 0 ? saved : []);
+  }, [fetchNext, lang, loadSavedAnswers, mounted]);
 
   // При изменении языка во время создания персонажа сохраняем текущее состояние
   useEffect(() => {
     // Если есть история ответов, значит мы в процессе создания персонажа
     // В этом случае вызываем fetchNext с текущей историей, но новым языком
-    if (history.length > 0) {
-      void fetchNext(history);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang]);
+    if (!mounted) return;
+    if (!didInitRef.current) return;
+    if (lastLangRef.current === lang) return;
+    lastLangRef.current = lang;
+    void fetchNext(history);
+  }, [fetchNext, history, lang, mounted]);
 
   useEffect(() => {
     setPendingMultiple([]);
@@ -1284,7 +1338,10 @@ export default function BuilderPage() {
                 <p>{displayLang === "ru" ? "Опрос завершён." : "Survey completed."}</p>
                 <button
                   type="button"
-                  onClick={() => fetchNext([])}
+                  onClick={() => {
+                    clearSavedAnswers();
+                    void fetchNext([]);
+                  }}
                   disabled={loading}
                   className="btn btn-primary"
                 >
