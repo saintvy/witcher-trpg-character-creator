@@ -24,12 +24,12 @@ components_expanded AS (
 components_pretty AS (
   SELECT ce.ms_id
        , ce.lang
-       , string_agg(
+       , E'\n - ' || string_agg(
            CASE
              WHEN ce.qty IS NOT NULL THEN (COALESCE(i18n.text,'') || ' (' || ce.qty::text || ')')
              ELSE COALESCE(i18n.text,'')
            END,
-           E',\n' ORDER BY ce.pos
+           E',\n - ' ORDER BY ce.pos
          ) AS remove_components
     FROM components_expanded ce
     LEFT JOIN i18n_text i18n
@@ -75,10 +75,23 @@ SELECT hr.ms_id
      , hr.effect
      , hr.remove_instructions
      , hr.remove_components
-     , (COALESCE(hr.effect,'') || E'\n\n' || COALESCE(hr.remove_instructions,'') || E'\n\n' || COALESCE(hr.remove_components,'')) AS tooltip
+     , replace(
+         replace(
+           replace(
+             COALESCE(itpl.text, E'Описание:{effect}\nКак снять:{remove}\nИнгредиенты ритуала снятия:{components}'),
+             '{effect}',
+             COALESCE(hr.effect, '')
+           ),
+           '{remove}',
+           COALESCE(hr.remove_instructions, '')
+         ),
+         '{components}',
+         COALESCE(hr.remove_components, '')
+       ) AS tooltip
      , lpad(hr.level_sort::text, 2, '0') || '|' || COALESCE(hr.hex_name,'') AS sort_key
      , hr.lang
   FROM hex_rows hr
+  LEFT JOIN i18n_text itpl ON itpl.id = ck_id('witcher_cc.magic.hex.tooltip_tpl') AND itpl.lang = hr.lang
  ORDER BY hex_name;
 
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_magic_hexes_v_ms_lang_uidx ON wcc_magic_hexes_v (ms_id, lang);

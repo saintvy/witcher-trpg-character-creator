@@ -1021,7 +1021,7 @@ export default function BuilderPage() {
     } finally {
       setLoadingGenerateResult(false);
     }
-  }, [getCharacterJson, avatarDataUrl]);
+  }, [getCharacterJson]);
 
   type PdfOptions = { alchemy_style?: "w1" | "w2" };
 
@@ -1093,7 +1093,7 @@ export default function BuilderPage() {
     } finally {
       setLoadingGeneratePdf(false);
     }
-  }, [getCharacterJson]);
+  }, [getCharacterJson, avatarDataUrl]);
 
   const pickAvatar = useCallback(async () => {
     const input = document.createElement("input");

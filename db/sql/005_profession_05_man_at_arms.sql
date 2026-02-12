@@ -561,6 +561,20 @@ SELECT
     )
   ) AS body;
 
+-- Эффекты: 1 жетон магических даров (если раса не полурослик и не дварф)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o05' AS an_an_id,
+  jsonb_build_object(
+    'when', '{"and":[{"!==":[{"var":"characterRaw.logicFields.race"},"Halfling"]},{"!==":[{"var":"characterRaw.logicFields.race"},"Dwarf"]}]}'::jsonb,
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options.magic_gifts_tokens'),
+      1
+    )
+  ) AS body;
+
 -- Эффекты: стартовые деньги
 INSERT INTO effects (scope, an_an_id, body)
 SELECT

@@ -22,6 +22,8 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('source.invocations_druid.title', 'en', 'Druid Invocations'),
           ('source.invocations_priest.title', 'ru', 'Инвокации жреца'),
           ('source.invocations_priest.title', 'en', 'Priest Invocations'),
+          ('source.magic_gifts.title', 'ru', 'Магические дары'),
+          ('source.magic_gifts.title', 'en', 'Magical Gifts'),
 
           -- Column labels
           ('column.level', 'ru', 'Уровень'),
@@ -40,6 +42,8 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('column.preparing_time', 'en', 'Preparation'),
           ('column.zone_size', 'ru', 'Зона'),
           ('column.zone_size', 'en', 'Area'),
+          ('column.action_cost', 'ru', 'Затраты'),
+          ('column.action_cost', 'en', 'Action cost'),
 
           -- Budget names
           ('budget.novice_invocation_tokens.name', 'ru', 'Жетоны инвокаций новичка'),
@@ -51,7 +55,9 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('budget.novice_rituals_tokens.name', 'ru', 'Жетоны ритуалов новичка'),
           ('budget.novice_rituals_tokens.name', 'en', 'Novice Rituals Tokens'),
           ('budget.novice_hexes_tokens.name', 'ru', 'Жетоны порч с низкой опасностью'),
-          ('budget.novice_hexes_tokens.name', 'en', 'Low Danger Hexes Tokens')
+          ('budget.novice_hexes_tokens.name', 'en', 'Low Danger Hexes Tokens'),
+          ('budget.magic_gifts_tokens.name', 'ru', 'Жетоны магических даров (!! Обязательно получи одобрение ГМа на использование !!)'),
+          ('budget.magic_gifts_tokens.name', 'en', 'Magical Gifts Tokens (!! Be sure to get GM approval for use !!)')
        ) AS v(key, lang, text)
 ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text;
@@ -139,6 +145,16 @@ SELECT meta.qu_id
                'is_required', true,
                'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.novice_hexes_tokens.name')::text),
                'coverage', jsonb_build_object('items', jsonb_build_array('MS119', 'MS120', 'MS222', 'MS223'))
+             ),
+             jsonb_build_object(
+               'id', 'magic_gifts_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.magic_gifts_tokens',
+               'priority', 1,
+               'is_default', false,
+               'is_required', false,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.magic_gifts_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MG001', 'MG002', 'MG003', 'MG004', 'MG005', 'MG006', 'MG007', 'MG008', 'MG009', 'MG010', 'MG011', 'MG012', 'MG013', 'MG014'))
              )
            ),
            'sources', jsonb_build_array(
@@ -224,9 +240,9 @@ SELECT meta.qu_id
                'keyColumn', 'ms_id',
                'langColumn', 'lang',
                'langPath', 'characterRaw.lang',
-               'tooltipField', 'effect',
-               'orderBy', 'sort_key',
-               'targetPath', 'characterRaw.gear.magic.rituals',
+                 'tooltipField', 'effect_tpl',
+                 'orderBy', 'sort_key',
+                 'targetPath', 'characterRaw.gear.magic.rituals',
                'columns', jsonb_build_array(
                  jsonb_build_object('field', 'ritual_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
                  jsonb_build_object('field', 'level', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.level')::text)),
@@ -293,6 +309,27 @@ SELECT meta.qu_id
                  jsonb_build_object('field', 'effect_time', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.time_effect')::text)),
                  jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
                )
+             ),
+             -- 6) Magical Gifts (no grouping; tooltip = description = effect + side_effect)
+             jsonb_build_object(
+               'id', 'magic_gifts',
+               'title', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.source.magic_gifts.title')::text),
+               'table', 'wcc_magic_gifts_v',
+               'dlcColumn', 'dlc_id',
+               'keyColumn', 'mg_id',
+               'langColumn', 'lang',
+               'langPath', 'characterRaw.lang',
+               'tooltipField', 'description',
+               'orderBy', 'sort_key',
+               'targetPath', 'characterRaw.gear.magic.gifts',
+               'columns', jsonb_build_array(
+                 jsonb_build_object('field', 'gift_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.name')::text)),
+                 jsonb_build_object('field', 'group_name', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.group')::text)),
+                 jsonb_build_object('field', 'action_cost', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.action_cost')::text)),
+                 jsonb_build_object('field', 'dc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.difficulty_check')::text)),
+                 jsonb_build_object('field', 'vigor_cost', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.stamina_cast')::text)),
+                 jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
+               )
              )
            )
          )
@@ -321,7 +358,7 @@ existing_filtered AS (
   SELECT elem, ord
     FROM existing_sources
     CROSS JOIN LATERAL jsonb_array_elements(existing_sources.arr) WITH ORDINALITY t(elem, ord)
-   WHERE (elem->>'id') NOT IN ('magic_spells', 'magic_signs', 'magic_hexes', 'magic_rituals', 'invocations_druid', 'invocations_priest')
+   WHERE (elem->>'id') NOT IN ('magic_spells', 'magic_signs', 'magic_hexes', 'magic_rituals', 'invocations_druid', 'invocations_priest', 'magic_gifts')
 ),
 merged AS (
   SELECT COALESCE(jsonb_agg(elem ORDER BY ord), '[]'::jsonb) AS arr
@@ -341,7 +378,6 @@ WHERE NOT EXISTS (
   WHERE t.from_qu_qu_id = 'wcc_shop'
     AND t.to_qu_qu_id = 'wcc_shop_magic'
 );
-
 
 
 

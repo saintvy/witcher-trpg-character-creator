@@ -135,8 +135,8 @@ WITH
     SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'human' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
          , meta.entity, 'perks', v.lang, v.text
       FROM (VALUES
-        ('ru', '<b>Изобретательность</b> Врождённый бонус [+1 к Дедукции]'),
-        ('en', '<b>Ingenuity</b> [+1 to Deduction]')
+        ('ru', '<b>Изобретательность</b>: Врождённый бонус [+1 к Дедукции]'),
+        ('en', '<b>Ingenuity</b>: [+1 to Deduction]')
       ) AS v(lang, text)
       CROSS JOIN meta
   )

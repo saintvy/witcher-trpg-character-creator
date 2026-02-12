@@ -24,12 +24,12 @@ components_expanded AS (
 components_pretty AS (
   SELECT ce.ms_id
        , ce.lang
-       , string_agg(
+       , E'\n - ' || string_agg(
            CASE
              WHEN ce.qty IS NOT NULL THEN (COALESCE(i18n.text,'') || ' (' || ce.qty::text || ')')
              ELSE COALESCE(i18n.text,'')
            END,
-           E',\n' ORDER BY ce.pos
+           E',\n - ' ORDER BY ce.pos
          ) AS ingredients
     FROM components_expanded ce
     LEFT JOIN i18n_text i18n
@@ -75,6 +75,20 @@ SELECT r.ms_id
          ELSE
            COALESCE(ieffect.text, '')
        END AS effect
+     , CASE
+         WHEN cp.ingredients IS NOT NULL THEN
+           replace(
+             replace(
+               COALESCE(itpl.text, E'Описание:{effect}\nИнгредиенты:{ingredients}'),
+               '{effect}',
+               COALESCE(ieffect.text, '')
+             ),
+             '{ingredients}',
+             COALESCE(cp.ingredients, '')
+           )
+         ELSE
+           COALESCE(ieffect.text, '')
+       END AS effect_tpl
      , iremove.text AS how_to_remove
      , lpad(
          CASE r.level_id
@@ -100,6 +114,7 @@ SELECT r.ms_id
   LEFT JOIN i18n_text itcu ON itcu.id = r.effect_time_unit_id AND itcu.lang = l.lang
   LEFT JOIN i18n_text ieffect ON ieffect.id = r.effect_id AND ieffect.lang = l.lang
   LEFT JOIN i18n_text iremove ON iremove.id = r.how_to_remove_id AND iremove.lang = l.lang
+  LEFT JOIN i18n_text itpl ON itpl.id = ck_id('witcher_cc.magic.ritual.effect_tpl') AND itpl.lang = l.lang
   LEFT JOIN components_pretty cp ON cp.ms_id = r.ms_id AND cp.lang = l.lang
  ORDER BY ritual_name;
 

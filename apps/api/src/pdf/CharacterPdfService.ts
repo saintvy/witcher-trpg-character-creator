@@ -10,6 +10,7 @@ import {
   type MutagenDetails,
   type TrophyDetails,
 } from './pages/viewModelPage3.js';
+import type { MagicGiftDetails } from './pages/viewModelPage4.js';
 import { renderCharacterPdfHtml } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
 import { db } from '../db/pool.js';
@@ -169,6 +170,14 @@ export class CharacterPdfService {
     const upgradeIds = Array.isArray(gearRec?.upgrades)
       ? (gearRec!.upgrades as unknown[])
           .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).u_id ?? '') : ''))
+          .filter((x) => x.length > 0)
+      : [];
+
+    const magic = gearRec?.magic;
+    const magicRec = magic && typeof magic === 'object' && magic !== null && !Array.isArray(magic) ? (magic as Record<string, unknown>) : null;
+    const giftIds = Array.isArray(magicRec?.gifts)
+      ? (magicRec!.gifts as unknown[])
+          .map((x) => (x && typeof x === 'object' && !Array.isArray(x) ? String((x as any).mg_id ?? '') : ''))
           .filter((x) => x.length > 0)
       : [];
 
@@ -396,6 +405,26 @@ export class CharacterPdfService {
       console.error('[pdf] upgrades lookup failed', error);
     }
 
+    const giftDetailsById = new Map<string, MagicGiftDetails>();
+    try {
+      if (giftIds.length > 0) {
+        const { rows } = await this.withTimeout(
+          db.query<MagicGiftDetails>(
+            `
+              SELECT mg_id, group_name, gift_name, dc, vigor_cost, action_cost, description, sort_key, is_major
+              FROM wcc_magic_gifts_v
+              WHERE lang = $1 AND mg_id = ANY($2::text[])
+            `,
+            [lang, Array.from(new Set(giftIds))],
+          ),
+          2500,
+        );
+        rows.forEach((r) => giftDetailsById.set(r.mg_id, r));
+      }
+    } catch (error) {
+      console.error('[pdf] gifts lookup failed', error);
+    }
+
     const pdfVm = buildCharacterPdfViewModel(characterJson, {
       lang,
       i18n,
@@ -411,8 +440,9 @@ export class CharacterPdfService {
       trophyDetailsById,
       generalGearDetailsById,
       upgradeDetailsById,
+      giftDetailsById,
     });
-    const html = renderCharacterPdfHtml({ page1: pdfVm.page1, page2: pdfVm.page2, page3: pdfVm.page3, options });
+    const html = renderCharacterPdfHtml({ page1: pdfVm.page1, page2: pdfVm.page2, page3: pdfVm.page3, page4: pdfVm.page4, options });
 
     const browser = await CharacterPdfService.getBrowser();
     const context = await browser.newContext({

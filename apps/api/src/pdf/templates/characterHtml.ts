@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import type { CharacterPdfPage1Vm } from '../pages/viewModelPage1.js';
 import type { CharacterPdfPage2Vm } from '../pages/viewModelPage2.js';
 import type { CharacterPdfPage3Vm } from '../pages/viewModelPage3.js';
+import type { CharacterPdfPage4Vm } from '../pages/viewModelPage4.js';
 
 const assetDataUrlCache = new Map<string, string>();
 const assetFormulaIngredientCache = new Map<string, string>();
@@ -119,6 +120,12 @@ function escapeHtml(value: string): string {
 function escapeHtmlAllowBold(value: string): string {
   const escaped = escapeHtml(value);
   return escaped.replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>');
+}
+
+/** Escapes HTML but allows <b>, </b>, <i>, </i> tags for formatting. */
+function escapeHtmlAllowBoldItalic(value: string): string {
+  const escaped = escapeHtml(value);
+  return escaped.replace(/&lt;(\/?)(b|i)&gt;/gi, (_m, slash: string, tag: string) => `<${slash}${tag.toLowerCase()}>`);
 }
 
 function formatSigned(value: number): string {
@@ -1758,7 +1765,7 @@ function renderUpgradesTable(vm: CharacterPdfPage3Vm): string {
   );
 }
 
-function renderPage2(vm: CharacterPdfPage2Vm): string {
+function renderPage2(vm: CharacterPdfPage2Vm, giftsInlineTplHtml = ''): string {
   const loreHtml = renderLoreBlock(vm);
   const socialStatusHtml = renderSocialStatusTable(vm);
   const lifePathHtml = renderLifeEvents(vm);
@@ -1796,6 +1803,7 @@ function renderPage2(vm: CharacterPdfPage2Vm): string {
       <template id="page2-siblings-tpl">${siblingsHtml}</template>
       <template id="page2-style-tpl">${styleHtml}</template>
       <template id="page2-values-tpl">${valuesHtml}</template>
+      ${giftsInlineTplHtml ? `<template id="page2-gifts-tpl">${giftsInlineTplHtml}</template>` : ''}
     </div>
   `;
 }
@@ -1824,16 +1832,376 @@ function renderPage3(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
   `;
 }
 
+function renderSpellsSignsTable(vm: CharacterPdfPage4Vm): string {
+  const t = getMagic4Labels(vm);
+  const rows = [...vm.spellsSigns, null];
+  return `
+    <table class="equip-table equip-magic4 equip-magic4-spells">
+      <colgroup>
+        <col class="equip-fit" /> <!-- name -->
+        <col class="equip-fit" /> <!-- element -->
+        <col class="equip-fit" /> <!-- sta cast -->
+        <col class="equip-fit" /> <!-- sta keep -->
+        <col class="equip-fit" /> <!-- time -->
+        <col class="equip-fit" /> <!-- damage -->
+        <col class="equip-fit" /> <!-- range -->
+        <col class="equip-fit" /> <!-- form -->
+        <col /> <!-- area (flex) -->
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="equip-fit">${escapeHtml(t.name)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.element)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.staminaCast)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.staminaKeeping)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.effectTime)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.damage)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.distance)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.form)}</th>
+          <th class="equip-left">${escapeHtml(t.zoneSize)}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map((r) => {
+            if (!r) {
+              return `
+                <tr>
+                  <td class="equip-fit">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-left">&nbsp;</td>
+                </tr>
+              `;
+            }
+            const tooltip = r.tooltip?.trim() ?? '';
+            const rowClass = tooltip ? ' class="magic4-main magic4-with-tooltip"' : ' class="magic4-main"';
+            return `
+              <tr${rowClass}>
+                <td class="equip-fit">${escapeHtml(r.name)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.element)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.staminaCast)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.staminaKeeping)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.effectTime)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.damage)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.distance)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.form)}</td>
+                <td class="equip-left">${escapeHtml(r.zoneSize)}</td>
+              </tr>
+              ${tooltip ? renderMagic4TooltipRow(9, tooltip) : ''}
+            `;
+          })
+          .join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderInvocationsTable(vm: CharacterPdfPage4Vm): string {
+  const t = getMagic4Labels(vm);
+  const rows = [...vm.invocations, null];
+  return `
+    <table class="equip-table equip-magic4 equip-magic4-invocations">
+      <colgroup>
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="equip-fit">${escapeHtml(t.name)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.group)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.staminaCast)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.staminaKeeping)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.damage)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.distance)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.zoneSize)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.form)}</th>
+          <th class="equip-left">${escapeHtml(t.effectTime)}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map((r) => {
+            if (!r) {
+              return `
+                <tr>
+                  <td class="equip-fit">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-left">&nbsp;</td>
+                </tr>
+              `;
+            }
+            const tooltip = r.tooltip?.trim() ?? '';
+            const rowClass = tooltip ? ' class="magic4-main magic4-with-tooltip"' : ' class="magic4-main"';
+            return `
+              <tr${rowClass}>
+                <td class="equip-fit">${escapeHtml(r.name)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.group)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.staminaCast)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.staminaKeeping)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.damage)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.distance)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.zoneSize)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.form)}</td>
+                <td class="equip-left">${escapeHtml(r.effectTime)}</td>
+              </tr>
+              ${tooltip ? renderMagic4TooltipRow(9, tooltip) : ''}
+            `;
+          })
+          .join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderRitualsTable(vm: CharacterPdfPage4Vm): string {
+  const t = getMagic4Labels(vm);
+  const rows = [...vm.rituals, null];
+  return `
+    <table class="equip-table equip-magic4 equip-magic4-rituals">
+      <colgroup>
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="equip-fit">${escapeHtml(t.name)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.level)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.dc)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.preparingTime)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.staminaCast)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.staminaKeeping)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.zoneSize)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.form)}</th>
+          <th class="equip-left">${escapeHtml(t.effectTime)}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map((r) => {
+            if (!r) {
+              return `
+                <tr>
+                  <td class="equip-fit">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-left">&nbsp;</td>
+                </tr>
+              `;
+            }
+            const tooltip = r.tooltip?.trim() ?? '';
+            const rowClass = tooltip ? ' class="magic4-main magic4-with-tooltip"' : ' class="magic4-main"';
+            return `
+              <tr${rowClass}>
+                <td class="equip-fit">${escapeHtml(r.name)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.level)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.dc)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.preparingTime)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.staminaCast)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.staminaKeeping)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.zoneSize)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.form)}</td>
+                <td class="equip-left">${escapeHtml(r.effectTime)}</td>
+              </tr>
+              ${tooltip ? renderMagic4TooltipRow(9, tooltip) : ''}
+            `;
+          })
+          .join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderHexesTable(vm: CharacterPdfPage4Vm): string {
+  const t = getMagic4Labels(vm);
+  const rows = [...vm.hexes, null];
+  return `
+    <table class="equip-table equip-magic4 equip-magic4-hexes">
+      <colgroup>
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="equip-fit">${escapeHtml(t.name)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.level)}</th>
+          <th class="equip-left">${escapeHtml(t.staminaCast)}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map((r) => {
+            if (!r) {
+              return `
+                <tr>
+                  <td class="equip-fit">&nbsp;</td>
+                  <td class="equip-fit equip-left">&nbsp;</td>
+                  <td class="equip-left">&nbsp;</td>
+                </tr>
+              `;
+            }
+            const tooltip = r.tooltip?.trim() ?? '';
+            const rowClass = tooltip ? ' class="magic4-main magic4-with-tooltip"' : ' class="magic4-main"';
+            return `
+              <tr${rowClass}>
+                <td class="equip-fit">${escapeHtml(r.name)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.level)}</td>
+                <td class="equip-left">${escapeHtml(r.staminaCast)}</td>
+              </tr>
+              ${tooltip ? renderMagic4TooltipRow(3, tooltip) : ''}
+            `;
+          })
+          .join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function getMagic4Labels(vm: CharacterPdfPage4Vm): {
+  name: string;
+  element: string;
+  level: string;
+  group: string;
+  staminaCast: string;
+  staminaKeeping: string;
+  damage: string;
+  distance: string;
+  zoneSize: string;
+  form: string;
+  preparingTime: string;
+  dc: string;
+  effectTime: string;
+} {
+  const c = vm.i18n.column;
+  const lang = vm.i18n.lang;
+  return {
+    ...c,
+    name: lang === 'ru' ? 'Имя' : 'Name',
+    staminaCast: lang === 'ru' ? 'Вын' : 'STA',
+    staminaKeeping: lang === 'ru' ? 'Вын+' : 'STA+',
+    distance: lang === 'ru' ? 'Дист.' : 'Rng.',
+    effectTime: lang === 'ru' ? 'Время' : 'Time',
+  };
+}
+
+function renderMagic4TooltipRow(colspan: number, tooltip: string): string {
+  const text = tooltip.trim();
+  if (!text) return '';
+  const html = escapeHtmlAllowBoldItalic(text.replaceAll('\r\n', '\n')).replaceAll('\n', '<br/>');
+  return `
+    <tr class="magic4-tooltip">
+      <td colspan="${colspan}" class="magic4-tooltip-cell">${html}</td>
+    </tr>
+  `;
+}
+
+function renderGiftsTable(vm: CharacterPdfPage4Vm): string {
+  const t = vm.i18n.gifts;
+  const rows = vm.gifts;
+  return `
+    <table class="equip-table equip-magic4 equip-magic4-gifts">
+      <colgroup>
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col class="equip-fit" />
+        <col />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="equip-fit">${escapeHtml(t.colName)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.colGroup)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.colSl)}</th>
+          <th class="equip-fit equip-left">${escapeHtml(t.colVigor)}</th>
+          <th class="equip-left">${escapeHtml(t.colCost)}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map((r) => {
+            const tooltip = (r.description ?? '').trim();
+            const rowClass = tooltip ? ' class="magic4-main magic4-with-tooltip"' : ' class="magic4-main"';
+            return `
+              <tr${rowClass}>
+                <td class="equip-fit">${escapeHtml(r.name)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.group)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.sl)}</td>
+                <td class="equip-fit equip-left">${escapeHtml(r.vigor)}</td>
+                <td class="equip-left">${escapeHtml(r.cost)}</td>
+              </tr>
+              ${tooltip ? renderMagic4TooltipRow(5, tooltip) : ''}
+            `;
+          })
+          .join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function renderPage4(vm: CharacterPdfPage4Vm): string {
+  if (!vm.shouldRender) return '';
+  const titles = vm.i18n.source;
+  const spellsSignsTitle = `${titles.magicSpellsTitle} / ${titles.magicSignsTitle}`;
+
+  return `
+    <div class="page page4">
+      <div class="page4-layout">
+        ${vm.showSpellsSigns ? box(spellsSignsTitle, renderSpellsSignsTable(vm), 'magic4-spells-box') : ''}
+        ${vm.showInvocations ? box(titles.invocationsPriestTitle, renderInvocationsTable(vm), 'magic4-invocations-box') : ''}
+        ${vm.showRituals ? box(titles.magicRitualsTitle, renderRitualsTable(vm), 'magic4-rituals-box') : ''}
+        ${vm.showHexes ? box(titles.magicHexesTitle, renderHexesTable(vm), 'magic4-hexes-box') : ''}
+        ${vm.showGifts ? box(titles.magicGiftsTitle, renderGiftsTable(vm), 'magic4-gifts-box') : ''}
+      </div>
+    </div>
+  `;
+}
+
 export function renderCharacterPdfHtml(input: {
   page1: CharacterPdfPage1Vm;
   page2: CharacterPdfPage2Vm;
   page3: CharacterPdfPage3Vm;
+  page4: CharacterPdfPage4Vm;
   options?: { alchemy_style?: 'w1' | 'w2' };
 }): string {
   const vm = input.page1;
   const page2 = input.page2;
   const page3 = input.page3;
+  const page4 = input.page4;
   const alchemyStyle = input.options?.alchemy_style ?? 'w2';
+  const page2GiftsInlineTpl = page4.onlyGiftsData && page4.gifts.length > 0
+    ? box(page4.i18n.source.magicGiftsTitle, renderGiftsTable(page4), 'magic4-gifts-box magic4-gifts-inline')
+    : '';
   return `<!doctype html>
 <html>
   <head>
@@ -1874,8 +2242,14 @@ export function renderCharacterPdfHtml(input: {
         page-break-before: always;
         height: 285mm;
       }
+      .page4 {
+        min-height: 285mm;
+        break-before: page;
+        page-break-before: always;
+      }
       .page2-layout { display: flex; flex-direction: column; gap: 3mm; }
       .page3-layout { display: flex; flex-direction: column; gap: 3mm; height: 100%; }
+      .page4-layout { display: flex; flex-direction: column; gap: 3mm; height: 100%; }
       .page2-pack { display: none; }
       .page2-pack.page2-visible {
         display: grid;
@@ -1892,6 +2266,7 @@ export function renderCharacterPdfHtml(input: {
       .page2-row2-hidden { display: none !important; }
       .page2-row2.page2-row2-visible { display: grid !important; }
       .page2-hidden { display: none !important; }
+      .page-hidden { display: none !important; }
       .page2-siblings-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
       .page2-siblings-row.page2-visible { display: grid !important; }
       .page2-allies-row, .page2-enemies-row { margin-top: 0; }
@@ -1959,6 +2334,7 @@ export function renderCharacterPdfHtml(input: {
       .equip-table.equip-general-gear { table-layout: auto; width: 100%; }
       .equip-table.equip-money { table-layout: fixed; width: 100%; }
       .equip-table.equip-upgrades { table-layout: auto; width: 100%; }
+      .equip-table.equip-magic4 { table-layout: auto; width: 100%; }
       .equip-upgrades .equip-effect { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; }
       .cell-subtle { color: #6b7280; font-size: 9px; line-height: 1.1; }
       .equip-general-gear .cell-subtle, .equip-upgrades .cell-subtle { color: #9ca3af; }
@@ -2220,6 +2596,16 @@ export function renderCharacterPdfHtml(input: {
       .upgrades-box .box-title { background: rgba(59,130,246,0.14); }
       .mutagens-box .box-title,
       .trophies-box .box-title { background: rgba(220,38,38,0.14); }
+      .magic4-spells-box .box-title { background: rgba(147, 197, 253, 0.35); }
+      .magic4-invocations-box .box-title { background: rgba(253, 186, 116, 0.35); }
+      .magic4-rituals-box .box-title { background: rgba(196, 181, 253, 0.35); }
+      .magic4-hexes-box .box-title { background: rgba(252, 165, 165, 0.35); }
+      .magic4-gifts-box .box-title { background: rgba(110, 231, 183, 0.28); }
+      .equip-table.equip-magic4 tbody tr.magic4-main.magic4-with-tooltip td { border-bottom-color: #d1d5db; }
+      .equip-table.equip-magic4 tbody tr.magic4-tooltip td { border-top-color: #d1d5db; font-size: 9px; color: #374151; }
+      .equip-table.equip-magic4 tbody tr.magic4-tooltip td.magic4-tooltip-cell { padding-top: 3px; padding-bottom: 3px; }
+      .equip-table.equip-magic4 tbody tr.magic4-tooltip td.magic4-tooltip-cell b { font-weight: 900; }
+      .equip-table.equip-magic4 tbody tr.magic4-tooltip td.magic4-tooltip-cell i { font-style: italic; }
       .t { width: 100%; border-collapse: collapse; table-layout: fixed; }
       .t th, .t td { border: 1px solid #111827; padding: 2px 3px; vertical-align: top; }
       .t thead th { background: #f3f4f6; font-weight: 900; text-transform: uppercase; font-size: 9px; letter-spacing: 0.06em; text-align: left; }
@@ -2228,11 +2614,12 @@ export function renderCharacterPdfHtml(input: {
     </style>
   </head>
   <body>
-    ${renderPage1(vm)}
-    ${renderPage2(page2)}
-    ${renderPage3(page3, alchemyStyle)}
+      ${renderPage1(vm)}
+      ${renderPage2(page2, page2GiftsInlineTpl)}
+      ${renderPage3(page3, alchemyStyle)}
+      ${renderPage4(page4)}
 
-    <script>
+      <script>
       (() => {
         const run = () => {
           const wrapper = document.getElementById('notes-wrapper');
@@ -2434,6 +2821,38 @@ export function renderCharacterPdfHtml(input: {
                 if (row1) row1.remove();
                 if (row2) row2.remove();
                 if (siblingsFull) siblingsFull.remove();
+
+                // If the character has ONLY magic gifts, try to inline the gifts table on page 2 (near the Lore block).
+                // If it fits, hide page 4 entirely so we don't start a new page.
+                const giftsTpl = document.getElementById('page2-gifts-tpl');
+                if (giftsTpl && giftsTpl.tagName === 'TEMPLATE' && giftsTpl.innerHTML && giftsTpl.innerHTML.trim()) {
+                  const page2El = layout.closest('.page') || document.querySelector('.page.page2');
+                  const page4El = document.querySelector('.page.page4');
+                  const frag = giftsTpl.content ? giftsTpl.content.cloneNode(true) : null;
+                  if (page2El && frag) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'page2-gifts-inline-wrap';
+                    wrap.appendChild(frag);
+
+                    const loreInPack = pack.querySelector && pack.querySelector('.lore-box');
+                    if (loreInPack && loreInPack.parentElement) {
+                      loreInPack.parentElement.insertBefore(wrap, loreInPack.nextSibling);
+                    } else {
+                      pack.appendChild(wrap);
+                    }
+
+                    const EPS_PX = 3.0;
+                    const page2Bottom = page2El.getBoundingClientRect().bottom - EPS_PX;
+                    const giftsBottom = wrap.getBoundingClientRect().bottom;
+                    const fits = Number.isFinite(page2Bottom) && Number.isFinite(giftsBottom) && giftsBottom <= page2Bottom;
+
+                    if (fits) {
+                      if (page4El) page4El.classList.add('page-hidden');
+                    } else {
+                      wrap.remove();
+                    }
+                  }
+                }
               }
             }
 

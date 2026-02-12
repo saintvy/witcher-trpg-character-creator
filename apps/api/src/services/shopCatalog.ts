@@ -214,6 +214,7 @@ const ALLOWED_TABLES = new Set([
   'wcc_magic_hexes_v',
   'wcc_magic_invocations_v',
   'wcc_magic_rituals_v',
+  'wcc_magic_gifts_v',
 ]);
 
 export type GetAllShopItemsRequest = {
