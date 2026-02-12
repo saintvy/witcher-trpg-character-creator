@@ -78,7 +78,7 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('column.body_part', 'ru', 'Часть тела'),
           ('column.body_part', 'en', 'Body Part'),
           ('column.stopping_power', 'ru', 'Защита'),
-          ('column.stopping_power', 'en', 'Stopping Power'),
+          ('column.stopping_power', 'en', 'SP/Rel'),
           ('column.encumbrance', 'ru', 'Обременение'),
           ('column.encumbrance', 'en', 'Encumbrance'),
           ('column.protections', 'ru', 'Защита'),

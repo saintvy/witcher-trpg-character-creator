@@ -393,12 +393,19 @@ ins_i18n_blueprint_item_desc_tpl AS (
       E'DMG: {dmg}\nReliability: {reliability}\nHands: {hands}\nConcealment: {concealment}\nEnh.: {enhancements}\nEffects: {effect_names}'
 
     UNION ALL
-    -- armor
+    -- armor (ПБ)
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor'), 'items', 'blueprint_item_desc_tpl', 'ru',
       E'ПБ: {stopping_power}\nСкованность: {encumbrance}\nУБ: {enhancements}\nЭффекты: {effect_names}'
     UNION ALL
     SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor'), 'items', 'blueprint_item_desc_tpl', 'en',
       E'SP: {stopping_power}\nEnc.: {encumbrance}\nEnh.: {enhancements}\nEffects: {effect_names}'
+    UNION ALL
+    -- armor для щитов (Надежность)
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor_shield'), 'items', 'blueprint_item_desc_tpl', 'ru',
+      E'Надежность: {stopping_power}\nСкованность: {encumbrance}\nУБ: {enhancements}\nЭффекты: {effect_names}'
+    UNION ALL
+    SELECT ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor_shield'), 'items', 'blueprint_item_desc_tpl', 'en',
+      E'Reliability: {stopping_power}\nEnc.: {encumbrance}\nEnh.: {enhancements}\nEffects: {effect_names}'
 
     UNION ALL
     -- ingredient (craft)

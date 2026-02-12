@@ -11,7 +11,7 @@ SELECT ia.a_id
      , iname.text AS armor_name
      , ibp.text AS body_part
      , iac.text AS armor_class
-     , coalesce(ia.stopping_power, 0) AS stopping_power
+     , coalesce(ia.stopping_power, ia.reliability, 0) AS stopping_power
      , coalesce(ia.enhancements, 0) AS enhancements
      , coalesce(ia.encumbrance, 0) AS encumbrance
      , coalesce(ia.weight, 0) AS weight

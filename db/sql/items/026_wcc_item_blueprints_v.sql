@@ -139,12 +139,13 @@ SELECT b.b_id
   LEFT JOIN i18n_text itcu ON itcu.id = b.time_unit_id AND itcu.lang = l.lang
   LEFT JOIN components_pretty cp ON cp.b_id = b.b_id AND cp.lang = l.lang
   LEFT JOIN wcc_item_weapons_v w ON w.w_id = b.item_id AND w.lang = l.lang
+  LEFT JOIN wcc_item_armors ia ON ia.a_id = b.item_id
   LEFT JOIN wcc_item_armors_v a ON a.a_id = b.item_id AND a.lang = l.lang
   LEFT JOIN wcc_item_ingredients_v ing ON ing.i_id = b.item_id AND ing.lang = l.lang
   LEFT JOIN wcc_item_general_gear_v gg ON gg.t_id = b.item_id AND gg.lang = l.lang
   LEFT JOIN wcc_item_upgrades_v upg ON upg.u_id = b.item_id AND upg.lang = l.lang
   LEFT JOIN i18n_text tpl_w ON tpl_w.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.weapon') AND tpl_w.lang = l.lang
-  LEFT JOIN i18n_text tpl_a ON tpl_a.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor') AND tpl_a.lang = l.lang
+  LEFT JOIN i18n_text tpl_a ON tpl_a.id = CASE WHEN ia.body_part_id = ck_id('bodypart.shield') THEN ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor_shield') ELSE ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor') END AND tpl_a.lang = l.lang
   LEFT JOIN i18n_text tpl_i ON tpl_i.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.ingredient') AND tpl_i.lang = l.lang
   LEFT JOIN i18n_text tpl_t ON tpl_t.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.general_gear') AND tpl_t.lang = l.lang
   LEFT JOIN i18n_text tpl_u ON tpl_u.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.upgrade') AND tpl_u.lang = l.lang
