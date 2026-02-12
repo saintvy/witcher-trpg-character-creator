@@ -3018,6 +3018,19 @@ async function applyShopNode(
     };
     addToArrayAtPath(state, entry.targetPath, item);
   }
+
+  // If at least one magical gift was purchased (directly or via bundle), ensure Vigor cur is at least 2.
+  const hasMagicGifts =
+    (lookedUp.get('magic_gifts')?.length ?? 0) > 0 ||
+    bundleLookedUp.some((e) => e.sourceId === 'magic_gifts') ||
+    [...lookedUp.entries()].some(
+      ([, entries]) => entries.length > 0 && entries[0].targetPath === 'characterRaw.gear.magic.gifts',
+    ) ||
+    bundleLookedUp.some((e) => e.targetPath === 'characterRaw.gear.magic.gifts');
+  if (hasMagicGifts) {
+    const vigorCur = toFiniteNumber(getAtPath(state, 'characterRaw.statistics.vigor.cur'), 0);
+    setAtPath(state, 'characterRaw.statistics.vigor.cur', Math.max(vigorCur, 2));
+  }
 }
 
 type StatsSkillsLevel = 'Average' | 'Skilled' | 'Heroes' | 'Legends';

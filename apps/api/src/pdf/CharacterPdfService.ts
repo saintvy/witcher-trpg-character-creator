@@ -452,9 +452,11 @@ export class CharacterPdfService {
     const page = await context.newPage();
 
     try {
-      await page.setContent(html, { waitUntil: 'networkidle' });
+      // Important: apply print media before injecting HTML so any layout measurements in inline scripts
+      // run deterministically under print CSS (avoids occasional mis-measurements that can add extra rows).
       await page.emulateMedia({ media: 'print' });
-      await page.waitForFunction('window.__pdfReady === true', { timeout: 1000 }).catch(() => undefined);
+      await page.setContent(html, { waitUntil: 'networkidle' });
+      await page.waitForFunction('window.__pdfReady === true', { timeout: 5000 }).catch(() => undefined);
 
       const pdf = await page.pdf({
         format: 'A4',

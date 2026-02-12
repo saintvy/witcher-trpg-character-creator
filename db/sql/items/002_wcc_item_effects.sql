@@ -78,7 +78,7 @@ WITH raw_data (e_id, name_ru, name_en, description_ru, description_en) AS ( VALU
     ('E058', 'Парирующее', 'Parrying', '(-2) к штрафу при парировании.', 'Reduces the Parry penalty by (-2).'),
     ('E059', 'Пахучее', 'Scented', 'Пока боеприпас остаётся в теле цели, выслеживание по запаху не требует проверок, если следу менее половины суток.', 'While the ammunition remains in the target’s body, tracking by smell requires no checks if the trail is less than half a day old.'),
     ('E060', 'Перелом ноги', 'Leg Fracture', 'Критическое ранение "Перелом ноги" при отсутстви брони ног.', 'Inflicts the "Broken Leg" critical injury if the target has no leg armor.'),
-    ('E061', 'Подвижная перезарядка', 'Mobile Reload', '', ''),
+    ('E061', 'Подвижная перезарядка', 'Mobile Reload', 'Позволяет перезаряжать арбалет за счёт действия, либо действия перемещения в каждом раунде.', 'Allows reloading a crossbow by spending an action or by moving during each round.'),
     ('E062', 'Полное укрытие', 'Full Cover', 'Если присесть за щитом, то щит рассматривается как укрытие, снижая любой проходящий урон на количество своей прочности.', 'If you crouch behind the shield, it counts as cover, reducing any incoming damage by its durability.'),
     ('E063', 'Пробивающее броню', 'Armor Piercing', 'Игнорирует сопротивление урону любой брони, по которой оно попадает.', 'Ignores the damage resistance of any armor it hits.'),
     ('E064', 'Пробивающее броню (+)', 'Armor Piercing (+)', 'Игнорирует сопротивление урону любой брони и половину прочности брони, по которой оно попадает.', 'Ignores the damage resistance of any armor it hits and half of that armor’s durability.'),

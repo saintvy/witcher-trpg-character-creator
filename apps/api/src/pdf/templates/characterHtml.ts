@@ -166,12 +166,14 @@ function boxRawTitle(titleHtml: string, body: string, extraClass = ''): string {
 }
 
 function renderBaseInfo(vm: CharacterPdfPage1Vm): string {
+  const schoolLabel = vm.i18n.lang.toLowerCase().startsWith('ru') ? 'Школа' : 'School';
   const rows: Array<[string, string]> = [
     [vm.i18n.base.name, vm.base.name],
     [vm.i18n.base.race, vm.base.race],
     [vm.i18n.base.gender, vm.base.gender],
     [vm.i18n.base.age, vm.base.age],
     [vm.i18n.base.profession, vm.base.profession],
+    ...(vm.base.school ? ([[schoolLabel, vm.base.school]] as Array<[string, string]>) : []),
     [vm.i18n.base.definingSkill, vm.base.definingSkill],
   ];
 
@@ -748,8 +750,9 @@ function renderEquipment(vm: CharacterPdfPage1Vm): string {
             .join('')}
         </tbody>
       </table>
-      ${renderNotes(vm.i18n.tables.notes.title)}
       ` : ''}
+
+      ${renderNotes(vm.i18n.tables.notes.title)}
     </div>
   `;
 }
@@ -2270,6 +2273,7 @@ export function renderCharacterPdfHtml(input: {
       .page2-siblings-row { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
       .page2-siblings-row.page2-visible { display: grid !important; }
       .page2-allies-row, .page2-enemies-row { margin-top: 0; }
+      .page2-gifts-inline-wrap { width: 100%; }
       .page2-separator { margin: 4mm 0; text-align: center; }
       .page2-separator-line {
         display: block;
@@ -2620,7 +2624,39 @@ export function renderCharacterPdfHtml(input: {
       ${renderPage4(page4)}
 
       <script>
-      (() => {
+      (async () => {
+        const waitForAssets = async () => {
+          // Fonts can affect line wrapping/row heights, and images (even data URLs) may decode asynchronously.
+          try {
+            if (document.fonts && document.fonts.ready) {
+              await document.fonts.ready;
+            }
+          } catch {}
+
+          const imgs = Array.from(document.images || []);
+          if (imgs.length === 0) return;
+
+          const waitLoad = (img) => {
+            if (img.complete) return Promise.resolve();
+            return new Promise((resolve) => {
+              img.addEventListener('load', resolve, { once: true });
+              img.addEventListener('error', resolve, { once: true });
+            });
+          };
+
+          await Promise.all(imgs.map(waitLoad));
+
+          await Promise.all(
+            imgs.map((img) => {
+              try {
+                return typeof img.decode === 'function' ? img.decode().catch(() => undefined) : Promise.resolve();
+              } catch {
+                return Promise.resolve();
+              }
+            }),
+          );
+        };
+
         const run = () => {
           const wrapper = document.getElementById('notes-wrapper');
           if (wrapper) {
@@ -2834,11 +2870,13 @@ export function renderCharacterPdfHtml(input: {
                     wrap.className = 'page2-gifts-inline-wrap';
                     wrap.appendChild(frag);
 
-                    const loreInPack = pack.querySelector && pack.querySelector('.lore-box');
-                    if (loreInPack && loreInPack.parentElement) {
-                      loreInPack.parentElement.insertBefore(wrap, loreInPack.nextSibling);
+                    // IMPORTANT: this is a full-width table. Place it after Allies/Enemies blocks on page 2,
+                    // not inside the packed half-width grid.
+                    const enemiesRow = layout.querySelector && layout.querySelector('.page2-enemies-row');
+                    if (enemiesRow && enemiesRow.parentElement) {
+                      enemiesRow.parentElement.insertBefore(wrap, enemiesRow.nextSibling);
                     } else {
-                      pack.appendChild(wrap);
+                      layout.appendChild(wrap);
                     }
 
                     const EPS_PX = 3.0;
@@ -2868,8 +2906,15 @@ export function renderCharacterPdfHtml(input: {
             if (stash && col1 && col2) {
               const EPS = 18; // be conservative to avoid spilling due to fractional print rounding
 
+              // IMPORTANT: use a fixed page boundary for all "fits in page" checks.
+              // Using the support group's own rect is incorrect because it grows as we append rows,
+              // making the boundary "move" and causing occasional overflow by a few rows.
+              const page3Root =
+                page3SupportGroup.closest('.page.page3') ?? document.querySelector('.page.page3');
+              const boundaryEl = page3Root ?? page3SupportGroup;
+
               const boundaryBottom = () => {
-                const r = page3SupportGroup.getBoundingClientRect();
+                const r = boundaryEl.getBoundingClientRect();
                 return r.bottom - EPS;
               };
 
@@ -2887,6 +2932,7 @@ export function renderCharacterPdfHtml(input: {
 
               const buildGeneralGearEmptyRow = () => {
                 const tr = document.createElement('tr');
+                tr.dataset.padRow = '1';
                 tr.innerHTML =
                   '<td class="equip-fit equip-right">&nbsp;</td>' +
                   '<td>&nbsp;</td>' +
@@ -2904,27 +2950,55 @@ export function renderCharacterPdfHtml(input: {
                 // Ensure there's at least one row to measure/pad from.
                 if (tbody.rows.length === 0) tbody.appendChild(buildGeneralGearEmptyRow());
 
-                const measureRowHeight = () => {
+                const isPadRow = (tr) => Boolean(tr && tr.dataset && tr.dataset.padRow === '1');
+
+                const measurePadRowHeight = () => {
+                  const probe = buildGeneralGearEmptyRow();
+                  tbody.appendChild(probe);
+                  const h = probe.getBoundingClientRect().height;
+                  tbody.removeChild(probe);
+                  return Number.isFinite(h) && h > 0 ? h : 16;
+                };
+
+                // NOTE: Chrome's printed pagination can be slightly more strict than DOM measurements
+                // (especially with tables + repeating headers). Keep a conservative buffer in "row units"
+                // so we never create a tiny spill page with a few empty rows.
+                const padRowH = measurePadRowHeight();
+                const BOTTOM_BUFFER_ROWS = 7;
+                const bottomBufferPx = Math.max(12, Math.ceil(padRowH * BOTTOM_BUFFER_ROWS + 2));
+                const safeBoundaryBottom = () => boundaryBottom() - bottomBufferPx;
+
+                // Iteratively add rows until the next one would overflow.
+                // (The arithmetic approach is fragile because row height can change with wrapping/images/fonts.)
+                const MAX_PAD_ROWS = 260; // safety guard (~3 pages worth of tiny rows)
+                for (let i = 0; i < MAX_PAD_ROWS; i++) {
+                  const boundary = safeBoundaryBottom();
                   const before = gearBox.getBoundingClientRect().bottom;
+                  if (!Number.isFinite(boundary) || !Number.isFinite(before)) break;
+                  if (before >= boundary) break;
+
                   const probe = buildGeneralGearEmptyRow();
                   tbody.appendChild(probe);
                   const after = gearBox.getBoundingClientRect().bottom;
-                  tbody.removeChild(probe);
-                  const h = after - before;
-                  return Number.isFinite(h) && h > 0 ? h : 14;
-                };
 
-                const rowH = measureRowHeight();
-                const remaining = boundaryBottom() - gearBox.getBoundingClientRect().bottom;
-                const SAFE_PX = 14;
-                const rowsToAdd = Math.max(0, Math.floor((remaining - SAFE_PX) / rowH) - 1);
+                  // If appending doesn't grow the box, stop to avoid infinite loops.
+                  if (!(Number.isFinite(after) && after > before + 0.2)) {
+                    tbody.removeChild(probe);
+                    break;
+                  }
 
-                for (let i = 0; i < rowsToAdd; i++) tbody.appendChild(buildGeneralGearEmptyRow());
+                  if (after > boundary) {
+                    tbody.removeChild(probe);
+                    break;
+                  }
+                }
 
-                // Final safeguard for fractional rounding: remove extra rows if we still spill.
-                for (let i = 0; i < 20; i++) {
-                  if (gearBox.getBoundingClientRect().bottom <= boundaryBottom()) break;
-                  if (tbody.rows.length <= 1) break;
+                // Final safeguard: if we still spill, remove ONLY padding rows from the bottom.
+                for (let i = 0; i < MAX_PAD_ROWS; i++) {
+                  const boundary = safeBoundaryBottom();
+                  if (gearBox.getBoundingClientRect().bottom <= boundary) break;
+                  const last = tbody.rows[tbody.rows.length - 1];
+                  if (!last || !isPadRow(last)) break;
                   tbody.deleteRow(tbody.rows.length - 1);
                 }
               };
@@ -3004,8 +3078,13 @@ export function renderCharacterPdfHtml(input: {
           }
 
         };
+
+        // Ensure layout-affecting assets are ready before we measure/pad to the bottom of the page.
+        await waitForAssets();
+
         requestAnimationFrame(() => requestAnimationFrame(() => {
           run();
+          // One more frame to let DOM moves/padding settle before signaling Playwright.
           requestAnimationFrame(() => { window.__pdfReady = true; });
         }));
       })();

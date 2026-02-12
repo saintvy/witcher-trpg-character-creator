@@ -14,6 +14,7 @@ export type CharacterPdfPage1Vm = {
     gender: string;
     age: string;
     profession: string;
+    school?: string;
     definingSkill: string;
   };
   computed: {
@@ -323,16 +324,24 @@ export function mapCharacterJsonToPage1Vm(
         ? definingName
         : '';
 
-  const base = {
+  const base: CharacterPdfPage1Vm['base'] = {
     name: getFirstString(characterJson, ['name', 'characterName', 'fullName']) || i18n.defaults.characterName,
     race: getFirstString(characterJson, ['race']) || '',
     gender: getFirstString(characterJson, ['gender']) || '',
     age: getFirstString(characterJson, ['age']) || '',
     profession: getFirstString(characterJson, ['profession', 'role', 'class', 'career']) || '',
+    school: (getFirstString(characterJson, ['characterRaw.school', 'school']) || '').trim() || undefined,
     definingSkill: definingText,
   };
 
-  const computed = {
+  const statTotal = (id: string): number => {
+    const s = readStat(characterJson, id);
+    return (s.cur ?? 0) + (s.bonus ?? 0) + (s.raceBonus ?? 0);
+  };
+  const resolveVal = Math.floor((5 * (statTotal('WILL') + statTotal('INT'))) / 2);
+  const resolveText = Number.isFinite(resolveVal) ? String(resolveVal) : '';
+
+  const computed: CharacterPdfPage1Vm['computed'] = {
     run: readCalcCurString(characterJson, 'run'),
     leap: readCalcCurString(characterJson, 'leap'),
     stability: readCalcCurString(characterJson, 'STUN'),
@@ -367,7 +376,7 @@ export function mapCharacterJsonToPage1Vm(
     { id: 'carry', label: i18n.consumables.label.carry, max: carryMax, current: carriedText },
     { id: 'hp', label: i18n.consumables.label.hp, max: readCalcCurString(characterJson, 'max_HP'), current: '' },
     { id: 'sta', label: i18n.consumables.label.sta, max: readCalcCurString(characterJson, 'STA'), current: '' },
-    { id: 'resolve', label: i18n.consumables.label.resolve, max: '', current: '' },
+    { id: 'resolve', label: i18n.consumables.label.resolve, max: resolveText, current: '' },
     { id: 'luck', label: i18n.consumables.label.luck, max: asString(asRecord(getPath(characterJson, 'statistics.LUCK'))?.cur) ?? '', current: '' },
   ];
 
@@ -452,17 +461,19 @@ export function mapCharacterJsonToPage1Vm(
     ? (prof?.branches as unknown[]).map((x) => asString(x) ?? '').filter(Boolean)
     : [];
   const colors: Array<'blue' | 'green' | 'red'> = ['blue', 'green', 'red'];
+  const abbrByParam: Record<string, string> = {
+    INT: i18n.stats.abbr.INT,
+    REF: i18n.stats.abbr.REF,
+    DEX: i18n.stats.abbr.DEX,
+    BODY: i18n.stats.abbr.BODY,
+    SPD: i18n.stats.abbr.SPD,
+    EMP: i18n.stats.abbr.EMP,
+    CRA: i18n.stats.abbr.CRA,
+    WILL: i18n.stats.abbr.WILL,
+  };
   const paramToAbbr = (param: string | null | undefined): string => {
     const p = (param ?? '').toUpperCase();
-    if (p === 'INT') return 'INT';
-    if (p === 'REF') return 'REF';
-    if (p === 'DEX') return 'DEX';
-    if (p === 'BODY') return 'BODY';
-    if (p === 'SPD') return 'SPD';
-    if (p === 'EMP') return 'EMP';
-    if (p === 'CRA') return 'CRA';
-    if (p === 'WILL') return 'WILL';
-    return '';
+    return abbrByParam[p] ?? '';
   };
   const branches: CharacterPdfPage1Vm['professional']['branches'] = colors.map((color, index) => {
     const title =
