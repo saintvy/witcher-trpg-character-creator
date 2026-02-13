@@ -59,12 +59,22 @@ type NextQuestionResponse = {
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const RUN_SEED_STORAGE_KEY = "wcc_builder_run_seed";
 const RUN_PROGRESS_STORAGE_PREFIX = "wcc_builder_progress";
+const IMPORT_EXPORT_SCHEMA_VERSION = 1;
+
+type BuilderProgressExport = {
+  v: number;
+  kind: "wcc_builder_progress";
+  seed: string;
+  lang: string;
+  answers: AnswerInput[];
+  ts: number;
+};
 
 export default function BuilderPage() {
   const { lang, mounted } = useLanguage();
   // Use default language until mounted to avoid hydration mismatch
   const displayLang = mounted ? lang : "en";
-  const [runSeed] = useState(() => {
+  const [runSeed, setRunSeed] = useState(() => {
     try {
       const existing = sessionStorage.getItem(RUN_SEED_STORAGE_KEY);
       if (existing && existing.trim().length > 0) return existing;
@@ -100,6 +110,7 @@ export default function BuilderPage() {
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
   const [copyGenerateSuccess, setCopyGenerateSuccess] = useState(false);
   const historyContainerRef = useRef<HTMLDivElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const didInitRef = useRef(false);
   const lastLangRef = useRef<string | null>(null);
 
@@ -124,18 +135,19 @@ export default function BuilderPage() {
   }, [progressStorageKey]);
 
   const saveAnswers = useCallback(
-    (answers: AnswerInput[]) => {
+    (answers: AnswerInput[], seedOverride?: string) => {
+      const key = `${RUN_PROGRESS_STORAGE_PREFIX}:${seedOverride ?? runSeed}`;
       try {
         if (!answers || answers.length === 0) {
-          sessionStorage.removeItem(progressStorageKey);
+          sessionStorage.removeItem(key);
           return;
         }
-        sessionStorage.setItem(progressStorageKey, JSON.stringify({ v: 1, answers, ts: Date.now() }));
+        sessionStorage.setItem(key, JSON.stringify({ v: 1, answers, ts: Date.now() }));
       } catch {
         // ignore storage failures
       }
     },
-    [progressStorageKey],
+    [runSeed],
   );
 
   const clearSavedAnswers = useCallback(() => {
@@ -145,6 +157,34 @@ export default function BuilderPage() {
       // ignore
     }
   }, [progressStorageKey]);
+
+  const normalizeImportedAnswers = useCallback((value: unknown): AnswerInput[] | null => {
+    if (!Array.isArray(value)) return null;
+    const out: AnswerInput[] = [];
+    for (const item of value) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      const rec = item as Record<string, unknown>;
+      const questionId = typeof rec.questionId === "string" ? rec.questionId.trim() : "";
+      if (!questionId) return null;
+      if (!Array.isArray(rec.answerIds) || !rec.answerIds.every((x) => typeof x === "string")) return null;
+
+      const answerIds = (rec.answerIds as string[]).slice();
+      let normalized: AnswerInput = { questionId, answerIds };
+      if (rec.value !== undefined) {
+        if (!rec.value || typeof rec.value !== "object" || Array.isArray(rec.value)) return null;
+        const valueObj = rec.value as Record<string, unknown>;
+        if (valueObj.type === "number" && typeof valueObj.data === "number" && Number.isFinite(valueObj.data)) {
+          normalized = { ...normalized, value: { type: "number", data: valueObj.data } };
+        } else if (valueObj.type === "string" && typeof valueObj.data === "string") {
+          normalized = { ...normalized, value: { type: "string", data: valueObj.data } };
+        } else {
+          return null;
+        }
+      }
+      out.push(normalized);
+    }
+    return out;
+  }, []);
 
   const questionMetadata = useMemo(() => (question?.metadata ?? {}) as Record<string, unknown>, [question]);
   const shopConfig = useMemo(() => {
@@ -330,14 +370,15 @@ export default function BuilderPage() {
   }, [question]);
 
   const fetchNext = useCallback(
-    async (answers: AnswerInput[]) => {
+    async (answers: AnswerInput[], seedOverride?: string) => {
       setLoading(true);
       setError(null);
       try {
+        const effectiveSeed = seedOverride ?? runSeed;
         const response = await fetch(`${API_URL}/survey/next`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ answers, lang, seed: runSeed }),
+          body: JSON.stringify({ answers, lang, seed: effectiveSeed }),
         });
 
         if (!response.ok) {
@@ -349,7 +390,7 @@ export default function BuilderPage() {
         
         // Сохраняем отформатированный JSON для debug
         const nextAnswers = payload.historyAnswers ?? answers;
-        saveAnswers(nextAnswers);
+        saveAnswers(nextAnswers, effectiveSeed);
         setLastResponseJson(JSON.stringify(payload, null, 2));
         setHistory(nextAnswers);
         setHistoryQuestions(payload.historyQuestions ?? []);
@@ -1164,6 +1205,77 @@ export default function BuilderPage() {
     }
   }, [lastResponseJson, displayLang]);
 
+  const exportProgress = useCallback(() => {
+    const payload: BuilderProgressExport = {
+      v: IMPORT_EXPORT_SCHEMA_VERSION,
+      kind: "wcc_builder_progress",
+      seed: runSeed,
+      lang,
+      answers: history,
+      ts: Date.now(),
+    };
+
+    const date = new Date(payload.ts);
+    const pad2 = (value: number) => String(value).padStart(2, "0");
+    const fileName = `wcc-progress-${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}-${pad2(date.getHours())}${pad2(date.getMinutes())}${pad2(date.getSeconds())}.json`;
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }, [history, lang, runSeed]);
+
+  const openImportPicker = useCallback(() => {
+    importInputRef.current?.click();
+  }, []);
+
+  const importProgress = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+
+      try {
+        setError(null);
+        const raw = await file.text();
+        const parsed = JSON.parse(raw) as unknown;
+
+        let importedSeed = runSeed;
+        let rawAnswers: unknown = parsed;
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          const rec = parsed as Record<string, unknown>;
+          if (typeof rec.seed === "string" && rec.seed.trim().length > 0) {
+            importedSeed = rec.seed.trim();
+          }
+          if ("answers" in rec) {
+            rawAnswers = rec.answers;
+          }
+        }
+
+        const importedAnswers = normalizeImportedAnswers(rawAnswers);
+        if (!importedAnswers) {
+          throw new Error(displayLang === "ru" ? "Некорректный формат файла импорта." : "Invalid import file format.");
+        }
+
+        try {
+          sessionStorage.setItem(RUN_SEED_STORAGE_KEY, importedSeed);
+        } catch {
+          // ignore storage failures
+        }
+
+        setRunSeed(importedSeed);
+        await fetchNext(importedAnswers, importedSeed);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      }
+    },
+    [displayLang, fetchNext, normalizeImportedAnswers, runSeed],
+  );
+
   return (
     <>
       <Topbar title={t.title} subtitle={t.subtitle} />
@@ -1254,51 +1366,76 @@ export default function BuilderPage() {
               </div>
             )}
             <div className="wizard-footer">
-              <button
-                type="button"
-                onClick={() => setShowDebug(true)}
-                className="debug-btn"
-              >
-                🐛 {displayLang === "ru" ? "Debug" : "Debug"}
-              </button>
-              <button
-                type="button"
-                onClick={() => void pickAvatar()}
-                className="debug-btn"
-                disabled={loadingGeneratePdf || loadingGenerateResult}
-                title={displayLang === "ru" ? "Выбрать изображение для аватара" : "Pick avatar image"}
-              >
-                {avatarDataUrl ? (displayLang === "ru" ? "Avatar ✓" : "Avatar ✓") : "Avatar"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowGenerateResult(true);
-                  void loadGenerateResult();
-                }}
-                className="debug-btn"
-                disabled={loadingGenerateResult}
-              >
-                {loadingGenerateResult ? "⏳" : "✨"} {displayLang === "ru" ? "Generate" : "Generate"}
-              </button>
-              <button
-                type="button"
-                onClick={() => void downloadPdf({ alchemy_style: "w2" })}
-                className="debug-btn"
-                disabled={loadingGeneratePdf || loadingGenerateResult}
-                title={displayLang === "ru" ? "Скачать PDF чарника (w2)" : "Download character PDF (w2)"}
-              >
-                {loadingGeneratePdf ? "⏳" : "PDF"} w2
-              </button>
-              <button
-                type="button"
-                onClick={() => void downloadPdf({ alchemy_style: "w1" })}
-                className="debug-btn"
-                disabled={loadingGeneratePdf || loadingGenerateResult}
-                title={displayLang === "ru" ? "Скачать PDF чарника (w1)" : "Download character PDF (w1)"}
-              >
-                {loadingGeneratePdf ? "⏳" : "PDF"} w1
-              </button>
+              <div className="wizard-footer-row">
+                <button
+                  type="button"
+                  onClick={() => setShowDebug(true)}
+                  className="debug-btn"
+                >
+                  🐛 {displayLang === "ru" ? "Debug" : "Debug"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void pickAvatar()}
+                  className="debug-btn"
+                  disabled={loadingGeneratePdf || loadingGenerateResult}
+                  title={displayLang === "ru" ? "Выбрать изображение для аватара" : "Pick avatar image"}
+                >
+                  {avatarDataUrl ? (displayLang === "ru" ? "Avatar ✓" : "Avatar ✓") : "Avatar"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGenerateResult(true);
+                    void loadGenerateResult();
+                  }}
+                  className="debug-btn"
+                  disabled={loadingGenerateResult}
+                >
+                  {loadingGenerateResult ? "⏳" : "✨"} {displayLang === "ru" ? "Generate" : "Generate"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void downloadPdf({ alchemy_style: "w2" })}
+                  className="debug-btn"
+                  disabled={loadingGeneratePdf || loadingGenerateResult}
+                  title={displayLang === "ru" ? "Скачать PDF чарника (w2)" : "Download character PDF (w2)"}
+                >
+                  {loadingGeneratePdf ? "⏳" : "PDF"} w2
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void downloadPdf({ alchemy_style: "w1" })}
+                  className="debug-btn"
+                  disabled={loadingGeneratePdf || loadingGenerateResult}
+                  title={displayLang === "ru" ? "Скачать PDF чарника (w1)" : "Download character PDF (w1)"}
+                >
+                  {loadingGeneratePdf ? "⏳" : "PDF"} w1
+                </button>
+              </div>
+              <div className="wizard-footer-row wizard-footer-row-secondary">
+                <button
+                  type="button"
+                  onClick={exportProgress}
+                  className="debug-btn wizard-footer-half"
+                >
+                  Export
+                </button>
+                <button
+                  type="button"
+                  onClick={openImportPicker}
+                  className="debug-btn wizard-footer-half"
+                >
+                  Import
+                </button>
+              </div>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json,.json"
+                onChange={(event) => void importProgress(event)}
+                style={{ display: "none" }}
+              />
             </div>
             {generatePdfError && (
               <div style={{ marginTop: "6px", color: "#ef4444", fontSize: "12px" }}>
