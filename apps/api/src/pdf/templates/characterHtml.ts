@@ -10,15 +10,15 @@ const assetDataUrlCache = new Map<string, string>();
 const assetFormulaIngredientCache = new Map<string, string>();
 
 const FORMULA_INGREDIENT_NAMES = [
-  'Aether',
-  'Caelum',
-  'Fulgur',
   'Hydragenum',
-  'Quebrith',
-  'Rebis',
-  'Sol',
+  'Fulgur',
   'Vermilion',
+  'Aether',
   'Vitriol',
+  'Sol',
+  'Rebis',
+  'Quebrith',
+  'Caelum',
   'Mutagen',
   'Spirits',
   'Dog Tallow',
@@ -186,8 +186,16 @@ function renderBaseInfo(vm: CharacterPdfPage1Vm): string {
     [vm.i18n.base.age, vm.base.age],
     [vm.i18n.base.profession, vm.base.profession],
     ...(vm.base.school ? ([[schoolLabel, vm.base.school]] as Array<[string, string]>) : []),
-    [vm.i18n.base.definingSkill, vm.base.definingSkill],
   ];
+
+  const defining = vm.base.definingSkillDetails;
+  const definingName = (defining?.name || vm.base.definingSkill || '').trim();
+  const definingParam = (defining?.paramAbbr || '').trim();
+  const definingCur = defining?.cur !== null && defining?.cur !== undefined && defining.cur !== 0 ? escapeHtml(String(defining.cur)) : '';
+  const definingBonus = defining ? renderBonus(defining.bonus, defining.raceBonus) : '';
+  const definingBase = defining?.base ? escapeHtml(defining.base) : '';
+  const definingLeft = [definingName, definingParam ? `(${definingParam})` : ''].filter(Boolean).join(' ');
+  const definingRight = [definingCur, definingBonus, definingBase].filter(Boolean).join('<span class="kv-defining-sep"></span>');
 
   return `
     <table class="kv">
@@ -202,6 +210,17 @@ function renderBaseInfo(vm: CharacterPdfPage1Vm): string {
             `,
           )
           .join('')}
+        <tr class="kv-defining-row kv-defining-head">
+          <td colspan="2" class="kv-defining-cell kv-defining-label">${escapeHtml(vm.i18n.base.definingSkill)}</td>
+        </tr>
+        <tr class="kv-defining-row kv-defining-value">
+          <td colspan="2" class="kv-defining-cell">
+            <div class="kv-defining-line">
+              <span class="kv-defining-left">${escapeHtml(definingLeft)}</span>
+              <span class="kv-defining-right">${definingRight || '&nbsp;'}</span>
+            </div>
+          </td>
+        </tr>
       </tbody>
     </table>
   `;
@@ -1546,9 +1565,9 @@ function renderComponentsTables(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w
 function mutagenColorKey(raw: string): 'b' | 'r' | 'g' | '' {
   const s = (raw ?? '').toLowerCase();
   if (!s) return '';
-  if (s.includes('крас') || s.includes('red')) return 'r';
-  if (s.includes('зел') || s.includes('green')) return 'g';
-  if (s.includes('голуб') || s.includes('син') || s.includes('blue')) return 'b';
+  if (s.includes('\u043A\u0440\u0430\u0441') || s.includes('red')) return 'r';
+  if (s.includes('\u0437\u0435\u043B') || s.includes('green')) return 'g';
+  if (s.includes('\u0433\u043E\u043B\u0443\u0431') || s.includes('\u0441\u0438\u043D') || s.includes('blue')) return 'b';
   return '';
 }
 
@@ -1570,7 +1589,7 @@ function renderMutagensTable(vm: CharacterPdfPage3Vm): string {
   const dataRows = vm.mutagens
     .map((m) => {
       const key = mutagenColorKey(m.color);
-      const letter = key === 'b' ? (lang === 'ru' ? 'С' : 'B') : key === 'r' ? (lang === 'ru' ? 'К' : 'R') : key === 'g' ? (lang === 'ru' ? 'З' : 'G') : '';
+      const letter = key === 'b' ? (lang === 'ru' ? '\u0421' : 'B') : key === 'r' ? (lang === 'ru' ? '\u041A' : 'R') : key === 'g' ? (lang === 'ru' ? '\u0417' : 'G') : '';
       const cls = key ? `mutagen-color mutagen-color-${key}` : 'mutagen-color';
       return `
         <tr>
@@ -1827,6 +1846,7 @@ function renderPage3(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
   return `
     <div class="page page3">
       <div class="page3-layout">
+        <div class="page3-general-gear-overflow" id="page3-general-gear-overflow"></div>
         <div class="page3-recipes-row">${renderRecipesTable(vm, alchemyStyle)}</div>
         <div class="page3-blueprints-row">${renderBlueprintsTable(vm)}</div>
         <div class="page3-components-row">${renderComponentsTables(vm, alchemyStyle)}</div>
@@ -2122,11 +2142,11 @@ function getMagic4Labels(vm: CharacterPdfPage4Vm): {
   const lang = vm.i18n.lang;
   return {
     ...c,
-    name: lang === 'ru' ? 'Имя' : 'Name',
-    staminaCast: lang === 'ru' ? 'Вын' : 'STA',
-    staminaKeeping: lang === 'ru' ? 'Вын+' : 'STA+',
-    distance: lang === 'ru' ? 'Дист.' : 'Rng.',
-    effectTime: lang === 'ru' ? 'Время' : 'Time',
+    name: lang === 'ru' ? '\u0418\u043C\u044F' : 'Name',
+    staminaCast: lang === 'ru' ? '\u0412\u044B\u043D' : 'STA',
+    staminaKeeping: lang === 'ru' ? '\u0412\u044B\u043D+' : 'STA+',
+    distance: lang === 'ru' ? '\u0414\u0438\u0441\u0442.' : 'Rng.',
+    effectTime: lang === 'ru' ? '\u0412\u0440\u0435\u043C\u044F' : 'Time',
   };
 }
 
@@ -2189,7 +2209,7 @@ function renderItemEffectsGlossaryTable(vm: CharacterPdfPage4Vm): string {
     .map((e) => {
       const name = escapeHtml(e.name ?? '');
       const value = escapeHtml(e.value ?? '').replace(/\r?\n/g, '<br>');
-      const body = value ? `<b>${name}</b> — ${value}` : `<b>${name}</b>`;
+      const body = value ? `<b>${name}</b> \u2014 ${value}` : `<b>${name}</b>`;
       return `
         <tr>
           <td class="item-effects-cell">${body}</td>
@@ -2238,10 +2258,11 @@ export function renderCharacterPdfHtml(input: {
   const page4 = input.page4;
   const alchemyStyle = input.options?.alchemy_style ?? 'w2';
   const onlyGiftsMagic = page4.gifts.length > 0 && !page4.showSpellsSigns && !page4.showInvocations && !page4.showRituals && !page4.showHexes;
+  const noMagicVisible = page4.gifts.length === 0 && !page4.showSpellsSigns && !page4.showInvocations && !page4.showRituals && !page4.showHexes;
   const page2GiftsInlineTpl = onlyGiftsMagic
     ? box(page4.i18n.source.magicGiftsTitle, renderGiftsTable(page4), 'magic4-gifts-box magic4-gifts-inline')
     : '';
-  const page2ItemEffectsInlineTpl = onlyGiftsMagic && page4.showItemEffects
+  const page2ItemEffectsInlineTpl = (onlyGiftsMagic || noMagicVisible) && page4.showItemEffects
     ? box(page4.i18n.effects.title, renderItemEffectsGlossaryTable(page4), 'item-effects-box item-effects-inline')
     : '';
   return `<!doctype html>
@@ -2249,7 +2270,7 @@ export function renderCharacterPdfHtml(input: {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(vm.base.name)} — ${escapeHtml(vm.i18n.titleSuffix)}</title>
+    <title>${escapeHtml(vm.base.name)} \u2014 ${escapeHtml(vm.i18n.titleSuffix)}</title>
     <style>
       @page { size: A4; margin: 6mm; }
       * { box-sizing: border-box; }
@@ -2331,6 +2352,14 @@ export function renderCharacterPdfHtml(input: {
         background-position: 0 50%;
       }
       .page3-recipes-row { min-width: 0; }
+      .page3-general-gear-overflow { display: none; }
+      .page3-general-gear-overflow.page3-visible { display: flex; flex-direction: column; gap: 3mm; }
+      .page3-general-gear-overflow-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3mm;
+        align-items: start;
+      }
       .page3-components-group {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
@@ -2422,6 +2451,14 @@ export function renderCharacterPdfHtml(input: {
       .kv tr:last-child td { border-bottom: 0; }
       .kv-k { width: 46%; font-weight: 800; }
       .kv-v { width: 54%; }
+      .kv-defining-cell { width: 100%; }
+      .kv-defining-label { font-weight: 800; }
+      .kv-defining-head td { border-bottom-color: transparent !important; }
+      .kv-defining-value td { border-bottom: 0 !important; }
+      .kv-defining-line { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+      .kv-defining-left { flex: 1; min-width: 0; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .kv-defining-right { flex: 0 0 auto; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .kv-defining-sep { display: inline-block; width: 8px; }
 
       .params-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
       .params-table td { border-bottom: 1px solid #e5e7eb; padding: 2px 2px; }
@@ -2903,56 +2940,63 @@ export function renderCharacterPdfHtml(input: {
                 if (row2) row2.remove();
                 if (siblingsFull) siblingsFull.remove();
 
-                // If the character has only ONE magic table (gifts), try to inline it on page 2 (near the Lore block).
-                // If present, also try to inline the item effects glossary right after it.
-                // If everything fits, hide page 4 entirely so we don't start a new page.
+                // Try to inline "gifts" and/or "item effects" on page 2.
+                // Supported modes:
+                // - gifts only magic (+ optional item effects),
+                // - no magic tables at all (+ item effects only).
                 const giftsTpl = document.getElementById('page2-gifts-tpl');
-                if (giftsTpl && giftsTpl.tagName === 'TEMPLATE' && giftsTpl.innerHTML && giftsTpl.innerHTML.trim()) {
+                const effectsTpl = document.getElementById('page2-item-effects-tpl');
+                const giftsFrag =
+                  giftsTpl && giftsTpl.tagName === 'TEMPLATE' && giftsTpl.innerHTML && giftsTpl.innerHTML.trim() && giftsTpl.content
+                    ? giftsTpl.content.cloneNode(true)
+                    : null;
+                const effectsFrag =
+                  effectsTpl && effectsTpl.tagName === 'TEMPLATE' && effectsTpl.innerHTML && effectsTpl.innerHTML.trim() && effectsTpl.content
+                    ? effectsTpl.content.cloneNode(true)
+                    : null;
+
+                if (giftsFrag || effectsFrag) {
                   const page2El = layout.closest('.page') || document.querySelector('.page.page2');
                   const page4El = document.querySelector('.page.page4');
-                  const frag = giftsTpl.content ? giftsTpl.content.cloneNode(true) : null;
-                  if (page2El && frag) {
-                    const wrap = document.createElement('div');
-                    wrap.className = 'page2-gifts-inline-wrap';
-                    wrap.appendChild(frag);
+                  if (page2El) {
+                    const insertAfterOrAppend = (node, refEl) => {
+                      if (refEl && refEl.parentElement) refEl.parentElement.insertBefore(node, refEl.nextSibling);
+                      else layout.appendChild(node);
+                    };
 
                     // IMPORTANT: this is a full-width table. Place it after Allies/Enemies blocks on page 2,
                     // not inside the packed half-width grid.
                     const enemiesRow = layout.querySelector && layout.querySelector('.page2-enemies-row');
-                    if (enemiesRow && enemiesRow.parentElement) {
-                      enemiesRow.parentElement.insertBefore(wrap, enemiesRow.nextSibling);
-                    } else {
-                      layout.appendChild(wrap);
+
+                    let giftsWrap = null;
+                    if (giftsFrag) {
+                      giftsWrap = document.createElement('div');
+                      giftsWrap.className = 'page2-gifts-inline-wrap';
+                      giftsWrap.appendChild(giftsFrag);
+                      insertAfterOrAppend(giftsWrap, enemiesRow);
                     }
-
-                    const EPS_PX = 3.0;
-                    const page2Bottom = page2El.getBoundingClientRect().bottom - EPS_PX;
-
-                    const effectsTpl = document.getElementById('page2-item-effects-tpl');
-                    const effectsFrag = effectsTpl && effectsTpl.tagName === 'TEMPLATE' && effectsTpl.innerHTML && effectsTpl.innerHTML.trim() && effectsTpl.content
-                      ? effectsTpl.content.cloneNode(true)
-                      : null;
 
                     let effectsWrap = null;
                     if (effectsFrag) {
                       effectsWrap = document.createElement('div');
                       effectsWrap.className = 'page2-item-effects-inline-wrap';
                       effectsWrap.appendChild(effectsFrag);
-                      if (wrap.parentElement) {
-                        wrap.parentElement.insertBefore(effectsWrap, wrap.nextSibling);
-                      } else {
-                        layout.appendChild(effectsWrap);
-                      }
+                      insertAfterOrAppend(effectsWrap, giftsWrap || enemiesRow);
                     }
 
-                    const bottomNow = (effectsWrap ?? wrap).getBoundingClientRect().bottom;
-                    const fits = Number.isFinite(page2Bottom) && Number.isFinite(bottomNow) && bottomNow <= page2Bottom;
+                    const lastInserted = effectsWrap || giftsWrap;
+                    if (lastInserted) {
+                      const EPS_PX = 3.0;
+                      const page2Bottom = page2El.getBoundingClientRect().bottom - EPS_PX;
+                      const bottomNow = lastInserted.getBoundingClientRect().bottom;
+                      const fits = Number.isFinite(page2Bottom) && Number.isFinite(bottomNow) && bottomNow <= page2Bottom;
 
-                    if (fits) {
-                      if (page4El) page4El.classList.add('page-hidden');
-                    } else {
-                      if (effectsWrap) effectsWrap.remove();
-                      wrap.remove();
+                      if (fits) {
+                        if (page4El) page4El.classList.add('page-hidden');
+                      } else {
+                        if (effectsWrap) effectsWrap.remove();
+                        if (giftsWrap) giftsWrap.remove();
+                      }
                     }
                   }
                 }
@@ -2967,6 +3011,7 @@ export function renderCharacterPdfHtml(input: {
             const stash = document.getElementById('page3-support-stash');
             const col1 = document.getElementById('page3-support-col1');
             const col2 = document.getElementById('page3-support-col2');
+            const gearOverflowHost = document.getElementById('page3-general-gear-overflow');
 
             if (stash && col1 && col2) {
               const EPS = 18; // be conservative to avoid spilling due to fractional print rounding
@@ -2981,12 +3026,6 @@ export function renderCharacterPdfHtml(input: {
               const boundaryBottom = () => {
                 const r = boundaryEl.getBoundingClientRect();
                 return r.bottom - EPS;
-              };
-
-              const colContentBottom = (colEl) => {
-                const last = colEl.lastElementChild;
-                if (last) return last.getBoundingClientRect().bottom;
-                return colEl.getBoundingClientRect().top;
               };
 
               const fitsLastChild = (colEl) => {
@@ -3007,64 +3046,97 @@ export function renderCharacterPdfHtml(input: {
                 return tr;
               };
 
-              const padGeneralGearToBottom = (gearBox) => {
+              const normalizeCellText = (value) => String(value ?? '').replace(/\u00a0/g, ' ').trim();
+              const isMeaningfulGearRow = (tr) => {
+                if (!tr || !tr.cells || tr.cells.length === 0) return false;
+                return Array.from(tr.cells).some((cell) => normalizeCellText(cell.textContent) !== '');
+              };
+              const isPadRow = (tr) => Boolean(tr && tr.dataset && tr.dataset.padRow === '1');
+              const getGeneralGearTbody = (gearBox) => {
                 const table = gearBox && gearBox.querySelector && gearBox.querySelector('table.equip-general-gear');
-                const tbody = table && table.tBodies && table.tBodies[0];
-                if (!tbody) return;
+                return table && table.tBodies && table.tBodies[0] ? table.tBodies[0] : null;
+              };
+              const cloneGearBoxEmpty = (sourceBox, extraClass = '') => {
+                const clone = sourceBox.cloneNode(true);
+                if (extraClass) clone.className = (clone.className + ' ' + extraClass).trim();
+                const tbody = getGeneralGearTbody(clone);
+                if (tbody) tbody.innerHTML = '';
+                return clone;
+              };
+              const measureGeneralGearRowHeight = (tbody) => {
+                if (!tbody) return 16;
+                const probe = buildGeneralGearEmptyRow();
+                tbody.appendChild(probe);
+                const h = probe.getBoundingClientRect().height;
+                tbody.removeChild(probe);
+                return Number.isFinite(h) && h > 0 ? h : 16;
+              };
+              const isGearBoxWithinBoundary = (gearBox, reserveRows = 0) => {
+                const tbody = getGeneralGearTbody(gearBox);
+                const rowH = measureGeneralGearRowHeight(tbody);
+                const reservePx = Math.max(8, Math.ceil(rowH * reserveRows));
+                return gearBox.getBoundingClientRect().bottom <= boundaryBottom() - reservePx;
+              };
+              const fillGearRowsToLimit = (gearBox, sourceRows, startIndex, reserveRows = 1.8) => {
+                const tbody = getGeneralGearTbody(gearBox);
+                if (!tbody) return startIndex;
+                tbody.innerHTML = '';
 
-                // Ensure there's at least one row to measure/pad from.
+                const rowH = measureGeneralGearRowHeight(tbody);
+                // Printed pagination is stricter than screen metrics. Keep a conservative reserve.
+                const reservePx = Math.max(8, Math.ceil(rowH * reserveRows));
+                const safeBoundaryBottom = () => boundaryBottom() - reservePx;
+
+                let idx = Math.max(0, startIndex);
+                while (idx < sourceRows.length) {
+                  const row = sourceRows[idx].cloneNode(true);
+                  tbody.appendChild(row);
+                  if (gearBox.getBoundingClientRect().bottom > safeBoundaryBottom()) {
+                    tbody.removeChild(row);
+                    break;
+                  }
+                  idx++;
+                }
+
+                if (tbody.rows.length === 0) tbody.appendChild(buildGeneralGearEmptyRow());
+                return idx;
+              };
+              const padGearRowsToBottom = (gearBox) => {
+                const tbody = getGeneralGearTbody(gearBox);
+                if (!tbody) return;
                 if (tbody.rows.length === 0) tbody.appendChild(buildGeneralGearEmptyRow());
 
-                const isPadRow = (tr) => Boolean(tr && tr.dataset && tr.dataset.padRow === '1');
+                const rowH = measureGeneralGearRowHeight(tbody);
+                const reservePx = Math.max(8, Math.ceil(rowH * 0.55));
+                const safeBoundaryBottom = () => boundaryBottom() - reservePx;
 
-                const measurePadRowHeight = () => {
-                  const probe = buildGeneralGearEmptyRow();
-                  tbody.appendChild(probe);
-                  const h = probe.getBoundingClientRect().height;
-                  tbody.removeChild(probe);
-                  return Number.isFinite(h) && h > 0 ? h : 16;
-                };
-
-                // NOTE: Chrome's printed pagination can be slightly more strict than DOM measurements
-                // (especially with tables + repeating headers). Keep a conservative buffer in "row units"
-                // so we never create a tiny spill page with a few empty rows.
-                const padRowH = measurePadRowHeight();
-                const BOTTOM_BUFFER_ROWS = 7;
-                const bottomBufferPx = Math.max(12, Math.ceil(padRowH * BOTTOM_BUFFER_ROWS + 2));
-                const safeBoundaryBottom = () => boundaryBottom() - bottomBufferPx;
-
-                // Iteratively add rows until the next one would overflow.
-                // (The arithmetic approach is fragile because row height can change with wrapping/images/fonts.)
-                const MAX_PAD_ROWS = 260; // safety guard (~3 pages worth of tiny rows)
+                const MAX_PAD_ROWS = 260;
                 for (let i = 0; i < MAX_PAD_ROWS; i++) {
-                  const boundary = safeBoundaryBottom();
                   const before = gearBox.getBoundingClientRect().bottom;
-                  if (!Number.isFinite(boundary) || !Number.isFinite(before)) break;
-                  if (before >= boundary) break;
+                  if (!Number.isFinite(before) || before >= safeBoundaryBottom()) break;
 
                   const probe = buildGeneralGearEmptyRow();
                   tbody.appendChild(probe);
                   const after = gearBox.getBoundingClientRect().bottom;
 
-                  // If appending doesn't grow the box, stop to avoid infinite loops.
                   if (!(Number.isFinite(after) && after > before + 0.2)) {
                     tbody.removeChild(probe);
                     break;
                   }
-
-                  if (after > boundary) {
+                  if (after > safeBoundaryBottom()) {
                     tbody.removeChild(probe);
                     break;
                   }
                 }
-
-                // Final safeguard: if we still spill, remove ONLY padding rows from the bottom.
-                for (let i = 0; i < MAX_PAD_ROWS; i++) {
-                  const boundary = safeBoundaryBottom();
-                  if (gearBox.getBoundingClientRect().bottom <= boundary) break;
-                  const last = tbody.rows[tbody.rows.length - 1];
-                  if (!last || !isPadRow(last)) break;
-                  tbody.deleteRow(tbody.rows.length - 1);
+              };
+              const fillGearRowsFixedCount = (gearBox, dataRows, totalRows) => {
+                const tbody = getGeneralGearTbody(gearBox);
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                const rowTotal = Math.max(1, totalRows);
+                for (let i = 0; i < rowTotal; i++) {
+                  if (i < dataRows.length) tbody.appendChild(dataRows[i].cloneNode(true));
+                  else tbody.appendChild(buildGeneralGearEmptyRow());
                 }
               };
 
@@ -3077,63 +3149,98 @@ export function renderCharacterPdfHtml(input: {
                 '.trophies-box',
               ];
 
-              let useCol2 = false;
+              // Swap columns: mandatory General Gear -> col1, Currency/Transport/optional General Gear -> col2.
+              let useMandatoryColFallback = false;
               for (const sel of firstColumnOrder) {
                 const el = pick(sel);
                 if (!el) continue;
-                if (!useCol2) {
-                  col1.appendChild(el);
-                  if (!fitsLastChild(col1)) {
-                    col1.removeChild(el);
-                    useCol2 = true;
-                    col2.appendChild(el);
+                if (!useMandatoryColFallback) {
+                  col2.appendChild(el);
+                  if (!fitsLastChild(col2)) {
+                    col2.removeChild(el);
+                    useMandatoryColFallback = true;
+                    col1.appendChild(el);
                   }
                 } else {
-                  col2.appendChild(el);
+                  col1.appendChild(el);
                 }
               }
 
               const gearBox = pick('.general-gear-box');
               if (gearBox) {
-                col2.appendChild(gearBox);
-                padGeneralGearToBottom(gearBox);
+                const sourceTbody = getGeneralGearTbody(gearBox);
+                const sourceRows = sourceTbody
+                  ? Array.from(sourceTbody.rows)
+                      .filter((tr) => isMeaningfulGearRow(tr))
+                      .map((tr) => tr.cloneNode(true))
+                  : [];
 
-                // Add an extra empty-only General Gear table to col1 if it fits (to fill remaining space).
-                const clone = gearBox.cloneNode(true);
-                const cloneTable = clone.querySelector && clone.querySelector('table.equip-general-gear');
-                const cloneTbody = cloneTable && cloneTable.tBodies && cloneTable.tBodies[0];
-                if (cloneTbody) {
-                  cloneTbody.innerHTML = '';
-                  cloneTbody.appendChild(buildGeneralGearEmptyRow());
+                // Mandatory table.
+                col1.appendChild(gearBox);
+                let nextSourceIndex = 0;
+
+                // Optional table in the neighboring column.
+                const optionalGearBox = cloneGearBoxEmpty(gearBox, 'general-gear-optional-box');
+                col2.appendChild(optionalGearBox);
+                if (fitsLastChild(col2)) {
+                  let mandatoryReserveRows = 2.6;
+                  const OPTIONAL_RESERVE_ROWS = 1.8;
+                  const MAX_PLACE_ATTEMPTS = 6;
+                  for (let attempt = 0; attempt < MAX_PLACE_ATTEMPTS; attempt++) {
+                    nextSourceIndex = fillGearRowsToLimit(gearBox, sourceRows, 0, mandatoryReserveRows);
+                    if (nextSourceIndex < sourceRows.length) {
+                      nextSourceIndex = fillGearRowsToLimit(optionalGearBox, sourceRows, nextSourceIndex, OPTIONAL_RESERVE_ROWS);
+                    } else {
+                      const optionalTbody = getGeneralGearTbody(optionalGearBox);
+                      if (optionalTbody && optionalTbody.rows.length === 0) optionalTbody.appendChild(buildGeneralGearEmptyRow());
+                    }
+
+                    if (isGearBoxWithinBoundary(gearBox, mandatoryReserveRows + 0.35)) break;
+                    mandatoryReserveRows += 0.55;
+                  }
+                  padGearRowsToBottom(optionalGearBox);
+                } else {
+                  col2.removeChild(optionalGearBox);
+                  nextSourceIndex = fillGearRowsToLimit(gearBox, sourceRows, 0, 3.0);
                 }
-                const measureMinHeight = (el, widthPx) => {
-                  const probe = document.createElement('div');
-                  probe.style.cssText = 'position:absolute;visibility:hidden;left:-10000px;top:-10000px;';
-                  probe.style.width = String(Math.max(1, Math.floor(widthPx))) + 'px';
-                  document.body.appendChild(probe);
-                  try {
-                    probe.appendChild(el);
-                    const h = el.getBoundingClientRect().height;
-                    probe.removeChild(el);
-                    return Number.isFinite(h) ? h : 0;
-                  } finally {
-                    probe.remove();
-                  }
-                };
 
-                const col1Width = col1.getBoundingClientRect().width || page3SupportGroup.getBoundingClientRect().width / 2;
-                const remainingCol1 = boundaryBottom() - colContentBottom(col1);
-                const minH = measureMinHeight(clone, col1Width);
+                // If two page-2 tables are not enough, continue on the next page with two half-width tables.
+                const remainingRows = sourceRows.slice(nextSourceIndex);
+                if (remainingRows.length > 0 && gearOverflowHost) {
+                  const leftDataCount = Math.ceil(remainingRows.length / 2);
+                  const leftDataRows = remainingRows.slice(0, leftDataCount);
+                  const rightDataRows = remainingRows.slice(leftDataCount);
+                  const rowsPerTable = Math.max(leftDataRows.length, rightDataRows.length) + 3;
 
-                const SAFE_MIN_PX = 16;
-                if (remainingCol1 >= minH + SAFE_MIN_PX) {
-                  col1.appendChild(clone);
-                  if (!fitsLastChild(col1)) {
-                    col1.removeChild(clone);
-                  } else {
-                    padGeneralGearToBottom(clone);
-                    if (!fitsLastChild(col1)) col1.removeChild(clone);
+                  const overflowRow = document.createElement('div');
+                  overflowRow.className = 'page3-general-gear-overflow-row';
+                  const overflowLeftBox = cloneGearBoxEmpty(gearBox, 'general-gear-overflow-box');
+                  const overflowRightBox = cloneGearBoxEmpty(gearBox, 'general-gear-overflow-box');
+                  overflowRow.appendChild(overflowLeftBox);
+                  overflowRow.appendChild(overflowRightBox);
+                  gearOverflowHost.appendChild(overflowRow);
+
+                  fillGearRowsFixedCount(overflowLeftBox, leftDataRows, rowsPerTable);
+                  fillGearRowsFixedCount(overflowRightBox, rightDataRows, rowsPerTable);
+
+                  // Keep both tables on one printed page when possible (trim only padding rows).
+                  const overflowFitsBoundary = () => overflowRow.getBoundingClientRect().bottom <= boundaryBottom();
+                  if (!overflowFitsBoundary()) {
+                    const leftBody = getGeneralGearTbody(overflowLeftBox);
+                    const rightBody = getGeneralGearTbody(overflowRightBox);
+                    if (leftBody && rightBody) {
+                      const MAX_TRIMS = 400;
+                      for (let i = 0; i < MAX_TRIMS && !overflowFitsBoundary(); i++) {
+                        const lLast = leftBody.rows[leftBody.rows.length - 1];
+                        const rLast = rightBody.rows[rightBody.rows.length - 1];
+                        if (!isPadRow(lLast) || !isPadRow(rLast)) break;
+                        leftBody.deleteRow(leftBody.rows.length - 1);
+                        rightBody.deleteRow(rightBody.rows.length - 1);
+                      }
+                    }
                   }
+
+                  gearOverflowHost.classList.add('page3-visible');
                 }
               }
 

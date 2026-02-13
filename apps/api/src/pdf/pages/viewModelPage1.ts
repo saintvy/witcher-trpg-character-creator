@@ -16,6 +16,14 @@ export type CharacterPdfPage1Vm = {
     profession: string;
     school?: string;
     definingSkill: string;
+    definingSkillDetails?: {
+      name: string;
+      paramAbbr: string;
+      cur: number | null;
+      bonus: number | null;
+      raceBonus: number | null;
+      base: string;
+    };
   };
   computed: {
     run: string;
@@ -317,6 +325,62 @@ export function mapCharacterJsonToPage1Vm(
   const definingId = asString(definingRec?.id) ?? '';
   const definingName = asString(definingRec?.name) ?? (definingId ? nameById.get(definingId) ?? definingId : '');
   const definingValue = definingId ? readSkillValue(common[definingId]) : { cur: null, bonus: null, raceBonus: null };
+  const definingCanonicalId = canonicalSkillId(definingId);
+  const definingParamFallbackBySkillId = (skillId: string): string | null => {
+    if (skillId === 'staff') return 'REF';
+    if (skillId === 'dodge') return 'REF';
+    if (skillId === 'sailing') return 'REF';
+    if (skillId === 'small_blades') return 'REF';
+    if (skillId === 'swordsmanship') return 'REF';
+    if (skillId === 'melee') return 'REF';
+    if (skillId === 'brawling') return 'REF';
+    return null;
+  };
+  const definingLanguageSkillFallback = (skillId: string): { name: string; param: string } | null => {
+    if (!skillId.startsWith('language_')) return null;
+    const suffix = skillId.slice('language_'.length);
+    const map: Record<string, string> = {
+      common_speech: i18n.skills.languageCommonSpeech,
+      elder_speech: i18n.skills.languageElderSpeech,
+      dwarvish: i18n.skills.languageDwarvish,
+    };
+    const display = map[suffix] ?? suffix.replaceAll('_', ' ');
+    return { name: `${i18n.skills.languagePrefix}${display}`, param: 'INT' };
+  };
+  const definingFallback = definingLanguageSkillFallback(definingId);
+  const definingParam =
+    definingId
+      ? (paramById.get(definingCanonicalId) ?? definingFallback?.param ?? definingParamFallbackBySkillId(definingCanonicalId) ?? 'OTHER')
+      : '';
+  const definingParamAbbrById: Record<string, string> = {
+    INT: i18n.stats.abbr.INT,
+    REF: i18n.stats.abbr.REF,
+    DEX: i18n.stats.abbr.DEX,
+    BODY: i18n.stats.abbr.BODY,
+    SPD: i18n.stats.abbr.SPD,
+    EMP: i18n.stats.abbr.EMP,
+    CRA: i18n.stats.abbr.CRA,
+    WILL: i18n.stats.abbr.WILL,
+  };
+  const definingStatId = (definingParam || '').toUpperCase();
+  const definingParamAbbr = definingParamAbbrById[definingStatId] ?? '';
+  const definingStat = definingStatId ? readStat(characterJson, definingStatId) : { cur: null, bonus: null, raceBonus: null };
+  const definingStatCur = definingStat.cur ?? 0;
+  const definingStatBonus = definingStat.bonus ?? 0;
+  const definingStatRaceBonus = definingStat.raceBonus ?? 0;
+  const definingSkillCur = definingValue.cur ?? 0;
+  const definingSkillBonus = definingValue.bonus ?? 0;
+  const definingSkillRaceBonus = definingValue.raceBonus ?? 0;
+  const definingBaseValue =
+    Math.min(definingStatCur + definingStatBonus, 10) +
+    definingStatRaceBonus +
+    Math.min(definingSkillCur + definingSkillBonus, 10) +
+    definingSkillRaceBonus;
+  const definingShowBase =
+    (definingValue.cur !== null && definingValue.cur !== 0) ||
+    (definingValue.bonus !== null && definingValue.bonus !== 0) ||
+    (definingValue.raceBonus !== null && definingValue.raceBonus !== 0);
+  const definingBaseText = definingShowBase ? String(definingBaseValue) : '';
   const definingText =
     definingName && definingId
       ? `${definingName} ${formatSkillValue(definingValue)}`.trim()
@@ -332,6 +396,14 @@ export function mapCharacterJsonToPage1Vm(
     profession: getFirstString(characterJson, ['profession', 'role', 'class', 'career']) || '',
     school: (getFirstString(characterJson, ['characterRaw.school', 'school']) || '').trim() || undefined,
     definingSkill: definingText,
+    definingSkillDetails: {
+      name: definingName,
+      paramAbbr: definingParamAbbr,
+      cur: definingValue.cur,
+      bonus: definingValue.bonus,
+      raceBonus: definingValue.raceBonus,
+      base: definingBaseText,
+    },
   };
 
   const statTotal = (id: string): number => {
