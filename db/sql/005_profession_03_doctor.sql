@@ -40,7 +40,7 @@ WITH
                 <li>[Интеллект] - Дедукция</li>
                 <li>[Интеллект] - Торговля</li>
                 <li>[Интеллект] - Этикет</li>
-                <li>[Ловкость] - Владение лёгкими клинками</li>
+                <li>[Реакция] - Владение лёгкими клинками</li>
                 <li>[Ремесло] - Алхимия</li>
                 <li>[Эмпатия] - Понимание людей</li>
                 <li>[Эмпатия] - Харизма</li>
@@ -239,13 +239,13 @@ WITH
             <strong>Skills</strong>
             <ul>
                 <li>[CRA] - Alchemy</li>
-                <li>[DEX] - Small Blades</li>
                 <li>[EMP] - Charisma</li>
                 <li>[EMP] - Human Perception</li>
                 <li>[INT] - Business</li>
                 <li>[INT] - Deduction</li>
                 <li>[INT] - Social Etiquette</li>
                 <li>[INT] - Wilderness Survival</li>
+                <li>[REF] - Small Blades</li>
                 <li>[WILL] - Courage</li>
                 <li>[WILL] - Resist Coercion</li>
             </ul>

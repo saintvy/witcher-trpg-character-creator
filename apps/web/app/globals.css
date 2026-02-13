@@ -2103,6 +2103,33 @@ body {
     color: rgba(255,210,160,0.92);
 }
 
+.ss-skill-param {
+    font-size: 10px;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.ss-skill-row.pro-skill .ss-skill-param {
+    color: rgba(255,210,160,0.7);
+}
+
+.ss-pro-name .ss-skill-param {
+    color: var(--text-soft);
+}
+
+.ss-skill-row.defining-skill .ss-stepper {
+    border-color: rgba(239,68,68,0.9) !important;
+}
+
+.ss-skill-row.defining-skill .ss-stepper-controls {
+    border-left-color: rgba(239,68,68,0.55) !important;
+}
+
+.ss-skill-row.defining-skill .ss-pill {
+    border-color: rgba(239,68,68,0.55) !important;
+}
+
 .ss-skill-list {
     display: flex;
     flex-direction: column;

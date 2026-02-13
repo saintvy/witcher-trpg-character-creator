@@ -285,7 +285,8 @@ WITH
         (106, 'dedicated', 'Посвящённый', 'emp', 'main'),
         (107, 'professional_paranoia', 'Профессиональная паранойя', 'int', 'main'),
         (108, 'quick_fix', 'Быстрый ремонт', 'cra', 'main'),
-        (109, 'well_traveled', 'Бывалый путешественник', 'int', 'main')
+        (109, 'well_traveled', 'Бывалый путешественник', 'int', 'main'),
+        (110, 'rite_of_oak_and_mistletoe', 'Обряд дуба и омелы', 'int', 'main')
       ) AS raw_data_ru(skill_aid, skill_id, name, param_id, skill_type)
     UNION ALL
     SELECT 'en' AS lang, skill_aid, skill_id, name, param_id, skill_type
@@ -298,7 +299,8 @@ WITH
         (106, 'dedicated', 'Dedicated', 'emp', 'main'),
         (107, 'professional_paranoia', 'Professional Paranoia', 'int', 'main'),
         (108, 'quick_fix', 'Quick Fix', 'cra', 'main'),
-        (109, 'well_traveled', 'Well Traveled', 'int', 'main')
+        (109, 'well_traveled', 'Well Traveled', 'int', 'main'),
+        (110, 'rite_of_oak_and_mistletoe', 'Rite of Oak and Mistletoe', 'int', 'main')
       ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type)
   ),
   ins_main_skill_names AS (
@@ -439,7 +441,19 @@ WITH
         -- Merchant branch 3: Торговец
         (279, 'haggle', 'Торг', 'emp', 'professional', 1, 3, 'Торговец', false, 'merchant'),
         (280, 'merchant_sense', 'Торговая жилка', 'int', 'professional', 2, 3, 'Торговец', false, 'merchant'),
-        (281, 'merchant_king', 'Король торговли', 'int', 'professional', 3, 3, 'Торговец', false, 'merchant')
+        (281, 'merchant_king', 'Король торговли', 'int', 'professional', 3, 3, 'Торговец', false, 'merchant'),
+        -- Druid branch 1: Посвященный
+        (282, 'nature_attunement', 'Единение с природой', NULL, 'professional', 1, 1, 'Посвященный', false, 'druid'),
+        (283, 'read_nature', 'Знаки природы', 'int', 'professional', 2, 1, 'Посвященный', false, 'druid'),
+        (284, 'animal_compact', 'Союзник природы', 'will', 'professional', 3, 1, 'Посвященный', false, 'druid'),
+        -- Druid branch 2: Таинственный мудрец
+        (285, 'lore_keeper', 'Хранитель знаний', NULL, 'professional', 1, 2, 'Таинственный мудрец', false, 'druid'),
+        (286, 'blood_and_bones', 'Кровь и кости', 'will', 'professional', 2, 2, 'Таинственный мудрец', false, 'druid'),
+        (287, 'bestial_form', 'Облик зверя', NULL, 'professional', 3, 2, 'Таинственный мудрец', false, 'druid'),
+        -- Druid branch 3: Воинствующий
+        (288, 'beast_healer', 'Целитель зверей', 'cra', 'professional', 1, 3, 'Воинствующий', false, 'druid'),
+        (289, 'sacred_grove', 'Священная роща', 'will', 'professional', 2, 3, 'Воинствующий', false, 'druid'),
+        (290, 'grove_guardian', 'Страж рощи', 'will', 'professional', 3, 3, 'Воинствующий', false, 'druid')
       ) AS raw_data_ru(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
     UNION ALL
     SELECT 'en' AS lang, raw_data_en.*
@@ -551,7 +565,19 @@ WITH
         -- Merchant branch 3: The Merchant
         (279, 'haggle', 'Haggle', 'emp', 'professional', 1, 3, 'The Merchant', false, 'merchant'),
         (280, 'merchant_sense', 'Merchant Sense', 'int', 'professional', 2, 3, 'The Merchant', false, 'merchant'),
-        (281, 'merchant_king', 'Merchant King', 'int', 'professional', 3, 3, 'The Merchant', false, 'merchant')
+        (281, 'merchant_king', 'Merchant King', 'int', 'professional', 3, 3, 'The Merchant', false, 'merchant'),
+        -- Druid branch 1: Initiate
+        (282, 'nature_attunement', 'Nature Attunement', NULL, 'professional', 1, 1, 'Initiate', false, 'druid'),
+        (283, 'read_nature', 'Read Nature', 'int', 'professional', 2, 1, 'Initiate', false, 'druid'),
+        (284, 'animal_compact', 'Animal Compact', 'will', 'professional', 3, 1, 'Initiate', false, 'druid'),
+        -- Druid branch 2: Mystic Sage
+        (285, 'lore_keeper', 'Lore Keeper', NULL, 'professional', 1, 2, 'Mystic Sage', false, 'druid'),
+        (286, 'blood_and_bones', 'Blood and Bones', 'will', 'professional', 2, 2, 'Mystic Sage', false, 'druid'),
+        (287, 'bestial_form', 'Bestial Form', NULL, 'professional', 3, 2, 'Mystic Sage', false, 'druid'),
+        -- Druid branch 3: Militant
+        (288, 'beast_healer', 'Beast Healer', 'cra', 'professional', 1, 3, 'Militant', false, 'druid'),
+        (289, 'sacred_grove', 'Sacred Grove', 'will', 'professional', 2, 3, 'Militant', false, 'druid'),
+        (290, 'grove_guardian', 'Grove Guardian', 'will', 'professional', 3, 3, 'Militant', false, 'druid')
       ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
   ),
   ins_prof_skill_names AS (
@@ -610,7 +636,8 @@ WITH
         ('dedicated', 'В большинстве церквей мира рады посетителям. Служители храмов помогают местным жителям и с радостью принимают новообращённых в свою веру. Жрец может совершить проверку навыка <strong>Посвящённый</strong> (СЛ определяет ведущий) в храме своей религии, чтобы получить бесплатный кров, исцеление и прочие услуги на усмотрение ведущего. Навык <strong>Посвящённый</strong> также можно использовать при общении с единоверцами, но получите вы куда меньше, чем в церкви. <strong>Посвящённый</strong> не действует при общении с теми, кто исповедует другую веру.'),
         ('professional_paranoia', 'Все преступники, будь то убийцы, воры, фальшивомонетчики или контрабандисты, обладают обострённым чутьём на опасность — фактически профессиональной паранойей, благодаря которой они избегают поимки. Когда преступник оказывается в пределах 10 метров от ловушки (включая экспериментальные ловушки, ловушки воина и засады), он может немедленно совершить проверку <strong>Профессиональной паранойи</strong> либо против СЛ обнаружения ловушки, либо против Скрытности засады, либо против заданной ведущим СЛ. Даже если преступник не заметит ловушки, чутьё всё равно ему подскажет, что тут что-то не так.'),
         ('quick_fix', 'Умелый ремесленник способен наскоро подлатать оружие или броню, чтобы их владелец мог продолжать сражаться. Ремесленник свяжет вместе обрывки лопнувшей тетивы, заострит край сломанного клинка или приколотит металлическую пластину поверх треснувшего щита. Ремесленник может потратить ход и совершить проверку <strong>Быстрого ремонта</strong> со сложностью, равной СЛ Изготовления данного предмета минус 3, чтобы восстановить 1/2 прочности брони или 1/2 надёжности сломанного оружия или щита. Пока оружие после <strong>Быстрого ремонта</strong> не починят в кузнице, оно наносит половину обычного урона.<br><br><strong>Слишком много поломок</strong><br>Ранее подлатанное оружие, щит или броню после повторной поломки можно подлатать ещё только один раз. Во второй раз <strong>Быстрый ремонт</strong> восстановит лишь 1/4 значения надёжности/прочности (с округлением вниз).'),
-        ('well_traveled', 'Обычный торговец зарабатывает на жизнь тем, что продаёт товар приходящим к нему покупателям. Странствующий же торговец сам приходит к покупателю. Он ездит по миру и узнаёт обо всём, что там происходит. Торговец может в любой момент по своему желанию совершить проверку навыка <strong>Бывалый путешественник</strong>, чтобы узнать один факт об определённом предмете, культуре или области. СЛ проверки определяет ведущий. При успехе торговец получает ответ на вопрос, вспомнив те времена, когда он в прошлый раз был в этом месте.')
+        ('well_traveled', 'Обычный торговец зарабатывает на жизнь тем, что продаёт товар приходящим к нему покупателям. Странствующий же торговец сам приходит к покупателю. Он ездит по миру и узнаёт обо всём, что там происходит. Торговец может в любой момент по своему желанию совершить проверку навыка <strong>Бывалый путешественник</strong>, чтобы узнать один факт об определённом предмете, культуре или области. СЛ проверки определяет ведущий. При успехе торговец получает ответ на вопрос, вспомнив те времена, когда он в прошлый раз был в этом месте.'),
+        ('rite_of_oak_and_mistletoe', 'Друид очень быстро учится собирать растения, обладающие магической силой, и превращать их в мощную основу своей магии, которая связывает их с землёй вокруг них. Друид может потратить день и совершить проверку <strong>Обряда дуба и омелы</strong> со СЛ, специфичной для области, в которой он оказался, чтобы собрать необходимые ингредиенты. В случае успеха друид создаёт посох, который может использовать только друид.<br><br>Этот посох действует точно так же, как посох (Основная книга, стр. 74), но его значение фокусировки увеличивается по мере того, как друид улучшает значение <strong>Обряда дуба и омелы</strong>. Значение фокусировки равно 1 на уровне 1 и увеличивается на 1 за каждые 2 очка сверх первого вплоть до максимума 4 на уровне 7. На уровне 9 посох получает эффект <strong>улучшенное фокусирующее</strong>.<br><br>Кроме того, пока друид держит свой посох, он получает следующие преимущества в зависимости от уровня <strong>Обряда дуба и омелы</strong>. На уровне 2 друид игнорирует все штрафы окружающей среды в заросшей или болотистой местности. На уровне 4 друид игнорирует штрафы за снежные и ледяные условия. На уровне 6 друид игнорирует штрафы за сильную жару. На уровне 8 друид игнорирует все штрафы от пребывания под водой. На уровне 10 друид может сделать бросок для создания нового посоха, тратя лишь действие полного хода, а не целый день. СЛ для создания посоха — 14 в лесу, 16 в болотистой местности, 18 в горных районах и 20 в море.')
       ) AS raw_data_ru(skill_id, description)
     UNION ALL
     SELECT 'en' AS lang, skill_id, description
@@ -623,7 +650,8 @@ WITH
         ('dedicated', 'The churches of the world are often warm and inviting places, helping their communities and welcoming new converts. A Priest can roll <strong>Initiate of the Gods</strong> at a DC set by the GM at churches of the same faith to get free lodging, healing, and other services at the GM''s discretion. <strong>Initiate of the Gods</strong> also works when dealing with members of the same faith, though they will likely be able to offer less than a fully supplied church. Keep in mind that <strong>Initiate of the Gods</strong> doesn''t work with members of other faiths.'),
         ('professional_paranoia', 'Whether they''re an assassin, a thief, a counterfeitter, or a smuggler, criminals all share a practiced paranoia that keeps them out of trouble. Whenever a Criminal comes within 10m of a trap (this includes experimental traps, Man at Arms booby traps, and ambushes) they immediately can make a <strong>Practiced Paranoia</strong> roll at either the DC to spot the trap, the ambushing party''s Stealth roll, or a DC set by the GM. Even if they don''t succeed in spotting the trap, they are still aware that something is wrong.'),
         ('quick_fix', 'A skilled craftsman can patch a weapon or armor well enough to keep it working and keep its wearer/wielder in the fight, whether that be by tying a bowstring back together, sharpening the edge of a broken blade, or nailing a plate over a cracked shield. By taking a turn to roll <strong>Patch Job</strong> at a DC equal to the item''s Crafting DC-3 a Craftsman can restore a broken shield or armor to half its full SP or restore a broken weapon to half its durability. Until fixed at a forge, a patched weapon does half its normal damage.<br><br><strong>Too Many Patches</strong><br>A weapon, shield, or armor which has already been patched once can only be patched again 1 more time, and this patch only brings it to 1/4th SP/Durability (rounding down).'),
-        ('well_traveled', 'Your average merchant makes a living from trade, and that trade brings in customers from all around. But a traveling merchant goes to their customers, wandering the roads of the world and learning from its people. A Merchant can make a <strong>Well Traveled</strong> roll any time they want to know a fact about a specific item, culture, or area. The DC is set by the GM, and if the roll is successful the Merchant remembers the answer to that question, calling on memories of the last time they traveled through the applicable area.')
+        ('well_traveled', 'Your average merchant makes a living from trade, and that trade brings in customers from all around. But a traveling merchant goes to their customers, wandering the roads of the world and learning from its people. A Merchant can make a <strong>Well Traveled</strong> roll any time they want to know a fact about a specific item, culture, or area. The DC is set by the GM, and if the roll is successful the Merchant remembers the answer to that question, calling on memories of the last time they traveled through the applicable area.'),
+        ('rite_of_oak_and_mistletoe', 'A Druid learns very quickly how to harvest magically potent plants and turn them into a powerful focus for their magic which connects them to the land around them. A Druid can take a day and make a Rite of Oak and Mistletoe roll against a DC specific to the area in which they find themselves to harvest the necessary ingredients. If successful, the Druid creates a Staff which works only for the Druid.<br><br>This staff functions exactly as a Staff (Witcher Core Rule Book, pg. 74) but its Focus value rises as they improve their Rite of Oak &amp; Mistletoe value. The Focus value begins at 1 at level 1 and rises by 1 every 2 levels to a maximum of 4 at level 7. At level 9, the Staff gains the Greater Focus Effect.<br><br>Additionally, while the Druid is carrying their staff, they gain the following benefits based on their Rite of Oak &amp; Mistletoe value. At level 2, the Druid ignores all environmental penalties in overgrown or swampy terrain. At level 4, the Druid ignores the penalties for snow and ice conditions. At level 6, the Druid ignores the penalties for extreme heat conditions. At level 8, the Druid ignores all penalties from being underwater. At level 10, the Druid can roll to create a new staff by taking a full round action rather than 1 day. The DCs to create a staff are 14 when in a forest, 16 when in swampy areas, 18 when in mountainous regions, and 20 when at sea.')
       ) AS raw_data_en(skill_id, description)
   ),
   ins_main_skill_descriptions AS (
@@ -709,6 +737,16 @@ WITH
         ('bloody_rituals', 'Проводя ритуал, жрец может совершить проверку способности <strong>Кровавые ритуалы</strong> со СЛ, равной СЛ ритуала. При успехе жрец проводит ритуал без необходимых алхимических субстанций, жертвуя при этом 5 ПЗ в виде крови за каждую недостающую субстанцию. Это может быть и чужая кровь, но только пролитая во время данного ритуала.'),
         ('zeal', 'Жрец может совершить проверку <strong>Рвения</strong> против текущего значения ИнтхЗ цели. При успехе слова жреца ободряют цель, что даёт ей 1d6 временных ПЗ за каждый пункт сверх СЛ (максимум 5). Этот эффект длится количество раундов, равное значению <strong>Рвения</strong> х 2, и на одну цель его можно использовать только раз в день.'),
         ('holy_fire', 'Жрец может совершить проверку способности <strong>Слово божье</strong>, чтобы убедить слушателей, что его устами говорит божество. Любой, кто провалит проверку Сопротивления убеждению, будет считать жреца мессией и следовать за ним. Количество последователей жреца равно значению его <strong>Слова божьего</strong>. Если у последователей нет блоков параметров, используйте для них параметры разбойников.<br><br>Когда ваш персонаж отдаёт своим последователям действительно странный или неестественный для него приказ, совершите проверку <strong>Слова божьего</strong> со СЛ, определяемой ведущим. Вы можете провалить проверку 3 раза, после чего последователи покинут вашего персонажа. Если при последней проверке выпадает 1, то последователи нападут на вас или объявят еретиком.'),
+        -- Druid skills
+        ('nature_attunement', 'Друид может укрепить свою гармонию с природой, получая 1 очко порога Энергии за каждый уровень <strong>Единения с природой</strong> вплоть до уровня 9. На 10-м уровне <strong>Единения с природой</strong> порог Энергии друида повышается на 5, доводя его суммарно до 16. <strong>Единение с природой</strong> можно тренировать, как и любой другой навык.'),
+        ('read_nature', 'Находясь среди природы, друид может сделать проверку способности <strong>Знаки природы</strong> со СЛ определяемой ведущим. При успехе друид по знакам узнает, кто и что здесь делал за последнюю неделю. <strong>Знаки природы</strong> показывают не только локальную информацию и не позволяют выслеживать, но дают очень подробное описание того, что произошло в этом районе.'),
+        ('animal_compact', 'Друид добавляет способность <strong>Союзник природы</strong> к любым проверкам Выживания в дикой природе для обращения с животными. Друид также может сдружиться с животным, потратив полный раунд и совершив проверку <strong>Союзника природы</strong> с СЛ установленной ведущим. Они могут сделать одного Зверя или иное животное их союзником на количество часов, равных их значению способности <strong>Союзник природы</strong>. Данная способность не действует на чудовищ.'),
+        ('lore_keeper', 'Частью посвящения в круг является запоминание множества знаний, которые могут пригодится друиду. Он может пройти проверку способности <strong>Хранитель знаний</strong> вместо любых проверок Выживания, Монстрологии, Понимании людей или Образования.'),
+        ('blood_and_bones', 'Бросив кости в чашу, наполненную кровью человека, друид может изменить судьбу этого человека. Друид делает проверку способности <strong>Кровь и кости</strong> со СЛ 10 + значение Воли цели. В случае успеха цель может добавить половину значения способности <strong>Кровь и кости</strong> друида к одной проверке, сделанной до следующего восхода солнца. При провале цель не сможет использовать эту способность в течение 1 недели. Эту способность можно применить к одной цели только один раз за сессию.'),
+        ('bestial_form', 'Познание древних ритуалов позволяет друиду включать в свое тело аспекты животных, превращаясь в гибридную форму без каких-либо действий. За каждые 2 уровня способности <strong>Облик зверя</strong>, друид может добавить новый животный аспект к своей гибридной форме. Кроме того, находясь в своей гибридной форме, друид может говорить с животными того типа, которого они включили, а также получить репутацию ненависти и опасения.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Зверь</th><th>Эффект</th></tr><tr><td>Вепрь</td><td>Кожа друида утолщается и покрывается щетиной. Друид получает +3 ПБ во всех частях тела.</td></tr><tr><td>Медведь</td><td>На руках друида вырастают когти. Когти наносят рубящий урон 4d6 и имеют 10 надежности. При повреждении эти когти отрастают со скоростью 1 очко в день.</td></tr><tr><td>Волк</td><td>Уши друида становятся острыми, а рот и нос превращаются в морду. Он получает преимущества усиленных чувств, давая +1 к Вниманию и позволяя ему выслеживать вещи ориентируясь по запаху.</td></tr><tr><td>Пантера</td><td>Ноги друида становятся узкими и пушистыми, что позволяет им прыгать в два раза больше, чем расстояние прыжка, используя действие движения с места. Этот прыжок может быть сделан горизонтально или вертикально.</td></tr><tr><td>Змей</td><td>Друид отращивает ядовитые клыки. Он получает атаку укуса, которая наносит 3d6 урона и имеет 100% шанс вызвать эффект отравления.</td></tr><tr><td>Сова</td><td>Глаза друида становятся большими, а вокруг лица вырастают перья. Он получает превосходное ночное зрение.</td></tr><tr><td>Ворон</td><td>Тело друида покрывается черными перьями, а его разум обостряется, давая +1 к Инт, что может поднять его Инт выше 10. Кроме того, каждый раз, когда он применяет смену позиции, он может переместиться на полную скорость, а не половину.</td></tr></table>'),
+        ('beast_healer', 'Часто работая с животными для защиты природы, друид может лечить тяжелые раны своих звериных компаньонов. Друид может пройти проверку способности <strong>Целитель зверей</strong>, чтобы вылечить критические раны, нанесенные зверям. Этот бросок работает точно так же, как способность медика <strong>Лечащее прикосновение</strong>.'),
+        ('sacred_grove', 'Друид может превратить участок природы в священную рощу. Это занимает 1 час и охватывает область радиусом 20 м. Друид берёт значение своей проверки способности <strong>Священная роща</strong> и использует как очки, чтобы добавить защиту своей священной роще. Друид и все, на кого он укажет, не восприимчивы к этой защите. Эта роща существует в течение 3 месяцев, и друид может поддерживать количество рощ, равное значению его <strong>Священной рощи</strong>.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Защита</th><th>Цена</th></tr><tr><td><strong>Заросшая среда</strong><br>Растения в этом районе бесконтрольно разрастаются, налагая -2 на проверки Уклонения/Изворотливости и Атлетики.</td><td>2</td></tr><tr><td><strong>Потерянные</strong><br>Волшебный туман окутывает рощу, каждый кто входит в нее, должен пройти проверку Сопротивление магии с СЛ 16, чтобы войти в эту область. Провалившиеся цели разворачиваются и немедленно покидают рощу.</td><td>10</td></tr><tr><td><strong>Отравленный урожай</strong><br>Смертельная магия пропитывает растения рощи, в результате чего культуры, выращенные в этом районе, вызывают эффект отравления при употреблении в пищу.</td><td>6</td></tr><tr><td><strong>Чудесный урожай</strong><br>Растения рощи дают обильный урожай, удваивая количество растительных ингредиентов, собранных с каждой проверки сбора.</td><td>4</td></tr><tr><td><strong>Шипы</strong><br>Стена колючих лоз прорастает на краю рощи, каждый кто проходит через нее, должен пройти проверку Атлетики с СЛ 16 или получить состояние Кровотечения.</td><td>10</td></tr></table>'),
+        ('grove_guardian', 'Используя древний ритуал, друид может усилить животное или зверя. Потратив один полный раунд и пройдя проверку способности <strong>Страж рощи</strong> со СЛ 10 + Тел существа, существо увеличивается в два раза, его Тел увеличивается на 5 и получает бонус +5 к урону. Этот бонус также влияет на производную статистику существа. Существо также становится очень агрессивным по отношению к врагам друида. Это длится 24 часа, и на это время порог Энергии друида снижается на 5.'),
         -- Criminal skills
         ('case_joint', 'Преступник может потратить час, чтобы побродить по улицам поселения и совершить проверку способности <strong>Присмотреться</strong> со СЛ, указанной в таблице на полях. При успехе преступник запоминает маршруты патрулей, расположение улиц и укрытий, что даёт ему бонус +2 к Скрытности в этом районе на количество дней, равное значению <strong>Присмотреться</strong>.'),
         ('repeat_lockpick', 'Когда преступник успешно вскрывает замок, он может совершить проверку <strong>Повторного взлома</strong> со СЛ, равной СЛ Взлома замков (для данного замка), чтобы запомнить положение штифтов. Это позволит ему открыть тот же замок без проверки навыка Взлома замков. Преступник может запомнить столько замков, сколько у него очков Инт. Всегда можно запомнить новый замок, забыв старый.'),
@@ -803,6 +841,16 @@ WITH
         ('bloody_rituals', 'A Priest casting a ritual can make a <strong>Blood Ritual</strong> check against the casting DC of the ritual. If they succeed, they can cast the ritual without required alchemical substances by sacrificing 5 HP in blood per missing alchemical substance. This blood can come from others, but must be spilled at the time of the ritual.'),
         ('zeal', 'A Priest can roll <strong>Fervor</strong> against a target''s current INT×3. On success, the rallying power of the Priest''s words grants 1d6 temporary health for every point rolled over the DC (maximum 5). This lasts for as many rounds as their <strong>Fervor</strong> ×2 and only works once per target per day.'),
         ('holy_fire', 'A Priest can roll <strong>Word of God</strong> to convince people that they are speaking directly for the gods. Anyone who fails a Resist Coercion roll sees the Priest as a messiah and follows along as an apostle. A Priest can have as many apostles as their <strong>Word of God</strong> value. In combat, use bandit stats for apostles with stat outs.<br><br>Any time you give a truly strange or uncharacteristic command to your apostles, you must make a <strong>Word of God</strong> roll at a DC set by the GM. You can fail 3 times before your apostles leave you. If your last failure is a fumble, your apostles will attack you or brand you as a heretic.'),
+        -- Druid skills
+        ('nature_attunement', 'A Druid can become more in tune with nature, gaining 1 point of Vigor threshold per level in <strong>Nature Attunement</strong> up to level 9. At the 10th level in <strong>Nature Attunement</strong> the Druid''s Vigor Threshold rises by 5 to a total of 16. <strong>Nature Attunement</strong> can be trained like any other skill.'),
+        ('read_nature', 'When in a purely natural environment, a Druid can roll <strong>Read Nature</strong> at a DC set by the GM. On a success, the Druid reads the signs around them to learn everything that passed through that area within the last week and what each creature did in the area. <strong>Read Nature</strong> renders a very localized picture and cannot track things but gives a very detailed description of what happened in the area.'),
+        ('animal_compact', 'A Druid adds their <strong>Animal Compact</strong> value to any Wilderness Survival rolls they make to handle animals. The Druid can also make a compact with an animal. By taking a full round and rolling an <strong>Animal Compact</strong> check at a DC set by the GM, they can make one Beast or animal their ally for a number of hours equal to their <strong>Animal Compact</strong> value. Monsters are unaffected.'),
+        ('lore_keeper', 'Part of the initiation into a Circle is to memorize a plethora of topics that can come in handy to the Druid. They can roll their <strong>Lore Keeper</strong> Ability in place of any Wilderness Survival, Monster Lore, Human Perception, or Education checks.'),
+        ('blood_and_bones', 'By casting bones in a bowl filled with blood drawn from a person, the Druid can alter the fate of that person. The Druid rolls <strong>Blood and Bones</strong> against a DC:10 + the target''s WILL. On a success, the target can add half the Druid''s <strong>Blood and Bones</strong> value to one check made before the next sunrise. On a failure, the target cannot benefit from this ability for 1 week. A single target can only benefit from this ability once per session.'),
+        ('bestial_form', 'Unlocking ancient rituals allows the Druid to incorporate animal aspects into their body, transforming into a hybrid form without taking an action. For each 2 levels the Druid has in <strong>Bestial Form</strong>, they can add a new animalistic aspect to their hybrid form. Additionally, while in their hybrid form, the Druid can speak with animals of a type they have incorporated, and become Feared &amp; Hated by non-druids.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Animal</th><th>Effect</th></tr><tr><td>Boar</td><td>The Druid''s skin thickens and grows bristles. The Druid gains +3 SP on all body locations.</td></tr><tr><td>Bear</td><td>The Druid''s hands grow claws. The claws deal 4d6 slashing damage and have 10 REL. If damaged, these claws regrow at a rate of 1 REL per day.</td></tr><tr><td>Wolf</td><td>The Druid''s ears grow to a point and their mouth and nose change into a snout. They gain the benefits of enhanced senses, granting a +1 to Awareness and allowing them to track things by scent alone.</td></tr><tr><td>Panther</td><td>The Druid''s legs become digitigrade and furry allowing them to leap twice their Leap distance by using your move action from a standing start. This leap can be made horizontally or vertically.</td></tr><tr><td>Serpent</td><td>The Druid grows poisonous fangs. They gain a bite attack that deals 3d6 damage and has a 100% chance to inflict the Poison Effect.</td></tr><tr><td>Owl</td><td>The Druid''s eyes grow large and feathers sprout around their face. They gain Superior Night Vision.</td></tr><tr><td>Crow</td><td>The Druid''s body sprouts black feathers and their mind sharpens granting a +1 to INT which can raise their INT above 10. Additionally, whenever they Reposition they can move their full SPD rather than half.</td></tr></table>'),
+        ('beast_healer', 'Working often with animals in defense of nature, a Druid can tend to grievous wounds in their beastly companions. A Druid can roll <strong>Beast Healer</strong> to treat Critical Wounds inflicted on Beasts. This roll works exactly like the Doctor''s Healing Hands ability.'),
+        ('sacred_grove', 'A Druid can turn an area of nature into a sacred grove. This takes 1 hour, and covers an area with a 20m radius. The Druid takes the value of their <strong>Sacred Grove</strong> check and uses those points to add protections to their sacred grove. The Druid and anyone they specify are immune to these protections. This grove lasts for 3 months and the Druid can maintain a number of groves equal to their <strong>Sacred Grove</strong> value.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Protection</th><th>Cost</th></tr><tr><td><strong>Overgrown Environment</strong><br>The plants of the area grow wildly out of control, imposing a -2 to Dodge/Escape and Athletics checks.</td><td>2</td></tr><tr><td><strong>Lost</strong><br>A magical fog settle around the grove which forces anyone entering it to make a Resist Magic DC:16 to enter the area. Targets who fail are turned around and immediately exit the grove.</td><td>10</td></tr><tr><td><strong>Poisoned Harvest</strong><br>Deadly magic suffuses the plants of the grove causing crops grown in the area inflict the poison effect when eaten.</td><td>6</td></tr><tr><td><strong>Miracle Harvest</strong><br>The plants of the grove grow a bountiful harvest doubling the number of plant-based ingredients gathered from each gathering check.</td><td>4</td></tr><tr><td><strong>Thorns</strong><br>A wall of thorny vines sprouts at the edge of the grove and anything that passes through it must make a DC:16 Athletics check or suffer the Bleeding condition.</td><td>10</td></tr></table>'),
+        ('grove_guardian', 'By using an ancient ritual, the Druid can empower an animal or beast. By taking one full round and rolling <strong>Grove Guardian</strong> against a DC:10 + the creature''s BODY, the creature grows to twice its size, its BODY increases by 5, and gains a +5 bonus to damage. This bonus affects the creature''s Derived Statistics as well. The creature also becomes highly aggressive to enemies of the Druid. This lasts for 24 hours and during that time the Druid''s Vigor threshold is reduced by 5.'),
         -- Criminal skills
         ('case_joint', 'A Criminal can take an hour to wander the streets of a Settlement and roll <strong>Case The Area</strong> against a DC in the Case The Area chart. If successful, the Criminal memorizes guard patterns, street layouts, and hiding spots for a +2 to Stealth in that area for a number of days equal to their <strong>Case The Area</strong> value.'),
         ('repeat_lockpick', 'Whenever a Criminal successfully picks a lock they can roll <strong>Mental Key</strong> at a DC equal to the Lock Picking DC to memorize its tumbler positions. This allows the Criminal to open the lock without a Lock Picking roll. You can memorize as many locks as you have points in INT and can always replace one.'),
@@ -857,6 +905,8 @@ WHERE skill_type = 'professional'
     'extreme_range', 'twin_shot', 'precise_aim', 'bloodhound', 'warrior_trap', 'tactical_advantage',
     'fury', 'two_handed', 'ignore_pain', 'divine_power', 'divine_authority', 'foresight',
     'one_with_nature', 'nature_s_signs', 'nature_s_ally', 'bloody_rituals', 'zeal', 'holy_fire',
+    'nature_attunement', 'read_nature', 'animal_compact', 'lore_keeper', 'blood_and_bones', 'bestial_form',
+    'beast_healer', 'sacred_grove', 'grove_guardian',
     'case_joint', 'repeat_lockpick', 'lay_low', 'vulnerability', 'take_note', 'intimidating_presence',
     'smuggler', 'false_identity', 'black_market', 'large_catalog', 'apprentice', 'masterwork',
     'alchemical_concoction', 'enhanced_potion', 'experimental_formula', 'workshop', 'repair', 'upgrade',
@@ -879,6 +929,7 @@ WITH
         ('mage', 'Маг', 'core'),
         ('man_at_arms', 'Воин', 'core'),
         ('priest', 'Жрец', 'core'),
+        ('druid', 'Друид', 'exp_toc'),
         ('criminal', 'Преступник', 'core'),
         ('craftsman', 'Ремесленник', 'core'),
         ('merchant', 'Торговец', 'core')
@@ -892,6 +943,7 @@ WITH
         ('mage', 'Mage', 'core'),
         ('man_at_arms', 'Man At Arms', 'core'),
         ('priest', 'Priest', 'core'),
+        ('druid', 'Druid', 'exp_toc'),
         ('criminal', 'Criminal', 'core'),
         ('craftsman', 'Craftsman', 'core'),
         ('merchant', 'Merchant', 'core')
@@ -929,6 +981,7 @@ SET prof_desc_id = ck_id('witcher_cc.wcc_profession_o' ||
       WHEN 'mage' THEN '04'
       WHEN 'man_at_arms' THEN '05'
       WHEN 'priest' THEN '06'
+      WHEN 'druid' THEN '10'
       WHEN 'criminal' THEN '07'
       WHEN 'craftsman' THEN '08'
       WHEN 'merchant' THEN '09'
@@ -944,6 +997,7 @@ WHERE prof_desc_id IS NULL
         WHEN 'mage' THEN '04'
         WHEN 'man_at_arms' THEN '05'
         WHEN 'priest' THEN '06'
+        WHEN 'druid' THEN '10'
         WHEN 'criminal' THEN '07'
         WHEN 'craftsman' THEN '08'
         WHEN 'merchant' THEN '09'
@@ -990,6 +1044,7 @@ VALUES
   ('mage', 'magical_training'),
   ('man_at_arms', 'tough_as_nails'),
   ('priest', 'dedicated'),
+  ('druid', 'rite_of_oak_and_mistletoe'),
   ('criminal', 'professional_paranoia'),
   ('craftsman', 'quick_fix'),
   ('merchant', 'well_traveled')
@@ -1026,6 +1081,18 @@ WHERE skill_id IN (
   'hex_weaving', 'ritual_crafting', 'spell_casting', 'courage',
   'wilderness_survival', 'teaching', 'first_aid', 'leadership',
   'human_perception', 'charisma'
+)
+ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
+
+-- Вставка связей профессий и навыков (Druid)
+INSERT INTO wcc_profession_skills (prof_id, skill_skill_id)
+SELECT 'druid', skill_id
+FROM wcc_skills
+WHERE skill_id IN (
+  'wilderness_survival', 'awareness', 'monster_lore',
+  'hex_weaving', 'first_aid', 'teaching',
+  'ritual_crafting', 'spell_casting',
+  'endurance', 'persuasion'
 )
 ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
 

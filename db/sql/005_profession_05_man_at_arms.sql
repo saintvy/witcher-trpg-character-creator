@@ -37,15 +37,15 @@ WITH
             <strong class="section-title">(Выберите 5)</strong>
             <ul>
                 <li>[Ловкость] - Атлетика</li>
-                <li>[Ловкость] - Владение древковым оружием</li>
-                <li>[Ловкость] - Владение лёгкими клинками</li>
-                <li>[Ловкость] - Владение мечом</li>
                 <li>[Ловкость] - Стрельба из арбалета</li>
                 <li>[Ловкость] - Стрельба из лука</li>
                 <li>[Интеллект] - Тактика</li>
                 <li>[Реакция] - Ближний бой</li>
                 <li>[Реакция] - Борьба</li>
                 <li>[Реакция] - Верховая езда</li>
+                <li>[Реакция] - Владение древковым оружием</li>
+                <li>[Реакция] - Владение лёгкими клинками</li>
+                <li>[Реакция] - Владение мечом</li>
                 <li>Любой другой навык, одобренный вашим ГМ</li>
             </ul><br>
             <strong>Обычные навыки</strong>
@@ -239,12 +239,12 @@ WITH
                 <li>[DEX] - Archery</li>
                 <li>[DEX] - Athletics</li>
                 <li>[DEX] - Crossbow</li>
-                <li>[DEX] - Small Blades</li>
-                <li>[DEX] - Staff/Spear</li>
-                <li>[DEX] - Swordsmanship</li>
                 <li>[REF] - Riding</li>
                 <li>[REF] - Brawling</li>
                 <li>[REF] - Melee</li>
+                <li>[REF] - Small Blades</li>
+                <li>[REF] - Staff/Spear</li>
+                <li>[REF] - Swordsmanship</li>
                 <li>[INT] - Tactics</li>
                 <li>Any other skill your GM approves</li>
             </ul><br>

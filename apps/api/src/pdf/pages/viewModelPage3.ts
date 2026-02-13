@@ -55,6 +55,7 @@ export type UpgradeDetails = {
 
 export type BlueprintDetails = {
   b_id: string;
+  item_id: string | null;
   blueprint_name: string | null;
   blueprint_group: string | null;
   craft_level: string | null;

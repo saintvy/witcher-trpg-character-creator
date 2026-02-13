@@ -15,7 +15,7 @@ import {
   type CharacterPdfPage3Vm,
 } from './pages/viewModelPage3.js';
 import { mapCharacterJsonToPage4Vm, type CharacterPdfPage4Vm } from './pages/viewModelPage4.js';
-import type { MagicGiftDetails } from './pages/viewModelPage4.js';
+import type { MagicGiftDetails, ItemEffectGlossaryRow } from './pages/viewModelPage4.js';
 import {
   mapCharacterJsonToPage1Vm,
   type SkillCatalogInfo,
@@ -49,6 +49,7 @@ export type BuildCharacterPdfViewModelDeps = {
   generalGearDetailsById?: ReadonlyMap<string, GeneralGearDetails>;
   upgradeDetailsById?: ReadonlyMap<string, UpgradeDetails>;
   giftDetailsById?: ReadonlyMap<string, MagicGiftDetails>;
+  itemEffectsGlossary?: ReadonlyArray<ItemEffectGlossaryRow>;
 };
 
 export function buildCharacterPdfViewModel(
@@ -79,7 +80,11 @@ export function buildCharacterPdfViewModel(
     upgradeDetailsById: deps.upgradeDetailsById,
   });
 
-  const page4 = mapCharacterJsonToPage4Vm(characterJson, { i18n: deps.i18n.page4, giftDetailsById: deps.giftDetailsById });
+  const page4 = mapCharacterJsonToPage4Vm(characterJson, {
+    i18n: deps.i18n.page4,
+    giftDetailsById: deps.giftDetailsById,
+    itemEffectsGlossary: deps.itemEffectsGlossary,
+  });
 
   return { page1, page2, page3, page4 };
 }

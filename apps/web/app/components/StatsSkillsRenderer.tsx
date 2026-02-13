@@ -15,6 +15,10 @@ type SkillCatalogEntry = {
   profId?: string | null;
 };
 
+type SkillRowEntry = SkillCatalogEntry & {
+  isDefining?: boolean;
+};
+
 type GameLevelKey = "Average" | "Skilled" | "Heroes" | "Legends";
 
 const GAME_LEVELS: Array<{ key: GameLevelKey; points: number }> = [
@@ -101,6 +105,8 @@ function statVigorByProfession(profession: unknown): number | null {
     case "Mage":
       return 5;
     case "Priest":
+      return 2;
+    case "Druid":
       return 2;
     case "Bard":
     case "Doctor":
@@ -264,6 +270,27 @@ export function StatsSkillsRenderer(props: {
         out[skillId] = clampInt(toNumber(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0), 0, 99);
       }
     }
+
+    const initialSkillsRaw = getAtPath(state, "characterRaw.skills.initial");
+    const initialSkills = Array.isArray(initialSkillsRaw)
+      ? initialSkillsRaw.filter((x): x is string => typeof x === "string" && x.length > 0)
+      : [];
+    const definingRaw = getAtPath(state, "characterRaw.skills.defining");
+    const definingSkillId =
+      typeof definingRaw === "string"
+        ? definingRaw
+        : isRecord(definingRaw) && typeof definingRaw.skill_id === "string"
+          ? definingRaw.skill_id
+          : isRecord(definingRaw) && typeof definingRaw.id === "string"
+            ? definingRaw.id
+            : null;
+
+    const required = new Set<string>(initialSkills);
+    if (definingSkillId) required.add(definingSkillId);
+    for (const skillId of required) {
+      out[skillId] = Math.max(out[skillId] ?? 0, 1);
+    }
+
     return out;
   });
 
@@ -285,6 +312,27 @@ export function StatsSkillsRenderer(props: {
         nextSkills[skillId] = clampInt(toNumber(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0), 0, 99);
       }
     }
+
+    const initialSkillsRaw = getAtPath(state, "characterRaw.skills.initial");
+    const initialSkills = Array.isArray(initialSkillsRaw)
+      ? initialSkillsRaw.filter((x): x is string => typeof x === "string" && x.length > 0)
+      : [];
+    const definingRaw = getAtPath(state, "characterRaw.skills.defining");
+    const definingSkillId =
+      typeof definingRaw === "string"
+        ? definingRaw
+        : isRecord(definingRaw) && typeof definingRaw.skill_id === "string"
+          ? definingRaw.skill_id
+          : isRecord(definingRaw) && typeof definingRaw.id === "string"
+            ? definingRaw.id
+            : null;
+
+    const required = new Set<string>(initialSkills);
+    if (definingSkillId) required.add(definingSkillId);
+    for (const skillId of required) {
+      nextSkills[skillId] = Math.max(nextSkills[skillId] ?? 0, 1);
+    }
+
     setSkillCurById(nextSkills);
 
     baselineRef.current = { stats: nextStats, skills: nextSkills };
@@ -410,9 +458,20 @@ export function StatsSkillsRenderer(props: {
   }, [generalBudget, professionalSkillSet, skillCurById, skillMetaById]);
 
   const groupedCommonSkills = useMemo(() => {
-    const list: SkillCatalogEntry[] = (catalog ?? []).filter(
-      (s) => s.type === "common" && stateCommonSkillIdSet.has(toStateSkillId(s.id)),
-    );
+    const list: SkillRowEntry[] = (catalog ?? [])
+      .filter((s) => s.type === "common" && stateCommonSkillIdSet.has(toStateSkillId(s.id)))
+      .map((s) => ({ ...s }));
+
+    const definingStateId = definingSkillId ? toStateSkillId(definingSkillId) : null;
+    if (definingStateId) {
+      const existing = list.some((s) => toStateSkillId(s.id) === definingStateId);
+      if (!existing) {
+        const meta = (catalog ?? []).find((s) => toStateSkillId(s.id) === definingStateId);
+        if (meta) {
+          list.push({ ...meta, isDefining: true });
+        }
+      }
+    }
 
     const languageIds = new Set(["language_dwarvish", "language_common_speech", "language_elder_speech"]);
     const languages = list
@@ -420,7 +479,7 @@ export function StatsSkillsRenderer(props: {
       .sort((a, b) => a.name.localeCompare(b.name));
     const rest = list.filter((s) => !languageIds.has(s.id));
 
-    const byParam = new Map<string, SkillCatalogEntry[]>();
+    const byParam = new Map<string, SkillRowEntry[]>();
     for (const s of rest) {
       const p = normaliseStatKey(s.param) ?? "OTHER";
       const arr = byParam.get(p) ?? [];
@@ -449,7 +508,7 @@ export function StatsSkillsRenderer(props: {
       { key: "BODY", title: `${lang === "ru" ? "ТЕЛОСЛОЖЕНИЕ" : "BODY"} ${fmt("BODY")}` },
     ];
 
-    const groups: Array<{ key: string; title: string; skills: SkillCatalogEntry[] }> = [];
+    const groups: Array<{ key: string; title: string; skills: SkillRowEntry[] }> = [];
     for (const o of order) {
       const arr = byParam.get(o.key) ?? [];
       if (arr.length > 0) groups.push({ key: o.key, title: o.title, skills: arr });
@@ -842,6 +901,7 @@ export function StatsSkillsRenderer(props: {
                   <div className="ss-skill-list">
                     {g.skills.map((s) => {
                       const stateId = toStateSkillId(s.id);
+                      const isDefining = Boolean((s as SkillRowEntry).isDefining);
                       const cur = clampInt(skillCurById[stateId] ?? 0, 0, 99);
                       const baseline = baselineRef.current?.skills?.[stateId] ?? 0;
                       const bonus = getSkillNumber(stateId, "bonus");
@@ -857,7 +917,10 @@ export function StatsSkillsRenderer(props: {
                       const canDec = !disabled && cur > Math.max(0, baseline);
 
                       return (
-                        <div key={s.id} className={`ss-skill-row ${isProfessional ? "pro-skill" : ""}`}>
+                        <div
+                          key={s.id}
+                          className={`ss-skill-row ${isProfessional ? "pro-skill" : ""} ${isDefining ? "defining-skill" : ""}`}
+                        >
                           {renderStepper(cur, {
                             disabled,
                             blankWhenZero: true,
@@ -895,12 +958,22 @@ export function StatsSkillsRenderer(props: {
                 <div className="ss-pro-title">{b.title}</div>
                 <div className="ss-pro-list">
                   {b.skills.length === 0 && <div className="shop-muted">—</div>}
-                  {b.skills.map((s) => (
-                    <div key={`${s.id}-${s.name}`} className="ss-pro-row">
-                      {renderStepper(0, { disabled: true })}
-                      <div className="ss-pro-name">{s.name}</div>
-                    </div>
-                  ))}
+                  {b.skills.map((s) => {
+                    const meta = skillMetaById.get(s.id);
+                    const statKey = meta?.param ? normaliseStatKey(meta.param) : null;
+                    const rawAbbr = statKey ? (STAT_META[statKey]?.[lang]?.abbr ?? statKey) : "";
+                    const paramAbbr = rawAbbr ? (lang === "ru" ? rawAbbr.toUpperCase() : rawAbbr) : "";
+                    const suffix = paramAbbr ? ` (${paramAbbr})` : "";
+                    return (
+                      <div key={`${s.id}-${s.name}`} className="ss-pro-row">
+                        {renderStepper(0, { disabled: true })}
+                        <div className="ss-pro-name">
+                          {s.name}
+                          {suffix ? <span className="ss-skill-param">{suffix}</span> : null}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}

@@ -132,6 +132,11 @@ export type MagicGiftRow = {
   description: string;
 };
 
+export type ItemEffectGlossaryRow = {
+  name: string;
+  value: string;
+};
+
 export type CharacterPdfPage4Vm = {
   i18n: CharacterPdfPage4I18n;
   shouldRender: boolean;
@@ -141,23 +146,30 @@ export type CharacterPdfPage4Vm = {
   showRituals: boolean;
   showHexes: boolean;
   showGifts: boolean;
+  showItemEffects: boolean;
   spellsSigns: MagicSpellLikeRow[];
   invocations: MagicInvocationRow[];
   rituals: MagicRitualRow[];
   hexes: MagicHexRow[];
   gifts: MagicGiftRow[];
+  itemEffects: ItemEffectGlossaryRow[];
 };
 
 export function mapCharacterJsonToPage4Vm(
   characterJson: unknown,
-  deps: { i18n: CharacterPdfPage4I18n; giftDetailsById?: ReadonlyMap<string, MagicGiftDetails> },
+  deps: {
+    i18n: CharacterPdfPage4I18n;
+    giftDetailsById?: ReadonlyMap<string, MagicGiftDetails>;
+    itemEffectsGlossary?: ReadonlyArray<ItemEffectGlossaryRow>;
+  },
 ): CharacterPdfPage4Vm {
   const i18n = deps.i18n;
 
   const profession = normalizeProfession(getFirstString(characterJson, ['profession', 'role', 'class', 'career']));
   const isMage = hasAny(profession, ['mage', 'маг']);
   const isWitcher = hasAny(profession, ['witcher', 'ведьмак', 'ведьмач']);
-  const isPriest = hasAny(profession, ['priest', 'жрец']);
+  // Druids use invocations (like priests), so treat them as priest-like for PDF visibility.
+  const isPriest = hasAny(profession, ['priest', 'жрец', 'druid', 'друид']);
 
   const vigor = readStat(characterJson, 'vigor');
   const vigorTotal = (vigor.cur ?? 0) + (vigor.bonus ?? 0) + (vigor.raceBonus ?? 0);
@@ -296,18 +308,27 @@ export function mapCharacterJsonToPage4Vm(
     .sort((a, b) => (a._sortKey || a.group || '').localeCompare(b._sortKey || b.group || '', undefined, { sensitivity: 'base' }))
     .map(({ _sortKey: _ignored, ...rest }) => rest);
 
-  const onlyGiftsData =
-    gifts.length > 0 && spellsSigns.length === 0 && invocations.length === 0 && rituals.length === 0 && hexes.length === 0;
+  const itemEffects = Array.isArray(deps.itemEffectsGlossary) ? [...deps.itemEffectsGlossary] : [];
+  const showItemEffects = itemEffects.length > 0;
+
+  const onlyGiftsMagic =
+    gifts.length > 0 &&
+    spellsSigns.length === 0 &&
+    invocations.length === 0 &&
+    rituals.length === 0 &&
+    hexes.length === 0;
+
+  const onlyGiftsData = onlyGiftsMagic && !showItemEffects;
 
   // Display rules:
   // - If corresponding magic exists in JSON -> show the table.
   // - Profession / Vigor only affects whether to show an empty table.
-  const showSpellsSigns = onlyGiftsData ? false : spellsSigns.length > 0 || isMage || isWitcher;
-  const showInvocations = onlyGiftsData ? false : invocations.length > 0 || isPriest;
-  const showRituals = onlyGiftsData ? false : rituals.length > 0 || hasVigor;
-  const showHexes = onlyGiftsData ? false : hexes.length > 0 || hasVigor;
+  const showSpellsSigns = onlyGiftsMagic ? false : spellsSigns.length > 0 || isMage || isWitcher;
+  const showInvocations = onlyGiftsMagic ? false : invocations.length > 0 || isPriest;
+  const showRituals = onlyGiftsMagic ? false : rituals.length > 0 || hasVigor;
+  const showHexes = onlyGiftsMagic ? false : hexes.length > 0 || hasVigor;
   const showGifts = gifts.length > 0;
-  const shouldRender = showSpellsSigns || showInvocations || showRituals || showHexes || showGifts;
+  const shouldRender = showSpellsSigns || showInvocations || showRituals || showHexes || showGifts || showItemEffects;
 
   return {
     i18n,
@@ -318,10 +339,12 @@ export function mapCharacterJsonToPage4Vm(
     showRituals,
     showHexes,
     showGifts,
+    showItemEffects,
     spellsSigns,
     invocations,
     rituals,
     hexes,
     gifts,
+    itemEffects,
   };
 }

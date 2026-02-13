@@ -147,6 +147,18 @@ function renderStatValue(cur: number | null, bonus: number | null, raceBonus: nu
   return c ? escapeHtml(c) : b;
 }
 
+function renderStatValueWithCappedTotal(cur: number | null, bonus: number | null, raceBonus: number | null): string {
+  const base = renderStatValue(cur, bonus, raceBonus);
+  if (!base) return '';
+  const b = bonus ?? 0;
+  const r = raceBonus ?? 0;
+  const hasAnyBonus = b !== 0 || r !== 0;
+  if (!hasAnyBonus) return base;
+  const c = cur ?? 0;
+  const total = Math.min(c + b, 10) + r;
+  return `${base} = ${escapeHtml(String(total))}`;
+}
+
 function box(title: string, body: string, extraClass = ''): string {
   return `
     <section class="box ${extraClass}">
@@ -300,7 +312,7 @@ function renderAvatar(vm: CharacterPdfPage1Vm): string {
 function renderSkillGroups(vm: CharacterPdfPage1Vm): string {
   return vm.skillGroups
     .map((group) => {
-      const statValue = renderStatValue(group.stat.cur, group.stat.bonus, group.stat.raceBonus);
+      const statValue = renderStatValueWithCappedTotal(group.stat.cur, group.stat.bonus, group.stat.raceBonus);
       const skillsHtml = group.skills
         .map((s) => {
           const cur = s.cur !== null && s.cur !== 0 ? String(s.cur) : '';
@@ -1642,7 +1654,6 @@ function renderGeneralGearTable(vm: CharacterPdfPage3Vm): string {
           <tr>
             <td class="equip-fit equip-right">${escapeHtml(g.amount)}</td>
             <td class="equip-left">
-              ${g.group ? `<div class="cell-subtle">${escapeHtml(g.group)}</div>` : ''}
               <div>${escapeHtml(g.name)}</div>
               ${SHOW_GENERAL_GEAR_DESCRIPTION && g.description ? `<div class="cell-subtle">${escapeHtml(g.description)}</div>` : ''}
             </td>
@@ -1768,7 +1779,7 @@ function renderUpgradesTable(vm: CharacterPdfPage3Vm): string {
   );
 }
 
-function renderPage2(vm: CharacterPdfPage2Vm, giftsInlineTplHtml = ''): string {
+function renderPage2(vm: CharacterPdfPage2Vm, giftsInlineTplHtml = '', itemEffectsInlineTplHtml = ''): string {
   const loreHtml = renderLoreBlock(vm);
   const socialStatusHtml = renderSocialStatusTable(vm);
   const lifePathHtml = renderLifeEvents(vm);
@@ -1807,6 +1818,7 @@ function renderPage2(vm: CharacterPdfPage2Vm, giftsInlineTplHtml = ''): string {
       <template id="page2-style-tpl">${styleHtml}</template>
       <template id="page2-values-tpl">${valuesHtml}</template>
       ${giftsInlineTplHtml ? `<template id="page2-gifts-tpl">${giftsInlineTplHtml}</template>` : ''}
+      ${itemEffectsInlineTplHtml ? `<template id="page2-item-effects-tpl">${itemEffectsInlineTplHtml}</template>` : ''}
     </div>
   `;
 }
@@ -2172,6 +2184,28 @@ function renderGiftsTable(vm: CharacterPdfPage4Vm): string {
   `;
 }
 
+function renderItemEffectsGlossaryTable(vm: CharacterPdfPage4Vm): string {
+  const rows = vm.itemEffects
+    .map((e) => {
+      const name = escapeHtml(e.name ?? '');
+      const value = escapeHtml(e.value ?? '').replace(/\r?\n/g, '<br>');
+      const body = value ? `<b>${name}</b> — ${value}` : `<b>${name}</b>`;
+      return `
+        <tr>
+          <td class="item-effects-cell">${body}</td>
+        </tr>
+      `;
+    })
+    .join('');
+
+  return `
+    <table class="equip-table equip-item-effects">
+      <colgroup><col /></colgroup>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
 function renderPage4(vm: CharacterPdfPage4Vm): string {
   if (!vm.shouldRender) return '';
   const titles = vm.i18n.source;
@@ -2185,6 +2219,7 @@ function renderPage4(vm: CharacterPdfPage4Vm): string {
         ${vm.showRituals ? box(titles.magicRitualsTitle, renderRitualsTable(vm), 'magic4-rituals-box') : ''}
         ${vm.showHexes ? box(titles.magicHexesTitle, renderHexesTable(vm), 'magic4-hexes-box') : ''}
         ${vm.showGifts ? box(titles.magicGiftsTitle, renderGiftsTable(vm), 'magic4-gifts-box') : ''}
+        ${vm.showItemEffects ? box(vm.i18n.effects.title, renderItemEffectsGlossaryTable(vm), 'item-effects-box') : ''}
       </div>
     </div>
   `;
@@ -2202,8 +2237,12 @@ export function renderCharacterPdfHtml(input: {
   const page3 = input.page3;
   const page4 = input.page4;
   const alchemyStyle = input.options?.alchemy_style ?? 'w2';
-  const page2GiftsInlineTpl = page4.onlyGiftsData && page4.gifts.length > 0
+  const onlyGiftsMagic = page4.gifts.length > 0 && !page4.showSpellsSigns && !page4.showInvocations && !page4.showRituals && !page4.showHexes;
+  const page2GiftsInlineTpl = onlyGiftsMagic
     ? box(page4.i18n.source.magicGiftsTitle, renderGiftsTable(page4), 'magic4-gifts-box magic4-gifts-inline')
+    : '';
+  const page2ItemEffectsInlineTpl = onlyGiftsMagic && page4.showItemEffects
+    ? box(page4.i18n.effects.title, renderItemEffectsGlossaryTable(page4), 'item-effects-box item-effects-inline')
     : '';
   return `<!doctype html>
 <html>
@@ -2274,6 +2313,7 @@ export function renderCharacterPdfHtml(input: {
       .page2-siblings-row.page2-visible { display: grid !important; }
       .page2-allies-row, .page2-enemies-row { margin-top: 0; }
       .page2-gifts-inline-wrap { width: 100%; }
+      .page2-item-effects-inline-wrap { width: 100%; }
       .page2-separator { margin: 4mm 0; text-align: center; }
       .page2-separator-line {
         display: block;
@@ -2610,6 +2650,11 @@ export function renderCharacterPdfHtml(input: {
       .equip-table.equip-magic4 tbody tr.magic4-tooltip td.magic4-tooltip-cell { padding-top: 3px; padding-bottom: 3px; }
       .equip-table.equip-magic4 tbody tr.magic4-tooltip td.magic4-tooltip-cell b { font-weight: 900; }
       .equip-table.equip-magic4 tbody tr.magic4-tooltip td.magic4-tooltip-cell i { font-style: italic; }
+      .item-effects-box .box-title { background: rgba(59, 130, 246, 0.12); }
+      .equip-table.equip-item-effects { table-layout: auto; }
+      .equip-table.equip-item-effects tbody tr { height: auto; break-inside: avoid; page-break-inside: avoid; }
+      .equip-table.equip-item-effects td.item-effects-cell { white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.12; font-size: 9.5px; }
+      .equip-table.equip-item-effects td.item-effects-cell b { font-weight: 900; }
       .t { width: 100%; border-collapse: collapse; table-layout: fixed; }
       .t th, .t td { border: 1px solid #111827; padding: 2px 3px; vertical-align: top; }
       .t thead th { background: #f3f4f6; font-weight: 900; text-transform: uppercase; font-size: 9px; letter-spacing: 0.06em; text-align: left; }
@@ -2619,7 +2664,7 @@ export function renderCharacterPdfHtml(input: {
   </head>
   <body>
       ${renderPage1(vm)}
-      ${renderPage2(page2, page2GiftsInlineTpl)}
+      ${renderPage2(page2, page2GiftsInlineTpl, page2ItemEffectsInlineTpl)}
       ${renderPage3(page3, alchemyStyle)}
       ${renderPage4(page4)}
 
@@ -2858,8 +2903,9 @@ export function renderCharacterPdfHtml(input: {
                 if (row2) row2.remove();
                 if (siblingsFull) siblingsFull.remove();
 
-                // If the character has ONLY magic gifts, try to inline the gifts table on page 2 (near the Lore block).
-                // If it fits, hide page 4 entirely so we don't start a new page.
+                // If the character has only ONE magic table (gifts), try to inline it on page 2 (near the Lore block).
+                // If present, also try to inline the item effects glossary right after it.
+                // If everything fits, hide page 4 entirely so we don't start a new page.
                 const giftsTpl = document.getElementById('page2-gifts-tpl');
                 if (giftsTpl && giftsTpl.tagName === 'TEMPLATE' && giftsTpl.innerHTML && giftsTpl.innerHTML.trim()) {
                   const page2El = layout.closest('.page') || document.querySelector('.page.page2');
@@ -2881,12 +2927,31 @@ export function renderCharacterPdfHtml(input: {
 
                     const EPS_PX = 3.0;
                     const page2Bottom = page2El.getBoundingClientRect().bottom - EPS_PX;
-                    const giftsBottom = wrap.getBoundingClientRect().bottom;
-                    const fits = Number.isFinite(page2Bottom) && Number.isFinite(giftsBottom) && giftsBottom <= page2Bottom;
+
+                    const effectsTpl = document.getElementById('page2-item-effects-tpl');
+                    const effectsFrag = effectsTpl && effectsTpl.tagName === 'TEMPLATE' && effectsTpl.innerHTML && effectsTpl.innerHTML.trim() && effectsTpl.content
+                      ? effectsTpl.content.cloneNode(true)
+                      : null;
+
+                    let effectsWrap = null;
+                    if (effectsFrag) {
+                      effectsWrap = document.createElement('div');
+                      effectsWrap.className = 'page2-item-effects-inline-wrap';
+                      effectsWrap.appendChild(effectsFrag);
+                      if (wrap.parentElement) {
+                        wrap.parentElement.insertBefore(effectsWrap, wrap.nextSibling);
+                      } else {
+                        layout.appendChild(effectsWrap);
+                      }
+                    }
+
+                    const bottomNow = (effectsWrap ?? wrap).getBoundingClientRect().bottom;
+                    const fits = Number.isFinite(page2Bottom) && Number.isFinite(bottomNow) && bottomNow <= page2Bottom;
 
                     if (fits) {
                       if (page4El) page4El.classList.add('page-hidden');
                     } else {
+                      if (effectsWrap) effectsWrap.remove();
                       wrap.remove();
                     }
                   }

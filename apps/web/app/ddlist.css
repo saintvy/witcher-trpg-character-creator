@@ -27,6 +27,7 @@
 
 .profession_table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   border: 1px solid #5a4a3a;
   margin-bottom: 1em;
@@ -34,6 +35,7 @@
 }
 
 .profession_table td {
+  width: 33.33%;
   padding: 0.75em;
   border: 1px solid #5a4a3a;
   background-color: #2a2419;

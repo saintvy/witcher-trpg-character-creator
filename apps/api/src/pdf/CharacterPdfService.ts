@@ -10,7 +10,7 @@ import {
   type MutagenDetails,
   type TrophyDetails,
 } from './pages/viewModelPage3.js';
-import type { MagicGiftDetails } from './pages/viewModelPage4.js';
+import type { MagicGiftDetails, ItemEffectGlossaryRow } from './pages/viewModelPage4.js';
 import { renderCharacterPdfHtml } from './templates/characterHtml.js';
 import { getSkillsCatalog } from '../services/skillsCatalog.js';
 import { db } from '../db/pool.js';
@@ -351,7 +351,7 @@ export class CharacterPdfService {
           db.query<BlueprintDetails>(
             `
               SELECT b_id, blueprint_name, blueprint_group, craft_level, difficulty_check, time_craft,
-                     components, item_desc, price_components, price, price_item
+                     item_id, components, item_desc, price_components, price, price_item
               FROM wcc_item_blueprints_v
               WHERE lang = $1 AND b_id = ANY($2::text[])
             `,
@@ -425,6 +425,96 @@ export class CharacterPdfService {
       console.error('[pdf] gifts lookup failed', error);
     }
 
+    const itemEffectsGlossary: ItemEffectGlossaryRow[] = [];
+    try {
+      const blueprintItemIds = Array.from(blueprintDetailsById.values())
+        .map((b) => String(b.item_id ?? '').trim())
+        .filter((x) => x.length > 0);
+
+      const itemIdsForEffects = Array.from(
+        new Set([...weaponIds, ...armorIds, ...upgradeIds, ...blueprintItemIds]),
+      ).filter((id) => id.startsWith('W') || id.startsWith('A') || id.startsWith('U'));
+
+      if (itemIdsForEffects.length > 0) {
+        type EffectRow = {
+          item_id: string;
+          effect_id: string;
+          modifier: number | null;
+          name_tpl: string | null;
+          desc_tpl: string | null;
+          cond_tpl: string | null;
+        };
+
+        const { rows } = await this.withTimeout(
+          db.query<EffectRow>(
+            `
+              SELECT ite.item_id::text AS item_id,
+                     ite.e_e_id::text AS effect_id,
+                     ite.modifier AS modifier,
+                     COALESCE(ie_lang.text, ie_en.text, '') AS name_tpl,
+                     COALESCE(ide_lang.text, ide_en.text, '') AS desc_tpl,
+                     COALESCE(iec_lang.text, iec_en.text, '') AS cond_tpl
+                FROM wcc_item_to_effects ite
+                LEFT JOIN wcc_item_effects e ON e.e_id = ite.e_e_id
+                LEFT JOIN i18n_text ie_lang ON ie_lang.id = e.name_id AND ie_lang.lang = $1
+                LEFT JOIN i18n_text ie_en ON ie_en.id = e.name_id AND ie_en.lang = 'en'
+                LEFT JOIN i18n_text ide_lang ON ide_lang.id = e.description_id AND ide_lang.lang = $1
+                LEFT JOIN i18n_text ide_en ON ide_en.id = e.description_id AND ide_en.lang = 'en'
+                LEFT JOIN wcc_item_effect_conditions ec ON ec.ec_id = ite.ec_ec_id
+                LEFT JOIN i18n_text iec_lang ON iec_lang.id = ec.description_id AND iec_lang.lang = $1
+                LEFT JOIN i18n_text iec_en ON iec_en.id = ec.description_id AND iec_en.lang = 'en'
+               WHERE ite.item_id = ANY($2::text[])
+               ORDER BY ite.e_e_id ASC, ite.modifier ASC NULLS FIRST
+            `,
+            [lang, itemIdsForEffects],
+          ),
+          2500,
+        );
+
+        const normalize = (v: string | null | undefined): string => String(v ?? '').trim();
+        const replaceMod = (tpl: string, modifier: number | null): string => {
+          const mod = modifier === null || modifier === undefined ? '' : String(modifier);
+          return tpl.replaceAll('<mod>', mod);
+        };
+        const toSortNumber = (effectId: string): number => {
+          const m = /^E(\d+)$/.exec(effectId.trim());
+          if (!m) return Number.POSITIVE_INFINITY;
+          const n = Number(m[1]);
+          return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+        };
+
+        const byKey = new Map<string, { effectId: string; modifier: number | null; cond: string; row: ItemEffectGlossaryRow }>();
+        for (const r of rows) {
+          const effectId = normalize(r.effect_id);
+          const nameTpl = normalize(r.name_tpl);
+          if (!effectId && !nameTpl) continue;
+
+          const cond = replaceMod(normalize(r.cond_tpl), r.modifier).trim();
+          const nameBase = replaceMod(nameTpl || effectId, r.modifier).trim();
+          const name = cond ? `${nameBase} [${cond}]` : nameBase;
+          const value = replaceMod(normalize(r.desc_tpl), r.modifier).trim();
+
+          const key = `${effectId}|${r.modifier ?? ''}|${cond}`;
+          if (byKey.has(key)) continue;
+          byKey.set(key, { effectId, modifier: r.modifier ?? null, cond, row: { name, value } });
+        }
+
+        const sorted = Array.from(byKey.values()).sort((a, b) => {
+          const an = toSortNumber(a.effectId);
+          const bn = toSortNumber(b.effectId);
+          if (an !== bn) return an - bn;
+          const am = a.modifier ?? Number.NEGATIVE_INFINITY;
+          const bm = b.modifier ?? Number.NEGATIVE_INFINITY;
+          if (am !== bm) return am - bm;
+          return a.row.name.localeCompare(b.row.name, undefined, { sensitivity: 'base' });
+        });
+
+        itemEffectsGlossary.push(...sorted.map((x) => x.row));
+      }
+    } catch (error) {
+      console.error('[pdf] item effects glossary lookup failed', error);
+    }
+
     const pdfVm = buildCharacterPdfViewModel(characterJson, {
       lang,
       i18n,
@@ -441,6 +531,7 @@ export class CharacterPdfService {
       generalGearDetailsById,
       upgradeDetailsById,
       giftDetailsById,
+      itemEffectsGlossary,
     });
     const html = renderCharacterPdfHtml({ page1: pdfVm.page1, page2: pdfVm.page2, page3: pdfVm.page3, page4: pdfVm.page4, options });
 

@@ -3078,6 +3078,8 @@ function statVigorByProfessionLogicField(profession: unknown): number | null {
       return 5;
     case 'Priest':
       return 2;
+    case 'Druid':
+      return 2;
     case 'Bard':
     case 'Doctor':
     case 'Man At Arms':
@@ -3161,7 +3163,11 @@ async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
   if (definingSkillId) professionalSet.add(definingSkillId);
 
   const commonSkillsObj = getAtPath(state, 'characterRaw.skills.common');
-  const commonSkillIds = isPlainObject(commonSkillsObj) ? Object.keys(commonSkillsObj) : [];
+  const commonSkillIdsRaw = isPlainObject(commonSkillsObj) ? Object.keys(commonSkillsObj) : [];
+  const commonSkillIdSet = new Set<string>(commonSkillIdsRaw);
+  // Ensure professional skills (including defining) are present in the adjustable list.
+  for (const sid of professionalSet) commonSkillIdSet.add(sid);
+  const commonSkillIds = Array.from(commonSkillIdSet);
 
   // Legacy skill ids used in characterRaw.skills.common vs DB ids in wcc_skills
   const stateSkillToDbSkill: Record<string, string> = {
@@ -3195,8 +3201,9 @@ async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
   let spentCommon = 0;
 
   for (const skillId of commonSkillIds) {
-    const baseline = toInt(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0);
+    const baselineRaw = toInt(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0);
     const bonus = toInt(getAtPath(state, `characterRaw.skills.common.${skillId}.bonus`), 0);
+    const baseline = professionalSet.has(skillId) ? Math.max(baselineRaw, 1) : baselineRaw;
     const maxCur = Math.max(Math.max(6 - bonus, 0), Math.max(0, baseline));
 
     const requested = payload.skills && typeof payload.skills === 'object' ? toInt(payload.skills[skillId], baseline) : baseline;
