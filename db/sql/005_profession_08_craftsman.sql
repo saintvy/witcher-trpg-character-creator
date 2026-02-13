@@ -422,7 +422,7 @@ CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
 -- Craftsman (pick 5)
--- 50 crowns of components - budget(50) - source_id = 'ingredients_craft', 'ingredients_alchemy'
+-- 50 crowns of components - option item T901 (grants budget(50) for ingredients sources)
 -- Alchemy set - T105
 -- Crafting tools - T107
 -- Hourglass - T091
@@ -444,7 +444,7 @@ SELECT
       jsonb_build_object('var', 'characterRaw.professional_gear_options'),
       jsonb_build_object(
         'tokens', 5,
-        'items', jsonb_build_array('T105', 'T107', 'T091', 'W116', 'T053', 'W069', 'T102', 'T023', 'T114'),
+        'items', jsonb_build_array('T901', 'T105', 'T107', 'T091', 'W116', 'T053', 'W069', 'T102', 'T023', 'T114'),
         'bundles', jsonb_build_array()
       )
     )
@@ -486,19 +486,6 @@ SELECT
           )
         )
       )
-    )
-  ) AS body;
-
--- Эффекты: бюджет на алхимические ингредиенты (50) для магазина
-INSERT INTO effects (scope, an_an_id, body)
-SELECT
-  'character' AS scope,
-  'wcc_profession_o08' AS an_an_id,
-  jsonb_build_object(
-    'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'characterRaw.money.alchemyIngredientsCrowns'),
-      50
     )
   ) AS body;
 

@@ -2,6 +2,8 @@
 -- Узел: Выбор DLC/источников для генерации
 WITH raw_data (dlc_id, name_ru, name_en, is_official) AS ( VALUES
     ('core',             'База',                                                'Core',                                             TRUE),
+    -- Internal/system DLCs: used for technical items that should not be selectable by the user.
+    ('sys_internal',     'Служебное (внутреннее)',                               'Internal (system)',                                FALSE),
     ('exp_bot',          'EXP-DLC "Книга Сказок"',                              'EXP-DLC "A Book of Tales"',                        TRUE),
     ('exp_lal',          'EXP-DLC "Правители и земли"',                         'EXP-DLC "Lords and Lands"',                        TRUE),
     ('exp_toc',          'EXP-DLC "Том Хаоса"',                                 'EXP-DLC "A Tome of Chaos"',                        TRUE),

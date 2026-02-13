@@ -56,7 +56,17 @@ SELECT meta.qu_id
            -- Флаг: профессиональный магазин (для отдельного рендера на фронте)
            'isProfessional', true,
            -- Allowed DLCs: берём из state.dlcs (core всегда доступен и добавляется на стороне API)
-           'allowedDlcs', jsonb_build_object('jsonlogic_expression', jsonb_build_object('var','dlcs')),
+           -- Additionally allow sys_internal for technical professional options (pseudo-items like budget grants).
+           'allowedDlcs', jsonb_build_object(
+             'jsonlogic_expression',
+             jsonb_build_object(
+               'concat_arrays',
+               jsonb_build_array(
+                 jsonb_build_object('var', jsonb_build_array('dlcs', jsonb_build_array())),
+                 jsonb_build_array('sys_internal')
+               )
+             )
+           ),
            -- Бюджет с жетонами
            'budgets', jsonb_build_array(
              jsonb_build_object(

@@ -413,7 +413,7 @@ CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
 -- Druid (pick 5)
--- 100 crowns of ingredients - budget(100) - source_id = 'ingredients_craft', 'ingredients_alchemy'
+-- 100 crowns of ingredients - option item T900 (grants budget(100) for ingredients sources)
 -- Smelling salts ×2 - P052 x2
 -- Numbing herbs ×3 - P053 x3
 -- Staff - W157
@@ -483,7 +483,7 @@ SELECT
       jsonb_build_object('var', 'characterRaw.professional_gear_options'),
       jsonb_build_object(
         'tokens', 5,
-        'items', jsonb_build_array('W157', 'T068', 'T012', 'W039', 'T006'),
+        'items', jsonb_build_array('T900', 'W157', 'T068', 'T012', 'W039', 'T006'),
         'bundles', jsonb_build_array(
           jsonb_build_object(
             'bundleId', 'druid_smelling_salts',
@@ -553,19 +553,6 @@ SELECT
           )
         )
       )
-    )
-  ) AS body;
-
--- Эффекты: бюджет на алхимические ингредиенты (100) для магазина
-INSERT INTO effects (scope, an_an_id, body)
-SELECT
-  'character' AS scope,
-  'wcc_profession_o10' AS an_an_id,
-  jsonb_build_object(
-    'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'characterRaw.money.alchemyIngredientsCrowns'),
-      100
     )
   ) AS body;
 

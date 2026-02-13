@@ -103,6 +103,10 @@ type ShopPurchase = {
   qty: number;
 };
 
+// Professional shop pseudo-items: grant budgets instead of inventory entries.
+const PROFESSIONAL_BUDGET_ITEM_ALCH_100 = 'T900';
+const PROFESSIONAL_BUDGET_ITEM_ALCH_50 = 'T901';
+
 type ShopAnswerValue = {
   v?: number;
   purchases?: ShopPurchase[];
@@ -2473,11 +2477,36 @@ async function applyShopNode(
     return; // No budgets configured
   }
 
-  // DLC фильтр для магазина берём из state.dlcs (core всегда доступен)
+  // DLC filter for shop item eligibility.
+  // Prefer question metadata shop.allowedDlcs (supports jsonlogic_expression), fallback to state.dlcs.
+  // ('core' is always allowed)
   const dlcs = (() => {
-    const allowed = getAllowedDlcs(state);
-    const set = new Set<string>(['core', ...allowed]);
-    return Array.from(set);
+    const rawAllowedDlcs = (shop as any)?.allowedDlcs as unknown;
+    let allowed = [] as string[];
+
+    // Support {"jsonlogic_expression": ...} wrapper (same shape as in SQL metadata).
+    if (rawAllowedDlcs && typeof rawAllowedDlcs === 'object' && !Array.isArray(rawAllowedDlcs)) {
+      const obj = rawAllowedDlcs as Record<string, unknown>;
+      if ('jsonlogic_expression' in obj && Object.keys(obj).length === 1) {
+        try {
+          allowed = toStringArray(evaluateJsonLogicExpression(obj.jsonlogic_expression, state));
+        } catch {
+          allowed = [];
+        }
+      }
+    }
+
+    // Or a plain array already resolved earlier.
+    if (allowed.length === 0) {
+      allowed = toStringArray(rawAllowedDlcs);
+    }
+
+    // Fallback: use state.dlcs
+    if (allowed.length === 0) {
+      allowed = getAllowedDlcs(state);
+    }
+
+    return Array.from(new Set<string>(['core', ...allowed]));
   })();
 
   const parsed = parseShopAnswerValue(rawValue);
@@ -3000,6 +3029,14 @@ async function applyShopNode(
   // Third pass: add items to targets
   for (const [sourceId, entries] of lookedUp.entries()) {
     for (const entry of entries) {
+      // Pseudo-items (professional gear options): grant ingredient budget and don't add to inventory.
+      if (sourceId === 'general_gear' && (entry.purchase.id === PROFESSIONAL_BUDGET_ITEM_ALCH_100 || entry.purchase.id === PROFESSIONAL_BUDGET_ITEM_ALCH_50)) {
+        const add = (entry.purchase.id === PROFESSIONAL_BUDGET_ITEM_ALCH_100 ? 100 : 50) * Math.max(1, entry.purchase.qty);
+        const current = toFiniteNumber(getAtPath(state, 'characterRaw.money.alchemyIngredientsCrowns'), 0);
+        setAtPath(state, 'characterRaw.money.alchemyIngredientsCrowns', current + add);
+        continue;
+      }
+
       const item = {
         ...entry.row,
         amount: entry.purchase.qty,

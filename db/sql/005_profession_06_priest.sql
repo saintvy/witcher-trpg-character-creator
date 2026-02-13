@@ -11,7 +11,9 @@ WITH
   INSERT INTO rules (ru_id, name, body)
   VALUES
     (ck_id('witcher_cc.rules.is_dlc_exp_toc_enabled'), 'is_dlc_exp_toc_enabled', '{"in":["exp_toc",{"var":["dlcs",[]]}]}'::jsonb)
-  ON CONFLICT (ru_id) DO NOTHING
+  ON CONFLICT (ru_id) DO UPDATE
+  SET name = EXCLUDED.name,
+      body = EXCLUDED.body
   RETURNING ru_id
 )
 , rule_parts AS (
@@ -39,7 +41,9 @@ WITH
       )
     ) AS body
   FROM rule_parts
-  ON CONFLICT (ru_id) DO NOTHING
+  ON CONFLICT (ru_id) DO UPDATE
+  SET name = EXCLUDED.name,
+      body = EXCLUDED.body
   RETURNING ru_id
 )
 , raw_data AS (
@@ -424,7 +428,7 @@ SELECT 'wcc_profession_o' || to_char(raw_data.num, 'FM00') AS an_id,
        meta.qu_id,
        ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title') AS label,
        raw_data.num AS sort_order,
-       ck_id('witcher_cc.rules.wcc_profession.priest') AS visible_ru_ru_id,
+       (SELECT ru_id FROM vis_rules LIMIT 1) AS visible_ru_ru_id,
        jsonb_build_object(
            'title', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title')::text),
            'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.description')::text)
@@ -434,7 +438,7 @@ CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
 -- Priest (pick 5)
--- 100 crowns of components - budget(100) - source_id = 'ingredients_craft', 'ingredients_alchemy'
+-- 100 crowns of components - option item T900 (grants budget(100) for ingredients sources)
 -- Alchemy set - T105
 -- Clotting powder ×5 - P048 x5
 -- Dagger - W082
@@ -492,7 +496,7 @@ SELECT
       jsonb_build_object('var', 'characterRaw.professional_gear_options'),
       jsonb_build_object(
         'tokens', 5,
-        'items', jsonb_build_array('T105', 'W082', 'T080', 'T091', 'W157', 'T111'),
+        'items', jsonb_build_array('T900', 'T105', 'W082', 'T080', 'T091', 'W157', 'T111'),
         'bundles', jsonb_build_array(
           jsonb_build_object(
             'bundleId', 'priest_clotting_powder',
@@ -554,19 +558,6 @@ SELECT
           )
         )
       )
-    )
-  ) AS body;
-
--- Эффекты: бюджет на алхимические ингредиенты (100) для магазина
-INSERT INTO effects (scope, an_an_id, body)
-SELECT
-  'character' AS scope,
-  'wcc_profession_o06' AS an_an_id,
-  jsonb_build_object(
-    'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'characterRaw.money.alchemyIngredientsCrowns'),
-      100
     )
   ) AS body;
 
