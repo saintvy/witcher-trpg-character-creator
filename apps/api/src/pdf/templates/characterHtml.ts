@@ -2235,7 +2235,7 @@ function renderPage4(vm: CharacterPdfPage4Vm): string {
     <div class="page page4">
       <div class="page4-layout">
         ${vm.showSpellsSigns ? box(spellsSignsTitle, renderSpellsSignsTable(vm), 'magic4-spells-box') : ''}
-        ${vm.showInvocations ? box(titles.invocationsPriestTitle, renderInvocationsTable(vm), 'magic4-invocations-box') : ''}
+        ${vm.showInvocations ? box(vm.invocationsTitle, renderInvocationsTable(vm), vm.invocationsBoxClass) : ''}
         ${vm.showRituals ? box(titles.magicRitualsTitle, renderRitualsTable(vm), 'magic4-rituals-box') : ''}
         ${vm.showHexes ? box(titles.magicHexesTitle, renderHexesTable(vm), 'magic4-hexes-box') : ''}
         ${vm.showGifts ? box(titles.magicGiftsTitle, renderGiftsTable(vm), 'magic4-gifts-box') : ''}
@@ -2679,6 +2679,7 @@ export function renderCharacterPdfHtml(input: {
       .trophies-box .box-title { background: rgba(220,38,38,0.14); }
       .magic4-spells-box .box-title { background: rgba(147, 197, 253, 0.35); }
       .magic4-invocations-box .box-title { background: rgba(253, 186, 116, 0.35); }
+      .magic4-invocations-druid-box .box-title { background: rgba(134, 239, 172, 0.35); }
       .magic4-rituals-box .box-title { background: rgba(196, 181, 253, 0.35); }
       .magic4-hexes-box .box-title { background: rgba(252, 165, 165, 0.35); }
       .magic4-gifts-box .box-title { background: rgba(110, 231, 183, 0.28); }

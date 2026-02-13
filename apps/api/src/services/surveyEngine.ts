@@ -2427,6 +2427,22 @@ function getTokenCostForItem(budget: ShopBudgetConfig, sourceId: string, itemId:
   return 1; // default cost
 }
 
+function getShopRowPrice(row: Record<string, unknown>): number {
+  const candidates: unknown[] = [
+    (row as any).price,
+    (row as any).price_formula,
+    (row as any).price_potion,
+  ];
+
+  for (const c of candidates) {
+    if (c === null || c === undefined || c === '') continue;
+    const n = typeof c === 'number' ? c : Number(c);
+    if (Number.isFinite(n)) return n;
+  }
+
+  return 0;
+}
+
 /**
  * If characterRaw.gear was set as an array (by professional shop 093), JSON.stringify
  * would omit named properties like .weapons / .magic added by 094/096. Ensure gear is
@@ -2882,7 +2898,7 @@ async function applyShopNode(
   flatEntries.sort((a, b) => maxMoneyPriorityForItem(b.sourceId, b.entry.purchase.id) - maxMoneyPriorityForItem(a.sourceId, a.entry.purchase.id));
 
   for (const { sourceId, entry } of flatEntries) {
-      const price = toFiniteNumber(entry.row.price, 0);
+      const price = getShopRowPrice(entry.row);
       const qty = entry.purchase.qty;
       
       // Find applicable budgets for this item, sorted by priority

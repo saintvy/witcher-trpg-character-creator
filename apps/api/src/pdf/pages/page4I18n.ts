@@ -44,6 +44,7 @@ const PAGE4_KEYS = {
     magicHexesTitle: 'witcher_cc.wcc_shop.source.magic_hexes.title',
     magicRitualsTitle: 'witcher_cc.wcc_shop.source.magic_rituals.title',
     invocationsPriestTitle: 'witcher_cc.wcc_shop.source.invocations_priest.title',
+    invocationsDruidTitle: 'witcher_cc.pdf.page4.invocations_druid.title',
     magicGiftsTitle: 'witcher_cc.wcc_shop.source.magic_gifts.title',
   },
   effects: {
@@ -83,6 +84,7 @@ export type CharacterPdfPage4I18n = {
     magicHexesTitle: string;
     magicRitualsTitle: string;
     invocationsPriestTitle: string;
+    invocationsDruidTitle: string;
     magicGiftsTitle: string;
   };
   effects: {

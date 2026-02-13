@@ -16,6 +16,7 @@ SELECT ir.r_id
      , coalesce(ir.minimal_ingredients_cost, 0) AS minimal_ingredients_cost
      , coalesce(ir.price_potion, 0) AS price_potion
      , coalesce(ir.price_formula, 0) AS price_formula
+     , coalesce(ir.price_formula, 0) AS price
      , coalesce(ir.complexity, 0) AS complexity
      , CASE 
          WHEN ir.time_craft_val IS NOT NULL AND ir.time_craft_unit_id IS NOT NULL THEN
@@ -73,4 +74,3 @@ SELECT ir.r_id
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_recipes_v_rid_lang_uidx ON wcc_item_recipes_v (r_id, lang);
 CREATE INDEX IF NOT EXISTS wcc_item_recipes_v_lang_dlc_idx ON wcc_item_recipes_v (lang, dlc_id);
 CREATE INDEX IF NOT EXISTS wcc_item_recipes_v_lang_group_idx ON wcc_item_recipes_v (lang, recipe_group);
-

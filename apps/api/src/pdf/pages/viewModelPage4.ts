@@ -147,6 +147,8 @@ export type CharacterPdfPage4Vm = {
   showHexes: boolean;
   showGifts: boolean;
   showItemEffects: boolean;
+  invocationsTitle: string;
+  invocationsBoxClass: string;
   spellsSigns: MagicSpellLikeRow[];
   invocations: MagicInvocationRow[];
   rituals: MagicRitualRow[];
@@ -168,8 +170,9 @@ export function mapCharacterJsonToPage4Vm(
   const profession = normalizeProfession(getFirstString(characterJson, ['profession', 'role', 'class', 'career']));
   const isMage = hasAny(profession, ['mage', 'маг']);
   const isWitcher = hasAny(profession, ['witcher', 'ведьмак', 'ведьмач']);
+  const isDruid = hasAny(profession, ['druid', 'друид']);
   // Druids use invocations (like priests), so treat them as priest-like for PDF visibility.
-  const isPriest = hasAny(profession, ['priest', 'жрец', 'druid', 'друид']);
+  const isPriest = hasAny(profession, ['priest', 'жрец']) || isDruid;
 
   const vigor = readStat(characterJson, 'vigor');
   const vigorTotal = (vigor.cur ?? 0) + (vigor.bonus ?? 0) + (vigor.raceBonus ?? 0);
@@ -208,8 +211,9 @@ export function mapCharacterJsonToPage4Vm(
     .map(({ _sortKey: _ignored, ...rest }) => rest);
 
   const invocationsRec = asRecord(magicRec.invocations) ?? {};
+  const druidRaw = Array.isArray(invocationsRec.druid) ? (invocationsRec.druid as unknown[]) : [];
   const priestRaw = Array.isArray(invocationsRec.priest) ? (invocationsRec.priest as unknown[]) : [];
-  const invocations: MagicInvocationRow[] = priestRaw
+  const invocations: MagicInvocationRow[] = [...druidRaw, ...priestRaw]
     .map((x) => {
       const rec = asRecord(x);
       if (!rec) return null;
@@ -329,6 +333,13 @@ export function mapCharacterJsonToPage4Vm(
   const showHexes = onlyGiftsMagic ? false : hexes.length > 0 || hasVigor;
   const showGifts = gifts.length > 0;
   const shouldRender = showSpellsSigns || showInvocations || showRituals || showHexes || showGifts || showItemEffects;
+  const resolveI18nFallback = (value: string, fallback: string): string => {
+    const v = String(value ?? '').trim();
+    if (!v) return fallback;
+    // If a key wasn't found in DB, loaders fall back to returning the key itself.
+    if (v.startsWith('witcher_cc.')) return fallback;
+    return v;
+  };
 
   return {
     i18n,
@@ -340,6 +351,10 @@ export function mapCharacterJsonToPage4Vm(
     showHexes,
     showGifts,
     showItemEffects,
+    invocationsTitle: isDruid
+      ? resolveI18nFallback(i18n.source.invocationsDruidTitle, i18n.lang === 'ru' ? 'Инвокации друида' : 'Druid Invocations')
+      : i18n.source.invocationsPriestTitle,
+    invocationsBoxClass: isDruid ? 'magic4-invocations-druid-box' : 'magic4-invocations-box',
     spellsSigns,
     invocations,
     rituals,

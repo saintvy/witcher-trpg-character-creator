@@ -3,11 +3,11 @@
 -- Magic (shop tooltips) templates
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
 VALUES
-  (ck_id('witcher_cc.magic.hex.tooltip_tpl'), 'magic', 'hex.tooltip_tpl', 'ru', E'Описание: {effect}\nКак снять: {remove}\nИнгредиенты ритуала снятия:{components}'),
-  (ck_id('witcher_cc.magic.hex.tooltip_tpl'), 'magic', 'hex.tooltip_tpl', 'en', E'Description: {effect}\nHow to remove: {remove}\nRemoval ritual ingredients:{components}'),
+  (ck_id('witcher_cc.magic.hex.tooltip_tpl'), 'magic', 'hex.tooltip_tpl', 'ru', E'<b>Описание:</b> {effect}\n<b>Как снять:</b> {remove}\n<b>Ингредиенты ритуала снятия:</b>{components}'),
+  (ck_id('witcher_cc.magic.hex.tooltip_tpl'), 'magic', 'hex.tooltip_tpl', 'en', E'<b>Description:</b> {effect}\n<b>How to remove:</b> {remove}\n<b>Removal ritual ingredients:</b>{components}'),
 
-  (ck_id('witcher_cc.magic.ritual.effect_tpl'), 'magic', 'ritual.effect_tpl', 'ru', E'Описание: {effect}\nИнгредиенты:{ingredients}'),
-  (ck_id('witcher_cc.magic.ritual.effect_tpl'), 'magic', 'ritual.effect_tpl', 'en', E'Description: {effect}\nIngredients:{ingredients}'),
+  (ck_id('witcher_cc.magic.ritual.effect_tpl'), 'magic', 'ritual.effect_tpl', 'ru', E'<b>Описание:</b> {effect}\n<b>Ингредиенты:</b>{ingredients}'),
+  (ck_id('witcher_cc.magic.ritual.effect_tpl'), 'magic', 'ritual.effect_tpl', 'en', E'<b>Description:</b> {effect}\n<b>Ingredients:</b>{ingredients}'),
 
   -- PDF page 4: gifts table
   (ck_id('witcher_cc.pdf.page4.gifts.col.name'), 'pdf', 'page4.gifts.col.name', 'ru', 'Имя'),
@@ -23,7 +23,10 @@ VALUES
   (ck_id('witcher_cc.pdf.page4.gifts.cost.action'), 'pdf', 'page4.gifts.cost.action', 'ru', 'Действие'),
   (ck_id('witcher_cc.pdf.page4.gifts.cost.action'), 'pdf', 'page4.gifts.cost.action', 'en', 'Action'),
   (ck_id('witcher_cc.pdf.page4.gifts.cost.fullAction'), 'pdf', 'page4.gifts.cost.fullAction', 'ru', 'Действие полного хода'),
-  (ck_id('witcher_cc.pdf.page4.gifts.cost.fullAction'), 'pdf', 'page4.gifts.cost.fullAction', 'en', 'Full action')
+  (ck_id('witcher_cc.pdf.page4.gifts.cost.fullAction'), 'pdf', 'page4.gifts.cost.fullAction', 'en', 'Full action'),
+
+  -- PDF page 4: invocations title for druids
+  (ck_id('witcher_cc.pdf.page4.invocations_druid.title'), 'pdf', 'page4.invocations.druid.title', 'ru', 'Инвокации друида'),
+  (ck_id('witcher_cc.pdf.page4.invocations_druid.title'), 'pdf', 'page4.invocations.druid.title', 'en', 'Druid Invocations')
 ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text;
-

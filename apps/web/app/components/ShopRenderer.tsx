@@ -96,6 +96,23 @@ function clampInt(value: number): number {
   return Math.max(0, Math.floor(value));
 }
 
+function getRowPrice(row: Record<string, unknown> | null | undefined): number {
+  if (!row) return 0;
+  const candidates: unknown[] = [
+    (row as any).price,
+    (row as any).price_formula,
+    (row as any).price_potion,
+  ];
+
+  for (const c of candidates) {
+    if (c === null || c === undefined || c === '') continue;
+    const n = typeof c === 'number' ? c : Number(c);
+    if (Number.isFinite(n)) return n;
+  }
+
+  return 0;
+}
+
 function isTokenBudgetType(type: ShopBudgetConfig['type']): boolean {
   return type === 'tokens' || type === 'token';
 }
@@ -423,7 +440,7 @@ export function ShopRenderer(props: {
       for (const [itemId, qty] of Object.entries(selected)) {
         if (qty <= 0) continue;
         const row = byId.get(itemId);
-        const price = row ? toNumber(row.price, 0) : 0;
+        const price = getRowPrice(row);
         
         // Find applicable budgets for this item, sorted by priority (higher first)
         const applicableBudgets = budgets
@@ -867,7 +884,7 @@ export function ShopRenderer(props: {
       for (const [id, qty] of Object.entries(selected)) {
         if (qty <= 0) continue;
         const row = byId.get(id);
-        const price = row ? toNumber(row.price, 0) : 0;
+        const price = getRowPrice(row);
         if (price === 0) return true;
       }
     }
