@@ -72,6 +72,8 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('column.reliability', 'en', 'Reliability'),
           ('column.effects', 'ru', 'Эффекты'),
           ('column.effects', 'en', 'Effects'),
+          ('column.enhancements', 'ru', 'Ус'),
+          ('column.enhancements', 'en', 'EN'),
           ('column.dlc', 'ru', 'DLC'),
           ('column.dlc', 'en', 'DLC'),
           -- Названия столбцов (специфичные для брони)
@@ -352,7 +354,7 @@ SELECT meta.qu_id
                 jsonb_build_object('field', 'price', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.price')::text)),
                 jsonb_build_object('field', 'availability', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.availability')::text)),
                 jsonb_build_object('field', 'crafted_by', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.crafted_by')::text)),
-                jsonb_build_object('field', 'enhancements', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.slots')::text)),
+                jsonb_build_object('field', 'enhancements', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.enhancements')::text)),
                 jsonb_build_object('field', 'effect_names', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.effects')::text)),
                 jsonb_build_object('field', 'dlc', 'label', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.column.dlc')::text))
               )

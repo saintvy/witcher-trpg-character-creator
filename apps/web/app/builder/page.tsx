@@ -86,6 +86,7 @@ export default function BuilderPage() {
     }
   });
   const [loading, setLoading] = useState(false);
+  const [autoRandomising, setAutoRandomising] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<AnswerInput[]>([]);
   const [historyQuestions, setHistoryQuestions] = useState<HistoryQuestion[]>([]);
@@ -370,7 +371,7 @@ export default function BuilderPage() {
   }, [question]);
 
   const fetchNext = useCallback(
-    async (answers: AnswerInput[], seedOverride?: string) => {
+    async (answers: AnswerInput[], seedOverride?: string): Promise<NextQuestionResponse | null> => {
       setLoading(true);
       setError(null);
       try {
@@ -398,8 +399,10 @@ export default function BuilderPage() {
         setDone(Boolean(payload.done));
         setQuestion(payload.question ?? null);
         setOptions(payload.answerOptions ?? []);
+        return payload;
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
+        return null;
       } finally {
         setLoading(false);
       }
@@ -665,98 +668,288 @@ export default function BuilderPage() {
     return map;
   }, [question, options]);
 
-  const pickRandomOption = useCallback((): AnswerOption | null => {
-    if (!options.length) {
-      return null;
-    }
-
-    // Собираем варианты с весами (metadata.probability трактуем как "вес", не как % от 1.0)
-    const weightedOptions: Array<{ option: AnswerOption; weight: number }> = [];
-    
-    for (const option of options) {
-      const metadata = option.metadata ?? {};
-      const weight = Number((metadata as Record<string, unknown>)["probability"]);
-      
-      // Если вес невалидный, используем равномерное распределение (вес = 1)
-      // 0 — валидный вес (ноль означает "не выпадает"); fallback к 1 только для NaN/∞/некорректных значений.
-      const validWeight = Number.isFinite(weight) && weight >= 0 ? weight : 1;
-      weightedOptions.push({ option, weight: validWeight });
-    }
-
-    if (!weightedOptions.length) {
-      // Fallback: равномерный выбор
-      const randomIndex = Math.floor(Math.random() * options.length);
-      return options[randomIndex] ?? null;
-    }
-
-    // Вычисляем сумму весов
-    const totalWeight = weightedOptions.reduce((sum, item) => sum + item.weight, 0);
-    if (totalWeight <= 0) {
-      const randomIndex = Math.floor(Math.random() * options.length);
-      return options[randomIndex] ?? null;
-    }
-
-    // Генерируем случайное число в диапазоне [0, totalWeight)
-    let random = Math.random() * totalWeight;
-    
-    // Применяем модификатор из metadata вопроса, если он есть
-    const diceModifierExpr = questionMetadata.diceModifier;
-    if (diceModifierExpr !== undefined && diceModifierExpr !== null) {
+  const resolveNumericValue = useCallback(
+    (expr: unknown, evalState: Record<string, unknown>, treatNullAsUndefined: boolean): number | undefined => {
+      if (expr === undefined || expr === null) {
+        return undefined;
+      }
       try {
-        let modifier = 0;
-        if (typeof diceModifierExpr === "number") {
-          modifier = Number.isFinite(diceModifierExpr) ? diceModifierExpr : 0;
-        } else if (typeof diceModifierExpr === "object") {
-          // Проверяем, есть ли jsonlogic_expression
-          const expr = (diceModifierExpr as Record<string, unknown>).jsonlogic_expression;
-          if (expr !== undefined) {
-            // Вычисляем через jsonLogic
-            const result = jsonLogic.apply(expr, state);
-            if (result !== null && result !== undefined) {
-              const numValue = typeof result === "number" ? result : Number(result);
-              if (Number.isFinite(numValue)) {
-                modifier = numValue;
+        if (typeof expr === "number") {
+          return Number.isFinite(expr) ? expr : undefined;
+        }
+        const result = jsonLogic.apply(expr, evalState);
+        if (treatNullAsUndefined && (result === null || result === undefined)) {
+          return undefined;
+        }
+        const numValue = typeof result === "number" ? result : Number(result);
+        return Number.isFinite(numValue) ? numValue : undefined;
+      } catch (error) {
+        return undefined;
+      }
+    },
+    [],
+  );
+
+  const computeNumericMinMax = useCallback(
+    (metadata: Record<string, unknown>, evalState: Record<string, unknown>) => {
+      return {
+        min: resolveNumericValue(metadata.min, evalState, true),
+        max: resolveNumericValue(metadata.max, evalState, true),
+      };
+    },
+    [resolveNumericValue],
+  );
+
+  const computeNumericRandMinMax = useCallback(
+    (metadata: Record<string, unknown>, evalState: Record<string, unknown>) => {
+      return {
+        minRand: resolveNumericValue(metadata.min_rand, evalState, false),
+        maxRand: resolveNumericValue(metadata.max_rand, evalState, false),
+      };
+    },
+    [resolveNumericValue],
+  );
+
+  const resolveTextboxRandomList = useCallback(
+    (metadata: Record<string, unknown>, evalState: Record<string, unknown>): string[] | undefined => {
+      const randomListExpr = metadata.randomList;
+      if (randomListExpr === undefined || randomListExpr === null) {
+        return undefined;
+      }
+      try {
+        const result = jsonLogic.apply(randomListExpr, evalState);
+        if (Array.isArray(result)) {
+          return result.filter((item): item is string => typeof item === "string" && item.length > 0);
+        }
+      } catch (error) {
+        return undefined;
+      }
+      return undefined;
+    },
+    [],
+  );
+
+  const canRandomiseQuestionFor = useCallback(
+    (valueQuestion: Question | null, valueOptions: AnswerOption[], evalState: Record<string, unknown>): boolean => {
+      if (!valueQuestion) return false;
+      const metadata = (valueQuestion.metadata ?? {}) as Record<string, unknown>;
+      if (
+        valueQuestion.qtype === "single" ||
+        valueQuestion.qtype === "single_table" ||
+        valueQuestion.qtype === "multiple" ||
+        valueQuestion.qtype === "drop_down_detailed"
+      ) {
+        return valueOptions.length > 0;
+      }
+      if (valueQuestion.qtype === "value_numeric") {
+        const { minRand, maxRand } = computeNumericRandMinMax(metadata, evalState);
+        return minRand !== undefined && maxRand !== undefined;
+      }
+      if (valueQuestion.qtype === "value_textbox") {
+        const randomList = resolveTextboxRandomList(metadata, evalState);
+        return randomList !== undefined || metadata.defaultValue !== undefined;
+      }
+      return false;
+    },
+    [computeNumericRandMinMax, resolveTextboxRandomList],
+  );
+
+  const pickRandomOptionFor = useCallback(
+    (
+      valueOptions: AnswerOption[],
+      metadata: Record<string, unknown>,
+      evalState: Record<string, unknown>,
+    ): AnswerOption | null => {
+      if (!valueOptions.length) {
+        return null;
+      }
+
+      // Собираем варианты с весами (metadata.probability трактуем как "вес", не как % от 1.0)
+      const weightedOptions: Array<{ option: AnswerOption; weight: number }> = [];
+      
+      for (const option of valueOptions) {
+        const optionMetadata = option.metadata ?? {};
+        const weight = Number((optionMetadata as Record<string, unknown>)["probability"]);
+        
+        // Если вес невалидный, используем равномерное распределение (вес = 1)
+        // 0 — валидный вес (ноль означает "не выпадает"); fallback к 1 только для NaN/∞/некорректных значений.
+        const validWeight = Number.isFinite(weight) && weight >= 0 ? weight : 1;
+        weightedOptions.push({ option, weight: validWeight });
+      }
+
+      if (!weightedOptions.length) {
+        // Fallback: равномерный выбор
+        const randomIndex = Math.floor(Math.random() * valueOptions.length);
+        return valueOptions[randomIndex] ?? null;
+      }
+
+      // Вычисляем сумму весов
+      const totalWeight = weightedOptions.reduce((sum, item) => sum + item.weight, 0);
+      if (totalWeight <= 0) {
+        const randomIndex = Math.floor(Math.random() * valueOptions.length);
+        return valueOptions[randomIndex] ?? null;
+      }
+
+      // Генерируем случайное число в диапазоне [0, totalWeight)
+      let random = Math.random() * totalWeight;
+      
+      // Применяем модификатор из metadata вопроса, если он есть
+      const diceModifierExpr = metadata.diceModifier;
+      if (diceModifierExpr !== undefined && diceModifierExpr !== null) {
+        try {
+          let modifier = 0;
+          if (typeof diceModifierExpr === "number") {
+            modifier = Number.isFinite(diceModifierExpr) ? diceModifierExpr : 0;
+          } else if (typeof diceModifierExpr === "object") {
+            // Проверяем, есть ли jsonlogic_expression
+            const expr = (diceModifierExpr as Record<string, unknown>).jsonlogic_expression;
+            if (expr !== undefined) {
+              // Вычисляем через jsonLogic
+              const result = jsonLogic.apply(expr, evalState);
+              if (result !== null && result !== undefined) {
+                const numValue = typeof result === "number" ? result : Number(result);
+                if (Number.isFinite(numValue)) {
+                  modifier = numValue;
+                }
               }
-            }
-          } else {
-            // Если нет jsonlogic_expression, пытаемся применить напрямую
-            const result = jsonLogic.apply(diceModifierExpr, state);
-            if (result !== null && result !== undefined) {
-              const numValue = typeof result === "number" ? result : Number(result);
-              if (Number.isFinite(numValue)) {
-                modifier = numValue;
+            } else {
+              // Если нет jsonlogic_expression, пытаемся применить напрямую
+              const result = jsonLogic.apply(diceModifierExpr, evalState);
+              if (result !== null && result !== undefined) {
+                const numValue = typeof result === "number" ? result : Number(result);
+                if (Number.isFinite(numValue)) {
+                  modifier = numValue;
+                }
               }
             }
           }
+          
+          // Применяем модификатор к случайному значению
+          // Модификатор применяется как абсолютное значение, умноженное на totalWeight
+          // (модификатор в диапазоне [-0.2, 0.2] означает изменение на ±20% от диапазона)
+          random = random + (modifier * totalWeight);
+          
+          // Ограничиваем значение в пределах [0, totalWeight)
+          random = Math.max(0, Math.min(totalWeight - 0.0001, random));
+        } catch (error) {
+          // В случае ошибки игнорируем модификатор
         }
-        
-        // Применяем модификатор к случайному значению
-        // Модификатор применяется как абсолютное значение, умноженное на totalWeight
-        // (модификатор в диапазоне [-0.2, 0.2] означает изменение на ±20% от диапазона)
-        random = random + (modifier * totalWeight);
-        
-        // Ограничиваем значение в пределах [0, totalWeight)
-        random = Math.max(0, Math.min(totalWeight - 0.0001, random));
-      } catch (error) {
-        // В случае ошибки игнорируем модификатор
       }
-    }
-    
-    // Находим вариант по накопленным весам
-    let accumulated = 0;
-    for (const { option, weight } of weightedOptions) {
-      accumulated += weight;
-      if (random < accumulated) {
-        return option;
+      
+      // Находим вариант по накопленным весам
+      let accumulated = 0;
+      for (const { option, weight } of weightedOptions) {
+        accumulated += weight;
+        if (random < accumulated) {
+          return option;
+        }
       }
-    }
-    
-    // Fallback: возвращаем последний вариант
-    return weightedOptions[weightedOptions.length - 1]?.option ?? null;
-  }, [options, questionMetadata, state]);
+      
+      // Fallback: возвращаем последний вариант
+      return weightedOptions[weightedOptions.length - 1]?.option ?? null;
+    },
+    [],
+  );
+
+  const pickRandomOption = useCallback((): AnswerOption | null => {
+    return pickRandomOptionFor(options, questionMetadata, state);
+  }, [options, questionMetadata, state, pickRandomOptionFor]);
+
+  const buildRandomAnswer = useCallback(
+    (valueQuestion: Question | null, valueOptions: AnswerOption[], evalState: Record<string, unknown>): AnswerInput | null => {
+      if (!valueQuestion) {
+        return null;
+      }
+      const metadata = (valueQuestion.metadata ?? {}) as Record<string, unknown>;
+
+      if (valueQuestion.qtype === "value_numeric") {
+        const { minRand, maxRand } = computeNumericRandMinMax(metadata, evalState);
+        if (minRand === undefined || maxRand === undefined) {
+          return null;
+        }
+        if (minRand > maxRand) {
+          return null;
+        }
+        const allowFloatValue =
+          typeof metadata.type === "string" && metadata.type.toLowerCase() === "float";
+        const randomValue = Math.random() * (maxRand - minRand) + minRand;
+        const finalValue = allowFloatValue ? Number(randomValue.toFixed(6)) : Math.round(randomValue);
+        const { min, max } = computeNumericMinMax(metadata, evalState);
+        let clamped = finalValue;
+        if (min !== undefined && clamped < min) {
+          clamped = min;
+        }
+        if (max !== undefined && clamped > max) {
+          clamped = max;
+        }
+        return {
+          questionId: valueQuestion.id,
+          answerIds: [],
+          value: { type: "number", data: clamped },
+        };
+      }
+
+      if (valueQuestion.qtype === "value_textbox") {
+        const randomList = resolveTextboxRandomList(metadata, evalState);
+        let randomText: string | null = null;
+        if (randomList !== undefined && randomList.length > 0) {
+          const randomIndex = Math.floor(Math.random() * randomList.length);
+          randomText = randomList[randomIndex] ?? null;
+        } else if (metadata.defaultValue !== undefined && metadata.defaultValue !== null) {
+          randomText =
+            typeof metadata.defaultValue === "string"
+              ? metadata.defaultValue
+              : String(metadata.defaultValue);
+        }
+        return {
+          questionId: valueQuestion.id,
+          answerIds: [],
+          value: { type: "string", data: randomText ?? "" },
+        };
+      }
+
+      if (valueQuestion.qtype === "multiple") {
+        if (!valueOptions.length) {
+          return null;
+        }
+        const allowEmptySelection = Boolean(metadata.allowEmptySelection);
+        const minSelected = typeof metadata.minSelected === "number" ? metadata.minSelected : 0;
+        const maxSelectedRaw = typeof metadata.maxSelected === "number" ? metadata.maxSelected : valueOptions.length;
+        const maxSelected = Math.min(maxSelectedRaw, valueOptions.length);
+        const requiredMin = allowEmptySelection ? minSelected : Math.max(1, minSelected);
+        const effectiveMin = Math.min(requiredMin, valueOptions.length);
+        const effectiveMax = Math.max(effectiveMin, maxSelected);
+        const count = Math.floor(Math.random() * (effectiveMax - effectiveMin + 1)) + effectiveMin;
+        const shuffled = [...valueOptions].sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, count).map((option) => option.id);
+        return {
+          questionId: valueQuestion.id,
+          answerIds: selected,
+        };
+      }
+
+      if (
+        valueQuestion.qtype === "single" ||
+        valueQuestion.qtype === "single_table" ||
+        valueQuestion.qtype === "drop_down_detailed"
+      ) {
+        const picked = pickRandomOptionFor(valueOptions, metadata, evalState);
+        if (!picked) {
+          return null;
+        }
+        return {
+          questionId: valueQuestion.id,
+          answerIds: [picked.id],
+        };
+      }
+
+      return null;
+    },
+    [computeNumericMinMax, computeNumericRandMinMax, pickRandomOptionFor, resolveTextboxRandomList],
+  );
 
   const randomiseAnswer = useCallback(() => {
-    if (!question || !canRandomiseQuestion || loading) {
+    if (!question || !canRandomiseQuestion || loading || autoRandomising) {
       return;
     }
 
@@ -819,7 +1012,64 @@ export default function BuilderPage() {
     } else {
       void submitAnswer([picked.id]);
     }
-  }, [canRandomiseQuestion, loading, pickRandomOption, question, questionMetadata, options, submitAnswer, numericMinRand, numericMaxRand, allowFloat, clampValue, submitValue]);
+  }, [canRandomiseQuestion, loading, autoRandomising, pickRandomOption, question, questionMetadata, options, submitAnswer, numericMinRand, numericMaxRand, allowFloat, clampValue, submitValue]);
+
+  const randomiseUntilStop = useCallback(async () => {
+    if (loading || autoRandomising || !question) {
+      return;
+    }
+
+    setAutoRandomising(true);
+    let currentQuestion: Question | null = question;
+    let currentOptions = options;
+    let currentState = state;
+    let currentHistory = history;
+    let currentDone = done;
+    let safety = 0;
+
+    try {
+      while (currentQuestion && !currentDone) {
+        if (!canRandomiseQuestionFor(currentQuestion, currentOptions, currentState)) {
+          break;
+        }
+
+        const randomAnswer = buildRandomAnswer(currentQuestion, currentOptions, currentState);
+        if (!randomAnswer) {
+          break;
+        }
+
+        const nextHistory = [...currentHistory, randomAnswer];
+        const payload = await fetchNext(nextHistory);
+        if (!payload) {
+          break;
+        }
+
+        currentHistory = payload.historyAnswers ?? nextHistory;
+        currentState = payload.state ?? {};
+        currentDone = Boolean(payload.done);
+        currentQuestion = payload.question ?? null;
+        currentOptions = payload.answerOptions ?? [];
+
+        safety += 1;
+        if (safety > 5000) {
+          break;
+        }
+      }
+    } finally {
+      setAutoRandomising(false);
+    }
+  }, [
+    autoRandomising,
+    buildRandomAnswer,
+    canRandomiseQuestionFor,
+    done,
+    fetchNext,
+    history,
+    loading,
+    options,
+    question,
+    state,
+  ]);
 
   const content = {
     en: {
@@ -1456,15 +1706,26 @@ export default function BuilderPage() {
                 </div>
               </div>
               {canRandomiseQuestion && (
-                <button
-                  type="button"
-                  onClick={randomiseAnswer}
-                  disabled={loading || !canRandomiseQuestion}
-                  className="badge-inline"
-                  style={{ cursor: "pointer", border: "1px solid rgba(242,199,68,0.5)" }}
-                >
-                  🎲 {displayLang === "ru" ? "Случайный ответ" : "Random answer"}
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={randomiseAnswer}
+                    disabled={loading || !canRandomiseQuestion || autoRandomising}
+                    className="badge-inline"
+                    style={{ cursor: "pointer", border: "1px solid rgba(242,199,68,0.5)" }}
+                  >
+                    🎲 {displayLang === "ru" ? "Случайный ответ" : "Random answer"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void randomiseUntilStop()}
+                    disabled={loading || !canRandomiseQuestion || autoRandomising}
+                    className="badge-inline"
+                    style={{ cursor: "pointer", border: "1px solid rgba(242,199,68,0.5)" }}
+                  >
+                    ⏩ {displayLang === "ru" ? "Случайные до конца" : "Random to end"}
+                  </button>
+                </div>
               )}
             </div>
 

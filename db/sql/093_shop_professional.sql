@@ -12,6 +12,13 @@ SELECT ck_id('witcher_cc.wcc_shop_professional.' || v.key) AS id
           -- Бюджет
           ('budget.tokens.name', 'ru', 'Жетоны'),
           ('budget.tokens.name', 'en', 'Tokens'),
+          -- Заголовок (имя/раса/профессия)
+          ('header.name', 'ru', 'Имя'),
+          ('header.name', 'en', 'Name'),
+          ('header.race', 'ru', 'Раса'),
+          ('header.race', 'en', 'Race'),
+          ('header.profession', 'ru', 'Профессия'),
+          ('header.profession', 'en', 'Profession'),
           -- Предупреждения
           ('warning.budget_exceeded', 'ru', 'Один или несколько бюджетов перевыполнены'),
           ('warning.budget_exceeded', 'en', 'One or more budgets are exceeded'),
@@ -55,6 +62,11 @@ SELECT meta.qu_id
          'shop', jsonb_build_object(
            -- Флаг: профессиональный магазин (для отдельного рендера на фронте)
            'isProfessional', true,
+           'professionalHeader', jsonb_build_object(
+             'nameLabel', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop_professional.header.name')::text),
+             'raceLabel', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop_professional.header.race')::text),
+             'professionLabel', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop_professional.header.profession')::text)
+           ),
            -- Allowed DLCs: берём из state.dlcs (core всегда доступен и добавляется на стороне API)
            -- Additionally allow sys_internal for technical professional options (pseudo-items like budget grants).
            'allowedDlcs', jsonb_build_object(
@@ -503,7 +515,6 @@ SET
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 SELECT 'wcc_values_feelings_on_people', 'wcc_shop_professional';
-
 
 
 

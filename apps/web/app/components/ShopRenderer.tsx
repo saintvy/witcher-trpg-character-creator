@@ -48,6 +48,11 @@ type ShopSourceConfig = {
 
 type ShopConfig = {
   isProfessional?: boolean;
+  professionalHeader?: {
+    nameLabel?: string;
+    raceLabel?: string;
+    professionLabel?: string;
+  };
   budgets?: ShopBudgetConfig[];
   warningPriceZero?: string; // resolved i18n text
   allowedDlcs?: string[];
@@ -195,6 +200,24 @@ export function ShopRenderer(props: {
   const isProfessionalShop = Boolean((shop as any)?.isProfessional);
   const isMagicShop = questionId === 'wcc_shop_magic';
   const isSingleQtyShop = isProfessionalShop || isMagicShop;
+  const professionalHeader = shop.professionalHeader;
+  const professionalHeaderRows = useMemo(() => {
+    if (!isProfessionalShop || !professionalHeader) return [];
+    return [
+      {
+        label: professionalHeader.nameLabel,
+        value: getAtPath(state, 'characterRaw.name'),
+      },
+      {
+        label: professionalHeader.raceLabel,
+        value: getAtPath(state, 'characterRaw.race'),
+      },
+      {
+        label: professionalHeader.professionLabel,
+        value: getAtPath(state, 'characterRaw.profession'),
+      },
+    ].filter((row) => typeof row.label === 'string' && row.label.length > 0);
+  }, [isProfessionalShop, professionalHeader, state]);
 
   const sourcesKey = useMemo(() => shop.sources.map((s) => s.id).join('|'), [shop.sources]);
 
@@ -1104,6 +1127,21 @@ export function ShopRenderer(props: {
           </div>
         )}
       </div>
+
+      {professionalHeaderRows.length > 0 && (
+        <div className="shop-professional-meta">
+          {professionalHeaderRows.map((row) => (
+            <div key={row.label} className="shop-professional-meta-row">
+              <span className="shop-professional-meta-label">{row.label}</span>
+              <span className="shop-professional-meta-value">
+                {row.value !== null && row.value !== undefined && String(row.value).length > 0
+                  ? String(row.value)
+                  : "—"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="shop-summary" ref={budgetSummaryRef}>
         {Boolean(onlyCoveredByBudget) && showAllItems && (
