@@ -193,4 +193,5 @@ WITH
   is_witcher_rule AS (SELECT ru_id, body FROM rules WHERE name = 'is_witcher')
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details_addiction', 'wcc_witcher_events', r.ru_id, 2 FROM is_witcher_rule r UNION ALL
-  SELECT 'wcc_life_events_fortune_or_not_details_curse', 'wcc_witcher_events', r.ru_id, 2 FROM is_witcher_rule r;
+  SELECT 'wcc_life_events_fortune_or_not_details_curse', 'wcc_witcher_events', r.ru_id, 2 FROM is_witcher_rule r UNION ALL
+  SELECT 'wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_witcher_events', r.ru_id, 2 FROM is_witcher_rule r;

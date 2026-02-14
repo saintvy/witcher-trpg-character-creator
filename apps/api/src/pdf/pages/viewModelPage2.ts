@@ -83,10 +83,30 @@ function renderRichText(value: string): string {
     .replaceAll(/&lt;\/?(i|em)&gt;/gi, (m) => m.replace('&lt;', '<').replace('&gt;', '>'));
 }
 
+function formatDiseaseOrCurseEntry(entry: unknown): string {
+  if (entry === null || entry === undefined) return '';
+  if (typeof entry === 'string') return entry;
+
+  const rec = asRecord(entry);
+  if (!rec) return asString(entry);
+
+  const type = asString(rec.type);
+  const name = asString(rec.name);
+  const description = asString(rec.description);
+
+  if (name && description) return `<b>${name}:</b> ${description}`;
+  if (name) return `<b>${name}</b>${description ? ` ${description}` : ''}`;
+  if (type && description) return `<b>${type}:</b> ${description}`;
+  return description || asString(entry);
+}
+
 function paragraph(label: string, value: string): { label: string; html: string } | null {
   const v = value.trim();
   if (!v) return null;
-  return { label, html: `<div class="p"><span class="p-k">${escapeHtml(label)}:</span> <span class="p-v">${renderRichText(v)}</span></div>` };
+  return {
+    label,
+    html: `<div class="p"><span class="p-k"><b>${escapeHtml(label)}:</b></span> <span class="p-v">${renderRichText(v)}</span></div>`,
+  };
 }
 
 function joinParagraphs(items: Array<{ label: string; html: string }>): Array<{ label: string; html: string }> {
@@ -133,8 +153,11 @@ export function mapCharacterJsonToPage2Vm(
   ].filter(Boolean);
 
   const diseasesAndCurses = Array.isArray(lore.diseases_and_curses)
-    ? (lore.diseases_and_curses as unknown[]).map(asString).filter(Boolean).join('<br>')
-    : asString(lore.diseases_and_curses);
+    ? (lore.diseases_and_curses as unknown[])
+        .map(formatDiseaseOrCurseEntry)
+        .filter(Boolean)
+        .join('<br>')
+    : formatDiseaseOrCurseEntry(lore.diseases_and_curses);
 
   const add = (p: { label: string; html: string } | null) => {
     if (p) paragraphs.push(p);

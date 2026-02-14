@@ -3010,7 +3010,7 @@ export function renderCharacterPdfHtml(input: {
             const col2 = document.getElementById('page3-support-col2');
 
             if (stash && col1 && col2) {
-              const EPS = 18; // be conservative to avoid spilling due to fractional print rounding
+              const EPS = 4; // small safety buffer for fractional print rounding (viewport now matches PDF width)
 
               // IMPORTANT: use a fixed page boundary for all "fits in page" checks.
               // Using the support group's own rect is incorrect because it grows as we append rows,
@@ -3207,23 +3207,27 @@ export function renderCharacterPdfHtml(input: {
                 }
 
                 // Phase 3: Place the remaining rows into the optional table.
+                // Use the MANDATORY table's trimmed bottom as the practical
+                // boundary for the optional table.  Both columns live in the
+                // same CSS-grid row, so any content in col2 that stays within
+                // the mandatory table's bottom is guaranteed to be on the same
+                // printed page.  Using page3.bottom directly was too unreliable
+                // because grid/flex interactions made the measurement inaccurate.
+                const optionalBoundary = gearBox.getBoundingClientRect().bottom;
                 let nextSourceIndex = optionalTableFits ? sourceRows.length : splitIndex;
                 if (optionalTableFits && splitIndex < sourceRows.length) {
                   const optTbody = getGeneralGearTbody(optionalGearBox);
                   if (optTbody) {
                     optTbody.innerHTML = '';
-                    // Fill all remaining rows at once so column widths settle.
                     for (let i = splitIndex; i < sourceRows.length; i++) {
                       optTbody.appendChild(sourceRows[i].cloneNode(true));
-                    }
-                    nextSourceIndex = sourceRows.length;
-
-                    // Trim from the end if the optional table also exceeds the boundary.
-                    while (optTbody.rows.length > 0
-                      && isMeaningfulGearRow(optTbody.rows[optTbody.rows.length - 1])
-                      && optionalGearBox.getBoundingClientRect().bottom > boundaryBottom()) {
-                      optTbody.removeChild(optTbody.rows[optTbody.rows.length - 1]);
-                      nextSourceIndex--;
+                      if (optionalGearBox.getBoundingClientRect().bottom > optionalBoundary) {
+                        // This row doesn't fit – remove it and stop.
+                        optTbody.removeChild(optTbody.rows[optTbody.rows.length - 1]);
+                        nextSourceIndex = i;
+                        break;
+                      }
+                      nextSourceIndex = i + 1;
                     }
                     if (optTbody.rows.length === 0) optTbody.appendChild(buildGeneralGearEmptyRow());
                   }

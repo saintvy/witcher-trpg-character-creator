@@ -434,7 +434,7 @@ SELECT 'wcc_life_events_fortune_or_not_details_o' || to_char(vals.group_id, 'FM0
        jsonb_build_object(
            'probability', vals.probability
        ) || CASE WHEN to_char(vals.group_id, 'FM00') || to_char(vals.num, 'FM00')
-                  IN ('1802','1803','1310','2007') THEN '{}'::jsonb
+                  IN ('1802','1803','1310','2001','2007') THEN '{}'::jsonb
                   ELSE jsonb_build_object( 'counterIncrement'
                                          , jsonb_build_object('id', 'lifeEventsCounter', 'step', 10))
            END AS metadata
@@ -1564,7 +1564,7 @@ SELECT DISTINCT
   )
 FROM raw_data
 CROSS JOIN meta
-WHERE raw_data.group_id = 20 AND raw_data.num <= 6 --AND raw_data.lang = 'en'
+WHERE raw_data.group_id = 20 AND raw_data.num BETWEEN 2 AND 6 --AND raw_data.lang = 'en'
 UNION ALL
 -- 9. Группа 13: Зависимости (добавляем в diseases_and_curses с типом "Зависимость")
 SELECT DISTINCT

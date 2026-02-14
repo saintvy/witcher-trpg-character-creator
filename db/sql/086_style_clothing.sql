@@ -97,6 +97,7 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_fortune_or_not_details_dice', 'wcc_style_clothing' UNION ALL
   SELECT 'wcc_life_events_fortune_or_not_details_addiction', 'wcc_style_clothing' UNION ALL
   SELECT 'wcc_life_events_fortune_or_not_details_curse', 'wcc_style_clothing' UNION ALL
+  SELECT 'wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_style_clothing' UNION ALL
   SELECT 'wcc_witcher_events_benefit', 'wcc_style_clothing' UNION ALL
   SELECT 'wcc_witcher_events_benefit_details', 'wcc_style_clothing' UNION ALL
   SELECT 'wcc_witcher_events_benefit_details_2', 'wcc_style_clothing' UNION ALL
