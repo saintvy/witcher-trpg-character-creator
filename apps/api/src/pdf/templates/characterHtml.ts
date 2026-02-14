@@ -1830,8 +1830,8 @@ function renderPage2(vm: CharacterPdfPage2Vm, giftsInlineTplHtml = '', itemEffec
           <div id="page2-siblings-col1"></div>
           <div class="page2-siblings-col-empty"></div>
         </div>
-        <div class="page2-allies-row">${renderAllies(vm)}</div>
-        <div class="page2-enemies-row">${renderEnemies(vm)}</div>
+        ${vm.allies.length > 0 ? `<div class="page2-allies-row">${renderAllies(vm)}</div>` : ''}
+        ${vm.enemies.length > 0 ? `<div class="page2-enemies-row">${renderEnemies(vm)}</div>` : ''}
       </div>
       <template id="page2-siblings-tpl">${siblingsHtml}</template>
       <template id="page2-style-tpl">${styleHtml}</template>
@@ -1846,7 +1846,6 @@ function renderPage3(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
   return `
     <div class="page page3">
       <div class="page3-layout">
-        <div class="page3-general-gear-overflow" id="page3-general-gear-overflow"></div>
         <div class="page3-recipes-row">${renderRecipesTable(vm, alchemyStyle)}</div>
         <div class="page3-blueprints-row">${renderBlueprintsTable(vm)}</div>
         <div class="page3-components-row">${renderComponentsTables(vm, alchemyStyle)}</div>
@@ -1863,6 +1862,9 @@ function renderPage3(vm: CharacterPdfPage3Vm, alchemyStyle: 'w1' | 'w2' = 'w2'):
           </div>
         </div>
       </div>
+      <!-- Overflow lives OUTSIDE page3-layout so it doesn't push recipes/components down.
+           It naturally overflows beyond the fixed 285 mm page height onto the next printed page. -->
+      <div class="page3-general-gear-overflow" id="page3-general-gear-overflow"></div>
     </div>
   `;
 }
@@ -2009,7 +2011,7 @@ function renderInvocationsTable(vm: CharacterPdfPage4Vm): string {
 
 function renderRitualsTable(vm: CharacterPdfPage4Vm): string {
   const t = getMagic4Labels(vm);
-  const rows = [...vm.rituals, null];
+  const rows = [...vm.rituals];
   return `
     <table class="equip-table equip-magic4 equip-magic4-rituals">
       <colgroup>
@@ -2079,7 +2081,7 @@ function renderRitualsTable(vm: CharacterPdfPage4Vm): string {
 
 function renderHexesTable(vm: CharacterPdfPage4Vm): string {
   const t = getMagic4Labels(vm);
-  const rows = [...vm.hexes, null];
+  const rows = [...vm.hexes];
   return `
     <table class="equip-table equip-magic4 equip-magic4-hexes">
       <colgroup>
@@ -2262,7 +2264,7 @@ export function renderCharacterPdfHtml(input: {
   const page2GiftsInlineTpl = onlyGiftsMagic
     ? box(page4.i18n.source.magicGiftsTitle, renderGiftsTable(page4), 'magic4-gifts-box magic4-gifts-inline')
     : '';
-  const page2ItemEffectsInlineTpl = (onlyGiftsMagic || noMagicVisible) && page4.showItemEffects
+  const page2ItemEffectsInlineTpl = page4.showItemEffects
     ? box(page4.i18n.effects.title, renderItemEffectsGlossaryTable(page4), 'item-effects-box item-effects-inline')
     : '';
   return `<!doctype html>
@@ -2335,6 +2337,8 @@ export function renderCharacterPdfHtml(input: {
       .page2-allies-row, .page2-enemies-row { margin-top: 0; }
       .page2-gifts-inline-wrap { width: 100%; }
       .page2-item-effects-inline-wrap { width: 100%; }
+      .page2-gear-overflow-wrap { width: 100%; }
+      .page4-gear-overflow-wrap { width: 100%; }
       .page2-separator { margin: 4mm 0; text-align: center; }
       .page2-separator-line {
         display: block;
@@ -2353,7 +2357,12 @@ export function renderCharacterPdfHtml(input: {
       }
       .page3-recipes-row { min-width: 0; }
       .page3-general-gear-overflow { display: none; }
-      .page3-general-gear-overflow.page3-visible { display: flex; flex-direction: column; gap: 3mm; }
+      .page3-general-gear-overflow.page3-visible {
+        display: flex; flex-direction: column; gap: 3mm;
+        /* Overflow lives outside page3-layout; force it onto its own printed page */
+        break-before: page; page-break-before: always;
+        padding-top: 3mm;
+      }
       .page3-general-gear-overflow-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -2941,78 +2950,64 @@ export function renderCharacterPdfHtml(input: {
                 if (row2) row2.remove();
                 if (siblingsFull) siblingsFull.remove();
 
-                // Try to inline "gifts" and/or "item effects" on page 2.
-                // Supported modes:
-                // - gifts only magic (+ optional item effects),
-                // - no magic tables at all (+ item effects only).
-                const giftsTpl = document.getElementById('page2-gifts-tpl');
+                // ── Step 1: Try to inline "item effects" on page 2 ──
+                // Gifts and overflow gear will be attempted later (after
+                // the page-3 script determines which gear items overflow).
                 const effectsTpl = document.getElementById('page2-item-effects-tpl');
-                const giftsFrag =
-                  giftsTpl && giftsTpl.tagName === 'TEMPLATE' && giftsTpl.innerHTML && giftsTpl.innerHTML.trim() && giftsTpl.content
-                    ? giftsTpl.content.cloneNode(true)
-                    : null;
                 const effectsFrag =
                   effectsTpl && effectsTpl.tagName === 'TEMPLATE' && effectsTpl.innerHTML && effectsTpl.innerHTML.trim() && effectsTpl.content
                     ? effectsTpl.content.cloneNode(true)
                     : null;
 
-                if (giftsFrag || effectsFrag) {
+                if (effectsFrag) {
                   const page2El = layout.closest('.page') || document.querySelector('.page.page2');
-                  const page4El = document.querySelector('.page.page4');
                   if (page2El) {
-                    const insertAfterOrAppend = (node, refEl) => {
-                      if (refEl && refEl.parentElement) refEl.parentElement.insertBefore(node, refEl.nextSibling);
-                      else layout.appendChild(node);
-                    };
+                    // Compute a FIXED boundary: page2 top + min-height.
+                    // Cannot use page2El.getBoundingClientRect().bottom because
+                    // min-height lets the element grow with content, making
+                    // the boundary chase the content (always "fits").
+                    const page2Top = page2El.getBoundingClientRect().top;
+                    const minHPx = parseFloat(getComputedStyle(page2El).minHeight);
+                    const EPS_PX = 3.0;
+                    const page2Bottom = page2Top + (Number.isFinite(minHPx) ? minHPx : page2El.getBoundingClientRect().height) - EPS_PX;
 
-                    // IMPORTANT: this is a full-width table. Place it after Allies/Enemies blocks on page 2,
-                    // not inside the packed half-width grid.
-                    const enemiesRow = layout.querySelector && layout.querySelector('.page2-enemies-row');
+                    const lastRow = layout.querySelector('.page2-enemies-row')
+                      || layout.querySelector('.page2-allies-row')
+                      || pack;
 
-                    let giftsWrap = null;
-                    if (giftsFrag) {
-                      giftsWrap = document.createElement('div');
-                      giftsWrap.className = 'page2-gifts-inline-wrap';
-                      giftsWrap.appendChild(giftsFrag);
-                      insertAfterOrAppend(giftsWrap, enemiesRow);
+                    const effectsWrap = document.createElement('div');
+                    effectsWrap.className = 'page2-item-effects-inline-wrap';
+                    effectsWrap.appendChild(effectsFrag);
+                    if (lastRow && lastRow.parentElement) {
+                      lastRow.parentElement.insertBefore(effectsWrap, lastRow.nextSibling);
+                    } else {
+                      layout.appendChild(effectsWrap);
                     }
 
-                    let effectsWrap = null;
-                    if (effectsFrag) {
-                      effectsWrap = document.createElement('div');
-                      effectsWrap.className = 'page2-item-effects-inline-wrap';
-                      effectsWrap.appendChild(effectsFrag);
-                      insertAfterOrAppend(effectsWrap, giftsWrap || enemiesRow);
-                    }
-
-                    const lastInserted = effectsWrap || giftsWrap;
-                    if (lastInserted) {
-                      const EPS_PX = 3.0;
-                      const page2Bottom = page2El.getBoundingClientRect().bottom - EPS_PX;
-                      const bottomNow = lastInserted.getBoundingClientRect().bottom;
-                      const fits = Number.isFinite(page2Bottom) && Number.isFinite(bottomNow) && bottomNow <= page2Bottom;
-
-                      if (fits) {
-                        if (page4El) page4El.classList.add('page-hidden');
-                      } else {
-                        if (effectsWrap) effectsWrap.remove();
-                        if (giftsWrap) giftsWrap.remove();
-                      }
+                    const effectsFits = effectsWrap.getBoundingClientRect().bottom <= page2Bottom;
+                    if (effectsFits) {
+                      // Remove item effects from page 4 (page 4 stays visible for other magic).
+                      const p4Effects = document.querySelector('.page4-layout .item-effects-box');
+                      if (p4Effects) p4Effects.remove();
+                    } else {
+                      effectsWrap.remove();
                     }
                   }
                 }
               }
             }
-
-            document.querySelectorAll('template').forEach(t => t.remove());
+            // NOTE: template removal is deferred until after page-3 overflow
+            // placement so that the gifts template is still accessible.
           }
+
+          // Variable shared between page-3 gear logic and the placement section below.
+          let gearOverflowEl = null;
 
           const page3SupportGroup = document.getElementById('page3-support-group');
           if (page3SupportGroup) {
             const stash = document.getElementById('page3-support-stash');
             const col1 = document.getElementById('page3-support-col1');
             const col2 = document.getElementById('page3-support-col2');
-            const gearOverflowHost = document.getElementById('page3-general-gear-overflow');
 
             if (stash && col1 && col2) {
               const EPS = 18; // be conservative to avoid spilling due to fractional print rounding
@@ -3176,38 +3171,75 @@ export function renderCharacterPdfHtml(input: {
                       .map((tr) => tr.cloneNode(true))
                   : [];
 
-                // Mandatory table.
+                // Mandatory table in col1.
                 col1.appendChild(gearBox);
-                let nextSourceIndex = 0;
 
-                // Optional table in the neighboring column.
+                // Optional table in col2.
                 const optionalGearBox = cloneGearBoxEmpty(gearBox, 'general-gear-optional-box');
                 col2.appendChild(optionalGearBox);
-                if (fitsLastChild(col2)) {
-                  let mandatoryReserveRows = 2.6;
-                  const OPTIONAL_RESERVE_ROWS = 1.8;
-                  const MAX_PLACE_ATTEMPTS = 6;
-                  for (let attempt = 0; attempt < MAX_PLACE_ATTEMPTS; attempt++) {
-                    nextSourceIndex = fillGearRowsToLimit(gearBox, sourceRows, 0, mandatoryReserveRows);
-                    if (nextSourceIndex < sourceRows.length) {
-                      nextSourceIndex = fillGearRowsToLimit(optionalGearBox, sourceRows, nextSourceIndex, OPTIONAL_RESERVE_ROWS);
-                    } else {
-                      const optionalTbody = getGeneralGearTbody(optionalGearBox);
-                      if (optionalTbody && optionalTbody.rows.length === 0) optionalTbody.appendChild(buildGeneralGearEmptyRow());
-                    }
+                const optionalTableFits = fitsLastChild(col2);
+                if (!optionalTableFits) col2.removeChild(optionalGearBox);
 
-                    if (isGearBoxWithinBoundary(gearBox, mandatoryReserveRows + 0.35)) break;
-                    mandatoryReserveRows += 0.55;
-                  }
-                  padGearRowsToBottom(optionalGearBox);
-                } else {
-                  col2.removeChild(optionalGearBox);
-                  nextSourceIndex = fillGearRowsToLimit(gearBox, sourceRows, 0, 3.0);
+                // ── Fill-first approach ──────────────────────────────────
+                // Instead of adding rows one-by-one and guessing reserve
+                // heights, we fill each table completely and then ask the
+                // DOM about its actual rendered size.  With table-layout:auto
+                // this is crucial because column widths (and therefore row
+                // heights for wrapped descriptions) only stabilise once ALL
+                // data is present.
+
+                // Phase 1: Put ALL rows into the mandatory table.
+                const mandatoryTbody = getGeneralGearTbody(gearBox);
+                if (mandatoryTbody) {
+                  mandatoryTbody.innerHTML = '';
+                  for (const row of sourceRows) mandatoryTbody.appendChild(row.cloneNode(true));
                 }
 
-                // If two page-2 tables are not enough, continue on the next page with two half-width tables.
+                // Phase 2: Trim from the end until the box fits within the
+                // page boundary (boundaryBottom already includes 18 px EPS).
+                let splitIndex = sourceRows.length;
+                if (mandatoryTbody) {
+                  while (splitIndex > 0 && gearBox.getBoundingClientRect().bottom > boundaryBottom()) {
+                    mandatoryTbody.removeChild(mandatoryTbody.rows[mandatoryTbody.rows.length - 1]);
+                    splitIndex--;
+                  }
+                  if (mandatoryTbody.rows.length === 0) mandatoryTbody.appendChild(buildGeneralGearEmptyRow());
+                }
+
+                // Phase 3: Place the remaining rows into the optional table.
+                let nextSourceIndex = optionalTableFits ? sourceRows.length : splitIndex;
+                if (optionalTableFits && splitIndex < sourceRows.length) {
+                  const optTbody = getGeneralGearTbody(optionalGearBox);
+                  if (optTbody) {
+                    optTbody.innerHTML = '';
+                    // Fill all remaining rows at once so column widths settle.
+                    for (let i = splitIndex; i < sourceRows.length; i++) {
+                      optTbody.appendChild(sourceRows[i].cloneNode(true));
+                    }
+                    nextSourceIndex = sourceRows.length;
+
+                    // Trim from the end if the optional table also exceeds the boundary.
+                    while (optTbody.rows.length > 0
+                      && isMeaningfulGearRow(optTbody.rows[optTbody.rows.length - 1])
+                      && optionalGearBox.getBoundingClientRect().bottom > boundaryBottom()) {
+                      optTbody.removeChild(optTbody.rows[optTbody.rows.length - 1]);
+                      nextSourceIndex--;
+                    }
+                    if (optTbody.rows.length === 0) optTbody.appendChild(buildGeneralGearEmptyRow());
+                  }
+                  padGearRowsToBottom(optionalGearBox);
+                } else if (optionalTableFits) {
+                  // All items fit in mandatory; optional gets empty padding.
+                  const optTbody = getGeneralGearTbody(optionalGearBox);
+                  if (optTbody && optTbody.rows.length === 0) optTbody.appendChild(buildGeneralGearEmptyRow());
+                  padGearRowsToBottom(optionalGearBox);
+                }
+
+                // Overflow: items that didn't fit in either table.
+                // Build the DOM but DON'T place it yet – placement
+                // (page 2 → page 4 → page 3 fallback) happens later.
                 const remainingRows = sourceRows.slice(nextSourceIndex);
-                if (remainingRows.length > 0 && gearOverflowHost) {
+                if (remainingRows.length > 0) {
                   const leftDataCount = Math.ceil(remainingRows.length / 2);
                   const leftDataRows = remainingRows.slice(0, leftDataCount);
                   const rightDataRows = remainingRows.slice(leftDataCount);
@@ -3219,29 +3251,11 @@ export function renderCharacterPdfHtml(input: {
                   const overflowRightBox = cloneGearBoxEmpty(gearBox, 'general-gear-overflow-box');
                   overflowRow.appendChild(overflowLeftBox);
                   overflowRow.appendChild(overflowRightBox);
-                  gearOverflowHost.appendChild(overflowRow);
 
                   fillGearRowsFixedCount(overflowLeftBox, leftDataRows, rowsPerTable);
                   fillGearRowsFixedCount(overflowRightBox, rightDataRows, rowsPerTable);
 
-                  // Keep both tables on one printed page when possible (trim only padding rows).
-                  const overflowFitsBoundary = () => overflowRow.getBoundingClientRect().bottom <= boundaryBottom();
-                  if (!overflowFitsBoundary()) {
-                    const leftBody = getGeneralGearTbody(overflowLeftBox);
-                    const rightBody = getGeneralGearTbody(overflowRightBox);
-                    if (leftBody && rightBody) {
-                      const MAX_TRIMS = 400;
-                      for (let i = 0; i < MAX_TRIMS && !overflowFitsBoundary(); i++) {
-                        const lLast = leftBody.rows[leftBody.rows.length - 1];
-                        const rLast = rightBody.rows[rightBody.rows.length - 1];
-                        if (!isPadRow(lLast) || !isPadRow(rLast)) break;
-                        leftBody.deleteRow(leftBody.rows.length - 1);
-                        rightBody.deleteRow(rightBody.rows.length - 1);
-                      }
-                    }
-                  }
-
-                  gearOverflowHost.classList.add('page3-visible');
+                  gearOverflowEl = overflowRow;
                 }
               }
 
@@ -3249,6 +3263,100 @@ export function renderCharacterPdfHtml(input: {
               stash.innerHTML = '';
             }
           }
+
+          // ── Place gear overflow tables + inline gifts ──────────────
+          // The overflow DOM was built inside the page-3 scope above.
+          // Priority order: page 2 (below item effects), page 4 (before
+          // magic tables), page 3 overflow host (fallback).
+          {
+            const page2Layout = document.getElementById('page2-layout');
+            const page2El = page2Layout
+              ? (page2Layout.closest('.page') || document.querySelector('.page.page2'))
+              : null;
+            const page4Layout = document.querySelector('.page4-layout');
+            const gearOverflowHost = document.getElementById('page3-general-gear-overflow');
+
+            // Fixed page-2 boundary (top + min-height) so adding children
+            // doesn't push the boundary further and produce a false "fits".
+            const computePage2Bottom = () => {
+              if (!page2El) return 0;
+              const top = page2El.getBoundingClientRect().top;
+              const minH = parseFloat(getComputedStyle(page2El).minHeight);
+              return top + (Number.isFinite(minH) ? minH : page2El.getBoundingClientRect().height) - 3;
+            };
+
+            if (gearOverflowEl) {
+              let placed = false;
+
+              // Attempt 1: page 2 (after item effects / allies / enemies)
+              if (page2Layout && page2El) {
+                const wrap = document.createElement('div');
+                wrap.className = 'page2-gear-overflow-wrap';
+                wrap.appendChild(gearOverflowEl);
+                page2Layout.appendChild(wrap);
+
+                if (wrap.getBoundingClientRect().bottom <= computePage2Bottom()) {
+                  placed = true;
+                } else {
+                  wrap.removeChild(gearOverflowEl);
+                  wrap.remove();
+                }
+              }
+
+              // Attempt 2: before magic on page 4
+              if (!placed && page4Layout) {
+                const wrap = document.createElement('div');
+                wrap.className = 'page4-gear-overflow-wrap';
+                wrap.appendChild(gearOverflowEl);
+                page4Layout.insertBefore(wrap, page4Layout.firstChild);
+                placed = true;
+              }
+
+              // Attempt 3 (fallback): page 3 overflow host
+              if (!placed && gearOverflowHost) {
+                gearOverflowHost.appendChild(gearOverflowEl);
+                gearOverflowHost.classList.add('page3-visible');
+              }
+            }
+
+            // Try to inline "gifts" on page 2 (only when gifts is the
+            // sole magic type, i.e. onlyGiftsMagic was true at template
+            // generation time and the template tag exists).
+            const giftsTpl = document.getElementById('page2-gifts-tpl');
+            const giftsFrag =
+              giftsTpl && giftsTpl.tagName === 'TEMPLATE' && giftsTpl.innerHTML && giftsTpl.innerHTML.trim() && giftsTpl.content
+                ? giftsTpl.content.cloneNode(true)
+                : null;
+
+            if (giftsFrag && page2Layout && page2El) {
+              const giftsWrap = document.createElement('div');
+              giftsWrap.className = 'page2-gifts-inline-wrap';
+              giftsWrap.appendChild(giftsFrag);
+              page2Layout.appendChild(giftsWrap);
+
+              if (giftsWrap.getBoundingClientRect().bottom <= computePage2Bottom()) {
+                // Gifts placed on page 2 – remove from page 4.
+                const p4Gifts = document.querySelector('.page4-layout .magic4-gifts-box');
+                if (p4Gifts) p4Gifts.remove();
+              } else {
+                giftsWrap.remove();
+              }
+            }
+
+            // If page 4 has no visible children left, hide the whole page.
+            if (page4Layout) {
+              const hasVisibleChild = Array.from(page4Layout.children).some(
+                (ch) => ch.offsetHeight > 0 && !ch.classList.contains('page-hidden'),
+              );
+              if (!hasVisibleChild) {
+                const page4El = page4Layout.closest('.page') || document.querySelector('.page.page4');
+                if (page4El) page4El.classList.add('page-hidden');
+              }
+            }
+          }
+
+          // Clean up all <template> elements now that inlining is done.
+          document.querySelectorAll('template').forEach((t) => t.remove());
 
         };
 

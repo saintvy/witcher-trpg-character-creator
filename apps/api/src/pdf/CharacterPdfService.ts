@@ -536,8 +536,12 @@ export class CharacterPdfService {
     const html = renderCharacterPdfHtml({ page1: pdfVm.page1, page2: pdfVm.page2, page3: pdfVm.page3, page4: pdfVm.page4, options });
 
     const browser = await CharacterPdfService.getBrowser();
+    // Viewport width MUST match the PDF printable area so that inline layout
+    // scripts (getBoundingClientRect measurements) produce results consistent
+    // with the actual printed page.  A4 = 210 mm; @page margin = 6 mm per side
+    // → content width = 210 − 12 = 198 mm ≈ 748 CSS-px at 96 dpi.
     const context = await browser.newContext({
-      viewport: { width: 1280, height: 720 },
+      viewport: { width: 748, height: 720 },
       deviceScaleFactor: 2,
     });
     const page = await context.newPage();
