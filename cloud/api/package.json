@@ -1,19 +1,17 @@
 {
-  "name": "api",
+  "name": "@wcc/cloud-api",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json",
-    "smoke:page4-invocations": "tsx scripts/smokePage4Invocations.ts"
+    "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.5",
     "@wcc/core": "*",
     "hono": "^4.5.7",
-    "dotenv": "^16.4.5",
-    "playwright": "^1.50.0"
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",

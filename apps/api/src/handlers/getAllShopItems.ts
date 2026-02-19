@@ -1,5 +1,5 @@
 import type { Context } from 'hono';
-import { getAllShopItems } from '../services/shopCatalog.js';
+import { getAllShopItems } from '@wcc/core';
 
 export async function getAllShopItemsHandler(c: Context) {
   try {

@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { db } from '../../db/pool.js';
+import { db } from '@wcc/core';
 
 type DeepKeyTree = { [k: string]: string | DeepKeyTree };
 

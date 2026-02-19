@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Witcher Character Creator — Prototype</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --bg-main: #05060a;
+            --bg-elevated: #11131a;
+            --bg-elevated-soft: #151822;
+            --bg-chip: #1d202b;
+            --border-subtle: #272a38;
+            --accent: #f2c744;
+            --accent-soft: rgba(242,199,68,0.12);
+            --accent-strong: #ffdd63;
+            --danger: #ff4d6a;
+            --text-main: #f6f7fb;
+            --text-muted: #9ca4c1;
+            --text-soft: #707899;
+            --shadow-soft: 0 18px 40px rgba(0,0,0,0.65);
+            --radius-lg: 18px;
+            --radius-sm: 999px;
+            --transition-fast: 0.18s ease-out;
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont,
+                         "Segoe UI", Roboto, sans-serif;
+            --font-mono: "JetBrains Mono", Menlo, Monaco, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: radial-gradient(circle at top, #151826 0, #05060a 55%, #020308 100%);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+        }
+
+        body {
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Layout */
+
+        .layout {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            grid-template-rows: 100vh;
+            width: 100%;
+        }
+
+        @media (max-width: 960px) {
+            .layout {
+                grid-template-columns: 72px minmax(0, 1fr);
+            }
+
+            .sidebar-title-text,
+            .nav-label,
+            .sidebar-footer {
+                display: none;
+            }
+
+            .sidebar {
+                align-items: center;
+            }
+
+            .sidebar-nav {
+                gap: 6px;
+            }
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, rgba(17,19,26,0.95), rgba(5,6,10,0.98));
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            padding: 18px 18px 14px;
+            backdrop-filter: blur(20px);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 8px 10px;
+        }
+
+        .sidebar-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(242,199,68,0.5);
+            background:
+                radial-gradient(circle at 30% 20%, #ffffff 0, transparent 35%),
+                radial-gradient(circle at 75% 70%, #f2c744 0, transparent 45%),
+                conic-gradient(from 220deg, #f2c744, #9c6b1f, #f2c744);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.9);
+            font-family: var(--font-mono);
+            font-size: 16px;
+            color: #05060a;
+        }
+
+        .sidebar-title-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sidebar-title {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .sidebar-subtitle {
+            font-size: 11px;
+            color: var(--text-soft);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-group-label {
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-soft);
+            margin: 12px 4px 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            color: var(--text-soft);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform 0.08s ease-out;
+        }
+
+        .nav-item-icon {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav-label {
+            flex: 1;
+        }
+
+        .nav-pill {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(242,199,68,0.08);
+            border: 1px solid rgba(242,199,68,0.45);
+            color: var(--accent-strong);
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.06);
+            transform: translateY(-1px);
+        }
+
+        .nav-item.active {
+            background: radial-gradient(circle at 0 0, rgba(242,199,68,0.14), transparent 55%), var(--bg-elevated);
+            border-color: rgba(242,199,68,0.7);
+            color: var(--text-main);
+        }
+
+        .nav-item.active .nav-item-icon {
+            color: var(--accent);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid rgba(255,255,255,0.04);
+            margin-top: 12px;
+            padding-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--text-soft);
+        }
+
+        .sidebar-footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge-version {
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            background: rgba(99, 179, 237, 0.08);
+            border: 1px solid rgba(99,179,237,0.5);
+            color: #9fd0ff;
+            font-size: 11px;
+        }
+
+        .beta-tag {
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            background: rgba(242,199,68,0.1);
+            border: 1px solid rgba(242,199,68,0.5);
+            color: var(--accent-strong);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+        }
+
+        /* Main */
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            padding: 16px 20px;
+            gap: 16px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .topbar-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .topbar-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .topbar-title-badge {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            padding: 2px 10px;
+            border-radius: var(--radius-sm);
+            background: rgba(242,199,68,0.08);
+            border: 1px solid rgba(242,199,68,0.45);
+            color: var(--accent-strong);
+        }
+
+        .topbar-subtitle {
+            font-size: 12px;
+            color: var(--text-soft);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            background: rgba(11,12,20,0.95);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            max-width: 260px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-size: 12px;
+            width: 100%;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-soft);
+        }
+
+        .chip {
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(12,14,20,0.9);
+            color: var(--text-soft);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chip-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #48e29b;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(10,11,18,0.95);
+            border: 1px solid rgba(255,255,255,0.06);
+            cursor: default;
+        }
+
+        .user-avatar {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f2c744, #9350ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #05060a;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 11px;
+        }
+
+        .user-role {
+            font-size: 10px;
+            color: var(--text-soft);
+        }
+
+        .content {
+            flex: 1;
+            min-height: 0;
+            border-radius: var(--radius-lg);
+            background: radial-gradient(circle at top left, rgba(242,199,68,0.05) 0, transparent 55%), var(--bg-elevated);
+            padding: 16px 18px 18px;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+
+        .tab {
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-soft);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform 0.08s ease-out;
+        }
+
+        .tab span {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.06);
+        }
+
+        .tab.active {
+            background: rgba(242,199,68,0.12);
+            border-color: rgba(242,199,68,0.8);
+            color: var(--accent-strong);
+            transform: translateY(-1px);
+        }
+
+        .pages {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+
+        .page {
+            position: absolute;
+            inset: 0;
+            padding-top: 4px;
+            display: none;
+            overflow: auto;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Cards grid */
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0,1fr));
+            gap: 12px;
+        }
+
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: repeat(2, minmax(0,1fr));
+            }
+        }
+
+        @media (max-width: 800px) {
+            .grid {
+                grid-template-columns: minmax(0,1fr);
+            }
+        }
+
+        .card {
+            background: var(--bg-elevated-soft);
+            border-radius: var(--radius-lg);
+            padding: 12px 12px 10px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.7);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .card-subtitle {
+            font-size: 11px;
+            color: var(--text-soft);
+        }
+
+        .card-badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-soft);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .metric-footnote {
+            font-size: 11px;
+            color: var(--text-soft);
+        }
+
+        .metric-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(72,226,155,0.1);
+            color: #8cf0c3;
+            border: 1px solid rgba(72,226,155,0.6);
+        }
+
+        .metric-pill.danger {
+            background: rgba(255,77,106,0.08);
+            border-color: rgba(255,77,106,0.5);
+            color: #ff9dab;
+        }
+
+        /* Tables */
+
+        .table-card {
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th, td {
+            padding: 6px 8px;
+            text-align: left;
+        }
+
+        thead {
+            background: rgba(7,9,15,0.9);
+        }
+
+        th {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-soft);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+
+        tbody tr:nth-child(every) {}
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        td {
+            color: var(--text-main);
+        }
+
+        .tag {
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.02);
+            color: var(--text-soft);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tag-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #48e29b;
+        }
+
+        .tag.red .tag-dot {
+            background: var(--danger);
+        }
+
+        .btn {
+            font-size: 11px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.14);
+            background: rgba(255,255,255,0.02);
+            color: var(--text-main);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background var(--transition-fast), border-color var(--transition-fast), transform 0.08s ease-out;
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.35);
+            transform: translateY(-0.5px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f2c744, #ff9d3c);
+            border-color: rgba(0,0,0,0.7);
+            color: #201305;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #ffdd63, #ffb24f);
+        }
+
+        .btn-ghost {
+            border-color: rgba(255,255,255,0.09);
+            background: transparent;
+            color: var(--text-soft);
+        }
+
+        .btn-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.01);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        /* Wizard / forms */
+
+        .wizard {
+            display: grid;
+            grid-template-columns: 260px minmax(0,1fr);
+            gap: 14px;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 960px) {
+            .wizard {
+                grid-template-columns: minmax(0,1fr);
+            }
+        }
+
+        .wizard-steps {
+            background: var(--bg-elevated-soft);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .wizard-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 8px;
+            border-radius: 999px;
+            font-size: 12px;
+            color: var(--text-soft);
+        }
+
+        .wizard-step-index {
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        .wizard-step.active {
+            background: rgba(242,199,68,0.13);
+            color: var(--accent-strong);
+        }
+
+        .wizard-step.active .wizard-step-index {
+            border-color: rgba(242,199,68,0.9);
+            background: rgba(242,199,68,0.2);
+        }
+
+        .wizard-step.done .wizard-step-index {
+            border-color: #48e29b;
+            background: rgba(72,226,155,0.15);
+        }
+
+        .wizard-body {
+            background: var(--bg-elevated-soft);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+            padding: 12px 13px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .section-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .section-note {
+            font-size: 11px;
+            color: var(--text-soft);
+        }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: 10px;
+        }
+
+        @media (max-width: 800px) {
+            .field-grid {
+                grid-template-columns: minmax(0,1fr);
+            }
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .field-label {
+            color: var(--text-soft);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .field-label span {
+            font-size: 11px;
+            color: var(--text-soft);
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            background: rgba(9,11,18,0.95);
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            padding: 7px 9px;
+            color: var(--text-main);
+            font-size: 12px;
+            outline: none;
+            resize: vertical;
+            min-height: 0;
+        }
+
+        .field input::placeholder,
+        .field textarea::placeholder {
+            color: var(--text-soft);
+        }
+
+        .field small {
+            font-size: 11px;
+            color: var(--text-soft);
+        }
+
+        .badge-inline {
+            font-size: 10px;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: rgba(242,199,68,0.12);
+            border: 1px solid rgba(242,199,68,0.5);
+            color: var(--accent-strong);
+        }
+
+        /* Character sheet */
+
+        .sheet-layout {
+            display: grid;
+            grid-template-columns: 260px minmax(0,1fr);
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 960px) {
+            .sheet-layout {
+                grid-template-columns: minmax(0,1fr);
+            }
+        }
+
+        .sheet-sidebar {
+            background: var(--bg-elevated-soft);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sheet-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 24px;
+            border: 1px solid rgba(242,199,68,0.6);
+            background: radial-gradient(circle at 30% 20%, #ffffff 0, transparent 30%), radial-gradient(circle at 60% 80%, #f2c744 0, transparent 45%), conic-gradient(from 230deg, #f2c744, #aa6b24, #241815, #f2c744);
+            margin-bottom: 4px;
+        }
+
+        .sheet-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .sheet-meta {
+            font-size: 11px;
+            color: var(--text-soft);
+        }
+
+        .sheet-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .sheet-stat-block {
+            background: rgba(4,6,11,0.8);
+            border-radius: 12px;
+            padding: 8px 9px;
+            border: 1px solid var(--border-subtle);
+            margin-top: 6px;
+        }
+
+        .sheet-stat-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-soft);
+            margin-bottom: 4px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0,1fr));
+            gap: 6px;
+        }
+
+        .stat-pill {
+            background: rgba(17,19,26,0.9);
+            border-radius: 999px;
+            padding: 4px 8px;
+            border: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+
+        .stat-pill span {
+            font-family: var(--font-mono);
+        }
+
+        .sheet-main {
+            background: var(--bg-elevated-soft);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+            padding: 11px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .pill {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-soft);
+        }
+
+        .pill.accent {
+            background: var(--accent-soft);
+            border-color: rgba(242,199,68,0.7);
+            color: var(--accent-strong);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0,1fr));
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            .skills-grid {
+                grid-template-columns: repeat(2, minmax(0,1fr));
+            }
+        }
+
+        @media (max-width: 800px) {
+            .skills-grid {
+                grid-template-columns: minmax(0,1fr);
+            }
+        }
+
+        .skill-chip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 8px;
+            border-radius: 12px;
+            background: rgba(7,9,15,0.9);
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 11px;
+        }
+
+        .skill-name {
+            color: var(--text-main);
+        }
+
+        .skill-meta {
+            font-family: var(--font-mono);
+            color: var(--text-soft);
+        }
+
+        .timeline {
+            margin-top: 6px;
+            padding-left: 4px;
+            border-left: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .timeline-item {
+            padding-left: 10px;
+            margin-bottom: 6px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -4px;
+            top: 4px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 4px rgba(242,199,68,0.18);
+        }
+
+        .timeline-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--text-soft);
+            margin-bottom: 2px;
+        }
+
+        .timeline-text {
+            font-size: 12px;
+        }
+
+        /* Settings panel */
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0,1fr));
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 1100px) {
+            .settings-grid {
+                grid-template-columns: repeat(2, minmax(0,1fr));
+            }
+        }
+
+        @media (max-width: 800px) {
+            .settings-grid {
+                grid-template-columns: minmax(0,1fr);
+            }
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .toggle-label {
+            font-size: 12px;
+        }
+
+        .toggle-switch {
+            width: 38px;
+            height: 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(3,5,10,0.9);
+            position: relative;
+        }
+
+        .toggle-switch::after {
+            content: "";
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #888da5;
+        }
+
+        .toggle-switch.on {
+            border-color: rgba(72,226,155,0.7);
+            background: rgba(72,226,155,0.18);
+        }
+
+        .toggle-switch.on::after {
+            background: #48e29b;
+            left: 21px;
+        }
+
+        .coming-soon {
+            font-size: 11px;
+            color: var(--text-soft);
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px dashed rgba(255,255,255,0.16);
+            background: rgba(255,255,255,0.01);
+        }
+
+        .footer-note {
+            margin-top: 10px;
+            font-size: 11px;
+            color: var(--text-soft);
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .link-muted {
+            color: var(--text-soft);
+            text-decoration: underline dotted;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">W</div>
+            <div class="sidebar-title-text">
+                <div class="sidebar-title">Witcher Character</div>
+                <div class="sidebar-subtitle">Тёмная НРИ • v0.1 UI ref</div>
+            </div>
+        </div>
+
+        <div class="sidebar-nav">
+            <div class="nav-group-label">Навигация</div>
+            <div class="nav-item active" data-page-target="dashboard">
+                <div class="nav-item-icon">🏠</div>
+                <div class="nav-label">Обзор</div>
+                <div class="nav-pill">3 кампании</div>
+            </div>
+            <div class="nav-item" data-page-target="characters">
+                <div class="nav-item-icon">🧬</div>
+                <div class="nav-label">Персонажи</div>
+            </div>
+            <div class="nav-item" data-page-target="builder">
+                <div class="nav-item-icon">✨</div>
+                <div class="nav-label">Создание персонажа</div>
+            </div>
+            <div class="nav-item" data-page-target="sheet">
+                <div class="nav-item-icon">📜</div>
+                <div class="nav-label">Лист персонажа</div>
+            </div>
+
+            <div class="nav-group-label">Мир</div>
+            <div class="nav-item" data-page-target="lifepath">
+                <div class="nav-item-icon">🧭</div>
+                <div class="nav-label">Жизненный путь</div>
+            </div>
+            <div class="nav-item" data-page-target="content">
+                <div class="nav-item-icon">📚</div>
+                <div class="nav-label">DLC & контент</div>
+                <div class="nav-pill">Tom of Chaos</div>
+            </div>
+            <div class="nav-item" data-page-target="settings">
+                <div class="nav-item-icon">⚙️</div>
+                <div class="nav-label">Настройки</div>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-footer-row">
+                <span>API контракт</span>
+                <span class="badge-version">v1.0 draft</span>
+            </div>
+            <div class="sidebar-footer-row">
+                <span>Frontend состояние</span>
+                <span class="beta-tag">prototype</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <header class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-title">
+                    Портал генерирования персонажей
+                    <span class="topbar-title-badge">GM / Player view</span>
+                </div>
+                <div class="topbar-subtitle">
+                    Черновой референс интерфейса для будущего SPA-приложения по НРИ «Ведьмак».
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="search-box">
+                    <span style="font-size:13px;opacity:0.8;">🔍</span>
+                    <input placeholder="Поиск персонажа, кампании или предмета…" />
+                </div>
+                <div class="chip">
+                    <span class="chip-dot"></span>
+                    <span>Черновые данные</span>
+                </div>
+                <div class="user-pill">
+                    <div class="user-avatar">V</div>
+                    <div class="user-info">
+                        <div class="user-name">Хозяин портала</div>
+                        <div class="user-role">архитектор правил</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="content">
+            <div class="tabs">
+                <button class="tab active" data-page-target="dashboard">
+                    Обзор
+                    <span>статистика и быстрые действия</span>
+                </button>
+                <button class="tab" data-page-target="characters">
+                    Персонажи
+                    <span>список, фильтры, импорт</span>
+                </button>
+                <button class="tab" data-page-target="builder">
+                    Создание
+                    <span>мастер шаг за шагом</span>
+                </button>
+                <button class="tab" data-page-target="sheet">
+                    Лист персонажа
+                    <span>просмотр / печать</span>
+                </button>
+                <button class="tab" data-page-target="lifepath">
+                    Жизненный путь
+                    <span>генерация на основе книги правил</span>
+                </button>
+                <button class="tab" data-page-target="content">
+                    Контент
+                    <span>база рас, профессий, DLC</span>
+                </button>
+                <button class="tab" data-page-target="settings">
+                    Настройки
+                    <span>профиль, локализация, экспорт</span>
+                </button>
+            </div>
+
+            <div class="pages">
+                <!-- DASHBOARD -->
+                <div class="page active" id="page-dashboard">
+                    <div class="grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Персонажи</div>
+                                    <div class="card-subtitle">Черновой статус данных сейва</div>
+                                </div>
+                                <span class="card-badge">overview</span>
+                            </div>
+                            <div class="metric-value">12</div>
+                            <div class="metric-footnote">
+                                <span class="metric-pill">+3 за последнюю сессию</span>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Кампании</div>
+                                    <div class="card-subtitle">Активные сюжетные линии</div>
+                                </div>
+                                <span class="card-badge">gm tools</span>
+                            </div>
+                            <div class="metric-value">3</div>
+                            <div class="metric-footnote">
+                                <span class="metric-pill">2 на Севере</span>
+                                <span class="metric-pill danger">1 в Нильфгаарде</span>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Экспорты</div>
+                                    <div class="card-subtitle">PDF / JSON / FoundryVTT</div>
+                                </div>
+                                <span class="card-badge">exports</span>
+                            </div>
+                            <div class="metric-value">7</div>
+                            <div class="metric-footnote">
+                                <span class="metric-pill">PDF лист персонажа</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Недавно редактированные персонажи</div>
+                                <div class="card-subtitle">Заглушка под список из API / БД</div>
+                            </div>
+                            <div style="display:flex;gap:6px;">
+                                <button class="btn-ghost btn">
+                                    Фильтры
+                                </button>
+                                <button class="btn-primary btn">
+                                    + Новый персонаж
+                                </button>
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Раса</th>
+                                <th>Профессия</th>
+                                <th>Уровень</th>
+                                <th>Кампания</th>
+                                <th>Обновлён</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Геральт из Ривии</td>
+                                <td><span class="tag"><span class="tag-dot"></span> ведьмак</span></td>
+                                <td>Ведьмак</td>
+                                <td>5</td>
+                                <td>Третья Северная война</td>
+                                <td>вчера</td>
+                                <td>
+                                    <button class="btn">
+                                        Открыть
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Йеннифэр из Венгерберга</td>
+                                <td><span class="tag"><span class="tag-dot"></span> человек</span></td>
+                                <td>Маг</td>
+                                <td>6</td>
+                                <td>Ложа Чародеек</td>
+                                <td>3 дня назад</td>
+                                <td>
+                                    <button class="btn">
+                                        Открыть
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Золтан Хивай</td>
+                                <td><span class="tag"><span class="tag-dot"></span> краснолюд</span></td>
+                                <td>Воин / Торговец</td>
+                                <td>4</td>
+                                <td>Новиградское кабаре</td>
+                                <td>неделю назад</td>
+                                <td>
+                                    <button class="btn">
+                                        Открыть
+                                    </button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- CHARACTERS LIST -->
+                <div class="page" id="page-characters">
+                    <div class="section-title-row">
+                        <div>
+                            <div class="section-title">Персонажи</div>
+                            <div class="section-note">Список персонажей игрока и NPC. Здесь будут фильтры, сортировка и пагинация.</div>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn">
+                                Импорт из JSON
+                            </button>
+                            <button class="btn-primary btn">
+                                + Создать
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card table-card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Список персонажей (заглушка)</div>
+                                <div class="card-subtitle">Названия колонок и структуры будут синхронизированы с контрактом API.</div>
+                            </div>
+                            <div class="pill-row">
+                                <span class="pill">Фильтр: раса = ведьмак</span>
+                                <span class="pill">Профессия: все</span>
+                                <span class="pill">Кампания: любая</span>
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Имя</th>
+                                <th>Раса</th>
+                                <th>Соц. статус</th>
+                                <th>Профессия</th>
+                                <th>Земля</th>
+                                <th>Создан</th>
+                                <th>Действия</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Клятва Школы Волка</td>
+                                <td><span class="tag"><span class="tag-dot"></span> ведьмак</span></td>
+                                <td>опасение</td>
+                                <td>Ведьмак</td>
+                                <td>Королевства Севера</td>
+                                <td>01.11.1272</td>
+                                <td>
+                                    <button class="btn-icon">👁</button>
+                                    <button class="btn-icon">✏️</button>
+                                    <button class="btn-icon">🗑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Аэдирнский дезертир</td>
+                                <td><span class="tag red"><span class="tag-dot"></span> человек</span></td>
+                                <td>равенство</td>
+                                <td>Воин</td>
+                                <td>Аэдирн</td>
+                                <td>13.09.1271</td>
+                                <td>
+                                    <button class="btn-icon">👁</button>
+                                    <button class="btn-icon">✏️</button>
+                                    <button class="btn-icon">🗑</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Эльф-лучник из Доль Блатанны</td>
+                                <td><span class="tag"><span class="tag-dot"></span> эльф</span></td>
+                                <td>равенство</td>
+                                <td>Воин / Бард</td>
+                                <td>Доль Блатанна</td>
+                                <td>22.03.1270</td>
+                                <td>
+                                    <button class="btn-icon">👁</button>
+                                    <button class="btn-icon">✏️</button>
+                                    <button class="btn-icon">🗑</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- BUILDER -->
+                <div class="page" id="page-builder">
+                    <div class="section-title-row">
+                        <div>
+                            <div class="section-title">Создание персонажа</div>
+                            <div class="section-note">Мастер, работающий поверх контракта персонажа (JSON/YAML). Сейчас — визуальная заглушка.</div>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn-ghost btn">Загрузить черновик</button>
+                            <button class="btn-primary btn">Сохранить черновик</button>
+                        </div>
+                    </div>
+
+                    <div class="wizard">
+                        <div class="wizard-steps">
+                            <div class="wizard-step active">
+                                <div class="wizard-step-index">1</div>
+                                <div>Идентичность</div>
+                            </div>
+                            <div class="wizard-step done">
+                                <div class="wizard-step-index">2</div>
+                                <div>Параметры</div>
+                            </div>
+                            <div class="wizard-step done">
+                                <div class="wizard-step-index">3</div>
+                                <div>Навыки</div>
+                            </div>
+                            <div class="wizard-step">
+                                <div class="wizard-step-index">4</div>
+                                <div>Жизненный путь</div>
+                            </div>
+                            <div class="wizard-step">
+                                <div class="wizard-step-index">5</div>
+                                <div>Снаряжение</div>
+                            </div>
+                            <div class="wizard-step">
+                                <div class="wizard-step-index">6</div>
+                                <div>Итоговая карточка</div>
+                            </div>
+                        </div>
+                        <div class="wizard-body">
+                            <div class="section-title-row">
+                                <div>
+                                    <div class="section-title">Шаг 1: Идентичность</div>
+                                    <div class="section-note">Поля и структуры должны соответствовать API контракту персонажа.</div>
+                                </div>
+                                <span class="badge-inline">auto-save черновика</span>
+                            </div>
+
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label class="field-label">
+                                        Имя персонажа
+                                        <span>обязательное</span>
+                                    </label>
+                                    <input placeholder="Например, «Летний Волк»" />
+                                    <small>Это отображаемое имя в листе персонажа и списках.</small>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">
+                                        Внутренний ID
+                                        <span>генерируется</span>
+                                    </label>
+                                    <input placeholder="uuid-v4 / snowflake" disabled value="<будет сгенерирован сервером>" />
+                                    <small>Связь с сохранёнными сущностями и DLC.</small>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">
+                                        Раса
+                                        <span>из книги правил</span>
+                                    </label>
+                                    <select>
+                                        <option>человек</option>
+                                        <option>эльф (Aen Seidhe)</option>
+                                        <option>краснолюд</option>
+                                        <option>ведьмак</option>
+                                    </select>
+                                    <small>Список подтягивается из справочника рас.</small>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">
+                                        Профессия
+                                        <span>из книги правил</span>
+                                    </label>
+                                    <select>
+                                        <option>ведьмак</option>
+                                        <option>воин</option>
+                                        <option>маг</option>
+                                        <option>жрец</option>
+                                        <option>ремесленник</option>
+                                        <option>торговец</option>
+                                        <option>преступник</option>
+                                        <option>бард</option>
+                                        <option>медик</option>
+                                    </select>
+                                    <small>Должна соответствовать profession и profession_local в контракте.</small>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">
+                                        Кампания / мир
+                                        <span>необязательное</span>
+                                    </label>
+                                    <input placeholder="Например, «Третья Северная война»" />
+                                    <small>Связь с сущностью «кампания» для GM-портала.</small>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">
+                                        Краткое описание
+                                        <span>флэйвор-текст</span>
+                                    </label>
+                                    <textarea rows="2" placeholder="Кто он, откуда и что его двигает?"></textarea>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                                <div class="section-note">
+                                    Далее — шаги по расстановке параметров (INT, REF, DEX, BODY, EMP, WILL, LUCK, STAM) и распределению очков навыков.
+                                </div>
+                                <div style="display:flex;gap:6px;">
+                                    <button class="btn">Назад</button>
+                                    <button class="btn-primary btn">Далее: параметры</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SHEET -->
+                <div class="page" id="page-sheet">
+                    <div class="section-title-row">
+                        <div>
+                            <div class="section-title">Лист персонажа (просмотр)</div>
+                            <div class="section-note">Визуальный прототип конечного листа, который можно будет экспортировать в PDF.</div>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn">Переключить на «версию ведущего»</button>
+                            <button class="btn-primary btn">Экспорт в PDF</button>
+                        </div>
+                    </div>
+
+                    <div class="sheet-layout">
+                        <aside class="sheet-sidebar">
+                            <div class="sheet-avatar"></div>
+                            <div class="sheet-name">Геральт из Ривии</div>
+                            <div class="sheet-meta">
+                                Ведьмак • Школа Волка<br/>
+                                Королевства Севера • Соц. статус: опасение
+                            </div>
+                            <div class="sheet-tags">
+                                <span class="pill accent">Раса: ведьмак</span>
+                                <span class="pill">Профессия: Ведьмак</span>
+                                <span class="pill">Возраст: 90+</span>
+                            </div>
+
+                            <div class="sheet-stat-block">
+                                <div class="sheet-stat-title">Основные параметры</div>
+                                <div class="stat-grid">
+                                    <div class="stat-pill"><span>INT</span><span>6</span></div>
+                                    <div class="stat-pill"><span>REF</span><span>14</span></div>
+                                    <div class="stat-pill"><span>DEX</span><span>10</span></div>
+                                    <div class="stat-pill"><span>BODY</span><span>8</span></div>
+                                    <div class="stat-pill"><span>EMP</span><span>3</span></div>
+                                    <div class="stat-pill"><span>WILL</span><span>8</span></div>
+                                    <div class="stat-pill"><span>LUCK</span><span>3</span></div>
+                                    <div class="stat-pill"><span>STAM</span><span>35</span></div>
+                                    <div class="stat-pill"><span>RUN</span><span>9</span></div>
+                                </div>
+                            </div>
+
+                            <div class="sheet-stat-block">
+                                <div class="sheet-stat-title">Ресурсы</div>
+                                <div class="stat-grid">
+                                    <div class="stat-pill"><span>HP</span><span>55</span></div>
+                                    <div class="stat-pill"><span>Энергия</span><span>7</span></div>
+                                    <div class="stat-pill"><span>Удача (сейчас)</span><span>1 / 3</span></div>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <div class="sheet-main">
+                            <div class="section-title-row">
+                                <div>
+                                    <div class="section-title">Навыки и знаки</div>
+                                    <div class="section-note">Пример группировки по книге правил: боевые, общие, магия, ведьмачьи знаки.</div>
+                                </div>
+                                <div class="pill-row">
+                                    <span class="pill accent">Режим: только-чтение</span>
+                                    <span class="pill">Показывать формулы</span>
+                                </div>
+                            </div>
+
+                            <div class="skills-grid">
+                                <div class="skill-chip">
+                                    <div class="skill-name">Владение мечом</div>
+                                    <div class="skill-meta">11 / max 10</div>
+                                </div>
+                                <div class="skill-chip">
+                                    <div class="skill-name">Уклонение / Изворотливость</div>
+                                    <div class="skill-meta">10 / max 10</div>
+                                </div>
+                                <div class="skill-chip">
+                                    <div class="skill-name">Внимание</div>
+                                    <div class="skill-meta">9</div>
+                                </div>
+                                <div class="skill-chip">
+                                    <div class="skill-name">Выживание в дикой природе</div>
+                                    <div class="skill-meta">9</div>
+                                </div>
+                                <div class="skill-chip">
+                                    <div class="skill-name">Алхимия</div>
+                                    <div class="skill-meta">5</div>
+                                </div>
+                                <div class="skill-chip">
+                                    <div class="skill-name">Скрытность</div>
+                                    <div class="skill-meta">8</div>
+                                </div>
+                            </div>
+
+                            <div class="section-title-row" style="margin-top:6px;">
+                                <div>
+                                    <div class="section-title">Ведьмачьи знаки</div>
+                                    <div class="section-note">Просто заглушка для блока «магия» / «ритуалы» / «знаки».</div>
+                                </div>
+                                <div class="pill-row">
+                                    <span class="pill">Ирден</span>
+                                    <span class="pill">Квен</span>
+                                    <span class="pill">Аард</span>
+                                    <span class="pill">Игни</span>
+                                    <span class="pill">Аксий</span>
+                                </div>
+                            </div>
+
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-label">Жизненный путь</div>
+                                    <div class="timeline-text">
+                                        Родом из Королевств Севера. Пережил Первую и Вторую Северные войны. 
+                                        Связан с Каэр Морхен и Школой Волка. Отношение к войне — «нейтралитет ведьмака».
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-label">Ключевые события</div>
+                                    <div class="timeline-text">
+                                        Участвовал в битве при Бренне, событиях в Вызиме, Лок Муинне. 
+                                        Настоящее время: поиски Цири и Йеннифэр, фон Третьей Северной войны.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="section-title-row" style="margin-top:8px;">
+                                <div>
+                                    <div class="section-title">Заметки ведущего</div>
+                                    <div class="section-note">В режиме GM здесь будет редактируемое поле с приватными пометками.</div>
+                                </div>
+                                <button class="btn">Переключить редактирование</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LIFEPATH -->
+                <div class="page" id="page-lifepath">
+                    <div class="section-title-row">
+                        <div>
+                            <div class="section-title">Генерация жизненного пути</div>
+                            <div class="section-note">UI для бросков по таблицам родины, семьи, событий и любви из книги правил.</div>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn">Случайная генерация</button>
+                            <button class="btn-primary btn">Применить к персонажу</button>
+                        </div>
+                    </div>
+
+                    <div class="wizard">
+                        <div class="wizard-steps">
+                            <div class="wizard-step active">
+                                <div class="wizard-step-index">1</div>
+                                <div>Родина</div>
+                            </div>
+                            <div class="wizard-step">
+                                <div class="wizard-step-index">2</div>
+                                <div>Семья</div>
+                            </div>
+                            <div class="wizard-step">
+                                <div class="wizard-step-index">3</div>
+                                <div>Важные события</div>
+                            </div>
+                            <div class="wizard-step">
+                                <div class="wizard-step-index">4</div>
+                                <div>Любовь и враги</div>
+                            </div>
+                        </div>
+                        <div class="wizard-body">
+                            <div class="field-grid">
+                                <div class="field">
+                                    <label class="field-label">
+                                        Территория
+                                        <span>по таблице «Родина»</span>
+                                    </label>
+                                    <select>
+                                        <option>Королевства Севера</option>
+                                        <option>Нильфгаард</option>
+                                        <option>Земли Старших Народов</option>
+                                    </select>
+                                    <small>Будет завязано на расу персонажа.</small>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">
+                                        Конкретный регион
+                                        <span>1d10 по подтаблице</span>
+                                    </label>
+                                    <select>
+                                        <option>Редания</option>
+                                        <option>Каэдвен</option>
+                                        <option>Темерия</option>
+                                        <option>Аэдирн</option>
+                                        <option>Лирия и Ривия</option>
+                                        <option>...</option>
+                                    </select>
+                                    <small>Будет отображать автоматические бонусы (например, +1 к Образованию).</small>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">
+                                        Судьба семьи
+                                        <span>таблица из книги</span>
+                                    </label>
+                                    <textarea rows="3" placeholder="Например: «Семья в долгах из-за азартных игр. Нужны деньги.»"></textarea>
+                                </div>
+                                <div class="field">
+                                    <label class="field-label">
+                                        Влияющий друг
+                                        <span>«Друг, оказавший влияние»</span>
+                                    </label>
+                                    <textarea rows="3" placeholder="Например: «Ремесленник из Махакама, научивший ценить мастерство»"></textarea>
+                                </div>
+                            </div>
+                            <div class="section-note" style="margin-top:6px;">
+                                Здесь можно будет визуально отображать результаты бросков (d10, d100) и сразу применять числовые бонусы к навыкам.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENT / DLC -->
+                <div class="page" id="page-content">
+                    <div class="section-title-row">
+                        <div>
+                            <div class="section-title">Библиотека контента</div>
+                            <div class="section-note">Расы, профессии, навыки, заклинания, предметы и DLC (включая «Tom of Chaos»).</div>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn">Синхронизировать с YAML / CSV</button>
+                            <button class="btn-primary btn">+ Добавить из DLC</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Расы</div>
+                                    <div class="card-subtitle">человек, эльф, краснолюд, ведьмак</div>
+                                </div>
+                                <span class="card-badge">core</span>
+                            </div>
+                            <div class="section-note">
+                                Здесь будет таблица рас с локализацией (race, race), социальным статусом и расовыми чертами.
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Профессии</div>
+                                    <div class="card-subtitle">ведьмак, воин, маг, жрец, ремесленник…</div>
+                                </div>
+                                <span class="card-badge">core</span>
+                            </div>
+                            <div class="section-note">
+                                Грид с классами, стартовыми навыками и деревьями развития, как в книге правил.
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Tom of Chaos</div>
+                                    <div class="card-subtitle">DLC: хаос, новые мутации, заклинания, монстры.</div>
+                                </div>
+                                <span class="card-badge">dlc</span>
+                            </div>
+                            <div class="section-note">
+                                Заглушка под раздел с дополнительными опциями персонажа (мутагены, хаотические эффекты, прочее).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS -->
+                <div class="page" id="page-settings">
+                    <div class="section-title-row">
+                        <div>
+                            <div class="section-title">Настройки портала</div>
+                            <div class="section-note">Будущие настройки UI, локализации, экспорта и синхронизации с внешними сервисами.</div>
+                        </div>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn">Сбросить до дефолта</button>
+                            <button class="btn-primary btn">Сохранить</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Тема интерфейса</div>
+                                    <div class="card-subtitle">Светлая / тёмная / системная</div>
+                                </div>
+                            </div>
+                            <div class="toggle-row">
+                                <div class="toggle-label">Тёмная тема (как сейчас)</div>
+                                <div class="toggle-switch on"></div>
+                            </div>
+                            <div class="toggle-row">
+                                <div class="toggle-label">Авто по системе</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Локализация</div>
+                                    <div class="card-subtitle">Язык интерфейса и текстов правил</div>
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label class="field-label">
+                                    Язык UI
+                                    <span>multi-language</span>
+                                </label>
+                                <select>
+                                    <option>Русский</option>
+                                    <option>Английский</option>
+                                    <option>Чешский</option>
+                                </select>
+                            </div>
+                            <div class="coming-soon">
+                                Ссылка на систему i18n-ключей (race, profession_local и т. д.) будет здесь.
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">Экспорт и интеграции</div>
+                                    <div class="card-subtitle">PDF, FoundryVTT, Roll20, JSON</div>
+                                </div>
+                            </div>
+                            <div class="toggle-row">
+                                <div class="toggle-label">Экспорт PDF листа в один клик</div>
+                                <div class="toggle-switch on"></div>
+                            </div>
+                            <div class="toggle-row">
+                                <div class="toggle-label">Генерировать JSON сохранения</div>
+                                <div class="toggle-switch on"></div>
+                            </div>
+                            <div class="toggle-row">
+                                <div class="toggle-label">Интеграция с виртуальным столом</div>
+                                <div class="toggle-switch"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer-note">
+                        <span>Это только визуальный референс. Все данные здесь — заглушки.</span>
+                        <span class="link-muted">Открыть API контракт персонажа</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    // Простая навигация по вкладкам / сайдбару
+    (function () {
+        const tabs = document.querySelectorAll(".tab");
+        const navItems = document.querySelectorAll(".nav-item");
+        const pages = document.querySelectorAll(".page");
+
+        function activate(target) {
+            pages.forEach(p => p.classList.remove("active"));
+            tabs.forEach(t => t.classList.remove("active"));
+            navItems.forEach(n => n.classList.remove("active"));
+
+            const page = document.getElementById("page-" + target);
+            if (page) page.classList.add("active");
+
+            tabs.forEach(t => {
+                if (t.dataset.pageTarget === target) t.classList.add("active");
+            });
+            navItems.forEach(n => {
+                if (n.dataset.pageTarget === target) n.classList.add("active");
+            });
+        }
+
+        tabs.forEach(t => {
+            t.addEventListener("click", () => activate(t.dataset.pageTarget));
+        });
+
+        navItems.forEach(n => {
+            n.addEventListener("click", () => activate(n.dataset.pageTarget));
+        });
+    })();
+</script>
+</body>
+</html>

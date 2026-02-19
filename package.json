@@ -2,16 +2,26 @@
   "name": "witcher-cc-starter",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "packages/*",
+    "apps/*",
+    "cloud/*",
+    "cloud/infra"
   ],
   "scripts": {
     "setup": "npm install",
-    "dev": "npm-run-all -p dev:*",
-    "dev:web": "npm --workspace apps/web run dev",
-    "dev:api": "npm --workspace apps/api run dev",
+    "dev": "npm-run-all -p dev:legacy-api dev:legacy-web",
+    "dev:legacy-api": "npm --workspace apps/api run dev",
+    "dev:legacy-web": "npm --workspace apps/web run dev",
+    "dev:cloud": "npm-run-all -p dev:cloud-api dev:cloud-web",
+    "dev:cloud-api": "npm --workspace @wcc/cloud-api run dev",
+    "dev:cloud-web": "npm --workspace @wcc/cloud-web run dev",
     "build": "npm-run-all -s build:*",
-    "build:web": "npm --workspace apps/web run build",
-    "build:api": "npm --workspace apps/api run build",
+    "build:core": "npm --workspace @wcc/core run build",
+    "build:cloud-api": "npm --workspace @wcc/cloud-api run build",
+    "build:cloud-web": "npm --workspace @wcc/cloud-web run build",
+    "build:legacy-web": "npm --workspace apps/web run build",
+    "build:legacy-api": "npm --workspace apps/api run build",
+    "deploy": "npm --workspace @wcc/infra run deploy",
     "lint": "echo \"(add ESLint later)\"",
     "format": "echo \"(add Prettier later)\""
   },

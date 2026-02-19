@@ -1,5 +1,5 @@
-﻿import type { Context } from 'hono';
-import { getNextQuestion } from '../services/surveyEngine.js';
+import type { Context } from 'hono';
+import { getNextQuestion } from '@wcc/core';
 
 export async function nextQuestion(c: Context) {
   try {

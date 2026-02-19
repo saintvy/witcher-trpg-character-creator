@@ -1,0 +1,211 @@
+import { db } from '../db/pool.js';
+import { getCharacterRawFromAnswers } from '../services/surveyEngine.js';
+
+type I18nValue = { i18n_uuid: string };
+type CharacterRaw = Record<string, unknown> & { logicFields?: Record<string, unknown> };
+type Character = Record<string, unknown>;
+type AnswerValue = { type: 'number'; data: number } | { type: 'string'; data: string };
+type AnswerInput = { questionId: string; answerIds: string[]; value?: AnswerValue };
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isI18nValue(value: unknown): value is I18nValue {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    'i18n_uuid' in value &&
+    typeof (value as I18nValue).i18n_uuid === 'string'
+  );
+}
+
+type I18nArrayValue = { i18n_uuid_array: string[] };
+
+function isI18nArrayValue(value: unknown): value is I18nArrayValue {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    'i18n_uuid_array' in value &&
+    Array.isArray((value as I18nArrayValue).i18n_uuid_array) &&
+    (value as I18nArrayValue).i18n_uuid_array.every((item) => typeof item === 'string')
+  );
+}
+
+type I18nResolver = (uuid: string) => string;
+
+async function buildI18nResolver(uuids: Set<string>, lang: string): Promise<I18nResolver> {
+  if (uuids.size === 0) {
+    return (uuid) => uuid;
+  }
+
+  const uuidArray = Array.from(uuids);
+  const languages = Array.from(new Set([lang, 'en']));
+
+  const { rows } = await db.query<{ id: string; lang: string; text: string }>(
+    `
+      SELECT id::text, lang, text
+      FROM i18n_text
+      WHERE id = ANY($1::uuid[]) AND lang = ANY($2::text[])
+    `,
+    [uuidArray, languages],
+  );
+
+  const cache = new Map<string, Record<string, string>>();
+  for (const row of rows) {
+    const byLang = cache.get(row.id) ?? {};
+    byLang[row.lang] = row.text;
+    cache.set(row.id, byLang);
+  }
+
+  return (uuid: string) => {
+    const byLang = cache.get(uuid);
+    if (byLang?.[lang]) return byLang[lang];
+    if (lang !== 'en' && byLang?.['en']) return byLang['en'];
+    return uuid;
+  };
+}
+
+function collectI18nUuids(value: unknown, acc: Set<string>): void {
+  if (typeof value === 'string') {
+    if (UUID_PATTERN.test(value)) {
+      acc.add(value);
+    }
+    return;
+  }
+  if (isI18nValue(value)) {
+    if (UUID_PATTERN.test(value.i18n_uuid)) {
+      acc.add(value.i18n_uuid);
+    }
+    return;
+  }
+  if (isI18nArrayValue(value)) {
+    value.i18n_uuid_array.slice(1).forEach((uuid) => {
+      if (UUID_PATTERN.test(uuid)) {
+        acc.add(uuid);
+      }
+    });
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectI18nUuids(item, acc));
+    return;
+  }
+  if (typeof value === 'object' && value !== null) {
+    for (const [key, val] of Object.entries(value)) {
+      if (key === 'logicFields') continue;
+      collectI18nUuids(val, acc);
+    }
+  }
+}
+
+async function resolveI18nRecursive(
+  value: unknown,
+  lang: string,
+  resolveText: I18nResolver,
+): Promise<unknown> {
+  if (isI18nValue(value)) {
+    return resolveText(value.i18n_uuid);
+  }
+
+  if (isI18nArrayValue(value)) {
+    const [separator, ...uuids] = value.i18n_uuid_array;
+    const texts = uuids.map((uuid) => resolveText(uuid));
+    return texts.join(separator ?? '');
+  }
+
+  if (typeof value === 'string') {
+    if (UUID_PATTERN.test(value)) {
+      return resolveText(value);
+    }
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean' || value === null) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return Promise.all(value.map((item) => resolveI18nRecursive(item, lang, resolveText)));
+  }
+
+  if (typeof value === 'object' && value !== null) {
+    const result: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value)) {
+      if (key === 'logicFields') {
+        result[key] = val;
+        continue;
+      }
+      result[key] = await resolveI18nRecursive(val, lang, resolveText);
+    }
+    return result;
+  }
+
+  return value;
+}
+
+const DEFAULT_SURVEY_ID = 'witcher_cc';
+
+/**
+ * Framework-agnostic character generation from raw body + lang.
+ * Resolves i18n UUIDs and removes logicFields.
+ */
+export async function generateCharacterFromBody(body: unknown, lang: string): Promise<Character> {
+  let characterRaw: CharacterRaw;
+
+  const rawAnswers =
+    body && typeof body === 'object' && !Array.isArray(body) && Array.isArray((body as Record<string, unknown>).answers)
+      ? ((body as Record<string, unknown>).answers as unknown[])
+      : null;
+
+  const answers: AnswerInput[] | null = rawAnswers
+    ? rawAnswers
+        .map((item): AnswerInput | null => {
+          if (typeof item !== 'object' || item === null || Array.isArray(item)) return null;
+          const rec = item as Record<string, unknown>;
+          const questionId = typeof rec.questionId === 'string' ? rec.questionId : null;
+          if (!questionId) return null;
+          const answerIds = Array.isArray(rec.answerIds) ? rec.answerIds.filter((x): x is string => typeof x === 'string') : [];
+
+          const valueRaw = rec.value;
+          if (valueRaw === undefined) return { questionId, answerIds };
+          if (typeof valueRaw !== 'object' || valueRaw === null || Array.isArray(valueRaw)) return { questionId, answerIds };
+
+          const valueRec = valueRaw as Record<string, unknown>;
+          if (valueRec.type === 'number' && typeof valueRec.data === 'number') {
+            return { questionId, answerIds, value: { type: 'number', data: valueRec.data } };
+          }
+          if (valueRec.type === 'string') {
+            const data = valueRec.data;
+            const dataStr = typeof data === 'string' ? data : (data !== undefined && data !== null ? JSON.stringify(data) : '');
+            return { questionId, answerIds, value: { type: 'string', data: dataStr } };
+          }
+
+          return { questionId, answerIds };
+        })
+        .filter((x): x is AnswerInput => Boolean(x))
+    : null;
+
+  if (answers && answers.length > 0) {
+    const surveyId = (body && typeof body === 'object' && typeof (body as Record<string, unknown>).surveyId === 'string')
+      ? ((body as Record<string, unknown>).surveyId as string)
+      : DEFAULT_SURVEY_ID;
+    const seed = (body && typeof body === 'object' && typeof (body as Record<string, unknown>).seed === 'string')
+      ? ((body as Record<string, unknown>).seed as string)
+      : undefined;
+    characterRaw = (await getCharacterRawFromAnswers(surveyId, lang, answers, seed)) as CharacterRaw;
+  } else {
+    characterRaw =
+      body && typeof body === 'object' && !Array.isArray(body) && 'characterRaw' in (body as Record<string, unknown>)
+        ? (((body as Record<string, unknown>).characterRaw ?? {}) as CharacterRaw)
+        : (body as CharacterRaw);
+  }
+
+  const uuids = new Set<string>();
+  collectI18nUuids(characterRaw, uuids);
+  const resolveText = await buildI18nResolver(uuids, lang);
+
+  const character = (await resolveI18nRecursive(characterRaw, lang, resolveText)) as Character;
+
+  return { ...character, lang };
+}

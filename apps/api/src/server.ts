@@ -1,4 +1,4 @@
-﻿// apps/api/src/server.ts
+// apps/api/src/server.ts
 import 'dotenv/config';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -8,7 +8,7 @@ import { nextQuestion } from './handlers/nextQuestion.js';
 import { getAllShopItemsHandler } from './handlers/getAllShopItems.js';
 import { getSkillsCatalogHandler } from './handlers/getSkillsCatalog.js';
 import { characterPdf } from './handlers/characterPdf.js';
-import { db } from './db/pool.js';
+import { db } from '@wcc/core';
 import { CharacterPdfService } from './pdf/CharacterPdfService.js';
 
 const app = new Hono();

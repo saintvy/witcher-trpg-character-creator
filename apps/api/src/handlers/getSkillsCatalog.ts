@@ -1,5 +1,5 @@
 import type { Context } from 'hono';
-import { getSkillsCatalog } from '../services/skillsCatalog.js';
+import { getSkillsCatalog } from '@wcc/core';
 
 export async function getSkillsCatalogHandler(c: Context) {
   try {

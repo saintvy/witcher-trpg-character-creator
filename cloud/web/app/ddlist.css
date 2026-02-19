@@ -1,0 +1,175 @@
+/* Styles for dropdown list options (professions, etc.) */
+
+.ddlist_option {
+  margin-bottom: 1.5em;
+  border-radius: 0;
+  font-size: 1.1em;
+}
+
+.header {
+  padding: 0.75em 1em;
+  font-weight: bold;
+  border-radius: 0;
+}
+
+.opt_content {
+  padding: 1em;
+  border: 1px solid #5a4a3a;
+  color: #e0c2a0;
+  border-top: none;
+  border-radius: 0;
+}
+
+.opt_content strong {
+  /* display: block; */
+  margin-bottom: 0.01em;
+}
+
+.profession_table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: 1px solid #5a4a3a;
+  margin-bottom: 1em;
+  border-radius: 0;
+}
+
+.profession_table td {
+  width: 33.33%;
+  padding: 0.75em;
+  border: 1px solid #5a4a3a;
+  background-color: #2a2419;
+  color: #e0c2a0;
+  vertical-align: top;
+}
+
+.profession_table strong {
+  color: #d4a574;
+}
+
+.profession_table .section-title {
+  color: #d4a574;
+}
+
+.profession_table ul {
+  margin: 0;
+  padding-left: 1.25em;
+  line-height: 1.6;
+  color: #e0c2a0;
+}
+
+.main_skill {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #5a4a3a;
+  margin-bottom: 1.5em;
+  border-radius: 0;
+}
+
+.main_skill .header {
+  background-color: #3b2414;
+  color: #e0c2a0;
+  border: 1px solid #3b2414;
+}
+
+.main_skill .opt_content {
+  background-color: #2a2419;
+}
+
+.main_skill .opt_content strong {
+  color: #d4a574;
+}
+
+.skills_branch_1 {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #5a4a3a;
+  margin-bottom: 1.5em;
+  border-radius: 0;
+}
+
+.skills_branch_1 .header {
+  background-color: #1d3557;
+  color: #ffffff;
+  border: 1px solid #1d3557;
+}
+
+.skills_branch_1 .opt_content {
+  background-color: #1a1f2e;
+}
+
+.skills_branch_1 .opt_content strong {
+  color: #8bb3d4;
+}
+
+.skills_branch_2 {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #5a4a3a;
+  margin-bottom: 1.5em;
+  border-radius: 0;
+}
+
+.skills_branch_2 .header {
+  background-color: #1b5e3b;
+  color: #ffffff;
+  border: 1px solid #1b5e3b;
+}
+
+.skills_branch_2 .opt_content {
+  background-color: #1a2e1f;
+}
+
+.skills_branch_2 .opt_content strong {
+  color: #7fb896;
+}
+
+.skills_branch_3 {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #5a4a3a;
+  margin-bottom: 1.5em;
+  border-radius: 0;
+}
+
+.skills_branch_3 .header {
+  background-color: #7f1d1d;
+  color: #ffffff;
+  border: 1px solid #7f1d1d;
+}
+
+.skills_branch_3 .opt_content {
+  background-color: #2e1a1a;
+}
+
+.skills_branch_3 .opt_content strong {
+  color: #d48484;
+}
+
+.table-small {
+  table-layout: auto !important;
+  display: inline-table !important;
+  width: auto !important;
+  max-width: none !important;
+  border-collapse: collapse;
+  border: 1px solid #5a4a3a;
+  border-radius: 0;
+  margin: 0.5em 0;
+}
+
+.table-small td,
+.table-small th {
+  padding: 0.4em 0.6em;
+  border: 1px solid #5a4a3a;
+  background-color: #2a2419;
+  color: #e0c2a0;
+  text-align: left;
+  border-radius: 0;
+}
+
+.table-small th {
+  background-color: #3b2414;
+  color: #d4a574;
+  font-weight: bold;
+}
+

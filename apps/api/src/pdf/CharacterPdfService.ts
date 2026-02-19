@@ -12,8 +12,7 @@ import {
 } from './pages/viewModelPage3.js';
 import type { MagicGiftDetails, ItemEffectGlossaryRow } from './pages/viewModelPage4.js';
 import { renderCharacterPdfHtml } from './templates/characterHtml.js';
-import { getSkillsCatalog } from '../services/skillsCatalog.js';
-import { db } from '../db/pool.js';
+import { getSkillsCatalog, db } from '@wcc/core';
 import { loadCharacterPdfI18n, type CharacterPdfI18n } from './i18n.js';
 import { buildCharacterPdfViewModel } from './pdfViewModel.js';
 
