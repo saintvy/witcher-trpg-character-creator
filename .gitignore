@@ -13,6 +13,10 @@ dist
 # CDK
 cdk.out
 
+# Cloud build output
+cloud/api/dist
+cloud/web/out
+
 # DB
 db/data
 db/*.log

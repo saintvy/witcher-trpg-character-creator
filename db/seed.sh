@@ -18,6 +18,13 @@ POSTGRES_DB="${POSTGRES_DB:-witcher_cc}"
 
 DEPLOY_FILE="sql/wcc_sql_deploy.sql"
 
+# When deploying to RDS you often want to avoid the "container mode" autodetection,
+# otherwise an active local docker-compose postgres might accidentally receive the seed.
+WCC_SEED_FORCE_HOST="${WCC_SEED_FORCE_HOST:-false}"
+
+# Useful for CI / audits: generate the merged SQL file but do not apply it.
+WCC_SEED_MERGE_ONLY="${WCC_SEED_MERGE_ONLY:-false}"
+
 # --- 0.5) setup pgadmin servers.json ---
 mkdir -p pgadmin
 cat > pgadmin/servers.json <<EOF
@@ -50,7 +57,7 @@ echo "[seed] detected host port from .env: $POSTGRES_PORT"
 
 # --- 1) decide how to connect ---
 use_container=false
-if docker compose ps postgres >/dev/null 2>&1; then
+if [ "$WCC_SEED_FORCE_HOST" != "true" ] && docker compose ps postgres >/dev/null 2>&1; then
   echo "[seed] trying container mode (connecting inside container to localhost:5432)..."
   for i in {1..60}; do
     if docker compose exec -T postgres pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
@@ -153,6 +160,12 @@ remove_bom() {
     done
   fi
 } > "$DEPLOY_FILE"
+
+# Optional: stop here.
+if [ "$WCC_SEED_MERGE_ONLY" = "true" ]; then
+  echo "[seed] merge-only mode enabled; generated $DEPLOY_FILE and exiting without applying."
+  exit 0
+fi
 
 # --- 4) apply combined file ---
 echo "[seed] applying $DEPLOY_FILE"
