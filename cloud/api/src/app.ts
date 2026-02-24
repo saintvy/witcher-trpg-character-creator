@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import type { AuthUser } from './auth.js';
+import { authMiddleware } from './auth.js';
 import {
   generateCharacterFromBody,
   getNextQuestion,
@@ -7,13 +9,20 @@ import {
   getSkillsCatalog,
 } from '@wcc/core';
 
-const app = new Hono().basePath('/api');
+type AppEnv = {
+  Variables: {
+    authUser?: AuthUser;
+  };
+};
+
+const app = new Hono<AppEnv>().basePath('/api');
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
   : ['http://localhost:3100'];
 
 app.use('*', cors({ origin: allowedOrigins }));
+app.use('*', authMiddleware);
 
 app.post('/generate-character', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as unknown;

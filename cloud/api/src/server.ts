@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import 'dotenv-flow/config';
 import { serve } from '@hono/node-server';
 import { app } from './app.js';
 import { db } from '@wcc/core';

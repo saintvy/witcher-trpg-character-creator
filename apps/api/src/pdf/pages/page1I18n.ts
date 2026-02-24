@@ -3,7 +3,7 @@ import { db } from '@wcc/core';
 
 type DeepKeyTree = { [k: string]: string | DeepKeyTree };
 
-const CK_ID_NAMESPACE = '12345678-9098-7654-3212-345678909876';
+const CK_ID_NAMESPACE = '348ce630-ac0d-49e3-8d22-d7a2aa677825';
 
 function ck_id(src: string): string {
   const hash = crypto.createHash('md5').update(CK_ID_NAMESPACE + src).digest('hex');

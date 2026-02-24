@@ -1,14 +1,26 @@
-import jsonLogic from 'json-logic-js';
+import jsonLogic, { type RulesLogic } from 'json-logic-js';
 import { db } from '../db/pool.js';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+function resolveDefaultCharacterPath(): string {
+  if (process.env.WCC_DEFAULT_CHARACTER_PATH) {
+    return process.env.WCC_DEFAULT_CHARACTER_PATH;
+  }
 
-const defaultCharacterPath = path.join(__dirname, '../data/defaultCharacter.json');
+  try {
+    const { fileURLToPath } = require('url') as typeof import('url');
+    const filename = fileURLToPath(import.meta.url);
+    const dirname = path.dirname(filename);
+    return path.join(dirname, '../data/defaultCharacter.json');
+  } catch {
+    // Bundled Lambda path should be provided via env; this fallback keeps local runs resilient.
+    return path.join(process.cwd(), 'packages/core/src/data/defaultCharacter.json');
+  }
+}
+
+const defaultCharacterPath = resolveDefaultCharacterPath();
 const defaultCharacter = JSON.parse(fs.readFileSync(defaultCharacterPath, 'utf-8'));
 
 function rollDie(sides: number): number {
@@ -281,7 +293,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
  * @returns UUID as string
  */
 function ck_id(src: string): string {
-  const _ns = '12345678-9098-7654-3212-345678909876';
+  const _ns = '348ce630-ac0d-49e3-8d22-d7a2aa677825';
   const hash = crypto.createHash('md5').update(_ns + src).digest('hex');
   return (
     hash.substring(0, 8) + '-' +
@@ -1600,7 +1612,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
         const bodyConfig = row.metadata.body;
         if (bodyConfig && typeof bodyConfig === 'object' && 'jsonlogic_expression' in bodyConfig) {
           try {
-            const dynamicBodyUuid = jsonLogic.apply(bodyConfig.jsonlogic_expression, state);
+            const dynamicBodyUuid = jsonLogic.apply(bodyConfig.jsonlogic_expression as RulesLogic, state);
             if (typeof dynamicBodyUuid === 'string') {
               // Load the dynamic body text
               const dynamicBodyResult = await db.query<{ text: string | null }>(
@@ -1649,7 +1661,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
           // Check if this is an object with jsonlogic_expression
           if ('jsonlogic_expression' in obj && Object.keys(obj).length === 1) {
             try {
-              const result = jsonLogic.apply(obj.jsonlogic_expression, state);
+              const result = jsonLogic.apply(obj.jsonlogic_expression as RulesLogic, state);
               // If result is a UUID, resolve it
               if (typeof result === 'string' && UUID_PATTERN.test(result)) {
                 const texts = i18nTexts.get(result);
@@ -3914,7 +3926,7 @@ function evaluateJsonLogicExpression(
     // Store state for cat_array operation
     currentJsonLogicState = state;
     try {
-      return jsonLogic.apply(expression, evaluationState);
+      return jsonLogic.apply(expression as RulesLogic, evaluationState);
     } finally {
       currentJsonLogicState = null;
     }

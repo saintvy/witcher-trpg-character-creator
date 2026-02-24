@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
+import { apiFetch } from "../api-fetch";
 
 type ShopBudgetCoverageMoney = {
   sources?: string[];
@@ -677,7 +678,7 @@ export function ShopRenderer(props: {
     setLoadingAllItems(true);
     setLoadErrorAllItems(null);
     
-    fetch(`${API_URL}/shop/allItems`, {
+    apiFetch(`${API_URL}/shop/allItems`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ questionId, lang, allowedDlcs: resolvedAllowedDlcs, state }),

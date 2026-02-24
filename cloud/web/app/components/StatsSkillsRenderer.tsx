@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { apiFetch } from "../api-fetch";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
@@ -223,7 +224,7 @@ export function StatsSkillsRenderer(props: {
     let cancelled = false;
     setCatalog(null);
     setCatalogError(null);
-    fetch(`${API_URL}/skills/catalog`, {
+    apiFetch(`${API_URL}/skills/catalog`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lang }),

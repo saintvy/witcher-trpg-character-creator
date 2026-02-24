@@ -1,5 +1,7 @@
 "use client";
 
+import { AuthProvider, AuthRouteGate } from "./auth-context";
+import { apiFetch } from "./api-fetch";
 import { LanguageProvider, useLanguage } from "./language-context";
 import "./globals.css";
 import "./ddlist.css";
@@ -73,7 +75,7 @@ function Sidebar() {
     setLoadingExample(true);
     setExampleError(null);
     try {
-      const response = await fetch(`${API_URL}/generate-character`, {
+      const response = await apiFetch(`${API_URL}/generate-character`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
@@ -199,12 +201,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <LanguageProvider>
-          <div className="layout">
-            <Sidebar />
-            <main className="main">{children}</main>
-          </div>
-        </LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <div className="layout">
+              <Sidebar />
+              <main className="main">
+                <AuthRouteGate>{children}</AuthRouteGate>
+              </main>
+            </div>
+          </LanguageProvider>
+        </AuthProvider>
       </body>
     </html>
   );

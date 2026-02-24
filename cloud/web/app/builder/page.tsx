@@ -4,6 +4,7 @@ import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, us
 import jsonLogic from "json-logic-js";
 import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
+import { apiFetch } from "../api-fetch";
 import { ShopRenderer } from "../components/ShopRenderer";
 import { StatsSkillsRenderer } from "../components/StatsSkillsRenderer";
 
@@ -376,7 +377,7 @@ export default function BuilderPage() {
       setError(null);
       try {
         const effectiveSeed = seedOverride ?? runSeed;
-        const response = await fetch(`${API_URL}/survey/next`, {
+        const response = await apiFetch(`${API_URL}/survey/next`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ answers, lang, seed: effectiveSeed }),
@@ -1286,7 +1287,7 @@ export default function BuilderPage() {
           ? (state as any).characterRaw
           : state;
 
-    const response = await fetch(`${API_URL}/generate-character?lang=${lang}`, {
+    const response = await apiFetch(`${API_URL}/generate-character?lang=${lang}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -1326,7 +1327,7 @@ export default function BuilderPage() {
           ? { ...(baseJson as any), avatarDataUrl }
           : baseJson;
 
-      const res = await fetch(`${API_URL}/character/pdf`, {
+      const res = await apiFetch(`${API_URL}/character/pdf`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ character: characterJson, options }),

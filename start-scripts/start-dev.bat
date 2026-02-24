@@ -33,8 +33,8 @@ call :seed_db || exit /b 1
 call :ensure_dependencies || exit /b 1
 call :stop_dev_servers
 
-start "Witcher API" cmd /K "cd /d %ROOT_DIR% && npm run dev:api"
-start "Witcher Web" cmd /K "cd /d %ROOT_DIR% && npm run dev:web"
+start "Witcher API" cmd /K "cd /d %ROOT_DIR% && npm run dev:legacy-api"
+start "Witcher Web" cmd /K "cd /d %ROOT_DIR% && npm run dev:legacy-web"
 exit /b 0
 
 :detect_compose

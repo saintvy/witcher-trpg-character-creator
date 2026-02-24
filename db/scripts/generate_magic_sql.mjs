@@ -7,7 +7,7 @@ import crypto from 'node:crypto';
  * namespace UUID is treated as plain text concatenated with src, then md5.
  */
 function ckId(src) {
-  const ns = '12345678-9098-7654-3212-345678909876';
+  const ns = '348ce630-ac0d-49e3-8d22-d7a2aa677825';
   const m = crypto.createHash('md5').update(ns + src, 'utf8').digest('hex');
   return `${m.slice(0, 8)}-${m.slice(8, 12)}-${m.slice(12, 16)}-${m.slice(16, 20)}-${m.slice(20, 32)}`;
 }

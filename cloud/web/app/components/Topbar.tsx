@@ -1,13 +1,17 @@
-"use client";
+﻿"use client";
 
+import { getDisplayName, useAuth } from "../auth-context";
 import { useLanguage } from "../language-context";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 
 export function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
   const { lang, setLang } = useLanguage();
+  const auth = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const googleButtonRef = useRef<HTMLDivElement>(null);
 
   const languages = [
     { code: "en", flag: "/uk.png", name: "English" },
@@ -28,6 +32,24 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    auth.renderGoogleButton(googleButtonRef.current);
+  }, [auth, auth.isAuthenticated]);
+
+  useEffect(() => {
+    setAvatarFailed(false);
+  }, [auth.session?.user.picture]);
+
+  const userName = getDisplayName(auth.session?.user);
+  const userRole =
+    auth.session?.provider === "cognito"
+      ? "cognito user"
+      : auth.session?.provider === "google"
+      ? "google account"
+      : "guest";
+  const userPicture = auth.session?.user.picture;
+  const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
 
   return (
     <header className="topbar">
@@ -75,14 +97,70 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
           )}
         </div>
         <div className="user-pill">
-          <div className="user-avatar">V</div>
-          <div className="user-info">
-            <div className="user-name">Хозяин портала</div>
-            <div className="user-role">архитектор правил</div>
-          </div>
+          {auth.isAuthenticated ? (
+            <>
+              <div className="user-avatar" aria-hidden="true">
+                {userPicture && !avatarFailed ? (
+                  <img
+                    src={userPicture}
+                    alt=""
+                    className="user-avatar-img"
+                    referrerPolicy="no-referrer"
+                    onError={() => setAvatarFailed(true)}
+                  />
+                ) : (
+                  userInitial
+                )}
+              </div>
+              <div className="user-info">
+                <div className="user-name" title={auth.session?.user.email}>{userName}</div>
+                <div className="user-role">{userRole}</div>
+              </div>
+              <button
+                type="button"
+                className="user-pill-button"
+                onClick={() => void auth.signOut()}
+                title="Sign out"
+              >
+                ↩
+              </button>
+            </>
+          ) : auth.provider === "google" ? (
+            <div className="user-login-slot">
+              <div ref={googleButtonRef} />
+              <button
+                type="button"
+                className="user-pill-button"
+                onClick={() => void auth.signIn()}
+                title="Open Google sign-in"
+              >
+                Sign in
+              </button>
+            </div>
+          ) : (
+            <div className="user-login-slot">
+              <div className="user-info">
+                <div className="user-name">
+                  {auth.provider === "cognito" ? "Cloud Sign-In" : "Guest"}
+                </div>
+                <div className="user-role">{auth.error ? "auth error" : "authorization required"}</div>
+              </div>
+              {auth.provider !== "none" ? (
+                <button
+                  type="button"
+                  className="user-pill-button"
+                  onClick={() => void auth.signIn()}
+                  disabled={auth.isBusy}
+                >
+                  Login
+                </button>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
     </header>
   );
 }
+
 

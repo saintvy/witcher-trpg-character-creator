@@ -281,7 +281,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
  * @returns UUID as string
  */
 function ck_id(src: string): string {
-  const _ns = '12345678-9098-7654-3212-345678909876';
+  const _ns = '348ce630-ac0d-49e3-8d22-d7a2aa677825';
   const hash = crypto.createHash('md5').update(_ns + src).digest('hex');
   return (
     hash.substring(0, 8) + '-' +

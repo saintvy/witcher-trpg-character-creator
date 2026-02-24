@@ -58,7 +58,7 @@ CREATE TYPE rule_logic AS ENUM ('jsonlogic'); -- зарезервировано 
 CREATE OR REPLACE FUNCTION ck_id(src text)
 RETURNS uuid AS $$
 DECLARE
-  _ns constant text := '12345678-9098-7654-3212-345678909876';
+  _ns constant text := '348ce630-ac0d-49e3-8d22-d7a2aa677825';
   m text;
 BEGIN
   m := md5(_ns || src);
