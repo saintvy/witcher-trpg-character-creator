@@ -1,47 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
 
 export default function SettingsPage() {
   const { lang, mounted, setLang } = useLanguage();
-  // Use default language until mounted to avoid hydration mismatch
   const displayLang = mounted ? lang : "en";
+  const [useW1AlchemyIcons, setUseW1AlchemyIcons] = useState(false);
 
   const content = {
     en: {
       title: "Settings",
-      subtitle: "Portal settings and preferences",
-      description: "Future settings for UI, localization, export, and synchronization with external services.",
-      cards: {
-        theme: {
-          title: "Interface Theme",
-          subtitle: "Light / dark / system",
-          darkTheme: "Dark theme (current)",
-          autoSystem: "Auto by system",
-        },
-        localization: {
-          title: "Localization",
-          subtitle: "Interface and rule text language",
-          uiLanguage: "UI Language",
-          multiLanguage: "multi-language",
-          note: "Link to i18n key system (race, profession_local, etc.) will be here.",
-        },
-        export: {
-          title: "Export and Integrations",
-          subtitle: "PDF, FoundryVTT, Roll20, JSON",
-          exportPDF: "Export PDF sheet in one click",
-          generateJSON: "Generate JSON saves",
-          virtualTable: "Virtual tabletop integration",
-        },
+      subtitle: "Language and display preferences",
+      languageCard: {
+        title: "Language",
+        subtitle: "Interface language",
+        uiLanguage: "UI Language",
+        note: "The selected language is applied immediately.",
       },
-      footer: {
-        note: "This is only a visual reference. All data here are placeholders.",
-        link: "Open character API contract",
-      },
-      buttons: {
-        reset: "Reset to default",
-        save: "Save",
+      alchemyCard: {
+        title: "Alchemy icons",
+        subtitle: "Visual style",
+        toggleLabel: "Witcher 1 style alchemy icons",
+        note: "Clickable now, functional behavior will be connected later.",
       },
       languages: {
         ru: "Russian",
@@ -50,44 +32,25 @@ export default function SettingsPage() {
     },
     ru: {
       title: "Настройки",
-      subtitle: "Настройки портала и предпочтения",
-      description: "Будущие настройки UI, локализации, экспорта и синхронизации с внешними сервисами.",
-      cards: {
-        theme: {
-          title: "Тема интерфейса",
-          subtitle: "Светлая / тёмная / системная",
-          darkTheme: "Тёмная тема (как сейчас)",
-          autoSystem: "Авто по системе",
-        },
-        localization: {
-          title: "Локализация",
-          subtitle: "Язык интерфейса и текстов правил",
-          uiLanguage: "Язык UI",
-          multiLanguage: "multi-language",
-          note: "Ссылка на систему i18n-ключей (race, profession_local и т. д.) будет здесь.",
-        },
-        export: {
-          title: "Экспорт и интеграции",
-          subtitle: "PDF, FoundryVTT, Roll20, JSON",
-          exportPDF: "Экспорт PDF листа в один клик",
-          generateJSON: "Генерировать JSON сохранения",
-          virtualTable: "Интеграция с виртуальным столом",
-        },
+      subtitle: "Язык и параметры отображения",
+      languageCard: {
+        title: "Язык",
+        subtitle: "Язык интерфейса",
+        uiLanguage: "Язык UI",
+        note: "Выбранный язык применяется сразу.",
       },
-      footer: {
-        note: "Это только визуальный референс. Все данные здесь — заглушки.",
-        link: "Открыть API контракт персонажа",
-      },
-      buttons: {
-        reset: "Сбросить до дефолта",
-        save: "Сохранить",
+      alchemyCard: {
+        title: "Иконки алхимии",
+        subtitle: "Визуальный стиль",
+        toggleLabel: "Иконки алхимии в стиле Witcher 1",
+        note: "Переключатель кликабельный, но пока ни на что не влияет.",
       },
       languages: {
         ru: "Русский",
         en: "Английский",
       },
     },
-  };
+  } as const;
 
   const t = content[displayLang];
 
@@ -95,80 +58,46 @@ export default function SettingsPage() {
     <>
       <Topbar title={t.title} subtitle={t.subtitle} />
       <section className="content" suppressHydrationWarning>
-        <div className="section-title-row">
-          <div>
-            <div className="section-title">{t.title}</div>
-            <div className="section-note">{t.description}</div>
-          </div>
-          <div style={{ display: "flex", gap: "6px" }}>
-            <button className="btn">{t.buttons.reset}</button>
-            <button className="btn btn-primary">{t.buttons.save}</button>
-          </div>
-        </div>
-
         <div className="settings-grid">
           <div className="card">
             <div className="card-header">
               <div>
-                <div className="card-title">{t.cards.theme.title}</div>
-                <div className="card-subtitle">{t.cards.theme.subtitle}</div>
-              </div>
-            </div>
-            <div className="toggle-row">
-              <div className="toggle-label">{t.cards.theme.darkTheme}</div>
-              <div className="toggle-switch on"></div>
-            </div>
-            <div className="toggle-row">
-              <div className="toggle-label">{t.cards.theme.autoSystem}</div>
-              <div className="toggle-switch"></div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <div>
-                <div className="card-title">{t.cards.localization.title}</div>
-                <div className="card-subtitle">{t.cards.localization.subtitle}</div>
+                <div className="card-title">{t.languageCard.title}</div>
+                <div className="card-subtitle">{t.languageCard.subtitle}</div>
               </div>
             </div>
             <div className="field">
               <label className="field-label">
-                {t.cards.localization.uiLanguage}
-                <span>{t.cards.localization.multiLanguage}</span>
+                {t.languageCard.uiLanguage}
+                <span>interface</span>
               </label>
               <select value={lang} onChange={(e) => setLang(e.target.value as "en" | "ru")}>
                 <option value="ru">{t.languages.ru}</option>
                 <option value="en">{t.languages.en}</option>
               </select>
             </div>
-            <div className="coming-soon">{t.cards.localization.note}</div>
+            <div className="coming-soon">{t.languageCard.note}</div>
           </div>
 
           <div className="card">
             <div className="card-header">
               <div>
-                <div className="card-title">{t.cards.export.title}</div>
-                <div className="card-subtitle">{t.cards.export.subtitle}</div>
+                <div className="card-title">{t.alchemyCard.title}</div>
+                <div className="card-subtitle">{t.alchemyCard.subtitle}</div>
               </div>
             </div>
             <div className="toggle-row">
-              <div className="toggle-label">{t.cards.export.exportPDF}</div>
-              <div className="toggle-switch on"></div>
+              <div className="toggle-label">{t.alchemyCard.toggleLabel}</div>
+              <button
+                type="button"
+                className={`toggle-switch ${useW1AlchemyIcons ? "on" : ""}`}
+                aria-pressed={useW1AlchemyIcons}
+                aria-label={t.alchemyCard.toggleLabel}
+                onClick={() => setUseW1AlchemyIcons((value) => !value)}
+              />
             </div>
-            <div className="toggle-row">
-              <div className="toggle-label">{t.cards.export.generateJSON}</div>
-              <div className="toggle-switch on"></div>
-            </div>
-            <div className="toggle-row">
-              <div className="toggle-label">{t.cards.export.virtualTable}</div>
-              <div className="toggle-switch"></div>
-            </div>
+            <div className="coming-soon">{t.alchemyCard.note}</div>
           </div>
-        </div>
-
-        <div className="footer-note">
-          <span>{t.footer.note}</span>
-          <span className="link-muted">{t.footer.link}</span>
         </div>
       </section>
     </>

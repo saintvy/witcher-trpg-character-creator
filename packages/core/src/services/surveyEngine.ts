@@ -3,6 +3,7 @@ import { db } from '../db/pool.js';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { fileURLToPath } from 'url';
 
 function resolveDefaultCharacterPath(): string {
   if (process.env.WCC_DEFAULT_CHARACTER_PATH) {
@@ -10,7 +11,6 @@ function resolveDefaultCharacterPath(): string {
   }
 
   try {
-    const { fileURLToPath } = require('url') as typeof import('url');
     const filename = fileURLToPath(import.meta.url);
     const dirname = path.dirname(filename);
     return path.join(dirname, '../data/defaultCharacter.json');

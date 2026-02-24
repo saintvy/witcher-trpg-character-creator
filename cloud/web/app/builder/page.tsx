@@ -60,6 +60,7 @@ type NextQuestionResponse = {
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 const RUN_SEED_STORAGE_KEY = "wcc_builder_run_seed";
 const RUN_PROGRESS_STORAGE_PREFIX = "wcc_builder_progress";
+const BUILDER_IMPORT_HANDOFF_STORAGE_KEY = "wcc_builder_import_handoff";
 const IMPORT_EXPORT_SCHEMA_VERSION = 1;
 
 type BuilderProgressExport = {
@@ -1526,6 +1527,51 @@ export default function BuilderPage() {
     },
     [displayLang, fetchNext, normalizeImportedAnswers, runSeed],
   );
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(BUILDER_IMPORT_HANDOFF_STORAGE_KEY);
+      if (!raw) return;
+      sessionStorage.removeItem(BUILDER_IMPORT_HANDOFF_STORAGE_KEY);
+
+      void (async () => {
+        try {
+          setError(null);
+          const parsed = JSON.parse(raw) as unknown;
+
+          let importedSeed = runSeed;
+          let rawAnswers: unknown = parsed;
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            const rec = parsed as Record<string, unknown>;
+            if (typeof rec.seed === "string" && rec.seed.trim().length > 0) {
+              importedSeed = rec.seed.trim();
+            }
+            if ("answers" in rec) {
+              rawAnswers = rec.answers;
+            }
+          }
+
+          const importedAnswers = normalizeImportedAnswers(rawAnswers);
+          if (!importedAnswers) {
+            throw new Error(displayLang === "ru" ? "Некорректный формат файла импорта." : "Invalid import file format.");
+          }
+
+          try {
+            sessionStorage.setItem(RUN_SEED_STORAGE_KEY, importedSeed);
+          } catch {
+            // ignore storage failures
+          }
+
+          setRunSeed(importedSeed);
+          await fetchNext(importedAnswers, importedSeed);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      })();
+    } catch {
+      // ignore storage failures
+    }
+  }, [displayLang, fetchNext, normalizeImportedAnswers, runSeed]);
 
   return (
     <>

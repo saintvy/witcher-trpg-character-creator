@@ -1,11 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
 
 export default function CharactersPage() {
   const { lang, mounted } = useLanguage();
-  // Use default language until mounted to avoid hydration mismatch
   const displayLang = mounted ? lang : "en";
 
   const content = {
@@ -111,7 +111,7 @@ export default function CharactersPage() {
         },
       ],
     },
-  };
+  } as const;
 
   const t = content[displayLang];
 
@@ -126,7 +126,9 @@ export default function CharactersPage() {
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
             <button className="btn">{t.buttons.import}</button>
-            <button className="btn btn-primary">{t.buttons.create}</button>
+            <Link href="/builder" className="btn btn-primary" style={{ textDecoration: "none" }}>
+              {t.buttons.create}
+            </Link>
           </div>
         </div>
 

@@ -5,90 +5,28 @@ import { Topbar } from "./components/Topbar";
 
 export default function HomePage() {
   const { lang, mounted } = useLanguage();
-  
-  // Use default language until mounted to avoid hydration mismatch
   const displayLang = mounted ? lang : "en";
-  
+
   const content = {
     en: {
-      title: "Project Overview",
-      subtitle: "Character generation portal for The Witcher TRPG",
-      description: "Overview of project goals, architecture, and technical implementation",
-      sections: {
-        goals: {
-          title: "Project Goals",
-          items: [
-            "Create a web application for generating Witcher TTRPG characters through an interactive questionnaire",
-            "Provide printable PDF character sheets",
-            "Support multiple languages (English, Russian, Czech) via i18n",
-            "Enable character storage and management for players and game masters",
-            "Integrate with virtual tabletop platforms (FoundryVTT, Roll20)"
-          ]
-        },
-        architecture: {
-          title: "Architecture",
-          items: [
-            "Frontend: Next.js (App Router) with TypeScript",
-            "Backend: Node.js API that will be deployed as AWS Lambda functions",
-            "Database: PostgreSQL (local via Docker, will use RDS/Aurora in production)",
-            "Infrastructure: AWS CDK for IaC (Infrastructure as Code)",
-            "Authentication: AWS Cognito (with Google Sign-in support planned)",
-            "Storage: S3 for generated PDFs"
-          ]
-        },
-        technical: {
-          title: "Technical Implementation",
-          items: [
-            "Survey engine: Dynamic questionnaire system using JSON Logic for conditional questions",
-            "Character generation: Step-by-step character creation following The Witcher TRPG rules",
-            "Content packs: Support for base game and DLC content (Tome of Chaos, etc.)",
-            "Localization: UUID-based i18n system for questions, answers, and game content",
-            "Data model: PostgreSQL schema with surveys, questions, answer options, and effects",
-            "API contracts: OpenAPI specification for frontend-backend communication"
-          ]
-        }
-      }
+      title: "Notice Board",
+      subtitle: "Portal news",
+      welcome:
+        "Welcome to the tavern, traveler: pull up a chair by the fire and let the dice decide your fate.\nHere we trade stories from the Continent, lucky omens, and glorious disasters with a smile.\nA witcher, bard, or merchant walks in with a tale, and we pin it to the board before the ale cools.\nRoll bold, keep silver close, and avoid wagers with anyone who grins like a leshen.",
+      whatsNew: "What's New",
+      launchTitle: "February 24, 2026: first public launch",
+      launchText: "The site went online for the first time with basic functionality: navigation, character list mockup, settings basics, and a working path to the character builder.",
     },
     ru: {
-      title: "Обзор проекта",
-      subtitle: "Портал генерации персонажей для The Witcher TRPG",
-      description: "Описание целей проекта, архитектуры и технической реализации",
-      sections: {
-        goals: {
-          title: "Цели проекта",
-          items: [
-            "Создать веб-приложение для генерации персонажей The Witcher TTRPG через интерактивный опросник",
-            "Предоставить печатные листы персонажей в формате PDF",
-            "Поддержка нескольких языков (английский, русский, чешский) через i18n",
-            "Возможность хранения и управления персонажами для игроков и мастеров",
-            "Интеграция с виртуальными столами (FoundryVTT, Roll20)"
-          ]
-        },
-        architecture: {
-          title: "Архитектура",
-          items: [
-            "Frontend: Next.js (App Router) с TypeScript",
-            "Backend: Node.js API, который будет развёрнут как AWS Lambda функции",
-            "База данных: PostgreSQL (локально через Docker, в продакшене будет использоваться RDS/Aurora)",
-            "Инфраструктура: AWS CDK для IaC (Infrastructure as Code)",
-            "Аутентификация: AWS Cognito (с поддержкой Google Sign-in в планах)",
-            "Хранилище: S3 для сгенерированных PDF"
-          ]
-        },
-        technical: {
-          title: "Техническая реализация",
-          items: [
-            "Движок опросника: Динамическая система вопросов с использованием JSON Logic для условных вопросов",
-            "Генерация персонажа: Пошаговое создание персонажа в соответствии с правилами The Witcher TRPG",
-            "Контент-паки: Поддержка базовой игры и DLC контента (Tome of Chaos и др.)",
-            "Локализация: UUID-based система i18n для вопросов, ответов и игрового контента",
-            "Модель данных: PostgreSQL схема с опросами, вопросами, вариантами ответов и эффектами",
-            "API контракты: Спецификация OpenAPI для коммуникации frontend-backend"
-          ]
-        }
-      }
-    }
-  };
+      title: "Доска объявлений",
+      subtitle: "Новости портала",
+      welcome:
+        "Добро пожаловать в корчму, путник: подсаживайся к огню и дай кубам решить твою судьбу.\nЗдесь мы собираем слухи с Континента, удачные знамения и славные провалы с улыбкой.\nЕсли ведьмак, бард или купец приносит историю, мы вешаем ее на доску раньше, чем остынет эль.\nБросай дайсы смелее, держи серебро под рукой и не спорь на ставки с тем, кто ухмыляется как леший.",
+      whatsNew: "Что нового",
+      launchTitle: "24 февраля 2026: первый выход сайта онлайн",
+      launchText: "Сайт впервые появился онлайн с базовым функционалом: навигация, страница персонажей, базовые настройки и рабочий переход в конструктор персонажа.",
+    },
+  } as const;
 
   const t = content[displayLang];
 
@@ -96,31 +34,41 @@ export default function HomePage() {
     <>
       <Topbar title={t.title} subtitle={t.subtitle} />
       <section className="content" suppressHydrationWarning>
-        <div className="info-section">
-          <h3>{t.sections.goals.title}</h3>
-          <ul>
-            {t.sections.goals.items.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title">{t.title}</div>
+              <div className="card-subtitle">{t.subtitle}</div>
+            </div>
+          </div>
+          <p
+            style={{
+              margin: 0,
+              lineHeight: 1.65,
+              fontSize: 14,
+              color: "var(--text-main)",
+              whiteSpace: "pre-line",
+            }}
+          >
+            {t.welcome}
+          </p>
         </div>
 
-        <div className="info-section">
-          <h3>{t.sections.architecture.title}</h3>
-          <ul>
-            {t.sections.architecture.items.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="info-section">
-          <h3>{t.sections.technical.title}</h3>
-          <ul>
-            {t.sections.technical.items.map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
+        <div className="card" style={{ marginTop: 12 }}>
+          <div className="card-header">
+            <div>
+              <div className="card-title">{t.whatsNew}</div>
+            </div>
+          </div>
+          <div className="timeline-list" style={{ marginTop: 0 }}>
+            <div className="timeline-item">
+              <div className="timeline-label">{displayLang === "ru" ? "Новость" : "News"}</div>
+              <div className="timeline-text">
+                <strong>{t.launchTitle}</strong>
+                <div style={{ marginTop: 4 }}>{t.launchText}</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </>

@@ -1,12 +1,16 @@
 "use client";
 
+import { ChangeEvent, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
 
+const BUILDER_IMPORT_HANDOFF_STORAGE_KEY = "wcc_builder_import_handoff";
+
 export default function CharactersPage() {
   const { lang, mounted } = useLanguage();
-  // Use default language until mounted to avoid hydration mismatch
   const displayLang = mounted ? lang : "en";
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const content = {
     en: {
@@ -111,24 +115,58 @@ export default function CharactersPage() {
         },
       ],
     },
-  };
+  } as const;
 
   const t = content[displayLang];
+
+  const openImportPicker = useCallback(() => {
+    importInputRef.current?.click();
+  }, []);
+
+  const importToBuilder = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    try {
+      const raw = await file.text();
+      // Quick shape check so obvious invalid files fail here before redirect.
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed === null || parsed === undefined) {
+        throw new Error("Empty file");
+      }
+      sessionStorage.setItem(BUILDER_IMPORT_HANDOFF_STORAGE_KEY, raw);
+      window.location.href = "/builder";
+    } catch {
+      window.alert(
+        displayLang === "ru"
+          ? "Не удалось импортировать JSON. Проверь формат файла."
+          : "Failed to import JSON. Please check the file format.",
+      );
+    }
+  }, [displayLang]);
 
   return (
     <>
       <Topbar title={t.title} subtitle={t.subtitle} />
       <section className="content" suppressHydrationWarning>
-        <div className="section-title-row">
-          <div>
-            <div className="section-title">{t.title}</div>
-            <div className="section-note">{t.description}</div>
-          </div>
+        <div className="section-title-row" style={{ justifyContent: "flex-start" }}>
           <div style={{ display: "flex", gap: "6px" }}>
-            <button className="btn">{t.buttons.import}</button>
-            <button className="btn btn-primary">{t.buttons.create}</button>
+            <Link href="/builder" className="btn btn-primary" style={{ textDecoration: "none" }}>
+              {t.buttons.create}
+            </Link>
+            <button type="button" className="btn" onClick={openImportPicker}>
+              {t.buttons.import}
+            </button>
           </div>
         </div>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept="application/json,.json"
+          onChange={(event) => void importToBuilder(event)}
+          style={{ display: "none" }}
+        />
 
         <div className="card table-card">
           <div className="card-header">
