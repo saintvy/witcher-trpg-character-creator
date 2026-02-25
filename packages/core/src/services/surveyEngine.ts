@@ -525,6 +525,10 @@ async function resolveI18nInState(
   lang: string,
   surveyId: string,
 ): Promise<void> {
+  // characterRaw must stay canonical (with i18n UUID nodes intact) because it is
+  // persisted/exported and later resolved separately (e.g. during PDF generation).
+  const shouldSkipStateKey = (key: string): boolean => key === 'characterRaw';
+
   // Collect all UUIDs from state (strings that look like UUIDs, and i18n_uuid objects)
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const uuidsToResolve = new Set<string>();
@@ -541,7 +545,8 @@ async function resolveI18nInState(
       if ('i18n_uuid' in obj && typeof obj.i18n_uuid === 'string') {
         uuidsToResolve.add(obj.i18n_uuid);
       }
-      for (const val of Object.values(obj)) {
+      for (const [key, val] of Object.entries(obj)) {
+        if (shouldSkipStateKey(key)) continue;
         collectUuidsFromValue(val);
       }
     } else if (Array.isArray(value)) {
@@ -603,6 +608,10 @@ async function resolveI18nInState(
       // Recursively process object
       const resolved: Record<string, unknown> = {};
       for (const key in obj) {
+        if (shouldSkipStateKey(key)) {
+          resolved[key] = obj[key];
+          continue;
+        }
         resolved[key] = resolveValue(obj[key]);
       }
       return resolved;
@@ -624,6 +633,11 @@ async function resolveI18nInState(
     if (typeof source === 'object' && !Array.isArray(source)) {
       const sourceObj = source as Record<string, unknown>;
       for (const key in sourceObj) {
+        if (shouldSkipStateKey(key)) {
+          // Preserve canonical raw character JSON exactly as produced by survey engine.
+          target[key] = sourceObj[key];
+          continue;
+        }
         const sourceValue = sourceObj[key];
         const targetValue = target[key];
         

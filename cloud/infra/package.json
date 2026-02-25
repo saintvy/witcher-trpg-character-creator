@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "synth": "cdk synth",
-    "diff": "cdk diff",
-    "deploy": "cdk deploy",
-    "destroy": "cdk destroy"
+    "synth": "cdk synth --profile pal-iamic-admin",
+    "diff": "cdk diff --profile pal-iamic-admin",
+    "deploy": "cdk deploy --profile pal-iamic-admin",
+    "destroy": "cdk destroy --profile pal-iamic-admin"
   },
   "dependencies": {
     "aws-cdk-lib": "^2.170.0",

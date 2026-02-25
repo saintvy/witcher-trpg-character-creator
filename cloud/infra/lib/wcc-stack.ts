@@ -23,12 +23,30 @@ export class WccStack extends cdk.Stack {
     cdk.Tags.of(this).add('witcher-cc', 'true');
 
     const appName = 'wcc';
-    const cognitoJwtIssuer = process.env.WCC_COGNITO_JWT_ISSUER?.trim();
-    const cognitoJwtAudience = (process.env.WCC_COGNITO_JWT_AUDIENCE ?? '')
+    const contextIssuer = this.node.tryGetContext('wccCognitoJwtIssuer');
+    const contextAudience = this.node.tryGetContext('wccCognitoJwtAudience');
+    const contextApiAuthMode = this.node.tryGetContext('wccApiAuthMode');
+
+    const cognitoJwtIssuer =
+      process.env.WCC_COGNITO_JWT_ISSUER?.trim() ||
+      (typeof contextIssuer === 'string' ? contextIssuer.trim() : undefined);
+
+    const cognitoJwtAudienceRaw =
+      process.env.WCC_COGNITO_JWT_AUDIENCE ??
+      (Array.isArray(contextAudience)
+        ? contextAudience.join(',')
+        : typeof contextAudience === 'string'
+          ? contextAudience
+          : '');
+    const cognitoJwtAudience = cognitoJwtAudienceRaw
       .split(',')
       .map((value) => value.trim())
       .filter(Boolean);
-    const apiAuthModeOverride = process.env.WCC_API_AUTH_MODE?.trim() ?? 'none';
+
+    const apiAuthModeOverride =
+      process.env.WCC_API_AUTH_MODE?.trim() ||
+      (typeof contextApiAuthMode === 'string' ? contextApiAuthMode.trim() : '') ||
+      'none';
     const generatedSqlVersionPath = path.join(
       __dirname,
       '../generated/sql-bundle-version.json',

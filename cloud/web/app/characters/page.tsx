@@ -180,6 +180,12 @@ export default function CharactersPage() {
   } as const;
 
   const t = content[displayLang];
+  const deleteActionTitle = displayLang === "ru" ? "Удалить персонажа" : "Delete character";
+  const deleteConfirmText =
+    displayLang === "ru"
+      ? "Удалить этого персонажа? Действие необратимо."
+      : "Delete this character? This action cannot be undone.";
+  const deleteErrorText = displayLang === "ru" ? "Не удалось удалить персонажа." : "Failed to delete character.";
 
   const loadCharacters = useCallback(async () => {
     if (!authMounted) return;
@@ -273,6 +279,31 @@ export default function CharactersPage() {
     }
   }, [displayLang, t.states.downloadError]);
 
+  const deleteCharacter = useCallback(async (id: string) => {
+    if (!window.confirm(deleteConfirmText)) return;
+
+    try {
+      setBusyActionId(`${id}:delete`);
+      const response = await apiFetch(`${API_URL}/characters/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      setItems((prev) => prev.filter((item) => item.id !== id));
+      try {
+        window.dispatchEvent(new Event("wcc:characters-changed"));
+      } catch {
+        // ignore browser event failures
+      }
+    } catch {
+      window.alert(deleteErrorText);
+    } finally {
+      setBusyActionId(null);
+    }
+  }, [deleteConfirmText, deleteErrorText]);
+
   const rows = useMemo(() => items, [items]);
 
   return (
@@ -325,6 +356,7 @@ export default function CharactersPage() {
                   const raceVisual = getRaceVisual(character.race, displayLang);
                   const isBusyHistory = busyActionId === `${character.id}:history`;
                   const isBusyRaw = busyActionId === `${character.id}:raw`;
+                  const isBusyDelete = busyActionId === `${character.id}:delete`;
                   return (
                     <tr key={character.id}>
                       <td>{character.name || (displayLang === "ru" ? "Без имени" : "Unnamed")}</td>
@@ -353,7 +385,16 @@ export default function CharactersPage() {
                           onClick={() => void downloadCharacterFile(character.id, "raw")}
                           disabled={Boolean(busyActionId)}
                         >
-                          {isBusyRaw ? "…" : "{}"}
+                          {isBusyRaw ? "…" : "📃"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-icon"
+                          title={deleteActionTitle}
+                          onClick={() => void deleteCharacter(character.id)}
+                          disabled={Boolean(busyActionId)}
+                        >
+                          {isBusyDelete ? "…" : "🗑️"}
                         </button>
                       </td>
                     </tr>

@@ -5,6 +5,11 @@
     "exclude": ["dist", "node_modules", "cdk.out"]
   },
   "context": {
-    "@aws-cdk/core:stackRelativeExports": true
+    "@aws-cdk/core:stackRelativeExports": true,
+    "wccApiAuthMode": "trust-apigw",
+    "wccCognitoJwtIssuer": "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_SqVAlWHtc",
+    "wccCognitoJwtAudience": [
+      "3gpg04t306k5116pdiu8bpoiie"
+    ]
   }
 }

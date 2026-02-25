@@ -352,6 +352,32 @@ app.get('/characters/:id/history-export', async (c) => {
   }
 });
 
+app.delete('/characters/:id', async (c) => {
+  const ownerEmail = getUserEmail(c.get('authUser'));
+  if (!ownerEmail) {
+    return c.json({ error: 'Authenticated user email is required' }, 401);
+  }
+  const id = c.req.param('id');
+
+  try {
+    const { rows } = await db.query<{ id: string }>(
+      `
+        DELETE FROM wcc_user_characters
+        WHERE id = $1::uuid AND owner_email = $2
+        RETURNING id::text AS id
+      `,
+      [id, ownerEmail],
+    );
+    if (!rows[0]) {
+      return c.json({ error: 'Character not found' }, 404);
+    }
+    return c.json({ ok: true, id: rows[0].id });
+  } catch (error) {
+    console.error('[characters] delete error', error);
+    return c.json({ error: 'Failed to delete character' }, 500);
+  }
+});
+
 app.get('/health', (c) => c.json({ status: 'ok' }));
 
 export { app };
