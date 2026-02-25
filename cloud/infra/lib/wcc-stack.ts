@@ -12,6 +12,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
+import * as fs from 'fs';
 import * as path from 'path';
 
 export class WccStack extends cdk.Stack {
@@ -28,6 +29,20 @@ export class WccStack extends cdk.Stack {
       .map((value) => value.trim())
       .filter(Boolean);
     const apiAuthModeOverride = process.env.WCC_API_AUTH_MODE?.trim() ?? 'none';
+    const generatedSqlVersionPath = path.join(
+      __dirname,
+      '../generated/sql-bundle-version.json',
+    );
+    const sqlBundleVersion = (() => {
+      try {
+        const parsed = JSON.parse(
+          fs.readFileSync(generatedSqlVersionPath, 'utf8'),
+        ) as { sqlBundleVersion?: string };
+        return parsed.sqlBundleVersion?.trim() || 'wcc_sql_deploy_v1';
+      } catch {
+        return 'wcc_sql_deploy_v1';
+      }
+    })();
 
     // ================================================================
     // 1. NETWORK (VPC)
@@ -259,7 +274,7 @@ export class WccStack extends cdk.Stack {
       serviceToken: dbSeedProvider.serviceToken,
       properties: {
         dbInstanceIdentifier: database.instanceIdentifier,
-        sqlBundleVersion: 'wcc_sql_deploy_v1',
+        sqlBundleVersion,
       },
     });
     dbSeedResource.node.addDependency(database);
@@ -325,21 +340,52 @@ export class WccStack extends cdk.Stack {
       autoDeleteObjects: true,
     });
 
-    new s3deploy.BucketDeployment(this, 'DeploySite', {
-      sources: [
-        s3deploy.Source.asset(path.join(__dirname, '../../web/out')),
-      ],
-      destinationBucket: siteBucket,
-    });
-
     // ================================================================
     // 6. CLOUDFRONT (CDN + routing)
     // ================================================================
+    const spaRewriteFunction = new cloudfront.Function(this, 'WccSpaRewriteFn', {
+      code: cloudfront.FunctionCode.fromInline(`
+function handler(event) {
+  var request = event.request;
+  var uri = request.uri || "/";
+
+  // API behavior is handled separately by /api/*.
+  if (uri.indexOf("/api/") === 0) {
+    return request;
+  }
+
+  // Keep asset/file requests intact.
+  if (uri.lastIndexOf(".") > uri.lastIndexOf("/")) {
+    return request;
+  }
+
+  if (uri === "/") {
+    request.uri = "/index.html";
+    return request;
+  }
+
+  if (uri.charAt(uri.length - 1) === "/") {
+    request.uri = uri + "index.html";
+    return request;
+  }
+
+  request.uri = uri + "/index.html";
+  return request;
+}
+      `),
+    });
+
     const distribution = new cloudfront.Distribution(this, 'WccCdn', {
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(siteBucket),
         viewerProtocolPolicy:
           cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        functionAssociations: [
+          {
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+            function: spaRewriteFunction,
+          },
+        ],
       },
       additionalBehaviors: {
         '/api/*': {
@@ -367,6 +413,15 @@ export class WccStack extends cdk.Stack {
           responseHttpStatus: 200,
         },
       ],
+    });
+
+    new s3deploy.BucketDeployment(this, 'DeploySite', {
+      sources: [
+        s3deploy.Source.asset(path.join(__dirname, '../../web/out')),
+      ],
+      destinationBucket: siteBucket,
+      distribution,
+      distributionPaths: ['/*'],
     });
 
     // ================================================================

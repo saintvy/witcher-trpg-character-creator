@@ -1,23 +1,29 @@
 "use client";
 
-import { AuthProvider, AuthRouteGate } from "./auth-context";
+import { useEffect, useState } from "react";
+import { AuthProvider, AuthRouteGate, useAuth } from "./auth-context";
 import { LanguageProvider, useLanguage } from "./language-context";
+import { apiFetch } from "./api-fetch";
 import "./globals.css";
 import "./ddlist.css";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
+
 function Sidebar() {
   const pathname = usePathname();
   const { lang, mounted } = useLanguage();
+  const { mounted: authMounted, provider, isAuthenticated } = useAuth();
   const displayLang = mounted ? lang : "en";
+  const [characterCount, setCharacterCount] = useState<number | null>(null);
 
   const content = {
     en: {
       subtitle: "Witcher character creator",
       tavernTitle: "The Pickles and Lard Tavern",
       navigation: "Navigation",
-      home: "📜 Notice Board",
+      home: "Notice Board",
       characters: "Characters",
       settings: "Settings",
       rulesStore: "Rules store",
@@ -26,7 +32,7 @@ function Sidebar() {
       subtitle: "Witcher character creator",
       tavernTitle: 'Таверна "Сало и Огурчики"',
       navigation: "Навигация",
-      home: "📜 Доска объявлений",
+      home: "Доска объявлений",
       characters: "Персонажи",
       settings: "Настройки",
       rulesStore: "Магазин правил",
@@ -40,6 +46,46 @@ function Sidebar() {
     if (path === "/") return pathname === "/";
     return pathname === path || pathname.startsWith(path + "/");
   };
+
+  useEffect(() => {
+    let disposed = false;
+
+    const loadCharacterCount = async () => {
+      if (!authMounted) return;
+      if (provider !== "none" && !isAuthenticated) {
+        if (!disposed) setCharacterCount(null);
+        return;
+      }
+      try {
+        const response = await apiFetch(`${API_URL}/characters/count`);
+        if (!response.ok) {
+          return;
+        }
+        const payload = (await response.json()) as { count?: unknown };
+        const nextCount =
+          typeof payload.count === "number"
+            ? payload.count
+            : Number(payload.count ?? 0);
+        if (!disposed && Number.isFinite(nextCount)) {
+          setCharacterCount(Math.max(0, Math.trunc(nextCount)));
+        }
+      } catch {
+        // ignore sidebar badge failures
+      }
+    };
+
+    void loadCharacterCount();
+
+    const onCharactersChanged = () => {
+      void loadCharacterCount();
+    };
+    window.addEventListener("wcc:characters-changed", onCharactersChanged);
+
+    return () => {
+      disposed = true;
+      window.removeEventListener("wcc:characters-changed", onCharactersChanged);
+    };
+  }, [authMounted, isAuthenticated, pathname, provider]);
 
   return (
     <aside className="sidebar">
@@ -61,13 +107,13 @@ function Sidebar() {
       <div className="sidebar-nav">
         <div className="nav-group-label" suppressHydrationWarning>{t.navigation}</div>
         <Link href="/" className={`nav-item ${pathname === "/" ? "active" : ""}`}>
-          <div className="nav-item-icon">🏠</div>
+          <div className="nav-item-icon">📜</div>
           <div className="nav-label" suppressHydrationWarning>{t.home}</div>
         </Link>
         <Link href="/characters" className={`nav-item ${isActive("/characters") ? "active" : ""}`}>
           <div className="nav-item-icon">🧬</div>
           <div className="nav-label" suppressHydrationWarning>{t.characters}</div>
-          <div className="nav-pill">3</div>
+          <div className="nav-pill">{characterCount ?? "..."}</div>
         </Link>
         <Link href="/settings" className={`nav-item ${isActive("/settings") ? "active" : ""}`}>
           <div className="nav-item-icon">⚙️</div>

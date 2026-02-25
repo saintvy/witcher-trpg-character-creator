@@ -166,7 +166,19 @@ function getCognitoRedirectUri(): string {
 }
 
 function getCognitoLogoutRedirectUri(): string {
-  if (COGNITO_LOGOUT_REDIRECT_URI) return COGNITO_LOGOUT_REDIRECT_URI;
+  if (COGNITO_LOGOUT_REDIRECT_URI) {
+    try {
+      const configured = new URL(COGNITO_LOGOUT_REDIRECT_URI);
+      const cognitoHost = COGNITO_DOMAIN ? new URL(COGNITO_DOMAIN).host : "";
+      // Misconfiguration guard: logout_uri must point back to the app, not Cognito itself.
+      if (configured.host && cognitoHost && configured.host === cognitoHost) {
+        return `${window.location.origin}/`;
+      }
+      return configured.toString();
+    } catch {
+      // Fall through to current origin fallback
+    }
+  }
   return `${window.location.origin}/`;
 }
 

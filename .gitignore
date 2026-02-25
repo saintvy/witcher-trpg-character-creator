@@ -13,6 +13,7 @@ dist
 
 # CDK
 cdk.out
+cloud/infra/generated/
 
 # Cloud build output
 cloud/api/dist

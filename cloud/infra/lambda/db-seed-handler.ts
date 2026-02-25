@@ -4,6 +4,7 @@ import { Client } from 'pg';
 
 type CfnEvent = {
   RequestType: 'Create' | 'Update' | 'Delete';
+  ResourceProperties?: Record<string, unknown>;
 };
 
 type DbSecret = {
@@ -74,20 +75,21 @@ async function applySeedSql(): Promise<void> {
 }
 
 export async function handler(event: CfnEvent): Promise<{ PhysicalResourceId: string; Data?: Record<string, string> }> {
+  console.log('[db-seed] event', {
+    requestType: event.RequestType,
+    sqlBundleVersion:
+      typeof event.ResourceProperties?.sqlBundleVersion === 'string'
+        ? event.ResourceProperties.sqlBundleVersion
+        : undefined,
+  });
+
   if (event.RequestType === 'Delete') {
     return { PhysicalResourceId: 'wcc-db-seed' };
-  }
-
-  if (event.RequestType === 'Update') {
-    return {
-      PhysicalResourceId: 'wcc-db-seed',
-      Data: { status: 'skipped-update' },
-    };
   }
 
   await applySeedSql();
   return {
     PhysicalResourceId: 'wcc-db-seed',
-    Data: { status: 'seeded' },
+    Data: { status: event.RequestType === 'Create' ? 'seeded-create' : 'seeded-update' },
   };
 }

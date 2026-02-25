@@ -1,13 +1,21 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
+
+# Useful for CI / audits: generate the merged SQL file but do not apply it.
+WCC_SEED_MERGE_ONLY_OVERRIDE="${WCC_SEED_MERGE_ONLY-}"
+WCC_SEED_MERGE_ONLY="${WCC_SEED_MERGE_ONLY:-false}"
 
 # --- 0) load .env ---
 if [ -f ".env" ]; then
   # shellcheck disable=SC1091
   source .env
-else
+elif [ "$WCC_SEED_MERGE_ONLY" != "true" ]; then
   echo "Please create db/.env from .env.example first."
   exit 1
+fi
+
+if [ -n "${WCC_SEED_MERGE_ONLY_OVERRIDE}" ]; then
+  WCC_SEED_MERGE_ONLY="${WCC_SEED_MERGE_ONLY_OVERRIDE}"
 fi
 
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
@@ -22,12 +30,10 @@ DEPLOY_FILE="sql/wcc_sql_deploy.sql"
 # otherwise an active local docker-compose postgres might accidentally receive the seed.
 WCC_SEED_FORCE_HOST="${WCC_SEED_FORCE_HOST:-false}"
 
-# Useful for CI / audits: generate the merged SQL file but do not apply it.
-WCC_SEED_MERGE_ONLY="${WCC_SEED_MERGE_ONLY:-false}"
-
 # --- 0.5) setup pgadmin servers.json ---
-mkdir -p pgadmin
-cat > pgadmin/servers.json <<EOF
+if [ "$WCC_SEED_MERGE_ONLY" != "true" ]; then
+  mkdir -p pgadmin
+  cat > pgadmin/servers.json <<EOF
 {
   "Servers": {
     "1": {
@@ -51,33 +57,34 @@ cat > pgadmin/servers.json <<EOF
   }
 }
 EOF
-echo "[seed] generated pgadmin/servers.json with database connection settings"
+  echo "[seed] generated pgadmin/servers.json with database connection settings"
 
-echo "[seed] detected host port from .env: $POSTGRES_PORT"
+  echo "[seed] detected host port from .env: $POSTGRES_PORT"
 
-# --- 1) decide how to connect ---
-use_container=false
-if [ "$WCC_SEED_FORCE_HOST" != "true" ] && docker compose ps postgres >/dev/null 2>&1; then
-  echo "[seed] trying container mode (connecting inside container to localhost:5432)..."
-  for i in {1..60}; do
-    if docker compose exec -T postgres pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
-      use_container=true
-      break
-    fi
-    sleep 2
-  done
-fi
+  # --- 1) decide how to connect ---
+  use_container=false
+  if [ "$WCC_SEED_FORCE_HOST" != "true" ] && docker compose ps postgres >/dev/null 2>&1; then
+    echo "[seed] trying container mode (connecting inside container to localhost:5432)..."
+    for i in {1..60}; do
+      if docker compose exec -T postgres pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
+        use_container=true
+        break
+      fi
+      sleep 2
+    done
+  fi
 
-if "$use_container"; then
-  echo "[seed] container mode confirmed."
-else
-  echo "[seed] fallback to host mode (using .env host/port: $POSTGRES_HOST:$POSTGRES_PORT)"
-  for i in {1..60}; do
-    if pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
-      break
-    fi
-    sleep 2
-  done
+  if "$use_container"; then
+    echo "[seed] container mode confirmed."
+  else
+    echo "[seed] fallback to host mode (using .env host/port: $POSTGRES_HOST:$POSTGRES_PORT)"
+    for i in {1..60}; do
+      if pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" >/dev/null 2>&1; then
+        break
+      fi
+      sleep 2
+    done
+  fi
 fi
 
 # --- 2) collect SQL files ---

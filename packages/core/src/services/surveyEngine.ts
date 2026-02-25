@@ -1,9 +1,11 @@
-import jsonLogic, { type RulesLogic } from 'json-logic-js';
+import jsonLogic from 'json-logic-js';
 import { db } from '../db/pool.js';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+
+type RulesLogic = any;
 
 function resolveDefaultCharacterPath(): string {
   if (process.env.WCC_DEFAULT_CHARACTER_PATH) {
