@@ -1753,11 +1753,6 @@ export default function BuilderPage() {
                 <div className="section-title">
                   {questionPathTitle ?? question?.id ?? "Loading..."}
                 </div>
-                <div className="section-note">
-                  {displayLang === "ru"
-                    ? "Поля и структуры должны соответствовать API контракту персонажа."
-                    : "Fields and structures must match the character API contract."}
-                </div>
               </div>
               {canRandomiseQuestion && (
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -1813,7 +1808,7 @@ export default function BuilderPage() {
 
             {!done && question && (
               <div className={loading ? "survey-loading" : ""}>
-                {bodyMarkup && (
+                {bodyMarkup && !isStatsSkillsNode && (
                   <div
                     className="survey-question-body"
                     dangerouslySetInnerHTML={bodyMarkup}

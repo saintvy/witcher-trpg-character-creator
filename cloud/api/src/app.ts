@@ -68,6 +68,14 @@ type PotionPdfDetailsRow = {
   price: number | string | null;
 };
 
+type I18nResolveRow = {
+  id: string;
+  lang: string;
+  text: string;
+};
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function getUserEmail(user: AuthUser | undefined): string | null {
   if (!user) return null;
   const email = typeof user.email === 'string' ? user.email.trim().toLowerCase() : '';
@@ -294,6 +302,56 @@ app.post('/skills/catalog', async (c) => {
   } catch (error) {
     console.error('[skills] catalog error', error);
     return c.json({ error: 'Failed to load skills catalog' }, 400);
+  }
+});
+
+app.post('/i18n/resolve', async (c) => {
+  try {
+    const payload = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+    const lang = typeof payload.lang === 'string' && payload.lang.trim() ? payload.lang.trim() : 'en';
+    const ids = Array.isArray(payload.ids)
+      ? Array.from(
+          new Set(
+            payload.ids
+              .filter((v): v is string => typeof v === 'string')
+              .map((v) => v.trim())
+              .filter((v) => UUID_RE.test(v)),
+          ),
+        )
+      : [];
+
+    if (ids.length === 0) {
+      return c.json({ texts: {} });
+    }
+
+    const { rows } = await db.query<I18nResolveRow>(
+      `
+        SELECT id::text AS id, lang, text
+        FROM i18n_text
+        WHERE id = ANY($1::uuid[])
+          AND lang = ANY($2::text[])
+      `,
+      [ids, [lang, 'en']],
+    );
+
+    const byId = new Map<string, Map<string, string>>();
+    for (const row of rows) {
+      const m = byId.get(row.id) ?? new Map<string, string>();
+      m.set(row.lang, row.text);
+      byId.set(row.id, m);
+    }
+
+    const texts: Record<string, string> = {};
+    for (const id of ids) {
+      const m = byId.get(id);
+      if (!m) continue;
+      texts[id] = m.get(lang) ?? m.get('en') ?? id;
+    }
+
+    return c.json({ texts });
+  } catch (error) {
+    console.error('[i18n] resolve error', error);
+    return c.json({ error: 'Failed to resolve i18n texts' }, 400);
   }
 });
 

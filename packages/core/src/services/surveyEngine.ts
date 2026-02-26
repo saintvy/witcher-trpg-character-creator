@@ -2991,6 +2991,27 @@ async function applyShopNode(
         }
       }
 
+      if (remainingQty > 0) {
+        const tokenApplicable = applicableBudgets.filter((b) => b.type === 'tokens' || (b.type as string) === 'token');
+        if (tokenApplicable.length > 0) {
+          if (!ignoreWarnings) {
+            throw new Error(
+              `Budget tokens exceeded for purchase (source: ${sourceId}, id: ${entry.purchase.id}). ` +
+              `Unpaid token units: ${remainingQty}.`
+            );
+          }
+          const tokenBudget = tokenApplicable.find((b) => b.is_default) ?? tokenApplicable[0]!;
+          const costPerUnit = getTokenCostForItem(tokenBudget, sourceId, entry.purchase.id);
+          const deficitTokens = Math.max(0, costPerUnit) * remainingQty;
+          const current = budgetStates.get(tokenBudget.id) ?? 0;
+          budgetStates.set(tokenBudget.id, current - deficitTokens);
+          if (!tokenBudget.is_with_money) {
+            remainingCost = 0;
+          }
+          remainingQty = 0;
+        }
+      }
+
       if (remainingCost > 0) {
         if (!ignoreWarnings) {
           throw new Error(
@@ -3224,7 +3245,7 @@ async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
     return base + extra;
   };
 
-  const commonBudget = statForSkills('INT') + statForSkills('REF');
+  const commonBudget = nextStatsCur.INT + nextStatsCur.REF + statRace('INT') + statRace('REF');
 
   const initialSkills = (() => {
     const raw = getAtPath(state, 'characterRaw.skills.initial');

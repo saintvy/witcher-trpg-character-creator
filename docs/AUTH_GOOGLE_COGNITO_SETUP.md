@@ -126,10 +126,10 @@ AUTH_PROTECT_HEALTH=true
 - App client без client secret (для SPA / PKCE)
 - Включите Hosted UI domain
 - Callback URL:
-  - `https://<ваш-cloudfront-domain>/`
+  - `https://picklesandlard.com/`
   - для локальной проверки также можно `http://localhost:3100/`
 - Sign out URL:
-  - `https://<ваш-cloudfront-domain>/`
+  - `https://picklesandlard.com/`
   - `http://localhost:3100/` (опционально)
 
 Scopes:
@@ -156,8 +156,8 @@ NEXT_PUBLIC_API_URL=/api
 NEXT_PUBLIC_AUTH_PROVIDER=cognito
 NEXT_PUBLIC_COGNITO_DOMAIN=https://your-domain-prefix.auth.eu-central-1.amazoncognito.com
 NEXT_PUBLIC_COGNITO_CLIENT_ID=your-cognito-app-client-id
-NEXT_PUBLIC_COGNITO_REDIRECT_URI=https://<cloudfront-domain>/
-NEXT_PUBLIC_COGNITO_LOGOUT_REDIRECT_URI=https://<cloudfront-domain>/
+NEXT_PUBLIC_COGNITO_REDIRECT_URI=https://picklesandlard.com/
+NEXT_PUBLIC_COGNITO_LOGOUT_REDIRECT_URI=https://picklesandlard.com/
 NEXT_PUBLIC_COGNITO_SCOPE=openid email profile
 ```
 

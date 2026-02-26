@@ -75,6 +75,7 @@ type ProfessionalBundle = {
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
+const MAGIC_NO_TOKENS_WARNING_I18N_ID = "d7b50262-5bb0-4d5c-8ad1-8c3327119e71";
 
 function getAtPath(obj: unknown, path: string): unknown {
   if (!path) return undefined;
@@ -85,6 +86,62 @@ function getAtPath(obj: unknown, path: string): unknown {
     cursor = cursor[part];
   }
   return cursor;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function looksLikeUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+function displayText(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map(displayText).filter(Boolean).join(", ");
+  if (isRecord(value)) {
+    for (const key of ["name", "label", "title", "text", "value"]) {
+      const v = value[key];
+      if (typeof v === "string" && v.trim()) return v.trim();
+    }
+    if (typeof value.i18n_uuid === "string") return value.i18n_uuid;
+  }
+  return String(value);
+}
+
+const RACE_LABELS: Record<string, { ru: string; en: string }> = {
+  Human: { ru: "Человек", en: "Human" },
+  Elf: { ru: "Эльф", en: "Elf" },
+  Dwarf: { ru: "Краснолюд", en: "Dwarf" },
+  Gnome: { ru: "Гном", en: "Gnome" },
+  Halfling: { ru: "Низушек", en: "Halfling" },
+  Vran: { ru: "Вран", en: "Vran" },
+  Werebubb: { ru: "Баболак", en: "Werebubb" },
+  Witcher: { ru: "Ведьмак", en: "Witcher" },
+};
+
+const PROF_LABELS: Record<string, { ru: string; en: string }> = {
+  Bard: { ru: "Бард", en: "Bard" },
+  Witcher: { ru: "Ведьмак", en: "Witcher" },
+  Doctor: { ru: "Доктор", en: "Doctor" },
+  Mage: { ru: "Маг", en: "Mage" },
+  "Man At Arms": { ru: "Воин", en: "Man At Arms" },
+  Priest: { ru: "Жрец", en: "Priest" },
+  Criminal: { ru: "Преступник", en: "Criminal" },
+  Craftsman: { ru: "Ремесленник", en: "Craftsman" },
+  Merchant: { ru: "Купец", en: "Merchant" },
+  Druid: { ru: "Друид", en: "Druid" },
+};
+
+function localizeLogicField(value: unknown, kind: "race" | "profession", lang: string): string {
+  const raw = typeof value === "string" ? value.trim() : "";
+  if (!raw) return "";
+  const dict = kind === "race" ? RACE_LABELS : PROF_LABELS;
+  const mapped = dict[raw];
+  if (mapped) return lang === "ru" ? mapped.ru : mapped.en;
+  return raw;
 }
 
 function toNumber(value: unknown, fallback = 0): number {
@@ -221,21 +278,30 @@ export function ShopRenderer(props: {
   const professionalHeader = shop.professionalHeader;
   const professionalHeaderRows = useMemo(() => {
     if (!isProfessionalShop || !professionalHeader) return [];
+    const logicFields = isRecord((state as any)?.characterRaw?.logicFields)
+      ? ((state as any).characterRaw.logicFields as Record<string, unknown>)
+      : isRecord((state as any)?.characterRaw?.logic_fields)
+        ? ((state as any).characterRaw.logic_fields as Record<string, unknown>)
+        : null;
     return [
       {
         label: professionalHeader.nameLabel,
-        value: getAtPath(state, 'characterRaw.name'),
+        value: displayText(getAtPath(state, 'characterRaw.name')),
       },
       {
         label: professionalHeader.raceLabel,
-        value: getAtPath(state, 'characterRaw.race'),
+        value:
+          localizeLogicField(logicFields?.race ?? logicFields?.race_code, "race", lang) ||
+          displayText(getAtPath(state, 'characterRaw.race')),
       },
       {
         label: professionalHeader.professionLabel,
-        value: getAtPath(state, 'characterRaw.profession'),
+        value:
+          localizeLogicField(logicFields?.profession ?? logicFields?.profession_code, "profession", lang) ||
+          displayText(getAtPath(state, 'characterRaw.profession')),
       },
     ].filter((row) => typeof row.label === 'string' && row.label.length > 0);
-  }, [isProfessionalShop, professionalHeader, state]);
+  }, [isProfessionalShop, professionalHeader, state, lang]);
 
   const sourcesKey = useMemo(() => shop.sources.map((s) => s.id).join('|'), [shop.sources]);
 
@@ -338,6 +404,7 @@ export function ShopRenderer(props: {
   const [sortBySource, setSortBySource] = useState<Record<string, { column: string | null; direction: 'asc' | 'desc' }>>({});
   const [ignoreWarnings, setIgnoreWarnings] = useState(false);
   const [showAllItems, setShowAllItems] = useState(false);
+  const [magicNoTokensWarningText, setMagicNoTokensWarningText] = useState<string | null>(null);
   const budgetSummaryRef = useRef<HTMLDivElement>(null);
 
   // Get all budgets, defaulting to old format for backward compatibility
@@ -498,9 +565,9 @@ export function ShopRenderer(props: {
                 usage[defaultBudget.id].remaining -= defaultSpend;
               }
             }
-          } else {
-            // tokens
-            if (remainingQty <= 0) break;
+        } else {
+          // tokens
+          if (remainingQty <= 0) break;
             
             const coverage = budget.coverage as ShopBudgetCoverageTokens | undefined;
             let costPerUnit = 1;
@@ -528,14 +595,19 @@ export function ShopRenderer(props: {
               }
             }
             
-            const budgetRemaining = usage[budget.id].remaining;
-            const unitsPayableByTokens = costPerUnit > 0
-              ? Math.max(0, Math.min(remainingQty, Math.floor(budgetRemaining / costPerUnit)))
-              : 0;
-            const tokensToSpend = unitsPayableByTokens * costPerUnit;
-            usage[budget.id].spent += tokensToSpend;
-            usage[budget.id].remaining -= tokensToSpend;
-            remainingQty -= unitsPayableByTokens;
+          const budgetRemaining = usage[budget.id].remaining;
+          const tokenApplicable = applicableBudgets.filter((b) => isTokenBudgetType(b.type));
+          const lastTokenBudgetId = tokenApplicable.length > 0 ? tokenApplicable[tokenApplicable.length - 1]!.id : null;
+          const isLastTokenBudget = lastTokenBudgetId === budget.id;
+          const unitsPayableByTokens = costPerUnit > 0
+            ? (isLastTokenBudget
+              ? Math.max(0, remainingQty)
+              : Math.max(0, Math.min(remainingQty, Math.floor(Math.max(0, budgetRemaining) / costPerUnit))))
+            : 0;
+          const tokensToSpend = unitsPayableByTokens * costPerUnit;
+          usage[budget.id].spent += tokensToSpend;
+          usage[budget.id].remaining -= tokensToSpend;
+          remainingQty -= unitsPayableByTokens;
             if (!budget.is_with_money) {
               remainingCost = price * remainingQty;
             }
@@ -707,8 +779,56 @@ export function ShopRenderer(props: {
     return out;
   }, [budgets, state]);
 
+  const hasPositiveBudgetForMagic = useMemo(() => (
+    isMagicShop && budgetsWithPositiveInitial.length > 0
+  ), [isMagicShop, budgetsWithPositiveInitial]);
+
+  const shouldShowMagicNoTokensWarning = useMemo(() => (
+    Boolean(isMagicShop && onlyCoveredByBudget && !loadingAllItems && !hasPositiveBudgetForMagic)
+  ), [hasPositiveBudgetForMagic, isMagicShop, loadingAllItems, onlyCoveredByBudget]);
+
+  useEffect(() => {
+    if (!shouldShowMagicNoTokensWarning) {
+      setMagicNoTokensWarningText(null);
+      return;
+    }
+    let cancelled = false;
+    apiFetch(`${API_URL}/i18n/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lang, ids: [MAGIC_NO_TOKENS_WARNING_I18N_ID] }),
+    })
+      .then(fetchJsonOrThrow)
+      .then((data) => {
+        if (cancelled) return;
+        const text = (data?.texts && typeof data.texts === "object" && !Array.isArray(data.texts))
+          ? (data.texts as Record<string, string>)[MAGIC_NO_TOKENS_WARNING_I18N_ID]
+          : undefined;
+        setMagicNoTokensWarningText(
+          text || (lang === "ru"
+            ? "Похоже, ваш персонаж не способен к магии, если следовать правилам."
+            : "It looks like your character is not capable of magic, if the rules are followed."),
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setMagicNoTokensWarningText(
+          lang === "ru"
+            ? "Похоже, ваш персонаж не способен к магии, если следовать правилам."
+            : "It looks like your character is not capable of magic, if the rules are followed.",
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lang, shouldShowMagicNoTokensWarning]);
+
   const displayAllItemsBySource = useMemo(() => {
-    const shouldFilter = Boolean(onlyCoveredByBudget) && !showAllItems && budgetsWithPositiveInitial.length > 0;
+    const shouldFilter =
+      Boolean(onlyCoveredByBudget) &&
+      !showAllItems &&
+      (budgetsWithPositiveInitial.length > 0 || isMagicShop);
     if (!shouldFilter) return allItemsBySource;
 
     const result: Record<string, {
@@ -768,6 +888,7 @@ export function ShopRenderer(props: {
     qtyBySource,
     shop.sources,
     showAllItems,
+    isMagicShop,
   ]);
 
   const visibleSources = useMemo(() => {
@@ -806,7 +927,7 @@ export function ShopRenderer(props: {
   }, [shop.sources, qtyBySource, displayAllItemsBySource, isProfessionalShop, professionalFreeItemIds]);
 
   const renderCell = useCallback((value: unknown) => {
-    const text = value === null || value === undefined ? "" : String(value);
+    const text = displayText(value);
     if (text.includes("\n")) {
       return <span style={{ whiteSpace: "pre-line" }}>{text}</span>;
     }
@@ -1177,6 +1298,21 @@ export function ShopRenderer(props: {
               : 'Make sure the game master is ok with adding items that contradict the standard rules.'}
           </div>
         )}
+        {shouldShowMagicNoTokensWarning && (
+          <div className="shop-warning" style={{ 
+            marginBottom: '12px', 
+            padding: '8px 10px', 
+            fontSize: '12px',
+            color: '#ffdd63',
+            background: 'rgba(242,199,68,0.12)',
+            border: '1px solid rgba(242,199,68,0.35)',
+            borderRadius: '10px'
+          }}>
+            {magicNoTokensWarningText ?? (lang === 'ru'
+              ? 'Похоже, ваш персонаж не способен к магии, если следовать правилам.'
+              : 'It looks like your character is not capable of magic, if the rules are followed.')}
+          </div>
+        )}
         {(shop.warningPriceZero && hasPriceZeroItems && budgets.some((b) => b.type === 'money')) && (
           <div className="shop-warning" style={{ 
             marginBottom: '12px', 
@@ -1521,10 +1657,14 @@ export function ShopRenderer(props: {
           {professionalOptions.bundles.map((bundle) => {
             const checked = Boolean(bundleCheckedById[bundle.bundleId]);
             const displayName = (() => {
-              if (typeof bundle.displayName === 'string') return bundle.displayName;
+              if (typeof bundle.displayName === 'string') {
+                return looksLikeUuid(bundle.displayName) ? bundle.bundleId : bundle.displayName;
+              }
               if (bundle.displayName && typeof bundle.displayName === 'object' && !Array.isArray(bundle.displayName)) {
                 const obj = bundle.displayName as any;
-                if (typeof obj.i18n_uuid === 'string') return obj.i18n_uuid;
+                const shown = displayText(obj);
+                if (shown && !looksLikeUuid(shown)) return shown;
+                if (typeof obj.i18n_uuid === 'string') return bundle.bundleId;
               }
               return bundle.bundleId;
             })();

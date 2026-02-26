@@ -52,9 +52,21 @@ const SKILL_ID_TO_STATE_ID: Record<string, string> = {
   staff_spear: "staff",
   dodge_escape: "dodge",
 };
+const STATE_ID_TO_SKILL_ID: Record<string, string> = {
+  staff: "staff_spear",
+  dodge: "dodge_escape",
+};
 
 function toStateSkillId(skillId: string): string {
   return SKILL_ID_TO_STATE_ID[skillId] ?? skillId;
+}
+
+function toCatalogSkillId(skillId: string): string {
+  return STATE_ID_TO_SKILL_ID[skillId] ?? skillId;
+}
+
+function looksLikeUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 function normaliseStatKey(raw: unknown): StatKey | null {
@@ -219,6 +231,7 @@ export function StatsSkillsRenderer(props: {
 
   const [catalog, setCatalog] = useState<SkillCatalogEntry[] | null>(null);
   const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [resolvedI18nTexts, setResolvedI18nTexts] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -242,6 +255,41 @@ export function StatsSkillsRenderer(props: {
       cancelled = true;
     };
   }, [lang]);
+
+  useEffect(() => {
+    const branchesRaw = getAtPath(state, "characterRaw.skills.professional.branches");
+    const ids = Array.isArray(branchesRaw)
+      ? branchesRaw
+          .filter((v): v is string => typeof v === "string" && looksLikeUuid(v))
+      : [];
+
+    if (ids.length === 0) {
+      setResolvedI18nTexts({});
+      return;
+    }
+
+    let cancelled = false;
+    apiFetch(`${API_URL}/i18n/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lang, ids }),
+    })
+      .then(fetchJsonOrThrow)
+      .then((data) => {
+        if (cancelled) return;
+        const texts = (data?.texts && typeof data.texts === "object" && !Array.isArray(data.texts))
+          ? (data.texts as Record<string, string>)
+          : {};
+        setResolvedI18nTexts(texts);
+      })
+      .catch(() => {
+        if (!cancelled) setResolvedI18nTexts({});
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lang, state]);
 
   const initialLevel = useMemo(() => {
     const saved = getAtPath(state, "characterRaw.logicFields.stats_skills.level");
@@ -295,7 +343,6 @@ export function StatsSkillsRenderer(props: {
     return out;
   });
 
-  const [, setCommonSpendLog] = useState<string[]>([]);
 
   useEffect(() => {
     setLevel(initialLevel);
@@ -337,7 +384,6 @@ export function StatsSkillsRenderer(props: {
     setSkillCurById(nextSkills);
 
     baselineRef.current = { stats: nextStats, skills: nextSkills };
-    setCommonSpendLog([]);
   }, [questionId, initialLevel, state]);
 
   const initialSkills = useMemo(() => {
@@ -436,16 +482,22 @@ export function StatsSkillsRenderer(props: {
 
   const remainingStatPoints = useMemo(() => levelBudget - spentStatPoints, [levelBudget, spentStatPoints]);
 
-  const generalBudget = useMemo(() => statForSkillsById.INT.total + statForSkillsById.REF.total, [statForSkillsById]);
+  const generalBudget = useMemo(
+    () => statCurById.INT + statCurById.REF + statBonusById.INT.race + statBonusById.REF.race,
+    [statCurById, statBonusById],
+  );
 
   const budgets = useMemo(() => {
     let spentProfessional = 0;
     let spentCommon = 0;
+    const baselineSkills = baselineRef.current?.skills ?? {};
 
     for (const [skillId, cur] of Object.entries(skillCurById)) {
       const meta = skillMetaById.get(skillId);
       const cost = meta?.isDifficult ? 2 : 1;
-      const tokens = Math.max(0, clampInt(cur, 0, 99)) * cost;
+      const baseline = Math.max(0, clampInt(baselineSkills[skillId] ?? 0, 0, 99));
+      const allocatedInNode = Math.max(0, clampInt(cur, 0, 99) - baseline);
+      const tokens = allocatedInNode * cost;
       if (professionalSkillSet.has(skillId)) spentProfessional += tokens;
       else spentCommon += tokens;
     }
@@ -541,7 +593,12 @@ export function StatsSkillsRenderer(props: {
 
     const branchesRaw = raw.branches;
     if (Array.isArray(branchesRaw)) {
-      const titles = branchesRaw.map((v) => (typeof v === "string" ? v : String(v ?? "")));
+      const titles = branchesRaw.map((v) => {
+        if (typeof v === "string") {
+          return looksLikeUuid(v) ? (resolvedI18nTexts[v] ?? v) : v;
+        }
+        return String(v ?? "");
+      });
       const byBranch: Array<Array<{ id: string; name: string; idx: number }>> = [[], [], []];
 
       for (const [key, value] of Object.entries(raw)) {
@@ -553,15 +610,18 @@ export function StatsSkillsRenderer(props: {
         if (branch < 1 || branch > 3) continue;
         if (!isRecord(value)) continue;
         const id = typeof value.id === "string" ? value.id : "";
-        const name = typeof value.name === "string" ? value.name : String(value.name ?? "");
+        const metaByExactId = id ? skillMetaById.get(id) : undefined;
+        const metaByStateId = id ? (catalog ?? []).find((s) => toStateSkillId(s.id) === id) : undefined;
+        const fallbackRawName = typeof value.name === "string" ? value.name : "";
+        const name = (metaByExactId?.name ?? metaByStateId?.name ?? fallbackRawName).trim();
         if (!name) continue;
         byBranch[branch - 1]!.push({ id, name, idx });
       }
 
       return [0, 1, 2].map((i) => ({
         title:
-          titles[i] && titles[i].trim().length > 0
-            ? titles[i]
+          titles[i] && titles[i].trim().length > 0 && !looksLikeUuid(titles[i]!)
+            ? titles[i]!
             : lang === "ru"
               ? `Ветка ${i + 1}`
               : `Branch ${i + 1}`,
@@ -583,7 +643,7 @@ export function StatsSkillsRenderer(props: {
         skills,
       };
     });
-  }, [lang, professionalSkillEntries, state, skillMetaById]);
+  }, [lang, professionalSkillEntries, state, skillMetaById, catalog, resolvedI18nTexts]);
 
   const canSubmit = useMemo(() => {
     if (remainingStatPoints < 0) return false;
@@ -592,52 +652,10 @@ export function StatsSkillsRenderer(props: {
     return true;
   }, [budgets.remainingCommon, budgets.remainingProfessional, remainingStatPoints]);
 
-  const rollbackCommonSkillsIfNeeded = (
-    prevSkills: Record<string, number>,
-    nextGeneralBudget: number,
-    log: string[],
-  ): Record<string, number> => {
-    let spentCommon = 0;
-    for (const [sid, cur] of Object.entries(prevSkills)) {
-      if (professionalSkillSet.has(sid)) continue;
-      const meta = skillMetaById.get(sid);
-      const cost = meta?.isDifficult ? 2 : 1;
-      spentCommon += Math.max(0, clampInt(cur, 0, 99)) * cost;
-    }
-
-    const baselineSkills = baselineRef.current?.skills ?? {};
-    const skillsNext = { ...prevSkills };
-
-    while (spentCommon > nextGeneralBudget && log.length > 0) {
-      const lastSkillId = log.pop()!;
-      const cur = skillsNext[lastSkillId] ?? 0;
-      const minCur = baselineSkills[lastSkillId] ?? 0;
-      if (cur <= minCur) continue;
-      const meta = skillMetaById.get(lastSkillId);
-      const cost = meta?.isDifficult ? 2 : 1;
-      skillsNext[lastSkillId] = cur - 1;
-      spentCommon -= cost;
-    }
-
-    return skillsNext;
-  };
-
   const adjustStat = (key: StatKey, delta: number) => {
     const baseline = baselineRef.current?.stats?.[key] ?? 1;
     const nextStats = buildNextStatsWithDelta(statCurById, key, delta, baseline);
     setStatCurById(nextStats);
-
-    if ((key === "INT" || key === "REF") && delta < 0) {
-      const nextIntTotal = nextStats.INT + statBonusById.INT.bonus + statBonusById.INT.race;
-      const nextRefTotal = nextStats.REF + statBonusById.REF.bonus + statBonusById.REF.race;
-      const nextGeneralBudget = nextIntTotal + nextRefTotal;
-
-      setCommonSpendLog((prevLog) => {
-        const log = [...prevLog];
-        setSkillCurById((prevSkills) => rollbackCommonSkillsIfNeeded(prevSkills, nextGeneralBudget, log));
-        return log;
-      });
-    }
   };
 
   const adjustSkill = (skillId: string, delta: number) => {
@@ -661,25 +679,6 @@ export function StatsSkillsRenderer(props: {
       return { ...prev, [skillId]: nextVal };
     });
 
-    if (!isProfessional) {
-      setCommonSpendLog((prevLog) => {
-        const log = [...prevLog];
-        if (delta > 0) {
-          log.push(skillId);
-          return log;
-        }
-        if (delta < 0) {
-          for (let i = log.length - 1; i >= 0; i--) {
-            if (log[i] === skillId) {
-              log.splice(i, 1);
-              break;
-            }
-          }
-          return log;
-        }
-        return log;
-      });
-    }
   };
 
   const renderStepper = (
@@ -726,6 +725,19 @@ export function StatsSkillsRenderer(props: {
 
   return (
     <div className="stats-skills-node">
+      <div className="survey-actions" style={{ marginBottom: "16px" }}>
+        <button
+          type="button"
+          onClick={() => {
+            onSubmit({ v: 1, level, stats: statCurById, skills: skillCurById });
+          }}
+          disabled={disabled || !canSubmit}
+          className="btn btn-primary"
+        >
+          {lang === "ru" ? "Продолжить" : "Continue"}
+        </button>
+      </div>
+
       <div className="ss-section">
         <div className="ss-section-title">{t.sections.budgets}</div>
         <div className="ss-budgets">

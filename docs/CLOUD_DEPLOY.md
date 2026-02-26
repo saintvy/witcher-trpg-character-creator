@@ -79,8 +79,8 @@ NEXT_PUBLIC_API_URL=/api
 NEXT_PUBLIC_AUTH_PROVIDER=cognito
 NEXT_PUBLIC_COGNITO_DOMAIN=https://your-prefix.auth.eu-central-1.amazoncognito.com
 NEXT_PUBLIC_COGNITO_CLIENT_ID=your-app-client-id
-NEXT_PUBLIC_COGNITO_REDIRECT_URI=https://your-cloudfront-domain.cloudfront.net/
-NEXT_PUBLIC_COGNITO_LOGOUT_REDIRECT_URI=https://your-cloudfront-domain.cloudfront.net/
+NEXT_PUBLIC_COGNITO_REDIRECT_URI=https://picklesandlard.com/
+NEXT_PUBLIC_COGNITO_LOGOUT_REDIRECT_URI=https://picklesandlard.com/
 NEXT_PUBLIC_COGNITO_SCOPE=openid email profile
 ```
 
