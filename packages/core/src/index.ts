@@ -4,4 +4,4 @@ export { getAllShopItems } from './services/shopCatalog.js';
 export type { GetAllShopItemsRequest, GetAllShopItemsResponse } from './services/shopCatalog.js';
 export { getSkillsCatalog } from './services/skillsCatalog.js';
 export type { GetSkillsCatalogRequest, SkillCatalogEntry } from './services/skillsCatalog.js';
-export { generateCharacterFromBody } from './character/generateCharacter.js';
+export { generateCharacterFromBody, resolveCharacterRawI18n } from './character/generateCharacter.js';

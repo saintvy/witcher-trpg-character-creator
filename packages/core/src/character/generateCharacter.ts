@@ -144,6 +144,20 @@ async function resolveI18nRecursive(
   return value;
 }
 
+/**
+ * Resolves i18n UUID nodes/strings inside canonical characterRaw.
+ * Keeps logicFields untouched (source-of-truth for internal logic identifiers).
+ */
+export async function resolveCharacterRawI18n(
+  characterRaw: Record<string, unknown>,
+  lang: string,
+): Promise<Record<string, unknown>> {
+  const uuids = new Set<string>();
+  collectI18nUuids(characterRaw, uuids);
+  const resolveText = await buildI18nResolver(uuids, lang);
+  return (await resolveI18nRecursive(characterRaw, lang, resolveText)) as Record<string, unknown>;
+}
+
 const DEFAULT_SURVEY_ID = 'witcher_cc';
 
 /**
@@ -201,11 +215,7 @@ export async function generateCharacterFromBody(body: unknown, lang: string): Pr
         : (body as CharacterRaw);
   }
 
-  const uuids = new Set<string>();
-  collectI18nUuids(characterRaw, uuids);
-  const resolveText = await buildI18nResolver(uuids, lang);
-
-  const character = (await resolveI18nRecursive(characterRaw, lang, resolveText)) as Character;
+  const character = (await resolveCharacterRawI18n(characterRaw, lang)) as Character;
 
   return { ...character, lang };
 }

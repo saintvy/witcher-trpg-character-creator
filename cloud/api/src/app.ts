@@ -8,8 +8,10 @@ import {
   getNextQuestion,
   getAllShopItems,
   getSkillsCatalog,
+  resolveCharacterRawI18n,
   db,
 } from '@wcc/core';
+import { generateCharacterPdfBuffer } from './pdf/characterPdf.js';
 
 type AppEnv = {
   Variables: {
@@ -32,6 +34,40 @@ type CountRow = {
   count: number;
 };
 
+type WeaponPdfDetailsRow = {
+  w_id: string;
+  weapon_name: string | null;
+  dmg: string | null;
+  dmg_types: string | null;
+  weight: string | null;
+  price: number | string | null;
+  hands: number | string | null;
+  reliability: number | string | null;
+  concealment: string | null;
+  effect_names: string | null;
+};
+
+type ArmorPdfDetailsRow = {
+  a_id: string;
+  armor_name: string | null;
+  stopping_power: number | string | null;
+  encumbrance: number | string | null;
+  enhancements: number | string | null;
+  weight: string | null;
+  price: number | string | null;
+  effect_names: string | null;
+};
+
+type PotionPdfDetailsRow = {
+  p_id: string;
+  potion_name: string | null;
+  toxicity: string | null;
+  time_effect: string | null;
+  effect: string | null;
+  weight: string | null;
+  price: number | string | null;
+};
+
 function getUserEmail(user: AuthUser | undefined): string | null {
   if (!user) return null;
   const email = typeof user.email === 'string' ? user.email.trim().toLowerCase() : '';
@@ -40,6 +76,10 @@ function getUserEmail(user: AuthUser | undefined): string | null {
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
 }
 
 function readStringAt(obj: Record<string, unknown> | null, key: string): string | null {
@@ -82,6 +122,96 @@ function extractCharacterSummary(rawCharacter: unknown): {
   return { name, raceCode, professionCode };
 }
 
+function readIdListFromGear(rawCharacter: Record<string, unknown>, listKey: 'weapons' | 'armors' | 'potions', idKey: string): string[] {
+  const gear = asRecord(rawCharacter.gear);
+  const list = asArray(gear?.[listKey]);
+  const out: string[] = [];
+  for (const item of list) {
+    const rec = asRecord(item);
+    const id = typeof rec?.[idKey] === 'string' ? rec[idKey].trim() : '';
+    if (id) out.push(id);
+  }
+  return Array.from(new Set(out));
+}
+
+function patchResolvedGearFromDbViews(params: {
+  rawCharacter: Record<string, unknown>;
+  resolvedCharacter: Record<string, unknown>;
+  weaponsById: ReadonlyMap<string, WeaponPdfDetailsRow>;
+  armorsById: ReadonlyMap<string, ArmorPdfDetailsRow>;
+  potionsById: ReadonlyMap<string, PotionPdfDetailsRow>;
+}) {
+  const rawGear = asRecord(params.rawCharacter.gear) ?? {};
+  const resolvedGear = asRecord(params.resolvedCharacter.gear) ?? {};
+
+  const patchWeapons = asArray(rawGear.weapons).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = typeof rec.w_id === 'string' ? rec.w_id : '';
+    const d = id ? params.weaponsById.get(id) : undefined;
+    return {
+      ...rec,
+      w_id: id || rec.w_id,
+      weapon_name: d?.weapon_name ?? rec.weapon_name,
+      name: d?.weapon_name ?? rec.name ?? rec.weapon_name,
+      dmg: d?.dmg ?? rec.dmg,
+      dmg_types: d?.dmg_types ?? rec.dmg_types ?? rec.type,
+      type: d?.dmg_types ?? rec.type ?? rec.dmg_types,
+      reliability: d?.reliability ?? rec.reliability,
+      hands: d?.hands ?? rec.hands,
+      concealment: d?.concealment ?? rec.concealment ?? rec.conceal,
+      enhancements: rec.enhancements ?? rec.enhancement ?? rec.upgrades,
+      weight: d?.weight ?? rec.weight,
+      price: d?.price ?? rec.price,
+      effect_names: d?.effect_names ?? rec.effect_names ?? rec.effect,
+    };
+  });
+
+  const patchArmors = asArray(rawGear.armors).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = typeof rec.a_id === 'string' ? rec.a_id : '';
+    const d = id ? params.armorsById.get(id) : undefined;
+    return {
+      ...rec,
+      a_id: id || rec.a_id,
+      armor_name: d?.armor_name ?? rec.armor_name,
+      name: d?.armor_name ?? rec.name ?? rec.armor_name,
+      stopping_power: d?.stopping_power ?? rec.stopping_power ?? rec.sp,
+      sp: d?.stopping_power ?? rec.sp ?? rec.stopping_power,
+      encumbrance: d?.encumbrance ?? rec.encumbrance ?? rec.enc,
+      enc: d?.encumbrance ?? rec.enc ?? rec.encumbrance,
+      enhancements: rec.enhancements ?? rec.enhancement ?? rec.upgrades ?? d?.enhancements,
+      weight: d?.weight ?? rec.weight,
+      price: d?.price ?? rec.price,
+      effect_names: d?.effect_names ?? rec.effect_names ?? rec.effect,
+    };
+  });
+
+  const patchPotions = asArray(rawGear.potions).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = typeof rec.p_id === 'string' ? rec.p_id : '';
+    const d = id ? params.potionsById.get(id) : undefined;
+    return {
+      ...rec,
+      p_id: id || rec.p_id,
+      potion_name: d?.potion_name ?? rec.potion_name,
+      name: d?.potion_name ?? rec.name ?? rec.potion_name,
+      toxicity: d?.toxicity ?? rec.toxicity,
+      time_effect: d?.time_effect ?? rec.time_effect ?? rec.duration,
+      duration: d?.time_effect ?? rec.duration ?? rec.time_effect,
+      effect: d?.effect ?? rec.effect,
+      weight: d?.weight ?? rec.weight,
+      price: d?.price ?? rec.price,
+    };
+  });
+
+  params.resolvedCharacter.gear = {
+    ...resolvedGear,
+    weapons: patchWeapons,
+    armors: patchArmors,
+    potions: patchPotions,
+  };
+}
+
 function safeFileNameBase(value: string | null | undefined, fallback: string): string {
   const base = (value ?? '')
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
@@ -89,6 +219,19 @@ function safeFileNameBase(value: string | null | undefined, fallback: string): s
     .trim()
     .slice(0, 80);
   return base.length > 0 ? base : fallback;
+}
+
+function buildDownloadContentDisposition(fileName: string): string {
+  const asciiFallback = fileName
+    .normalize('NFKD')
+    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/["\\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim() || 'download';
+  const encoded = encodeURIComponent(fileName)
+    .replace(/['()]/g, (m) => `%${m.charCodeAt(0).toString(16).toUpperCase()}`)
+    .replace(/\*/g, '%2A');
+  return `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encoded}`;
 }
 
 const app = new Hono<AppEnv>().basePath('/api');
@@ -313,7 +456,7 @@ app.get('/characters/:id/raw', async (c) => {
     return c.body(JSON.stringify(row.raw_character_json ?? {}, null, 2), 200, {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-store',
-      'Content-Disposition': `attachment; filename="${fileName}"`,
+      'Content-Disposition': buildDownloadContentDisposition(fileName),
     });
   } catch (error) {
     console.error('[characters] raw download error', error);
@@ -344,11 +487,127 @@ app.get('/characters/:id/history-export', async (c) => {
     return c.body(JSON.stringify(row.answers_export_json ?? {}, null, 2), 200, {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': 'no-store',
-      'Content-Disposition': `attachment; filename="${fileName}"`,
+      'Content-Disposition': buildDownloadContentDisposition(fileName),
     });
   } catch (error) {
     console.error('[characters] history download error', error);
     return c.json({ error: 'Failed to download history export' }, 500);
+  }
+});
+
+app.get('/characters/:id/pdf', async (c) => {
+  const ownerEmail = getUserEmail(c.get('authUser'));
+  if (!ownerEmail) {
+    return c.json({ error: 'Authenticated user email is required' }, 401);
+  }
+  const id = c.req.param('id');
+  const requestedLang = (c.req.query('lang') || c.req.header('Accept-Language')?.split(',')[0]?.split('-')[0] || 'en')
+    .trim()
+    .toLowerCase();
+  const lang = requestedLang === 'ru' ? 'ru' : 'en';
+
+  try {
+    const { rows } = await db.query<SavedCharacterRow>(
+      `
+        SELECT id::text AS id, name, raw_character_json
+        FROM wcc_user_characters
+        WHERE id = $1::uuid AND owner_email = $2
+      `,
+      [id, ownerEmail],
+    );
+    const row = rows[0];
+    if (!row) return c.json({ error: 'Character not found' }, 404);
+
+    const rawCharacter = asRecord(row.raw_character_json);
+    if (!rawCharacter) {
+      return c.json({ error: 'Saved raw character JSON is invalid' }, 500);
+    }
+
+    const resolvedCharacter = await resolveCharacterRawI18n(rawCharacter, lang);
+    const weaponIds = readIdListFromGear(rawCharacter, 'weapons', 'w_id');
+    const armorIds = readIdListFromGear(rawCharacter, 'armors', 'a_id');
+    const potionIds = readIdListFromGear(rawCharacter, 'potions', 'p_id');
+
+    const weaponsById = new Map<string, WeaponPdfDetailsRow>();
+    const armorsById = new Map<string, ArmorPdfDetailsRow>();
+    const potionsById = new Map<string, PotionPdfDetailsRow>();
+
+    try {
+      if (weaponIds.length > 0) {
+        const { rows } = await db.query<WeaponPdfDetailsRow>(
+          `
+            SELECT w_id, weapon_name, dmg, dmg_types, weight, price, hands, reliability, concealment, effect_names
+            FROM wcc_item_weapons_v
+            WHERE lang = $1 AND w_id = ANY($2::text[])
+          `,
+          [lang, weaponIds],
+        );
+        rows.forEach((r) => weaponsById.set(r.w_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf weapon lookup failed', error);
+    }
+
+    try {
+      if (armorIds.length > 0) {
+        const { rows } = await db.query<ArmorPdfDetailsRow>(
+          `
+            SELECT a_id, armor_name, stopping_power, encumbrance, enhancements, weight, price, effect_names
+            FROM wcc_item_armors_v
+            WHERE lang = $1 AND a_id = ANY($2::text[])
+          `,
+          [lang, armorIds],
+        );
+        rows.forEach((r) => armorsById.set(r.a_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf armor lookup failed', error);
+    }
+
+    try {
+      if (potionIds.length > 0) {
+        const { rows } = await db.query<PotionPdfDetailsRow>(
+          `
+            SELECT p_id, potion_name, toxicity, time_effect, effect, weight, price
+            FROM wcc_item_potions_v
+            WHERE lang = $1 AND p_id = ANY($2::text[])
+          `,
+          [lang, potionIds],
+        );
+        rows.forEach((r) => potionsById.set(r.p_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf potion lookup failed', error);
+    }
+
+    patchResolvedGearFromDbViews({
+      rawCharacter,
+      resolvedCharacter,
+      weaponsById,
+      armorsById,
+      potionsById,
+    });
+
+    const skillsCatalog = await getSkillsCatalog({ lang }).catch(() => ({ skills: [] as Array<{ id: string; param: string | null; name: string }> }));
+    const skillsCatalogById = new Map(
+      (Array.isArray(skillsCatalog.skills) ? skillsCatalog.skills : []).map((s) => [s.id, { param: s.param, name: s.name }] as const),
+    );
+    const pdfBuffer = await generateCharacterPdfBuffer({
+      rawCharacter,
+      resolvedCharacter,
+      lang,
+      skillsCatalogById,
+    });
+
+    const fileName = `${safeFileNameBase(row.name, 'character')}-sheet.pdf`;
+    return c.body(new Uint8Array(pdfBuffer), 200, {
+      'Content-Type': 'application/pdf',
+      'Cache-Control': 'no-store',
+      'Content-Disposition': buildDownloadContentDisposition(fileName),
+    });
+  } catch (error) {
+    console.error('[characters] pdf generation error', error);
+    return c.json({ error: 'Failed to generate PDF' }, 500);
   }
 });
 

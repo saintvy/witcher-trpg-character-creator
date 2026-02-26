@@ -31808,9 +31808,7 @@ ON CONFLICT (id, lang) DO UPDATE
 
 \echo '101_user_characters.sql'
 
-DROP TABLE IF EXISTS wcc_user_characters CASCADE;
-
-CREATE TABLE wcc_user_characters (
+CREATE TABLE IF NOT EXISTS wcc_user_characters (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_email       TEXT NOT NULL,
   owner_sub         TEXT,
@@ -31824,10 +31822,10 @@ CREATE TABLE wcc_user_characters (
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX wcc_user_characters_owner_email_idx
+CREATE INDEX IF NOT EXISTS wcc_user_characters_owner_email_idx
   ON wcc_user_characters (owner_email);
 
-CREATE INDEX wcc_user_characters_owner_email_created_at_idx
+CREATE INDEX IF NOT EXISTS wcc_user_characters_owner_email_created_at_idx
   ON wcc_user_characters (owner_email, created_at DESC);
 
 -- <<< END sql/101_user_characters.sql

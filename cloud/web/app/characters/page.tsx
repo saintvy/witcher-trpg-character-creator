@@ -180,6 +180,7 @@ export default function CharactersPage() {
   } as const;
 
   const t = content[displayLang];
+  const pdfActionTitle = displayLang === "ru" ? "Скачать PDF" : "Download PDF";
   const deleteActionTitle = displayLang === "ru" ? "Удалить персонажа" : "Delete character";
   const deleteConfirmText =
     displayLang === "ru"
@@ -279,6 +280,25 @@ export default function CharactersPage() {
     }
   }, [displayLang, t.states.downloadError]);
 
+  const downloadCharacterPdf = useCallback(async (id: string) => {
+    try {
+      setBusyActionId(`${id}:pdf`);
+      const response = await apiFetch(`${API_URL}/characters/${id}/pdf?lang=${displayLang}`);
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+      const blob = await response.blob();
+      const fileName =
+        parseFilenameFromDisposition(response.headers.get("content-disposition")) ??
+        "character-sheet.pdf";
+      triggerDownload(blob, fileName);
+    } catch {
+      window.alert(displayLang === "ru" ? "Не удалось скачать PDF." : "Failed to download PDF.");
+    } finally {
+      setBusyActionId(null);
+    }
+  }, [displayLang]);
+
   const deleteCharacter = useCallback(async (id: string) => {
     if (!window.confirm(deleteConfirmText)) return;
 
@@ -355,7 +375,7 @@ export default function CharactersPage() {
                 {rows.map((character) => {
                   const raceVisual = getRaceVisual(character.race, displayLang);
                   const isBusyHistory = busyActionId === `${character.id}:history`;
-                  const isBusyRaw = busyActionId === `${character.id}:raw`;
+                  const isBusyPdf = busyActionId === `${character.id}:pdf`;
                   const isBusyDelete = busyActionId === `${character.id}:delete`;
                   return (
                     <tr key={character.id}>
@@ -381,12 +401,15 @@ export default function CharactersPage() {
                         <button
                           type="button"
                           className="btn-icon"
-                          title={t.actions.raw}
-                          onClick={() => void downloadCharacterFile(character.id, "raw")}
+                          title={pdfActionTitle}
+                          onClick={() => void downloadCharacterPdf(character.id)}
                           disabled={Boolean(busyActionId)}
                         >
-                          {isBusyRaw ? "…" : "📃"}
+                          {isBusyPdf ? "…" : "📥"}
                         </button>
+                        <span aria-hidden="true" style={{ whiteSpace: "pre" }}>
+                          {"      "}
+                        </span>
                         <button
                           type="button"
                           className="btn-icon"
