@@ -34,6 +34,15 @@ type CountRow = {
   count: number;
 };
 
+type UserSettingsRow = {
+  owner_email: string;
+  settings_json: unknown | null;
+};
+
+type UserSettingsDto = {
+  useW1AlchemyIcons: boolean;
+};
+
 type WeaponPdfDetailsRow = {
   w_id: string;
   weapon_name: string | null;
@@ -68,13 +77,51 @@ type PotionPdfDetailsRow = {
   price: number | string | null;
 };
 
+type RecipePdfDetailsRow = {
+  r_id: string;
+  recipe_name: string | null;
+  recipe_group: string | null;
+  craft_level: string | null;
+  complexity: number | string | null;
+  time_craft: string | null;
+  formula_en: string | null;
+  price_formula: number | string | null;
+  minimal_ingredients_cost: number | string | null;
+  time_effect: string | null;
+  toxicity: string | null;
+  recipe_description: string | null;
+  weight_potion: string | null;
+  price_potion: number | string | null;
+};
+
 type I18nResolveRow = {
   id: string;
   lang: string;
   text: string;
 };
 
+type BlueprintItemRefRow = {
+  item_id: string | null;
+};
+
+type ItemEffectLookupRow = {
+  item_id: string;
+  effect_id: string;
+  modifier: number | null;
+  name_tpl: string | null;
+  desc_tpl: string | null;
+  cond_tpl: string | null;
+};
+
+type ItemEffectGlossaryRow = {
+  name: string;
+  value: string;
+};
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DEFAULT_USER_SETTINGS: UserSettingsDto = {
+  useW1AlchemyIcons: false,
+};
 
 function getUserEmail(user: AuthUser | undefined): string | null {
   if (!user) return null;
@@ -88,6 +135,21 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
+}
+
+function readBooleanAt(obj: Record<string, unknown> | null, key: string): boolean | null {
+  if (!obj) return null;
+  const value = obj[key];
+  return typeof value === 'boolean' ? value : null;
+}
+
+function normalizeUserSettingsRow(row: UserSettingsRow | undefined): UserSettingsDto {
+  const settingsJson = asRecord(row?.settings_json);
+  const fromCamel = readBooleanAt(settingsJson, 'useW1AlchemyIcons');
+  const fromSnake = readBooleanAt(settingsJson, 'use_w1_alchemy_icons');
+  return {
+    useW1AlchemyIcons: fromCamel ?? fromSnake ?? DEFAULT_USER_SETTINGS.useW1AlchemyIcons,
+  };
 }
 
 function readStringAt(obj: Record<string, unknown> | null, key: string): string | null {
@@ -142,12 +204,33 @@ function readIdListFromGear(rawCharacter: Record<string, unknown>, listKey: 'wea
   return Array.from(new Set(out));
 }
 
+function readIdListFromGearAny(rawCharacter: Record<string, unknown>, listKey: string, idKeys: string[]): string[] {
+  const gear = asRecord(rawCharacter.gear);
+  const list = asArray(gear?.[listKey]);
+  const out: string[] = [];
+  for (const item of list) {
+    const rec = asRecord(item);
+    if (!rec) continue;
+    let id = '';
+    for (const key of idKeys) {
+      const value = typeof rec[key] === 'string' ? rec[key].trim() : '';
+      if (value) {
+        id = value;
+        break;
+      }
+    }
+    if (id) out.push(id);
+  }
+  return Array.from(new Set(out));
+}
+
 function patchResolvedGearFromDbViews(params: {
   rawCharacter: Record<string, unknown>;
   resolvedCharacter: Record<string, unknown>;
   weaponsById: ReadonlyMap<string, WeaponPdfDetailsRow>;
   armorsById: ReadonlyMap<string, ArmorPdfDetailsRow>;
   potionsById: ReadonlyMap<string, PotionPdfDetailsRow>;
+  recipesById: ReadonlyMap<string, RecipePdfDetailsRow>;
 }) {
   const rawGear = asRecord(params.rawCharacter.gear) ?? {};
   const resolvedGear = asRecord(params.resolvedCharacter.gear) ?? {};
@@ -212,11 +295,36 @@ function patchResolvedGearFromDbViews(params: {
     };
   });
 
+  const patchRecipes = asArray(rawGear.recipes).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = typeof rec.r_id === 'string' ? rec.r_id : '';
+    const d = id ? params.recipesById.get(id) : undefined;
+    return {
+      ...rec,
+      r_id: id || rec.r_id,
+      recipe_name: d?.recipe_name ?? rec.recipe_name ?? rec.name,
+      name: d?.recipe_name ?? rec.name ?? rec.recipe_name,
+      recipe_group: d?.recipe_group ?? rec.recipe_group ?? rec.group,
+      craft_level: d?.craft_level ?? rec.craft_level,
+      complexity: d?.complexity ?? rec.complexity,
+      time_craft: d?.time_craft ?? rec.time_craft,
+      formula_en: d?.formula_en ?? rec.formula_en,
+      price_formula: d?.price_formula ?? rec.price_formula,
+      minimal_ingredients_cost: d?.minimal_ingredients_cost ?? rec.minimal_ingredients_cost,
+      time_effect: d?.time_effect ?? rec.time_effect,
+      toxicity: d?.toxicity ?? rec.toxicity,
+      recipe_description: d?.recipe_description ?? rec.recipe_description ?? rec.effect,
+      weight_potion: d?.weight_potion ?? rec.weight_potion ?? rec.weight,
+      price_potion: d?.price_potion ?? rec.price_potion ?? rec.price,
+    };
+  });
+
   params.resolvedCharacter.gear = {
     ...resolvedGear,
     weapons: patchWeapons,
     armors: patchArmors,
     potions: patchPotions,
+    recipes: patchRecipes,
   };
 }
 
@@ -352,6 +460,78 @@ app.post('/i18n/resolve', async (c) => {
   } catch (error) {
     console.error('[i18n] resolve error', error);
     return c.json({ error: 'Failed to resolve i18n texts' }, 400);
+  }
+});
+
+app.get('/user/settings', async (c) => {
+  const ownerEmail = getUserEmail(c.get('authUser'));
+  if (!ownerEmail) {
+    return c.json({ error: 'Authenticated user email is required' }, 401);
+  }
+
+  try {
+    const { rows } = await db.query<UserSettingsRow>(
+      `
+        SELECT owner_email, settings_json
+        FROM wcc_user_settings
+        WHERE owner_email = $1
+      `,
+      [ownerEmail],
+    );
+    const settings = normalizeUserSettingsRow(rows[0]);
+    return c.json(settings);
+  } catch (error) {
+    console.error('[user-settings] load error', error);
+    return c.json({ error: 'Failed to load user settings' }, 500);
+  }
+});
+
+app.put('/user/settings', async (c) => {
+  const user = c.get('authUser');
+  const ownerEmail = getUserEmail(user);
+  if (!ownerEmail) {
+    return c.json({ error: 'Authenticated user email is required' }, 401);
+  }
+
+  const body = (await c.req.json().catch(() => null)) as unknown;
+  const bodyRec = asRecord(body);
+  const useW1AlchemyIcons =
+    readBooleanAt(bodyRec, 'useW1AlchemyIcons') ??
+    readBooleanAt(bodyRec, 'use_w1_alchemy_icons');
+
+  if (useW1AlchemyIcons == null) {
+    return c.json({ error: 'useW1AlchemyIcons boolean is required' }, 400);
+  }
+
+  try {
+    const { rows } = await db.query<UserSettingsRow>(
+      `
+        INSERT INTO wcc_user_settings (
+          owner_email,
+          owner_sub,
+          owner_provider,
+          settings_json
+        )
+        VALUES ($1, $2, $3, $4::jsonb)
+        ON CONFLICT (owner_email) DO UPDATE
+        SET
+          owner_sub = EXCLUDED.owner_sub,
+          owner_provider = EXCLUDED.owner_provider,
+          settings_json = COALESCE(wcc_user_settings.settings_json, '{}'::jsonb) || EXCLUDED.settings_json,
+          updated_at = NOW()
+        RETURNING owner_email, settings_json
+      `,
+      [
+        ownerEmail,
+        user?.sub ?? null,
+        user?.provider ?? null,
+        JSON.stringify({ useW1AlchemyIcons }),
+      ],
+    );
+    return c.json(normalizeUserSettingsRow(rows[0]));
+  } catch (error) {
+    console.error('[user-settings] save error', error);
+    return c.json({ error: 'Failed to save user settings' }, 500);
   }
 });
 
@@ -580,15 +760,40 @@ app.get('/characters/:id/pdf', async (c) => {
     if (!rawCharacter) {
       return c.json({ error: 'Saved raw character JSON is invalid' }, 500);
     }
+    let userSettings = DEFAULT_USER_SETTINGS;
+    try {
+      const settingsResult = await db.query<UserSettingsRow>(
+        `
+          SELECT owner_email, settings_json
+          FROM wcc_user_settings
+          WHERE owner_email = $1
+        `,
+        [ownerEmail],
+      );
+      userSettings = normalizeUserSettingsRow(settingsResult.rows[0]);
+    } catch (error) {
+      console.error('[characters] pdf user settings lookup failed, using defaults', error);
+    }
+    const rawCharacterForPdf: Record<string, unknown> = {
+      ...rawCharacter,
+      user_settings: {
+        use_w1_alchemy_icons: userSettings.useW1AlchemyIcons,
+      },
+    };
 
     const resolvedCharacter = await resolveCharacterRawI18n(rawCharacter, lang);
     const weaponIds = readIdListFromGear(rawCharacter, 'weapons', 'w_id');
     const armorIds = readIdListFromGear(rawCharacter, 'armors', 'a_id');
     const potionIds = readIdListFromGear(rawCharacter, 'potions', 'p_id');
+    const recipeIds = readIdListFromGearAny(rawCharacter, 'recipes', ['r_id', 'id']);
+    const upgradeIds = readIdListFromGearAny(rawCharacter, 'upgrades', ['u_id', 'id']);
+    const blueprintIds = readIdListFromGearAny(rawCharacter, 'blueprints', ['b_id', 'bp_id', 'id']);
 
     const weaponsById = new Map<string, WeaponPdfDetailsRow>();
     const armorsById = new Map<string, ArmorPdfDetailsRow>();
     const potionsById = new Map<string, PotionPdfDetailsRow>();
+    const recipesById = new Map<string, RecipePdfDetailsRow>();
+    const itemEffectsGlossary: ItemEffectGlossaryRow[] = [];
 
     try {
       if (weaponIds.length > 0) {
@@ -638,12 +843,121 @@ app.get('/characters/:id/pdf', async (c) => {
       console.error('[characters] pdf potion lookup failed', error);
     }
 
+    try {
+      if (recipeIds.length > 0) {
+        const { rows } = await db.query<RecipePdfDetailsRow>(
+          `
+            SELECT r_id, recipe_name, recipe_group, craft_level, complexity, time_craft, formula_en,
+                   price_formula, minimal_ingredients_cost, time_effect, toxicity, recipe_description,
+                   weight_potion, price_potion
+            FROM wcc_item_recipes_v
+            WHERE lang = $1 AND r_id = ANY($2::text[])
+          `,
+          [lang, recipeIds],
+        );
+        rows.forEach((r) => recipesById.set(r.r_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf recipe lookup failed', error);
+    }
+
+    try {
+      const blueprintItemIds: string[] = [];
+      if (blueprintIds.length > 0) {
+        const { rows } = await db.query<BlueprintItemRefRow>(
+          `
+            SELECT item_id
+            FROM wcc_item_blueprints_v
+            WHERE lang = $1 AND b_id = ANY($2::text[])
+          `,
+          [lang, blueprintIds],
+        );
+        for (const row of rows) {
+          const itemId = typeof row.item_id === 'string' ? row.item_id.trim() : '';
+          if (itemId) blueprintItemIds.push(itemId);
+        }
+      }
+
+      const itemIdsForEffects = Array.from(
+        new Set([...weaponIds, ...armorIds, ...upgradeIds, ...blueprintItemIds]),
+      ).filter((id) => /^(W|A|U)/.test(id));
+
+      if (itemIdsForEffects.length > 0) {
+        const { rows } = await db.query<ItemEffectLookupRow>(
+          `
+            SELECT ite.item_id::text AS item_id,
+                   ite.e_e_id::text AS effect_id,
+                   ite.modifier AS modifier,
+                   COALESCE(ie_lang.text, ie_en.text, '') AS name_tpl,
+                   COALESCE(ide_lang.text, ide_en.text, '') AS desc_tpl,
+                   COALESCE(iec_lang.text, iec_en.text, '') AS cond_tpl
+            FROM wcc_item_to_effects ite
+            LEFT JOIN wcc_item_effects e ON e.e_id = ite.e_e_id
+            LEFT JOIN i18n_text ie_lang ON ie_lang.id = e.name_id AND ie_lang.lang = $1
+            LEFT JOIN i18n_text ie_en ON ie_en.id = e.name_id AND ie_en.lang = 'en'
+            LEFT JOIN i18n_text ide_lang ON ide_lang.id = e.description_id AND ide_lang.lang = $1
+            LEFT JOIN i18n_text ide_en ON ide_en.id = e.description_id AND ide_en.lang = 'en'
+            LEFT JOIN wcc_item_effect_conditions ec ON ec.ec_id = ite.ec_ec_id
+            LEFT JOIN i18n_text iec_lang ON iec_lang.id = ec.description_id AND iec_lang.lang = $1
+            LEFT JOIN i18n_text iec_en ON iec_en.id = ec.description_id AND iec_en.lang = 'en'
+            WHERE ite.item_id = ANY($2::text[])
+            ORDER BY ite.e_e_id ASC, ite.modifier ASC NULLS FIRST
+          `,
+          [lang, itemIdsForEffects],
+        );
+
+        const normalize = (v: string | null | undefined): string => String(v ?? '').trim();
+        const replaceMod = (tpl: string, modifier: number | null): string => {
+          const mod = modifier === null || modifier === undefined ? '' : String(modifier);
+          return tpl.replaceAll('<mod>', mod);
+        };
+        const toSortNumber = (effectId: string): number => {
+          const m = /^E(\d+)$/.exec(effectId.trim());
+          if (!m) return Number.POSITIVE_INFINITY;
+          const n = Number(m[1]);
+          return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
+        };
+
+        const byKey = new Map<string, { effectId: string; modifier: number | null; row: ItemEffectGlossaryRow }>();
+        for (const row of rows) {
+          const effectId = normalize(row.effect_id);
+          const nameTpl = normalize(row.name_tpl);
+          if (!effectId && !nameTpl) continue;
+          const cond = replaceMod(normalize(row.cond_tpl), row.modifier).trim();
+          const nameBase = replaceMod(nameTpl || effectId, row.modifier).trim();
+          const name = cond ? `${nameBase} [${cond}]` : nameBase;
+          const value = replaceMod(normalize(row.desc_tpl), row.modifier).trim();
+          const key = `${effectId}|${row.modifier ?? ''}|${cond}`;
+          if (byKey.has(key)) continue;
+          byKey.set(key, {
+            effectId,
+            modifier: row.modifier ?? null,
+            row: { name, value },
+          });
+        }
+
+        const sorted = Array.from(byKey.values()).sort((a, b) => {
+          const an = toSortNumber(a.effectId);
+          const bn = toSortNumber(b.effectId);
+          if (an !== bn) return an - bn;
+          const am = a.modifier ?? Number.NEGATIVE_INFINITY;
+          const bm = b.modifier ?? Number.NEGATIVE_INFINITY;
+          if (am !== bm) return am - bm;
+          return a.row.name.localeCompare(b.row.name, undefined, { sensitivity: 'base' });
+        });
+        itemEffectsGlossary.push(...sorted.map((x) => x.row));
+      }
+    } catch (error) {
+      console.error('[characters] pdf item effects lookup failed', error);
+    }
+
     patchResolvedGearFromDbViews({
       rawCharacter,
       resolvedCharacter,
       weaponsById,
       armorsById,
       potionsById,
+      recipesById,
     });
 
     const skillsCatalog = await getSkillsCatalog({ lang }).catch(() => ({ skills: [] as Array<{ id: string; param: string | null; name: string }> }));
@@ -651,10 +965,11 @@ app.get('/characters/:id/pdf', async (c) => {
       (Array.isArray(skillsCatalog.skills) ? skillsCatalog.skills : []).map((s) => [s.id, { param: s.param, name: s.name }] as const),
     );
     const pdfBuffer = await generateCharacterPdfBuffer({
-      rawCharacter,
+      rawCharacter: rawCharacterForPdf,
       resolvedCharacter,
       lang,
       skillsCatalogById,
+      itemEffectsGlossary,
     });
 
     const fileName = `${safeFileNameBase(row.name, 'character')}-sheet.pdf`;

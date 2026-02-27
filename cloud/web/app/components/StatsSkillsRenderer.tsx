@@ -94,6 +94,14 @@ function clampInt(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, rounded));
 }
 
+function calcStatFinal(cur: number, bonus: number, raceBonus: number): number {
+  return Math.max(1, Math.min(cur + bonus, 10) + raceBonus);
+}
+
+function calcSkillContribution(cur: number, bonus: number, raceBonus: number): number {
+  return Math.max(0, Math.min(cur + bonus, 10) + raceBonus);
+}
+
 function getAtPath(source: unknown, path: string): unknown {
   if (!path) return undefined;
   const parts = path.split(".").filter(Boolean);
@@ -442,8 +450,9 @@ export function StatsSkillsRenderer(props: {
     for (const k of STAT_KEYS) {
       const base = statCurById[k];
       const b = statBonusById[k];
-      const extra = Math.min(10 - base, b.bonus) + b.race;
-      out[k] = { base, extra, total: base + extra };
+      const total = calcStatFinal(base, b.bonus, b.race);
+      const extra = total - base;
+      out[k] = { base, extra, total };
     }
     return out;
   }, [statBonusById, statCurById]);
@@ -921,7 +930,9 @@ export function StatsSkillsRenderer(props: {
                       const race = getSkillNumber(stateId, "race_bonus");
                       const maxCur = Math.max(Math.max(6 - bonus, 0), Math.max(0, baseline));
                       const statKey = normaliseStatKey(s.param) ?? "INT";
-                      const base = (statForSkillsById[statKey]?.total ?? 0) + cur + bonus + race;
+                      const base =
+                        (statForSkillsById[statKey]?.total ?? 0) +
+                        calcSkillContribution(cur, bonus, race);
 
                       const cost = s.isDifficult ? 2 : 1;
                       const isProfessional = professionalSkillSet.has(stateId);

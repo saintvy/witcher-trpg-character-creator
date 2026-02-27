@@ -31843,6 +31843,21 @@ SET text = EXCLUDED.text;
 
 -- <<< END sql/102_magic_shop_warnings_i18n.sql
 
+-- >>> BEGIN sql/103_user_settings.sql
+
+\echo '103_user_settings.sql'
+
+CREATE TABLE IF NOT EXISTS wcc_user_settings (
+  owner_email            TEXT PRIMARY KEY,
+  owner_sub              TEXT,
+  owner_provider         TEXT,
+  settings_json          JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at             TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- <<< END sql/103_user_settings.sql
+
 -- >>> BEGIN sql/items/001_wcc_items_dict.sql
 
 \echo '001_wcc_items_dict.sql'

@@ -173,6 +173,21 @@ export default function BuilderPage() {
   }, [progressStorageKey]);
 
   const normalizeImportedAnswers = useCallback((value: unknown): AnswerInput[] | null => {
+    const patchImportedStringValue = (raw: string): string => {
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return raw;
+        const rec = parsed as Record<string, unknown>;
+        if (!Array.isArray(rec.purchases)) return raw;
+        if (rec.ignoreWarnings === true) return raw;
+        // Backward compatibility for old exports: allow replaying overspent shop payloads
+        // when the original run proceeded via "ignore warnings".
+        return JSON.stringify({ ...rec, ignoreWarnings: true });
+      } catch {
+        return raw;
+      }
+    };
+
     if (!Array.isArray(value)) return null;
     const out: AnswerInput[] = [];
     for (const item of value) {
@@ -190,7 +205,7 @@ export default function BuilderPage() {
         if (valueObj.type === "number" && typeof valueObj.data === "number" && Number.isFinite(valueObj.data)) {
           normalized = { ...normalized, value: { type: "number", data: valueObj.data } };
         } else if (valueObj.type === "string" && typeof valueObj.data === "string") {
-          normalized = { ...normalized, value: { type: "string", data: valueObj.data } };
+          normalized = { ...normalized, value: { type: "string", data: patchImportedStringValue(valueObj.data) } };
         } else {
           return null;
         }
