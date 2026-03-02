@@ -46,6 +46,148 @@ type RecipePageRow = {
   pricePotion: string;
 };
 
+type BlueprintPageRow = {
+  amount: string;
+  name: string;
+  group: string;
+  craftLevel: string;
+  difficultyCheck: string;
+  timeCraft: string;
+  components: string;
+  itemDesc: string;
+  priceComponents: string;
+  price: string;
+  priceItem: string;
+};
+
+type ComponentPageRow = {
+  amount: string;
+  substanceEn: string;
+  name: string;
+  harvestingComplexity: string;
+  weight: string;
+  price: string;
+};
+type VehiclePageRow = {
+  amount: string;
+  subgroupName: string;
+  vehicleName: string;
+  base: string;
+  controlModifier: string;
+  speed: string;
+  hp: string;
+  weight: string;
+  price: string;
+  occupancy: string;
+};
+type GeneralGearPageRow = {
+  amount: string;
+  name: string;
+  description: string;
+  concealment: string;
+  weight: string;
+  price: string;
+};
+type MagicSpellLikeRow = {
+  name: string;
+  element: string;
+  staminaCast: string;
+  staminaKeeping: string;
+  damage: string;
+  distance: string;
+  zoneSize: string;
+  form: string;
+  effectTime: string;
+  tooltip: string;
+};
+type MagicInvocationRow = {
+  name: string;
+  group: string;
+  staminaCast: string;
+  staminaKeeping: string;
+  damage: string;
+  distance: string;
+  zoneSize: string;
+  form: string;
+  effectTime: string;
+  tooltip: string;
+};
+type MagicRitualRow = {
+  name: string;
+  level: string;
+  dc: string;
+  preparingTime: string;
+  staminaCast: string;
+  staminaKeeping: string;
+  zoneSize: string;
+  form: string;
+  effectTime: string;
+  ingredients: string;
+  tooltip: string;
+};
+type MagicHexRow = {
+  name: string;
+  level: string;
+  staminaCast: string;
+  removeComponents: string;
+  removeInstructions: string;
+  tooltip: string;
+};
+type MagicGiftRow = {
+  name: string;
+  group: string;
+  sl: string;
+  vigor: string;
+  cost: string;
+  description: string;
+};
+type MagicGiftDetails = {
+  mg_id: string;
+  group_name: string | null;
+  gift_name: string | null;
+  dc: number | string | null;
+  vigor_cost: number | string | null;
+  action_cost?: number | string | null;
+  description: string | null;
+  sort_key: string | null;
+  is_major: boolean | null;
+};
+type MagicPageVm = {
+  onlyGiftsMagic: boolean;
+  shouldRender: boolean;
+  showSpellsSigns: boolean;
+  showInvocations: boolean;
+  showRituals: boolean;
+  showHexes: boolean;
+  showGifts: boolean;
+  invocationsTitle: string;
+  invocationsFill: string;
+  spellsSignsRows: MagicSpellLikeRow[];
+  invocationsRows: MagicInvocationRow[];
+  ritualsRows: MagicRitualRow[];
+  hexesRows: MagicHexRow[];
+  giftsRows: MagicGiftRow[];
+};
+type MagicTableRowVm = {
+  cells: string[];
+  tooltip?: string;
+};
+type PdfTableSettingVm = {
+  showIfEmpty: boolean;
+  emptyRows: number;
+};
+type PdfTablesSettingsVm = {
+  allies: PdfTableSettingVm;
+  enemies: PdfTableSettingVm;
+  alchemyRecipes: PdfTableSettingVm;
+  blueprints: PdfTableSettingVm;
+  components: PdfTableSettingVm;
+  spellsSigns: PdfTableSettingVm;
+  invocations: PdfTableSettingVm;
+  rituals: PdfTableSettingVm;
+  hexes: PdfTableSettingVm;
+};
+
 const COLORS = {
   page: '#ffffff',
   line: '#1f2d3a',
@@ -58,10 +200,18 @@ const COLORS = {
   headerEnemies: '#fee4e4',     // rgba(239,68,68,0.14) over white
   headerSiblings: '#e5f6f4',    // rgba(20,184,166,0.14) over white
   headerRecipes: '#e4f7eb',     // rgba(34,197,94,0.14) over white
+  headerBlueprints: '#efe8e3',  // rgba(139,90,43,0.12) over white
+  headerMagicSpells: '#dbeafe', // rgba(147,197,253,0.35) over white
+  headerMagicInvPriest: '#fed7aa', // rgba(253,186,116,0.35)
+  headerMagicInvDruid: '#bbf7d0', // rgba(134,239,172,0.35)
+  headerMagicRituals: '#ddd6fe', // rgba(196,181,253,0.35)
+  headerMagicHexes: '#fecaca', // rgba(252,165,165,0.35)
+  headerMagicGifts: '#a7f3d0', // rgba(110,231,183,0.28)
   headerPerks: '#fee3d0',       // rgba(249,115,22,0.20) over white
   headerWeapons: '#fdecec',     // rgba(239,68,68,0.10) over white
   headerArmors: '#ebf3fe',      // rgba(59,130,246,0.10) over white
   headerPotions: '#e7f8f2',     // rgba(16,185,129,0.10) over white
+  headerMagicSummary: '#f6eefe', // rgba(168,85,247,0.10) over white
   headerNotes: '#f4e7dc',       // rgba(180,83,9,0.14) over white
   profBlue: '#eff5fe',          // rgba(59,130,246,0.08) over white
   profMint: '#ecf9f6',          // rgba(16,185,129,0.08) over white
@@ -71,6 +221,18 @@ const COLORS = {
 
 const FONTS = { regular: 'WccNotoSans', bold: 'WccNotoSansBold' } as const;
 const PAGE = { margin: 20, gap: 8, headerH: 16 };
+const RECIPE_PRIMARY_MIN_HEIGHT = 14;
+const DEFAULT_PDF_TABLE_SETTINGS_VM: PdfTablesSettingsVm = {
+  allies: { showIfEmpty: false, emptyRows: 0 },
+  enemies: { showIfEmpty: false, emptyRows: 0 },
+  alchemyRecipes: { showIfEmpty: true, emptyRows: 3 },
+  blueprints: { showIfEmpty: true, emptyRows: 2 },
+  components: { showIfEmpty: true, emptyRows: 3 },
+  spellsSigns: { showIfEmpty: false, emptyRows: 0 },
+  invocations: { showIfEmpty: false, emptyRows: 0 },
+  rituals: { showIfEmpty: false, emptyRows: 0 },
+  hexes: { showIfEmpty: false, emptyRows: 0 },
+};
 
 const SKILL_TO_STAT: Record<string, string> = {
   awareness: 'INT', business: 'INT', deduction: 'INT', education: 'INT', monster_lore: 'INT', tactics: 'INT', streetwise: 'INT',
@@ -179,6 +341,25 @@ function tr(lang: Lang) {
       notes: lang === 'ru' ? 'ЗАМЕТКИ' : 'NOTES',
       recipes: lang === 'ru' ? 'РЕЦЕПТЫ' : 'RECIPES',
     },
+    page1: {
+      magicCols: {
+        type: lang === 'ru' ? 'ТИП' : 'TYPE',
+        name: lang === 'ru' ? 'НАЗВАНИЕ' : 'NAME',
+        element: lang === 'ru' ? 'ЭЛЕМЕНТ' : 'ELEMENT',
+        vigor: lang === 'ru' ? 'ВЫН' : 'VIG',
+        vigorKeep: lang === 'ru' ? 'ВЫН+' : 'VIG+',
+        damage: lang === 'ru' ? 'УРОН' : 'DMG',
+        time: lang === 'ru' ? 'ВРЕМЯ' : 'TIME',
+        distance: lang === 'ru' ? 'ДИСТ' : 'DIST',
+        size: lang === 'ru' ? 'РАЗМЕР' : 'SIZE',
+        form: lang === 'ru' ? 'ФОРМА' : 'FORM',
+      },
+      magicTypes: {
+        sign: lang === 'ru' ? 'Знак' : 'Sign',
+        spell: lang === 'ru' ? 'Закл.' : 'Spell',
+        invocation: lang === 'ru' ? 'Инв.' : 'Inv.',
+      },
+    },
     page2: {
       socialStatusRace: lang === 'ru' ? 'СОЦИАЛЬНЫЙ СТАТУС' : 'SOCIAL STATUS',
       lore: lang === 'ru' ? 'ЛОР' : 'LORE',
@@ -254,6 +435,10 @@ function tr(lang: Lang) {
     },
     page3: {
       recipes: lang === 'ru' ? 'РЕЦЕПТЫ' : 'RECIPES',
+      blueprints: lang === 'ru' ? 'ЧЕРТЕЖИ' : 'BLUEPRINTS',
+      money: lang === 'ru' ? 'ДЕНЬГИ' : 'MONEY',
+      transport: lang === 'ru' ? 'ТРАНСПОРТ' : 'TRANSPORT',
+      generalGear: lang === 'ru' ? 'ОБЩЕЕ СНАРЯЖЕНИЕ' : 'GENERAL GEAR',
       recipesCols: {
         qty: '#',
         recipeGroup: lang === 'ru' ? 'ГРУППА' : 'GROUP',
@@ -268,6 +453,53 @@ function tr(lang: Lang) {
         recipeDescription: lang === 'ru' ? 'ЭФФЕКТ' : 'EFFECT',
         weightPotion: lang === 'ru' ? 'ВЕС' : 'WEIGHT',
         pricePotion: lang === 'ru' ? 'ЦЕНА' : 'PRICE',
+      },
+      blueprintsCols: {
+        qty: '#',
+        name: lang === 'ru' ? 'ИМЯ' : 'NAME',
+        craftLevel: lang === 'ru' ? 'УРОВ.' : 'LEVEL',
+        difficultyCheck: lang === 'ru' ? 'СЛ' : 'DC',
+        timeCraft: lang === 'ru' ? 'ВРЕМЯ\nКРАФТА' : 'CRAFT\nTIME',
+        components: lang === 'ru' ? 'СОСТАВ' : 'COMPONENTS',
+        itemDesc: lang === 'ru' ? 'ОПИСАНИЕ' : 'DESC',
+        priceComponents: lang === 'ru' ? 'ДОПЛАТА' : 'SURCHARGE',
+        price: lang === 'ru' ? 'ЦЕНА\nСХЕМЫ' : 'BLUEPRINT\nCOST',
+        priceItem: lang === 'ru' ? 'ЦЕНА\nВЕЩИ' : 'ITEM\nCOST',
+      },
+      componentsCols: {
+        qty: '#',
+        sub: lang === 'ru' ? 'C' : 'S',
+        name: lang === 'ru' ? 'КОМПОНЕНТ' : 'COMPONENT',
+        harvestingComplexity: lang === 'ru' ? 'СЛ' : 'DC',
+        weight: lang === 'ru' ? 'ВЕС' : 'WEIGHT',
+        price: lang === 'ru' ? 'Ц' : 'PR',
+      },
+      moneyCols: {
+        crowns: lang === 'ru' ? 'КРОНЫ' : 'CROWNS',
+        orens: lang === 'ru' ? 'ОРЕНЫ' : 'ORENS',
+        florens: lang === 'ru' ? 'ФЛОРЕНЫ' : 'FLORENS',
+        ducats: lang === 'ru' ? 'ДУКАТЫ' : 'DUCATS',
+        bizants: lang === 'ru' ? 'БИЗАНТЫ' : 'BIZANTS',
+        lintars: lang === 'ru' ? 'ЛИНТАРЫ' : 'LINTARS',
+      },
+      transportCols: {
+        qty: '#',
+        type: lang === 'ru' ? 'ТИП' : 'TYPE',
+        name: lang === 'ru' ? 'ТРАНСПОРТ' : 'VEHICLE',
+        skill: lang === 'ru' ? 'НАВЫК' : 'SKILL',
+        mod: lang === 'ru' ? 'МОД.' : 'MOD.',
+        speed: lang === 'ru' ? 'СКОР.' : 'SPEED',
+        hp: lang === 'ru' ? 'ПЗ' : 'HP',
+        weight: lang === 'ru' ? 'ВЕС' : 'WEIGHT',
+        price: lang === 'ru' ? 'ЦЕНА' : 'PRICE',
+        occupancy: lang === 'ru' ? 'МЕСТА' : 'SEATS',
+      },
+      generalGearCols: {
+        qty: '#',
+        name: lang === 'ru' ? 'ИМЯ' : 'NAME',
+        concealment: lang === 'ru' ? 'СКР' : 'CONC',
+        weight: lang === 'ru' ? 'ВЕС' : 'WEIGHT',
+        price: lang === 'ru' ? 'ЦЕНА' : 'PRICE',
       },
       formulaLegend: {
         Hydragenum: lang === 'ru' ? 'Гидраген' : 'Hydragenum',
@@ -284,6 +516,43 @@ function tr(lang: Lang) {
         DogTallow: lang === 'ru' ? 'Собачье сало' : 'Dog Tallow',
       },
     },
+    page4: {
+      titles: {
+        spellsSigns: lang === 'ru' ? 'ЗАКЛИНАНИЯ / ЗНАКИ' : 'SPELLS / SIGNS',
+        invocationsPriest: lang === 'ru' ? 'ИНВОКАЦИИ ЖРЕЦА' : 'PRIEST INVOCATIONS',
+        invocationsDruid: lang === 'ru' ? 'ИНВОКАЦИИ ДРУИДА' : 'DRUID INVOCATIONS',
+        rituals: lang === 'ru' ? 'РИТУАЛЫ' : 'RITUALS',
+        hexes: lang === 'ru' ? 'ПОРЧИ' : 'HEXES',
+        gifts: lang === 'ru' ? 'МАГИЧЕСКИЕ ДАРЫ' : 'MAGICAL GIFTS',
+      },
+      cols: {
+        name: lang === 'ru' ? 'ИМЯ' : 'NAME',
+        element: lang === 'ru' ? 'ЭЛЕМЕНТ' : 'ELEMENT',
+        level: lang === 'ru' ? 'УРОВЕНЬ' : 'LEVEL',
+        group: lang === 'ru' ? 'ГРУППА' : 'GROUP',
+        staminaCast: lang === 'ru' ? 'ВЫН' : 'STA',
+        staminaKeeping: lang === 'ru' ? 'ВЫН+' : 'STA+',
+        damage: lang === 'ru' ? 'УРОН' : 'DAMAGE',
+        distance: lang === 'ru' ? 'ДИСТ.' : 'RNG.',
+        zoneSize: lang === 'ru' ? 'ЗОНА' : 'AREA',
+        form: lang === 'ru' ? 'ФОРМА' : 'FORM',
+        preparingTime: lang === 'ru' ? 'ПОДГ.' : 'PREP',
+        dc: lang === 'ru' ? 'СЛ' : 'DC',
+        effectTime: lang === 'ru' ? 'ВРЕМЯ' : 'TIME',
+        ingredients: lang === 'ru' ? 'КОМПОНЕНТЫ' : 'COMPONENTS',
+        removeComponents: lang === 'ru' ? 'КОМПОНЕНТЫ ДЛЯ СНЯТИЯ' : 'REMOVE COMPONENTS',
+        removeInstructions: lang === 'ru' ? 'КАК СНЯТЬ' : 'HOW TO REMOVE',
+      },
+      gifts: {
+        colName: lang === 'ru' ? 'ИМЯ' : 'NAME',
+        colGroup: lang === 'ru' ? 'ГРУППА' : 'GROUP',
+        colSl: lang === 'ru' ? 'СЛ' : 'DC',
+        colVigor: lang === 'ru' ? 'ВЫН' : 'STA',
+        colCost: lang === 'ru' ? 'СТОИМОСТЬ' : 'COST',
+        costAction: lang === 'ru' ? 'действие' : 'action',
+        costFullAction: lang === 'ru' ? 'полное действие' : 'full action',
+      },
+    },
     avatarPlaceholder: lang === 'ru' ? 'Портрет не загружен' : 'Portrait not provided',
   };
 }
@@ -296,6 +565,46 @@ function num(v: unknown): number | null {
   if (typeof v === 'number' && Number.isFinite(v)) return v;
   if (typeof v === 'string' && v.trim()) { const n = Number(v); return Number.isFinite(n) ? n : null; }
   return null;
+}
+function clonePdfTableSettingsDefaults(): PdfTablesSettingsVm {
+  return {
+    allies: { ...DEFAULT_PDF_TABLE_SETTINGS_VM.allies },
+    enemies: { ...DEFAULT_PDF_TABLE_SETTINGS_VM.enemies },
+    alchemyRecipes: { ...DEFAULT_PDF_TABLE_SETTINGS_VM.alchemyRecipes },
+    blueprints: { ...DEFAULT_PDF_TABLE_SETTINGS_VM.blueprints },
+    components: { ...DEFAULT_PDF_TABLE_SETTINGS_VM.components },
+    spellsSigns: { ...DEFAULT_PDF_TABLE_SETTINGS_VM.spellsSigns },
+    invocations: { ...DEFAULT_PDF_TABLE_SETTINGS_VM.invocations },
+    rituals: { ...DEFAULT_PDF_TABLE_SETTINGS_VM.rituals },
+    hexes: { ...DEFAULT_PDF_TABLE_SETTINGS_VM.hexes },
+  };
+}
+function clampPdfEmptyRows(v: unknown): number {
+  const n = num(v);
+  if (n == null) return 0;
+  return Math.max(0, Math.min(50, Math.trunc(n)));
+}
+function normalizePdfTableSettings(
+  root: Record<string, unknown> | null,
+): PdfTablesSettingsVm {
+  const out = clonePdfTableSettingsDefaults();
+  const source =
+    asRecord(root?.pdf_tables) ??
+    asRecord(root?.pdfTables) ??
+    null;
+  if (!source) return out;
+  const keys = Object.keys(out) as Array<keyof PdfTablesSettingsVm>;
+  for (const key of keys) {
+    const node = asRecord(source[key]);
+    if (!node) continue;
+    const show =
+      (typeof node.showIfEmpty === 'boolean' ? node.showIfEmpty : null) ??
+      (typeof node.show_if_empty === 'boolean' ? node.show_if_empty : null);
+    const rowsRaw = node.emptyRows ?? node.empty_rows;
+    if (show != null) out[key].showIfEmpty = show;
+    if (rowsRaw != null) out[key].emptyRows = clampPdfEmptyRows(rowsRaw);
+  }
+  return out;
 }
 function text(v: unknown, none = '—'): string {
   if (v == null) return none;
@@ -332,6 +641,29 @@ function normalizeInlineEffects(s: string): string {
     .replace(/,\s*,+/g, ', ')
     .replace(/\s{2,}/g, ' ')
     .trim();
+}
+
+function containsAnyNeedle(haystackLower: string, needles: readonly string[]): boolean {
+  return needles.some((needle) => haystackLower.includes(needle));
+}
+
+function normalizeComponentsMultiline(rawValue: string): string {
+  const value = String(rawValue ?? '').trim();
+  if (!value) return '';
+  return value
+    .replace(/,\s*\r?\n\s*-\s*/g, '\n- ')
+    .replace(/^\s*-\s*/gm, '- ')
+    .replace(/^\s*\r?\n/, '')
+    .trim();
+}
+
+function stripRitualComponentsFromEffect(rawValue: string): string {
+  const value = String(rawValue ?? '').trim();
+  if (!value) return '';
+  const match = /\n\s*\n(?:Компоненты:|Components:)\s*\n/i;
+  const idx = value.search(match);
+  if (idx < 0) return value;
+  return value.slice(0, idx).trim();
 }
 
 function formatDiseaseOrCurseEntry(entry: unknown): string {
@@ -470,6 +802,7 @@ function buildVmWithCatalog(
     asRecord(raw.user_settings) ??
     asRecord(raw.userSettings) ??
     null;
+  const pdfTableSettings = normalizePdfTableSettings(userSettings);
   const useW1AlchemyIcons =
     (typeof userSettings?.use_w1_alchemy_icons === 'boolean' && userSettings.use_w1_alchemy_icons) ||
     (typeof userSettings?.useW1AlchemyIcons === 'boolean' && userSettings.useW1AlchemyIcons) ||
@@ -659,7 +992,7 @@ function buildVmWithCatalog(
 
   const perksTable: Table = {
     title: tx.sections.perks,
-    columns: [tx.cols.n, tx.cols.effect],
+    columns: [lang === 'ru' ? 'ПЕРК' : 'PERK', tx.cols.effect],
     rows: asArray(resolved.perks).map((p) => {
       const s = text(p, '');
       const i = s.indexOf(':');
@@ -719,23 +1052,304 @@ function buildVmWithCatalog(
       r.amount || r.recipeGroup || r.recipeName || r.complexity || r.timeCraft || r.formulaEn || r.priceFormula ||
       r.minimalIngredientsCost || r.timeEffect || r.toxicity || r.recipeDescription || r.weightPotion || r.pricePotion,
     );
+  const blueprints: BlueprintPageRow[] = asArray(gear.blueprints)
+    .map((x) => asRecord(x) ?? {})
+    .map((b) => ({
+      amount: text(b.amount ?? b.qty ?? b.quantity, '1'),
+      name: text(b.blueprint_name ?? b.name ?? b.b_id, ''),
+      group: text(b.blueprint_group ?? b.group, ''),
+      craftLevel: text(b.craft_level, ''),
+      difficultyCheck: text(b.difficulty_check, ''),
+      timeCraft: text(b.time_craft, ''),
+      components: text(b.components, ''),
+      itemDesc: text(b.item_desc ?? b.description, ''),
+      priceComponents: text(b.price_components, ''),
+      price: text(b.price, ''),
+      priceItem: text(b.price_item, ''),
+    }))
+    .filter((b) =>
+      b.amount || b.name || b.group || b.craftLevel || b.difficultyCheck || b.timeCraft ||
+      b.components || b.itemDesc || b.priceComponents || b.price || b.priceItem,
+    );
 
-  const magic = asRecord(gear.magic);
-  const magicRows: Row[] = [];
-  const pushMagic = (list: unknown[], typeLabel: string) => list.forEach((x) => {
-    const r = asRecord(x) ?? {};
-    magicRows.push({ cells: [typeLabel, makeItemName(r), text(r.element ?? r.cult_or_circle), text(r.stamina_cast ?? r.vigor_cost ?? r.cost), text(r.effect_time ?? r.duration), text(r.distance ?? r.range), text(r.damage), text(r.form ?? r.note)] });
-  });
-  if (magic) {
-    pushMagic(asArray(magic.signs), lang === 'ru' ? 'Знак' : 'Sign');
-    pushMagic(asArray(magic.spells), lang === 'ru' ? 'Закл.' : 'Spell');
-    pushMagic(asArray(magic.gifts), lang === 'ru' ? 'Дар' : 'Gift');
-    pushMagic(asArray(magic.hexes), lang === 'ru' ? 'Прокл.' : 'Hex');
-    pushMagic(asArray(magic.rituals), lang === 'ru' ? 'Ритуал' : 'Ritual');
-    const inv = asRecord(magic.invocations);
-    pushMagic(asArray(inv?.druid), lang === 'ru' ? 'Друид' : 'Druid');
-    pushMagic(asArray(inv?.priest), lang === 'ru' ? 'Жрец' : 'Priest');
+  const ingredients = asRecord(gear.ingredients) ?? {};
+  const componentRowsAll: ComponentPageRow[] = [...asArray(ingredients.alchemy), ...asArray(ingredients.craft)]
+    .map((x) => asRecord(x) ?? {})
+    .map((i) => ({
+      amount: text(i.amount ?? i.qty ?? i.quantity, '1'),
+      substanceEn: text(i.alchemy_substance_en, ''),
+      name: text(i.ingredient_name ?? i.name ?? i.i_id, ''),
+      harvestingComplexity: text(i.harvesting_complexity, ''),
+      weight: text(i.weight, ''),
+      price: text(i.price, ''),
+    }))
+    .filter((r) => r.amount || r.substanceEn || r.name || r.harvestingComplexity || r.weight || r.price);
+  const componentRowsByTable: [ComponentPageRow[], ComponentPageRow[], ComponentPageRow[]] = [[], [], []];
+  for (let i = 0; i < componentRowsAll.length; i += 1) {
+    componentRowsByTable[i % 3]!.push(componentRowsAll[i]!);
   }
+  const page3ComponentTables = componentRowsByTable.map((rows) => ({ rows: rows.slice() }));
+  const vehicles: VehiclePageRow[] = asArray(gear.vehicles)
+    .map((x) => asRecord(x) ?? {})
+    .map((v) => ({
+      amount: text(v.amount ?? v.qty ?? v.quantity, '1'),
+      subgroupName: text(v.subgroup_name, ''),
+      vehicleName: text(v.vehicle_name ?? v.name ?? v.wt_id, ''),
+      base: text(v.base, ''),
+      controlModifier: text(v.control_modifier, ''),
+      speed: text(v.speed, ''),
+      hp: text(v.hp, ''),
+      weight: text(v.weight, ''),
+      price: text(v.price, ''),
+      occupancy: text(v.occupancy, ''),
+    }))
+    .filter((v) =>
+      v.amount || v.subgroupName || v.vehicleName || v.base || v.controlModifier || v.speed || v.hp || v.weight || v.price || v.occupancy,
+    );
+  const moneyRoot = asRecord(raw.money) ?? asRecord(resolved.money) ?? {};
+  const page3Money = {
+    crowns: text(moneyRoot.crowns, ''),
+    orens: '',
+    florens: '',
+    ducats: '',
+    bizants: '',
+    lintars: '',
+  };
+  const page3GeneralGear: GeneralGearPageRow[] = asArray(gear.general_gear)
+    .map((x) => asRecord(x) ?? {})
+    .map((g) => ({
+      amount: text(g.amount ?? g.qty ?? g.quantity, '1'),
+      name: text(g.name ?? g.gear_name ?? g.t_id, ''),
+      description: text(g.description ?? g.gear_description, ''),
+      concealment: text(g.concealment, ''),
+      weight: text(g.weight, ''),
+      price: text(g.price, ''),
+    }))
+    .filter((g) => g.amount || g.name || g.description || g.concealment || g.weight || g.price);
+
+  const magic = asRecord(gear.magic) ?? {};
+  const rawGear = asRecord(raw.gear) ?? {};
+  const rawMagic = asRecord(rawGear.magic) ?? {};
+
+  const mergeMagicRowsByIndex = (resolvedList: unknown[], rawList: unknown[]): Array<Record<string, unknown>> => {
+    const len = Math.max(resolvedList.length, rawList.length);
+    const out: Array<Record<string, unknown>> = [];
+    for (let i = 0; i < len; i += 1) {
+      const merged = {
+        ...(asRecord(rawList[i]) ?? {}),
+        ...(asRecord(resolvedList[i]) ?? {}),
+      };
+      if (Object.keys(merged).length > 0) out.push(merged);
+    }
+    return out;
+  };
+  const toSortKey = (value: unknown): number => {
+    const parsed = Number(String(value ?? '').trim());
+    return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+  };
+  const compareByName = (a: { name: string }, b: { name: string }) =>
+    a.name.localeCompare(b.name, lang === 'ru' ? 'ru' : 'en', { sensitivity: 'base' });
+  const lowerProfession = [
+    text(raw.profession, ''),
+    text(resolved.profession, ''),
+    text(logic.profession, ''),
+    text(logic.profession_code, ''),
+  ]
+    .join(' ')
+    .toLowerCase();
+  const isMage = containsAnyNeedle(lowerProfession, ['mage', 'маг']);
+  const isWitcherProfession = containsAnyNeedle(lowerProfession, ['witcher', 'ведьмак', 'ведьмач']);
+  const isDruid = containsAnyNeedle(lowerProfession, ['druid', 'друид']);
+  const isPriest = containsAnyNeedle(lowerProfession, ['priest', 'жрец']) || isDruid;
+  const vigorRec = asRecord(rawStats.vigor ?? rawStats.VIGOR ?? stats.vigor ?? stats.VIGOR) ?? {};
+  const hasVigor =
+    (num(vigorRec.cur) ?? 0) +
+      (num(vigorRec.bonus ?? vigorRec.mod) ?? 0) +
+      (num(vigorRec.race_bonus) ?? 0) >
+    0;
+
+  const spellsMerged = mergeMagicRowsByIndex(asArray(magic.spells), asArray(rawMagic.spells));
+  const signsMerged = mergeMagicRowsByIndex(asArray(magic.signs), asArray(rawMagic.signs));
+  const spellsSignsRows: MagicSpellLikeRow[] = [...spellsMerged, ...signsMerged]
+    .map((rec) => {
+      const name = text(rec.spell_name ?? rec.name, '').trim();
+      if (!name) return null;
+      return {
+        name,
+        element: text(rec.element, ''),
+        staminaCast: text(rec.stamina_cast, ''),
+        staminaKeeping: text(rec.stamina_keeping, ''),
+        damage: text(rec.damage, ''),
+        distance: text(rec.distance, ''),
+        zoneSize: text(rec.zone_size, ''),
+        form: text(rec.form, ''),
+        effectTime: text(rec.effect_time, ''),
+        tooltip: text(rec.effect ?? rec.tooltip, ''),
+        _sort: toSortKey(rec.sort_key),
+      };
+    })
+    .filter((v): v is (MagicSpellLikeRow & { _sort: number }) => Boolean(v))
+    .sort((a, b) => (a._sort - b._sort) || compareByName(a, b))
+    .map(({ _sort, ...rest }) => rest);
+
+  const resolvedInv = asRecord(magic.invocations) ?? {};
+  const rawInv = asRecord(rawMagic.invocations) ?? {};
+  const invocationsMerged = [
+    ...mergeMagicRowsByIndex(asArray(resolvedInv.druid), asArray(rawInv.druid)),
+    ...mergeMagicRowsByIndex(asArray(resolvedInv.priest), asArray(rawInv.priest)),
+  ];
+  const invocationsRows: MagicInvocationRow[] = invocationsMerged
+    .map((rec) => {
+      const name = text(rec.invocation_name ?? rec.name, '').trim();
+      if (!name) return null;
+      return {
+        name,
+        group: text(rec.cult_or_circle ?? rec.group, ''),
+        staminaCast: text(rec.stamina_cast, ''),
+        staminaKeeping: text(rec.stamina_keeping, ''),
+        damage: text(rec.damage, ''),
+        distance: text(rec.distance, ''),
+        zoneSize: text(rec.zone_size, ''),
+        form: text(rec.form, ''),
+        effectTime: text(rec.effect_time, ''),
+        tooltip: text(rec.effect ?? rec.tooltip, ''),
+      };
+    })
+    .filter((v): v is MagicInvocationRow => Boolean(v))
+    .sort(compareByName);
+
+  const magicRows: Row[] = [];
+  const pushMagicSummary = (list: Array<Record<string, unknown>>, typeLabel: string, elementKey: 'element' | 'cult_or_circle') => {
+    list.forEach((rec) => {
+      const name = text(rec.spell_name ?? rec.invocation_name ?? rec.name, '').trim();
+      if (!name) return;
+      magicRows.push({
+        cells: [
+          typeLabel,
+          name,
+          text(rec[elementKey], ''),
+          text(rec.stamina_cast ?? rec.vigor_cost ?? rec.cost, ''),
+          text(rec.stamina_keeping, ''),
+          text(rec.damage, ''),
+          text(rec.effect_time ?? rec.duration, ''),
+          text(rec.distance ?? rec.range, ''),
+          text(rec.zone_size, ''),
+          text(rec.form ?? rec.note, ''),
+        ],
+      });
+    });
+  };
+  const spellsSummary = spellsMerged.map((rec) => ({
+    typeLabel:
+      text(rec.type, '').trim().toLowerCase() === 'sign'
+        ? tx.page1.magicTypes.sign
+        : tx.page1.magicTypes.spell,
+    rec,
+  }));
+  spellsSummary.forEach(({ rec, typeLabel }) => pushMagicSummary([rec], typeLabel, 'element'));
+  pushMagicSummary(signsMerged, tx.page1.magicTypes.sign, 'element');
+  pushMagicSummary(invocationsMerged, tx.page1.magicTypes.invocation, 'cult_or_circle');
+
+  const ritualsMerged = mergeMagicRowsByIndex(asArray(magic.rituals), asArray(rawMagic.rituals));
+  const ritualsRows: MagicRitualRow[] = ritualsMerged
+    .map((rec) => {
+      const name = text(rec.ritual_name ?? rec.name, '').trim();
+      if (!name) return null;
+      return {
+        name,
+        level: text(rec.level, ''),
+        dc: text(rec.dc, ''),
+        preparingTime: text(rec.preparing_time, ''),
+        staminaCast: text(rec.stamina_cast, ''),
+        staminaKeeping: text(rec.stamina_keeping, ''),
+        zoneSize: text(rec.zone_size, ''),
+        form: text(rec.form, ''),
+        effectTime: text(rec.effect_time, ''),
+        ingredients: normalizeComponentsMultiline(text(rec.ingredients, '')),
+        tooltip: stripRitualComponentsFromEffect(text(rec.effect ?? rec.tooltip ?? rec.effect_tpl, '')),
+        _sort: toSortKey(rec.sort_key),
+      };
+    })
+    .filter((v): v is (MagicRitualRow & { _sort: number }) => Boolean(v))
+    .sort((a, b) => (a._sort - b._sort) || compareByName(a, b))
+    .map(({ _sort, ...rest }) => rest);
+
+  const hexesMerged = mergeMagicRowsByIndex(asArray(magic.hexes), asArray(rawMagic.hexes));
+  const hexesRows: MagicHexRow[] = hexesMerged
+    .map((rec) => {
+      const name = text(rec.hex_name ?? rec.name, '').trim();
+      if (!name) return null;
+      return {
+        name,
+        level: text(rec.level, ''),
+        staminaCast: text(rec.stamina_cast, ''),
+        removeComponents: normalizeComponentsMultiline(text(rec.remove_components, '')),
+        removeInstructions: text(rec.remove_instructions, ''),
+        tooltip: text(rec.effect ?? rec.tooltip, ''),
+        _sort: toSortKey(rec.sort_key),
+      };
+    })
+    .filter((v): v is (MagicHexRow & { _sort: number }) => Boolean(v))
+    .sort((a, b) => (a._sort - b._sort) || compareByName(a, b))
+    .map(({ _sort, ...rest }) => rest);
+
+  const giftsMerged = mergeMagicRowsByIndex(asArray(magic.gifts), asArray(rawMagic.gifts));
+  const giftsRows: MagicGiftRow[] = giftsMerged
+    .map((rec) => {
+      const id = text(rec.mg_id ?? rec.id, '').trim();
+      const name = text(rec.gift_name ?? rec.name, '').trim() || id;
+      if (!name) return null;
+      const isMajor =
+        rec.is_major === true ||
+        String(rec.is_major ?? '')
+          .trim()
+          .toLowerCase() === 'true';
+      const actionCost = text(rec.action_cost, '').trim();
+      return {
+        name,
+        group: text(rec.group_name ?? rec.group, ''),
+        sl: text(rec.dc, ''),
+        vigor: text(rec.vigor_cost, ''),
+        cost: actionCost || (isMajor ? tx.page4.gifts.costFullAction : tx.page4.gifts.costAction),
+        description: text(rec.description, ''),
+        _sort: text(rec.sort_key, ''),
+      };
+    })
+    .filter((v): v is (MagicGiftRow & { _sort: string }) => Boolean(v))
+    .sort((a, b) => (a._sort || a.group).localeCompare(b._sort || b.group, lang === 'ru' ? 'ru' : 'en', { sensitivity: 'base' }))
+    .map(({ _sort, ...rest }) => rest);
+
+  const onlyGiftsMagic =
+    giftsRows.length > 0 &&
+    spellsSignsRows.length === 0 &&
+    invocationsRows.length === 0 &&
+    ritualsRows.length === 0 &&
+    hexesRows.length === 0;
+  const showSpellsSigns = onlyGiftsMagic ? false : spellsSignsRows.length > 0 || isMage || isWitcherProfession;
+  const showInvocations = onlyGiftsMagic ? false : invocationsRows.length > 0 || isPriest;
+  const showRituals = onlyGiftsMagic ? false : ritualsRows.length > 0 || hasVigor;
+  const showHexes = onlyGiftsMagic ? false : hexesRows.length > 0 || hasVigor;
+  const showGifts = giftsRows.length > 0;
+  const canRenderSpellsSigns = showSpellsSigns && (spellsSignsRows.length > 0 || pdfTableSettings.spellsSigns.showIfEmpty);
+  const canRenderInvocations = showInvocations && (invocationsRows.length > 0 || pdfTableSettings.invocations.showIfEmpty);
+  const canRenderRituals = showRituals && (ritualsRows.length > 0 || pdfTableSettings.rituals.showIfEmpty);
+  const canRenderHexes = showHexes && (hexesRows.length > 0 || pdfTableSettings.hexes.showIfEmpty);
+  const page4Magic: MagicPageVm = {
+    onlyGiftsMagic,
+    shouldRender: canRenderSpellsSigns || canRenderInvocations || canRenderRituals || canRenderHexes || showGifts,
+    showSpellsSigns,
+    showInvocations,
+    showRituals,
+    showHexes,
+    showGifts,
+    invocationsTitle: isDruid ? tx.page4.titles.invocationsDruid : tx.page4.titles.invocationsPriest,
+    invocationsFill: isDruid ? COLORS.headerMagicInvDruid : COLORS.headerMagicInvPriest,
+    spellsSignsRows,
+    invocationsRows,
+    ritualsRows,
+    hexesRows,
+    giftsRows,
+  };
 
   const lore = asRecord(resolved.lore);
   const loreRows: Row[] = [];
@@ -880,6 +1494,7 @@ function buildVmWithCatalog(
   return {
     lang, tx, title: tx.title, subtitle: tx.subtitle, baseRows, mainStats, extraStats, consRows, skillTables, profTable, perksTable,
     alchemyIconStyle,
+    pdfTableSettings,
     definingSkillLine: definingCalc.skillLine,
     definingCells: definingCalc.cells,
     definingBasis: definingCalc.basis,
@@ -888,7 +1503,24 @@ function buildVmWithCatalog(
     weaponsTable: weapons.length ? { title: tx.sections.weapons, columns: [' ', tx.cols.qty, tx.sections.weapons, tx.cols.dmg, tx.cols.type, tx.cols.rel, tx.cols.hands, tx.cols.conceal, tx.cols.enh, tx.cols.wt, tx.cols.price], rows: weapons } : null,
     armorTable: armors.length ? { title: tx.sections.armor, columns: [' ', tx.cols.qty, tx.sections.armor, lang === 'ru' ? 'ПБ/Н' : 'SP', tx.cols.enc, lang === 'ru' ? 'УБ' : 'ENH', tx.cols.wt, tx.cols.price], rows: armors } : null,
     potionTable: potions.length ? { title: tx.sections.alchemy, columns: [tx.cols.qty, tx.cols.n, tx.cols.tox, tx.cols.time, tx.cols.effect, tx.cols.wt, tx.cols.price], rows: potions } : null,
-    magicTable: magicRows.length ? { title: tx.sections.magic, columns: [tx.cols.type, tx.cols.n, 'Elem', 'Cost', tx.cols.time, 'Dist', tx.cols.dmg, tx.cols.note], rows: magicRows } : null,
+    magicTable: magicRows.length
+      ? {
+          title: tx.sections.magic,
+          columns: [
+            tx.page1.magicCols.type,
+            tx.page1.magicCols.name,
+            tx.page1.magicCols.element,
+            tx.page1.magicCols.vigor,
+            tx.page1.magicCols.vigorKeep,
+            tx.page1.magicCols.damage,
+            tx.page1.magicCols.time,
+            tx.page1.magicCols.distance,
+            tx.page1.magicCols.size,
+            tx.page1.magicCols.form,
+          ],
+          rows: magicRows,
+        }
+      : null,
     loreTable: loreRows.length ? { title: tx.sections.lore, columns: [tx.cols.field, tx.cols.note], rows: loreRows } : null,
     page2SocialStatus: socialStatusGroups,
     page2LoreBlocks: loreBlocks,
@@ -901,6 +1533,12 @@ function buildVmWithCatalog(
     page2IsWitcher: isWitcher,
     page2ItemEffects: Array.isArray(itemEffectsGlossary) ? [...itemEffectsGlossary] : [],
     page3Recipes: recipes,
+    page3Blueprints: blueprints,
+    page3ComponentTables,
+    page3Vehicles: vehicles,
+    page3Money,
+    page3GeneralGear,
+    page4Magic,
   };
 }
 
@@ -1114,11 +1752,13 @@ class Painter {
   private x: number;
   private w: number;
   private y: number;
+  private page3FirstPairGuideRows: number;
   constructor(doc: PDFKit.PDFDocument) {
     this.doc = doc;
     this.x = PAGE.margin;
     this.w = doc.page.width - PAGE.margin * 2;
     this.y = PAGE.margin;
+    this.page3FirstPairGuideRows = 0;
     const fp = fontPaths();
     doc.registerFont(FONTS.regular, fp.regular);
     doc.registerFont(FONTS.bold, fp.bold);
@@ -1613,6 +2253,7 @@ class Painter {
     return titleH + maxBranchH;
   }
   private drawPerksCompact(x: number, y: number, w: number, table: Table): number {
+    const tableLang: 'ru' | 'en' = /[А-Яа-яЁё]/.test(`${table.title} ${table.columns.join(' ')}`) ? 'ru' : 'en';
     const rows = table.rows.slice(0, 6).map((r) => ({
       name: stripHtmlTags((r.cells[0] ?? '').trim()),
       effect: stripHtmlTags((r.cells[1] ?? '').trim()),
@@ -1635,8 +2276,8 @@ class Painter {
     this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, headerH).stroke();
     this.doc.moveTo(x + nameW, y).lineTo(x + nameW, y + h).strokeColor(COLORS.line).lineWidth(0.25).stroke();
     this.fontB(8.4);
-    this.doc.fillColor(COLORS.text).text('ПЕРК', x + 4, y + 3, { width: nameW - 8, lineBreak: false, ellipsis: true });
-    this.doc.fillColor(COLORS.text).text((table.columns[1] ?? 'ЭФФЕКТ').toUpperCase(), x + nameW + 2, y + 3, { width: w - nameW - 4, align: 'center', lineBreak: false, ellipsis: true });
+    this.doc.fillColor(COLORS.text).text((table.columns[0] ?? (tableLang === 'ru' ? 'ПЕРК' : 'PERK')).toUpperCase(), x + 4, y + 3, { width: nameW - 8, lineBreak: false, ellipsis: true });
+    this.doc.fillColor(COLORS.text).text((table.columns[1] ?? (tableLang === 'ru' ? 'ЭФФЕКТ' : 'EFFECT')).toUpperCase(), x + nameW + 2, y + 3, { width: w - nameW - 4, align: 'center', lineBreak: false, ellipsis: true });
     let cy = y + headerH;
     for (let i = 0; i < rows.length; i += 1) {
       const row = rows[i]!;
@@ -1718,12 +2359,21 @@ class Painter {
     this.doc.rect(x, y, w, headerH).fill(COLORS.headerWeapons);
     this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, headerH).stroke();
     const cols = [checkW, fitWidths[0]!, nameW, ...fitWidths.slice(1)];
+    const headerFontSize = 6.5;
     let cx = x;
     for (let i = 0; i < cols.length; i += 1) {
       const cw = cols[i]!;
       this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(cx, y, cw, h).stroke();
-      this.fontB(6.5);
-      this.doc.fillColor(COLORS.text).text(i === 0 ? ' ' : (headers[i] ?? ''), cx + 2, y + 1, { width: cw - 4, align: i >= 3 ? 'center' : (i === 2 ? 'left' : 'center'), lineBreak: false, ellipsis: true });
+      const headerText = i === 0 ? ' ' : (headers[i] ?? '');
+      this.fontB(headerFontSize);
+      const headerTextH = Math.ceil(this.doc.heightOfString(headerText, { width: cw - 4, lineBreak: false }));
+      const headerY = y + Math.max(1, Math.floor((headerH - headerTextH) / 2));
+      this.doc.fillColor(COLORS.text).text(headerText, cx + 2, headerY, {
+        width: cw - 4,
+        align: i >= 3 || i === 1 ? 'center' : (i === 2 ? 'left' : 'center'),
+        lineBreak: false,
+        ellipsis: true,
+      });
       cx += cw;
     }
     let cy = y + headerH;
@@ -1744,7 +2394,12 @@ class Painter {
           }
         } else if (c !== 0) {
           this.fontR(6.4);
-          this.doc.fillColor(COLORS.text).text(vals[c] ?? '', rx + 2, cy + 1, { width: cw - 4, align: c >= 3 ? 'center' : 'right', lineBreak: false, ellipsis: true });
+          this.doc.fillColor(COLORS.text).text(vals[c] ?? '', rx + 2, cy + 1, {
+            width: cw - 4,
+            align: c === 1 || c >= 3 ? 'center' : 'right',
+            lineBreak: false,
+            ellipsis: true,
+          });
         }
         rx += cw;
       }
@@ -1833,12 +2488,21 @@ class Painter {
     this.doc.rect(x, y, w, headerH).fill(COLORS.headerArmors);
     this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, headerH).stroke();
     const cols = [checkW, fitWidths[0]!, nameW, ...fitWidths.slice(1)];
+    const headerFontSize = 6.5;
     let cx = x;
     for (let i = 0; i < cols.length; i += 1) {
       const cw = cols[i]!;
       this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(cx, y, cw, h).stroke();
-      this.fontB(6.5);
-      this.doc.fillColor(COLORS.text).text(i === 0 ? ' ' : (headers[i] ?? ''), cx + 2, y + 1, { width: cw - 4, align: i >= 3 ? 'center' : (i === 2 ? 'left' : 'center'), lineBreak: false, ellipsis: true });
+      const headerText = i === 0 ? ' ' : (headers[i] ?? '');
+      this.fontB(headerFontSize);
+      const headerTextH = Math.ceil(this.doc.heightOfString(headerText, { width: cw - 4, lineBreak: false }));
+      const headerY = y + Math.max(1, Math.floor((headerH - headerTextH) / 2));
+      this.doc.fillColor(COLORS.text).text(headerText, cx + 2, headerY, {
+        width: cw - 4,
+        align: i >= 3 || i === 1 ? 'center' : (i === 2 ? 'left' : 'center'),
+        lineBreak: false,
+        ellipsis: true,
+      });
       cx += cw;
     }
     let cy = y + headerH;
@@ -1859,7 +2523,12 @@ class Painter {
           }
         } else if (c !== 0) {
           this.fontR(6.4);
-          this.doc.fillColor(COLORS.text).text(vals[c] ?? '', rx + 2, cy + 1, { width: cw - 4, align: c >= 3 ? 'center' : 'right', lineBreak: false, ellipsis: true });
+          this.doc.fillColor(COLORS.text).text(vals[c] ?? '', rx + 2, cy + 1, {
+            width: cw - 4,
+            align: c === 1 || c >= 3 ? 'center' : 'right',
+            lineBreak: false,
+            ellipsis: true,
+          });
         }
         rx += cw;
       }
@@ -1880,7 +2549,10 @@ class Painter {
     }));
     const totalRows = Math.max(srcRows.length + 3, 3);
     const rows = [...srcRows, ...new Array(Math.max(0, totalRows - srcRows.length)).fill(null).map(() => ({ qty: '', name: '', tox: '', time: '', effect: '', wt: '', price: '' }))];
-    const headers = (table.columns.length >= 7 ? table.columns : ['#', 'АЛХИМИЯ', 'ТОКС', 'ВРЕМЯ', 'ЭФФЕКТ', 'ВЕС', 'ЦЕНА']).map((h) => String(h || '').toUpperCase());
+    const tableLang: 'ru' | 'en' = /[А-Яа-яЁё]/.test(`${table.title} ${table.columns.join(' ')}`) ? 'ru' : 'en';
+    const headers = (table.columns.length >= 7 ? table.columns : ['#', 'АЛХИМИЯ', 'ТОКС', 'ВРЕМЯ', 'ЭФФЕКТ', 'ВЕС', 'ЦЕНА'])
+      .map((h) => String(h || '').toUpperCase());
+    headers[1] = tableLang === 'ru' ? 'ХИМИКАТ' : 'CHEMICAL';
     const fitDefs: Array<{ key: keyof (typeof rows)[number]; header: string; min: number }> = [
       { key: 'qty', header: headers[0] ?? '#', min: 14 },
       { key: 'name', header: headers[1] ?? 'АЛХИМИЯ', min: 56 },
@@ -1910,12 +2582,21 @@ class Painter {
     this.doc.rect(x, y, w, headerH).fill(COLORS.headerPotions);
     this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, headerH).stroke();
     const cols = [fitWidths[0]!, fitWidths[1]!, fitWidths[2]!, fitWidths[3]!, effectW, fitWidths[4]!, fitWidths[5]!];
+    const headerFontSize = 6.5;
     let cx = x;
     for (let i = 0; i < cols.length; i += 1) {
       const cw = cols[i]!;
       this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(cx, y, cw, h).stroke();
-      this.fontB(6.5);
-      this.doc.fillColor(COLORS.text).text(headers[i] ?? '', cx + 2, y + 1, { width: cw - 4, align: i === 1 || i === 4 ? 'left' : 'center', lineBreak: false, ellipsis: true });
+      const headerText = headers[i] ?? '';
+      this.fontB(headerFontSize);
+      const headerTextH = Math.ceil(this.doc.heightOfString(headerText, { width: cw - 4, lineBreak: false }));
+      const headerY = y + Math.max(1, Math.floor((headerH - headerTextH) / 2));
+      this.doc.fillColor(COLORS.text).text(headerText, cx + 2, headerY, {
+        width: cw - 4,
+        align: i === 4 ? 'left' : 'center',
+        lineBreak: false,
+        ellipsis: true,
+      });
       cx += cw;
     }
     let cy = y + headerH;
@@ -1928,7 +2609,118 @@ class Painter {
       for (let c = 0; c < cols.length; c += 1) {
         const cw = cols[c]!;
         this.fontR(c === 4 ? 6.0 : 6.2);
-        this.doc.fillColor(COLORS.text).text(vals[c] ?? '', rx + 2, cy + 1, { width: cw - 4, height: rowH - 2, align: c === 1 || c === 4 ? 'left' : 'center' });
+        this.doc.fillColor(COLORS.text).text(vals[c] ?? '', rx + 2, cy + 1, {
+          width: cw - 4,
+          height: rowH - 2,
+          align: c === 1 || c === 4 ? 'left' : 'center',
+        });
+        rx += cw;
+      }
+      cy += rowH;
+    }
+    return h;
+  }
+  private drawMagicSummaryCompact(x: number, y: number, w: number, table: Table): number {
+    const headerH = PAGE.headerH;
+    const srcRows = table.rows.map((r) => ({
+      type: (r.cells[0] ?? '').trim(),
+      name: (r.cells[1] ?? '').trim(),
+      element: (r.cells[2] ?? '').trim(),
+      vigor: (r.cells[3] ?? '').trim(),
+      vigorKeep: (r.cells[4] ?? '').trim(),
+      damage: (r.cells[5] ?? '').trim(),
+      time: (r.cells[6] ?? '').trim(),
+      distance: (r.cells[7] ?? '').trim(),
+      size: (r.cells[8] ?? '').trim(),
+      form: (r.cells[9] ?? '').trim(),
+    }));
+    const totalRows = Math.max(srcRows.length + 3, 3);
+    const rows = [
+      ...srcRows,
+      ...new Array(Math.max(0, totalRows - srcRows.length)).fill(null).map(() => ({
+        type: '',
+        name: '',
+        element: '',
+        vigor: '',
+        vigorKeep: '',
+        damage: '',
+        time: '',
+        distance: '',
+        size: '',
+        form: '',
+      })),
+    ];
+    const headers = (table.columns.length >= 10
+      ? table.columns
+      : ['ТИП', 'НАЗВАНИЕ', 'ЭЛЕМЕНТ', 'ВЫН', 'ВЫН+', 'УРОН', 'ВРЕМЯ', 'ДИСТ', 'РАЗМЕР', 'ФОРМА'])
+      .map((h) => String(h || '').toUpperCase());
+
+    const fitDefs: Array<{ key: keyof (typeof rows)[number]; header: string; min: number }> = [
+      { key: 'type', header: headers[0] ?? 'ТИП', min: 32 },
+      { key: 'element', header: headers[2] ?? 'ЭЛЕМЕНТ', min: 34 },
+      { key: 'vigor', header: headers[3] ?? 'ВЫН', min: 22 },
+      { key: 'vigorKeep', header: headers[4] ?? 'ВЫН+', min: 24 },
+      { key: 'damage', header: headers[5] ?? 'УРОН', min: 28 },
+      { key: 'time', header: headers[6] ?? 'ВРЕМЯ', min: 28 },
+      { key: 'distance', header: headers[7] ?? 'ДИСТ', min: 26 },
+      { key: 'size', header: headers[8] ?? 'РАЗМЕР', min: 30 },
+      { key: 'form', header: headers[9] ?? 'ФОРМА', min: 46 },
+    ];
+    const fitWidths = fitDefs.map((d) => {
+      this.fontB(6.5);
+      let mw = Math.max(d.min, Math.ceil(this.doc.widthOfString(d.header)) + 6);
+      this.fontR(6.2);
+      for (const row of rows) mw = Math.max(mw, Math.ceil(this.doc.widthOfString(String(row[d.key] || ''))) + 6);
+      return mw;
+    });
+    const nonNameW = fitWidths.reduce((a, v) => a + v, 0);
+    const nameW = Math.max(90, w - nonNameW);
+    const rowHeights = rows.map((row) => {
+      this.fontR(6.2);
+      const nameH = Math.ceil(this.doc.heightOfString(row.name || '—', { width: nameW - 6 }));
+      const formH = Math.ceil(this.doc.heightOfString(row.form || '—', { width: fitWidths[8]! - 6 }));
+      return Math.max(12, Math.max(nameH, formH) + 1);
+    });
+    const bodyH = rowHeights.reduce((a, v) => a + v, 0);
+    const h = headerH + bodyH;
+    this.doc.rect(x, y, w, h).fill('#ffffff');
+    this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, h).stroke();
+    this.doc.rect(x, y, w, headerH).fill(COLORS.headerMagicSummary);
+    this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, headerH).stroke();
+
+    const cols = [fitWidths[0]!, nameW, ...fitWidths.slice(1)];
+    const headerFontSize = 6.5;
+    let cx = x;
+    for (let i = 0; i < cols.length; i += 1) {
+      const cw = cols[i]!;
+      this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(cx, y, cw, h).stroke();
+      const headerText = headers[i] ?? '';
+      this.fontB(headerFontSize);
+      const headerTextH = Math.ceil(this.doc.heightOfString(headerText, { width: cw - 4, lineBreak: false }));
+      const headerY = y + Math.max(1, Math.floor((headerH - headerTextH) / 2));
+      this.doc.fillColor(COLORS.text).text(headerText, cx + 2, headerY, {
+        width: cw - 4,
+        align: i === 0 ? 'right' : 'left',
+        lineBreak: false,
+        ellipsis: true,
+      });
+      cx += cw;
+    }
+    let cy = y + headerH;
+    for (let i = 0; i < rows.length; i += 1) {
+      const row = rows[i]!;
+      const rowH = rowHeights[i]!;
+      this.doc.moveTo(x, cy).lineTo(x + w, cy).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+      const vals = [row.type, row.name, row.element, row.vigor, row.vigorKeep, row.damage, row.time, row.distance, row.size, row.form];
+      let rx = x;
+      for (let c = 0; c < cols.length; c += 1) {
+        const cw = cols[c]!;
+        this.fontR(6.2);
+        this.doc.fillColor(COLORS.text).text(vals[c] ?? '', rx + 2, cy + 1, {
+          width: cw - 4,
+          height: rowH - 2,
+          align: c === 0 ? 'right' : 'left',
+        });
         rx += cw;
       }
       cy += rowH;
@@ -2063,7 +2855,207 @@ class Painter {
     return cy - y + lineH;
   }
 
-  private drawHeaderRow(x: number, y: number, colW: number[], labels: string[]) {
+  private measureRichTextHeight(
+    w: number,
+    value: string,
+    size = 6.2,
+    lineH = 8,
+  ): number {
+    const tokens = parseRichInlineTokens(value);
+    let cx = 0;
+    let lines = 1;
+    for (const token of tokens) {
+      if ('newline' in token) {
+        lines += 1;
+        cx = 0;
+        continue;
+      }
+      const parts = token.text.split(/(\s+)/).filter((p) => p.length > 0);
+      for (const part of parts) {
+        const ww = this.textWidth(part, token.bold ? 'bold' : 'regular', size);
+        const onlySpaces = part.trim().length === 0;
+        if (!onlySpaces && cx + ww > w && cx > 0) {
+          cx = 0;
+          lines += 1;
+        }
+        cx += ww;
+      }
+    }
+    return Math.max(lineH, lines * lineH);
+  }
+
+  private drawRichText(
+    x: number,
+    y: number,
+    w: number,
+    value: string,
+    size = 6.2,
+    lineH = 8,
+    color = COLORS.muted,
+  ): number {
+    const tokens = parseRichInlineTokens(value);
+    const xMax = x + w;
+    let cx = x;
+    let cy = y;
+    for (const token of tokens) {
+      if ('newline' in token) {
+        cx = x;
+        cy += lineH;
+        continue;
+      }
+      const parts = token.text.split(/(\s+)/).filter((p) => p.length > 0);
+      for (const part of parts) {
+        const ww = this.textWidth(part, token.bold ? 'bold' : 'regular', size);
+        const onlySpaces = part.trim().length === 0;
+        if (!onlySpaces && cx + ww > xMax && cx > x) {
+          cx = x;
+          cy += lineH;
+        }
+        if (token.bold) this.fontB(size); else this.fontR(size);
+        this.doc.fillColor(color).text(part, cx, cy, {
+          width: ww + 1,
+          lineBreak: false,
+          oblique: token.italic,
+        });
+        cx += ww;
+      }
+    }
+    return cy - y + lineH;
+  }
+
+  private normalizeMagicRows(
+    headers: string[],
+    rows: MagicTableRowVm[],
+    ensureBlankMainRow: boolean,
+  ): MagicTableRowVm[] {
+    if (rows.length > 0) return rows;
+    if (!ensureBlankMainRow) return [];
+    return [{ cells: new Array(headers.length).fill('') }];
+  }
+
+  private measureMagicTableCardHeight(
+    w: number,
+    headers: string[],
+    rows: MagicTableRowVm[],
+    ensureBlankMainRow: boolean,
+    wrappedMainCols: number[] = [],
+  ): number {
+    const ix = w - 8;
+    const safeRows = this.normalizeMagicRows(headers, rows, ensureBlankMainRow);
+    const colW = this.fitAllExceptLastByContent(Math.max(20, ix), headers, safeRows.map((r) => r.cells));
+    const wrappedSet = new Set(wrappedMainCols);
+    const mainLineH = this.measureGeneralGearCellLineHeight(6.4);
+    const mainRowsH = safeRows.reduce((sum, row) => {
+      let mainH = Math.max(11, mainLineH + 2);
+      for (let i = 0; i < colW.length; i += 1) {
+        if (!wrappedSet.has(i)) continue;
+        const cellText = String(row.cells[i] ?? '');
+        const hCell = Math.ceil(
+          this.doc.heightOfString(cellText, { width: Math.max(12, colW[i]! - 6), lineGap: 0 }),
+        ) + 4;
+        mainH = Math.max(mainH, hCell);
+      }
+      const tooltip = (row.tooltip ?? '').trim();
+      const tooltipH = tooltip ? Math.max(11, this.measureRichTextHeight(Math.max(12, ix - 6), tooltip, 6.2, 8) + 2) : 0;
+      return sum + mainH + tooltipH;
+    }, 0);
+    const headerH = 12;
+    const tableH = headerH + mainRowsH;
+    return PAGE.headerH + 4 + tableH + 4;
+  }
+
+  private drawMagicTableCard(
+    x: number,
+    y: number,
+    w: number,
+    title: string,
+    fill: string,
+    headers: string[],
+    rows: MagicTableRowVm[],
+    ensureBlankMainRow: boolean,
+    wrappedMainCols: number[] = [],
+    centerBodyCols: number[] = [],
+    leftHeaderCols: number[] = [],
+  ): number {
+    const h = this.measureMagicTableCardHeight(w, headers, rows, ensureBlankMainRow, wrappedMainCols);
+    this.shell(x, y, w, h, title, fill);
+    const ix = x + 4;
+    const iy = y + PAGE.headerH + 4;
+    const iw = Math.max(20, w - 8);
+    const safeRows = this.normalizeMagicRows(headers, rows, ensureBlankMainRow);
+    const colW = this.fitAllExceptLastByContent(iw, headers, safeRows.map((r) => r.cells));
+    const headerAlign: Array<'left' | 'center' | 'right'> = headers.map((_, i) =>
+      leftHeaderCols.includes(i) ? 'left' : 'center',
+    );
+    const centerSet = new Set(centerBodyCols);
+    const headerH = this.drawHeaderRow(ix, iy, colW, headers, headerAlign);
+    const wrappedSet = new Set(wrappedMainCols);
+    const mainLineH = this.measureGeneralGearCellLineHeight(6.4);
+    const rowMetrics = safeRows.map((row) => {
+      let mainH = Math.max(11, mainLineH + 2);
+      for (let i = 0; i < colW.length; i += 1) {
+        if (!wrappedSet.has(i)) continue;
+        const cellText = String(row.cells[i] ?? '');
+        const hCell = Math.ceil(
+          this.doc.heightOfString(cellText, { width: Math.max(12, colW[i]! - 6), lineGap: 0 }),
+        ) + 4;
+        mainH = Math.max(mainH, hCell);
+      }
+      const tooltip = (row.tooltip ?? '').trim();
+      const tooltipH = tooltip ? Math.max(11, this.measureRichTextHeight(Math.max(12, iw - 6), tooltip, 6.2, 8) + 2) : 0;
+      return { mainH, tooltipH, tooltip };
+    });
+    const tableH = headerH + rowMetrics.reduce((sum, m) => sum + m.mainH + m.tooltipH, 0);
+
+    this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(ix, iy, iw, tableH).stroke();
+    let ry = iy + headerH;
+    for (let r = 0; r < safeRows.length; r += 1) {
+      const row = safeRows[r]!;
+      const metrics = rowMetrics[r]!;
+      const mainH = metrics.mainH;
+      this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+      let cx = ix;
+      for (let c = 0; c < colW.length; c += 1) {
+        if (c > 0) this.doc.moveTo(cx, ry).lineTo(cx, ry + mainH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        this.fontR(6.4);
+        const rawValue = String(row.cells[c] ?? '');
+        if (wrappedSet.has(c)) {
+          this.doc.fillColor(COLORS.text).text(rawValue, cx + 3, ry + 1, {
+            width: colW[c]! - 6,
+            lineGap: 0,
+            paragraphGap: 0,
+          });
+        } else {
+          const value = rawValue.replace(/\s*\r?\n\s*/g, ' ');
+          const textY = ry + Math.max(1, Math.floor((mainH - mainLineH) / 2));
+          this.doc.fillColor(COLORS.text).text(value, cx + 3, textY, {
+            width: colW[c]! - 6,
+            lineBreak: false,
+            ellipsis: true,
+            align: centerSet.has(c) ? 'center' : 'left',
+          });
+        }
+        cx += colW[c]!;
+      }
+      ry += mainH;
+      if (metrics.tooltip) {
+        this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor('#d1d5db').lineWidth(0.25).stroke();
+        this.drawRichText(ix + 3, ry + 1, Math.max(12, iw - 6), metrics.tooltip, 6.2, 8, COLORS.muted);
+        ry += metrics.tooltipH;
+      }
+    }
+    this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+    return h;
+  }
+
+  private drawHeaderRow(
+    x: number,
+    y: number,
+    colW: number[],
+    labels: string[],
+    align: 'left' | 'center' | 'right' | Array<'left' | 'center' | 'right'> = 'left',
+    paddingX = 3,
+  ) {
     const h = 12;
     this.doc.rect(x, y, colW.reduce((a, b) => a + b, 0), h).fill('#ffffff');
     this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(x, y, colW.reduce((a, b) => a + b, 0), h).stroke();
@@ -2072,10 +3064,43 @@ class Painter {
     for (let i = 0; i < colW.length; i += 1) {
       if (i > 0) this.doc.moveTo(cx, y).lineTo(cx, y + h).strokeColor(COLORS.line).lineWidth(0.25).stroke();
       const label = this.headerCellText(String(labels[i] ?? ''));
-      this.doc.fillColor(COLORS.text).text(label, cx + 3, y + 1, { width: colW[i]! - 6, lineBreak: false, ellipsis: true });
+      const currentAlign = Array.isArray(align) ? (align[i] ?? 'left') : align;
+      this.doc.fillColor(COLORS.text).text(label, cx + paddingX, y + 1, {
+        width: colW[i]! - paddingX * 2,
+        lineBreak: false,
+        ellipsis: true,
+        align: currentAlign,
+      });
       cx += colW[i]!;
     }
     return h;
+  }
+  private notesStripAtCount(x: number, y: number, w: number, h: number, title: string, count: number) {
+    if (h < 50 || count <= 0) return 0;
+    const safeCount = Math.max(1, Math.floor(count));
+    const colW = (w - PAGE.gap * (safeCount - 1)) / safeCount;
+    for (let i = 0; i < safeCount; i += 1) {
+      const bx = x + i * (colW + PAGE.gap);
+      this.shell(bx, y, colW, h, title, COLORS.headerNotes);
+      for (let ly = y + PAGE.headerH + 11; ly < y + h; ly += 12) {
+        this.doc.moveTo(bx, ly).lineTo(bx + colW, ly).strokeColor(COLORS.line).lineWidth(0.2).stroke();
+      }
+    }
+    return h;
+  }
+  private drawGeneralGearEmptyPairAt(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    title: string,
+    headers: string[],
+  ): void {
+    const colGap = PAGE.gap;
+    const colW = (w - colGap) / 2;
+    const emptyRows: GeneralGearPageRow[] = [];
+    this.drawGeneralGearHalfTable(x, y, colW, h, title, headers, emptyRows, 0);
+    this.drawGeneralGearHalfTable(x + colW + colGap, y, colW, h, title, headers, emptyRows, 0);
   }
 
   private drawPage2SocialStatusCard(
@@ -2351,16 +3376,29 @@ class Painter {
     const iw = w - 8;
     const headers = [cols.clothing, cols.personality, cols.hairStyle, cols.affectations];
     const row = [s.clothing, s.personality, s.hairStyle, s.affectations];
-    const pref0 = Math.max(this.headerCellWidth(headers[0]!, 6.8), this.textWidth(row[0]!, 'regular', 6.8)) + 8;
-    const pref1 = Math.max(this.headerCellWidth(headers[1]!, 6.8), this.textWidth(row[1]!, 'regular', 6.8)) + 8;
-    const pref2 = Math.max(this.headerCellWidth(headers[2]!, 6.8), this.textWidth(row[2]!, 'regular', 6.8)) + 8;
-    const min0 = Math.max(this.headerCellWidth(headers[0]!, 6.8), this.textWidth(row[0]!, 'regular', 6.8)) + 8;
-    const min1 = Math.max(this.headerCellWidth(headers[1]!, 6.8), this.textWidth(row[1]!, 'regular', 6.8)) + 8;
-    const min2 = Math.max(this.headerCellWidth(headers[2]!, 6.8), this.textWidth(row[2]!, 'regular', 6.8)) + 8;
+    const row0 = (row[0] ?? '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    const row1 = (row[1] ?? '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    const row2 = (row[2] ?? '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    const row3 = (row[3] ?? '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    const pref0 = Math.max(this.headerCellWidth(headers[0]!, 6.8), this.textWidth(row0, 'regular', 6.8)) + 8;
+    const pref1 = Math.max(this.headerCellWidth(headers[1]!, 6.8), this.textWidth(row1, 'regular', 6.8)) + 8;
+    const pref2 = Math.max(this.headerCellWidth(headers[2]!, 6.8), this.textWidth(row2, 'regular', 6.8)) + 8;
+    const min0 = Math.max(
+      this.headerCellWidth(headers[0]!, 6.8),
+      this.maxWordWidth(row0, 'regular', 6.8),
+    ) + 8;
+    const min1 = Math.max(
+      this.headerCellWidth(headers[1]!, 6.8),
+      this.maxWordWidth(row1, 'regular', 6.8),
+    ) + 8;
+    const min2 = Math.max(
+      this.headerCellWidth(headers[2]!, 6.8),
+      this.maxWordWidth(row2, 'regular', 6.8),
+    ) + 8;
     const minLast = Math.max(
       44,
       this.maxWordWidth(this.headerCellText(headers[3]!), 'bold', 6.8) + 8,
-      this.maxWordWidth(row[3]!, 'regular', 6.8) + 8,
+      this.maxWordWidth(row3, 'regular', 6.8) + 8,
     );
     const colW = this.fitFixedPlusFlexibleLast(
       iw,
@@ -2369,7 +3407,12 @@ class Painter {
       minLast,
     );
     const headerH = this.drawHeaderRow(ix, iy, colW, headers);
-    const rowH = Math.max(12, Math.ceil(this.doc.heightOfString(row[3] ?? '', { width: Math.max(12, colW[3]! - 6) })) + 2);
+    const rowH = Math.max(
+      12,
+      ...colW.map((cw, idx) =>
+        Math.ceil(this.doc.heightOfString(row[idx] ?? '', { width: Math.max(12, cw - 6), lineGap: 0 })) + 2,
+      ),
+    );
     const rowY = iy + headerH;
     const tableH = headerH + rowH;
     this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(ix, iy, iw, tableH).stroke();
@@ -2378,7 +3421,7 @@ class Painter {
     for (let i = 0; i < colW.length; i += 1) {
       if (i > 0) this.doc.moveTo(cx, iy).lineTo(cx, rowY + rowH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
       this.fontR(6.8);
-      this.doc.fillColor(COLORS.text).text(row[i] ?? '', cx + 3, rowY + 1, { width: colW[i]! - 6 });
+      this.doc.fillColor(COLORS.text).text(row[i] ?? '', cx + 3, rowY + 1, { width: colW[i]! - 6, lineGap: 0 });
       cx += colW[i]!;
     }
     this.doc.moveTo(ix, rowY + rowH).lineTo(ix + iw, rowY + rowH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
@@ -2389,16 +3432,29 @@ class Painter {
     const iw = Math.max(20, w - 8);
     const headers = [cols.clothing, cols.personality, cols.hairStyle, cols.affectations];
     const row = [s.clothing, s.personality, s.hairStyle, s.affectations];
-    const pref0 = Math.max(this.headerCellWidth(headers[0]!, 6.8), this.textWidth(row[0]!, 'regular', 6.8)) + 8;
-    const pref1 = Math.max(this.headerCellWidth(headers[1]!, 6.8), this.textWidth(row[1]!, 'regular', 6.8)) + 8;
-    const pref2 = Math.max(this.headerCellWidth(headers[2]!, 6.8), this.textWidth(row[2]!, 'regular', 6.8)) + 8;
-    const min0 = Math.max(this.headerCellWidth(headers[0]!, 6.8), this.textWidth(row[0]!, 'regular', 6.8)) + 8;
-    const min1 = Math.max(this.headerCellWidth(headers[1]!, 6.8), this.textWidth(row[1]!, 'regular', 6.8)) + 8;
-    const min2 = Math.max(this.headerCellWidth(headers[2]!, 6.8), this.textWidth(row[2]!, 'regular', 6.8)) + 8;
+    const row0 = (row[0] ?? '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    const row1 = (row[1] ?? '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    const row2 = (row[2] ?? '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    const row3 = (row[3] ?? '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    const pref0 = Math.max(this.headerCellWidth(headers[0]!, 6.8), this.textWidth(row0, 'regular', 6.8)) + 8;
+    const pref1 = Math.max(this.headerCellWidth(headers[1]!, 6.8), this.textWidth(row1, 'regular', 6.8)) + 8;
+    const pref2 = Math.max(this.headerCellWidth(headers[2]!, 6.8), this.textWidth(row2, 'regular', 6.8)) + 8;
+    const min0 = Math.max(
+      this.headerCellWidth(headers[0]!, 6.8),
+      this.maxWordWidth(row0, 'regular', 6.8),
+    ) + 8;
+    const min1 = Math.max(
+      this.headerCellWidth(headers[1]!, 6.8),
+      this.maxWordWidth(row1, 'regular', 6.8),
+    ) + 8;
+    const min2 = Math.max(
+      this.headerCellWidth(headers[2]!, 6.8),
+      this.maxWordWidth(row2, 'regular', 6.8),
+    ) + 8;
     const minLast = Math.max(
       44,
       this.maxWordWidth(this.headerCellText(headers[3]!), 'bold', 6.8) + 8,
-      this.maxWordWidth(row[3]!, 'regular', 6.8) + 8,
+      this.maxWordWidth(row3, 'regular', 6.8) + 8,
     );
     const colW = this.fitFixedPlusFlexibleLast(
       iw,
@@ -2406,7 +3462,12 @@ class Painter {
       [Math.max(30, min0), Math.max(30, min1), Math.max(30, min2)],
       minLast,
     );
-    const rowH = Math.max(12, Math.ceil(this.doc.heightOfString(row[3] ?? '', { width: Math.max(12, colW[3]! - 6) })) + 2);
+    const rowH = Math.max(
+      12,
+      ...colW.map((cw, idx) =>
+        Math.ceil(this.doc.heightOfString(row[idx] ?? '', { width: Math.max(12, cw - 6), lineGap: 0 })) + 2,
+      ),
+    );
     return PAGE.headerH + 4 + 12 + rowH + 4;
   }
 
@@ -2588,9 +3649,17 @@ class Painter {
     const n = headers.length;
     if (n <= 1) return [totalW];
     const last = n - 1;
+    const maxLineWidth = (value: string, kind: 'regular' | 'bold', size: number): number => {
+      const lines = String(value ?? '')
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      if (lines.length === 0) return 0;
+      return Math.max(...lines.map((line) => this.textWidth(line, kind, size)));
+    };
     const fixedPref = headers.slice(0, last).map((h, i) => {
       const headerW = this.headerCellWidth(h, 6.8) + 8;
-      const rowW = Math.max(0, ...rows.map((r) => this.textWidth((r[i] ?? '').replace(/\s*\r?\n\s*/g, ' '), 'regular', 6.8) + 8));
+      const rowW = Math.max(0, ...rows.map((r) => maxLineWidth(r[i] ?? '', 'regular', 6.8) + 8));
       return Math.max(24, headerW, rowW);
     });
     const fixedMin = headers.slice(0, last).map((h, i) => {
@@ -2630,6 +3699,7 @@ class Painter {
     flexIndex: number,
     rowHeightByColIndex?: number,
     fitAllExceptLastByContent?: boolean,
+    tableInTable?: boolean,
   ): number {
     const iw = Math.max(20, w - 8);
     const safeRows = rows.length ? rows : [new Array(headers.length).fill('')];
@@ -2649,7 +3719,9 @@ class Painter {
       return maxH;
     });
     const tableH = 12 + rowHeights.reduce((a, b) => a + b, 0);
-    return PAGE.headerH + 4 + tableH + 4;
+    const outerPad = 0;
+    const outerH = tableH + outerPad * 2;
+    return PAGE.headerH + 4 + outerH + 4;
   }
 
   private drawDataGridCard(
@@ -2663,17 +3735,23 @@ class Painter {
     flexIndex: number,
     rowHeightByColIndex?: number,
     fitAllExceptLastByContent?: boolean,
+    tableInTable?: boolean,
+    cellPaddingX = 3,
   ): number {
-    const h = this.measureDataGridCardHeight(w, headers, rows, flexIndex, rowHeightByColIndex, fitAllExceptLastByContent);
+    const h = this.measureDataGridCardHeight(w, headers, rows, flexIndex, rowHeightByColIndex, fitAllExceptLastByContent, tableInTable);
     this.shell(x, y, w, h, title, fill);
-    const ix = x + 4;
-    const iy = y + PAGE.headerH + 4;
-    const iw = w - 8;
+    const boxX = x + 4;
+    const boxY = y + PAGE.headerH + 4;
+    const boxW = w - 8;
+    const outerPad = 0;
+    const ix = boxX + outerPad;
+    const iy = boxY + outerPad;
+    const iw = boxW - outerPad * 2;
     const safeRows = rows.length ? rows : [new Array(headers.length).fill('')];
     const colW = fitAllExceptLastByContent
       ? this.fitAllExceptLastByContent(iw, headers, safeRows)
       : this.fitColumnsWithFlexible(iw, headers, safeRows, flexIndex);
-    const headerH = this.drawHeaderRow(ix, iy, colW, headers);
+    const headerH = this.drawHeaderRow(ix, iy, colW, headers, 'center', cellPaddingX);
     const rowHeights = safeRows.map((row) => {
       if (typeof rowHeightByColIndex === 'number') {
         const idx = clamp(rowHeightByColIndex, 0, colW.length - 1);
@@ -2700,8 +3778,8 @@ class Painter {
         const isWrapCol = typeof rowHeightByColIndex === 'number' && c === clamp(rowHeightByColIndex, 0, colW.length - 1);
         const cell = row[c] ?? '';
         const drawValue = isWrapCol ? cell : cell.replace(/\s*\r?\n\s*/g, ' ');
-        this.doc.fillColor(COLORS.text).text(drawValue, cx + 3, ry + 1, {
-          width: colW[c]! - 6,
+        this.doc.fillColor(COLORS.text).text(drawValue, cx + cellPaddingX, ry + 1, {
+          width: colW[c]! - cellPaddingX * 2,
           lineBreak: isWrapCol,
           ellipsis: isWrapCol ? false : true,
         });
@@ -2755,6 +3833,388 @@ class Painter {
       ry += rowH;
     }
     return h;
+  }
+
+  private measureEqualColumnsCardHeight(
+    w: number,
+    headers: string[],
+    rows: string[][],
+  ): number {
+    const outerPad = 0;
+    const boxW = Math.max(20, w - 8);
+    const iw = Math.max(12, boxW - outerPad * 2);
+    const safeRows = rows.length ? rows : [new Array(headers.length).fill('')];
+    const base = iw / Math.max(1, headers.length);
+    const colW = new Array(headers.length).fill(base);
+    const diff = iw - colW.reduce((a, b) => a + b, 0);
+    if (colW.length) colW[colW.length - 1] += diff;
+    const rowHeights = safeRows.map((row) => {
+      let maxH = 12;
+      for (let i = 0; i < colW.length; i += 1) {
+        const cellH = Math.ceil(this.doc.heightOfString(row[i] ?? '', { width: Math.max(12, colW[i]! - 6) })) + 2;
+        maxH = Math.max(maxH, cellH);
+      }
+      return maxH;
+    });
+    const tableH = 12 + rowHeights.reduce((a, b) => a + b, 0);
+    const outerH = tableH + outerPad * 2;
+    return PAGE.headerH + 4 + outerH + 4;
+  }
+
+  private drawEqualColumnsCard(
+    x: number,
+    y: number,
+    w: number,
+    title: string,
+    fill: string,
+    headers: string[],
+    rows: string[][],
+  ): number {
+    const h = this.measureEqualColumnsCardHeight(w, headers, rows);
+    this.shell(x, y, w, h, title, fill);
+    const outerPad = 0;
+    const boxX = x + 4;
+    const boxY = y + PAGE.headerH + 4;
+    const boxW = w - 8;
+    const ix = boxX + outerPad;
+    const iy = boxY + outerPad;
+    const iw = boxW - outerPad * 2;
+    const safeRows = rows.length ? rows : [new Array(headers.length).fill('')];
+    const base = iw / Math.max(1, headers.length);
+    const colW = new Array(headers.length).fill(base);
+    const diff = iw - colW.reduce((a, b) => a + b, 0);
+    if (colW.length) colW[colW.length - 1] += diff;
+    const headerH = this.drawHeaderRow(ix, iy, colW, headers, ['center', 'left', 'center', 'center', 'center']);
+    const rowHeights = safeRows.map((row) => {
+      let maxH = 12;
+      for (let i = 0; i < colW.length; i += 1) {
+        const cellH = Math.ceil(this.doc.heightOfString(row[i] ?? '', { width: Math.max(12, colW[i]! - 6) })) + 2;
+        maxH = Math.max(maxH, cellH);
+      }
+      return maxH;
+    });
+    const tableH = headerH + rowHeights.reduce((a, b) => a + b, 0);
+    this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(ix, iy, iw, tableH).stroke();
+    let ry = iy + headerH;
+    for (let r = 0; r < safeRows.length; r += 1) {
+      const row = safeRows[r]!;
+      const rowH = rowHeights[r]!;
+      this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+      let cx = ix;
+      for (let c = 0; c < colW.length; c += 1) {
+        if (c > 0) this.doc.moveTo(cx, ry).lineTo(cx, ry + rowH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        this.fontR(6.8);
+        this.doc.fillColor(COLORS.text).text((row[c] ?? '').replace(/\s*\r?\n\s*/g, ' '), cx + 3, ry + 1, {
+          width: colW[c]! - 6,
+          lineBreak: false,
+          ellipsis: true,
+          align: 'center',
+        });
+        cx += colW[c]!;
+      }
+      ry += rowH;
+    }
+    this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+    return h;
+  }
+
+  private fitGeneralGearColumns(totalW: number, headers: string[], rows: GeneralGearPageRow[]): number[] {
+    const rowMatrix = rows.map((r) => [r.amount, r.name, r.concealment, r.weight, r.price]);
+    return this.fitColumnsWithFlexible(totalW, headers, rowMatrix, 1);
+  }
+
+  private measureGeneralGearRow(
+    row: GeneralGearPageRow,
+    nameColW: number,
+  ): { rowH: number; nameLineH: number; descH: number } {
+    const name = (row.name ?? '').replace(/\s*\r?\n\s*/g, ' ').trim() || ' ';
+    const desc = (row.description ?? '').replace(/\s*\r?\n\s*/g, ' ').trim();
+    const textW = Math.max(16, nameColW - 6);
+
+    this.fontR(6.4);
+    const nameLineH = Math.ceil(this.doc.heightOfString(name, {
+      width: textW,
+      lineBreak: false,
+      ellipsis: true,
+      lineGap: 0,
+    }));
+
+    let descH = 0;
+    if (desc) {
+      this.fontR(6.0);
+      descH = Math.ceil(this.doc.heightOfString(desc, {
+        width: textW,
+        lineGap: 0,
+        oblique: true,
+      }));
+    }
+
+    const rowH = desc
+      ? Math.max(12, 1 + nameLineH + 1 + descH + 1)
+      : Math.max(11, 1 + nameLineH + 1);
+
+    return { rowH, nameLineH, descH };
+  }
+
+  private measureGeneralGearCellLineHeight(fontSize = 6.4): number {
+    this.fontR(fontSize);
+    return Math.ceil(this.doc.heightOfString('0', {
+      width: 12,
+      lineBreak: false,
+      lineGap: 0,
+    }));
+  }
+
+  private generalGearRowHeight(row: GeneralGearPageRow, nameColW: number): number {
+    return this.measureGeneralGearRow(row, nameColW).rowH;
+  }
+
+  private countGeneralGearRowsFit(
+    w: number,
+    h: number,
+    headers: string[],
+    rows: GeneralGearPageRow[],
+    startIndex: number,
+  ): number {
+    const iw = w - 8;
+    const tableH = Math.max(12, h - PAGE.headerH - 8);
+    const colW = this.fitGeneralGearColumns(iw, headers, rows.length ? rows : [{
+      amount: '',
+      name: '',
+      description: '',
+      concealment: '',
+      weight: '',
+      price: '',
+    }]);
+    const headerH = 12;
+    const tableBottom = tableH;
+    let used = headerH;
+    let index = startIndex;
+    const nameColW = colW[1] ?? 120;
+    while (index < rows.length) {
+      const rowH = this.generalGearRowHeight(rows[index]!, nameColW);
+      if (used + rowH > tableBottom) break;
+      used += rowH;
+      index += 1;
+    }
+    return index;
+  }
+  private estimateGeneralGearHalfUsage(
+    w: number,
+    h: number,
+    headers: string[],
+    rows: GeneralGearPageRow[],
+    startIndex: number,
+  ): { nextIndex: number; guideRows: number } {
+    const iw = w - 8;
+    const tableH = Math.max(12, h - PAGE.headerH - 8);
+    const colW = this.fitGeneralGearColumns(iw, headers, rows.length ? rows : [{
+      amount: '',
+      name: '',
+      description: '',
+      concealment: '',
+      weight: '',
+      price: '',
+    }]);
+    const headerH = 12;
+    let used = headerH;
+    let index = startIndex;
+    const nameColW = colW[1] ?? 120;
+    while (index < rows.length) {
+      const rowH = this.generalGearRowHeight(rows[index]!, nameColW);
+      if (used + rowH > tableH) break;
+      used += rowH;
+      index += 1;
+    }
+    let guideRows = 0;
+    let remaining = tableH - used;
+    while (remaining >= 11) {
+      guideRows += 1;
+      remaining -= 11;
+    }
+    return { nextIndex: index, guideRows };
+  }
+  private estimateGeneralGearPairUsage(
+    w: number,
+    h: number,
+    headers: string[],
+    rows: GeneralGearPageRow[],
+    startIndex: number,
+  ): { nextIndex: number; guideRows: number } {
+    const colGap = PAGE.gap;
+    const colW = (w - colGap) / 2;
+    const left = this.estimateGeneralGearHalfUsage(colW, h, headers, rows, startIndex);
+    const right = this.estimateGeneralGearHalfUsage(colW, h, headers, rows, left.nextIndex);
+    return {
+      nextIndex: right.nextIndex,
+      guideRows: left.guideRows + right.guideRows,
+    };
+  }
+
+  private drawGeneralGearPairOnce(
+    x: number,
+    y: number,
+    w: number,
+    title: string,
+    headers: string[],
+    rows: GeneralGearPageRow[],
+    startIndex: number,
+  ): number {
+    const colGap = PAGE.gap;
+    const colW = (w - colGap) / 2;
+    const pageH = this.bottom() - y;
+    const leftX = x;
+    const rightX = x + colW + colGap;
+    const nextLeft = this.drawGeneralGearHalfTable(
+      leftX,
+      y,
+      colW,
+      pageH,
+      title,
+      headers,
+      rows,
+      startIndex,
+    );
+    const nextRight = this.drawGeneralGearHalfTable(
+      rightX,
+      y,
+      colW,
+      pageH,
+      title,
+      headers,
+      rows,
+      nextLeft,
+    );
+    return nextRight;
+  }
+
+  private drawGeneralGearHalfTable(
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    title: string,
+    headers: string[],
+    rows: GeneralGearPageRow[],
+    startIndex: number,
+  ): number {
+    this.shell(x, y, w, h, title, COLORS.headerPage2Blue);
+    const ix = x + 4;
+    const iy = y + PAGE.headerH + 4;
+    const iw = w - 8;
+    const tableH = Math.max(12, h - PAGE.headerH - 8);
+    const colW = this.fitGeneralGearColumns(iw, headers, rows.length ? rows : [{
+      amount: '',
+      name: '',
+      description: '',
+      concealment: '',
+      weight: '',
+      price: '',
+    }]);
+    const headerH = this.drawHeaderRow(ix, iy, colW, headers);
+    this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(ix, iy, iw, tableH).stroke();
+    const tableBottom = iy + tableH;
+    let ry = iy + headerH;
+    let index = startIndex;
+
+    const nameColW = colW[1] ?? 120;
+    const normalCellLineH = this.measureGeneralGearCellLineHeight(6.4);
+
+    const drawRow = (row: GeneralGearPageRow, rowH: number) => {
+      this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+      let cx = ix;
+      const metrics = this.measureGeneralGearRow(row, nameColW);
+      for (let c = 0; c < colW.length; c += 1) {
+        if (c > 0) this.doc.moveTo(cx, ry).lineTo(cx, ry + rowH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        const cw = colW[c]!;
+        if (c === 1) {
+          const name = (row.name ?? '').replace(/\s*\r?\n\s*/g, ' ');
+          const desc = (row.description ?? '').replace(/\s*\r?\n\s*/g, ' ');
+          this.fontR(6.4);
+          this.doc.fillColor(COLORS.text).text(name, cx + 3, ry + 1, { width: cw - 6, lineBreak: false, ellipsis: true });
+          if (desc) {
+            this.fontR(6.0);
+            this.doc.fillColor(COLORS.muted).text(desc, cx + 3, ry + 1 + metrics.nameLineH + 1, {
+              width: cw - 6,
+              lineGap: 0,
+              oblique: true,
+            });
+          }
+        } else {
+          const vals = [row.amount, row.name, row.concealment, row.weight, row.price];
+          this.fontR(6.4);
+          const v = (vals[c] ?? '').replace(/\s*\r?\n\s*/g, ' ');
+          const ty = ry + Math.max(1, Math.floor((rowH - normalCellLineH) / 2));
+          this.doc.fillColor(COLORS.text).text(v, cx + 2, ty, {
+            width: cw - 4,
+            align: 'center',
+            lineBreak: false,
+            ellipsis: true,
+          });
+        }
+        cx += cw;
+      }
+      ry += rowH;
+    };
+
+    while (index < rows.length) {
+      const row = rows[index]!;
+      const rowH = this.generalGearRowHeight(row, nameColW);
+      if (ry + rowH > tableBottom) break;
+      drawRow(row, rowH);
+      index += 1;
+    }
+
+    // Empty guide rows down to table bottom.
+    while (ry + 11 <= tableBottom) {
+      this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+      let cx = ix;
+      for (let c = 0; c < colW.length; c += 1) {
+        if (c > 0) this.doc.moveTo(cx, ry).lineTo(cx, ry + 11).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        cx += colW[c]!;
+      }
+      ry += 11;
+    }
+    // If remaining tail is shorter than one full row, still draw separators to the real table end.
+    if (ry < tableBottom) {
+      this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+      let cx = ix;
+      for (let c = 0; c < colW.length; c += 1) {
+        if (c > 0) this.doc.moveTo(cx, ry).lineTo(cx, tableBottom).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        cx += colW[c]!;
+      }
+    }
+    this.doc.moveTo(ix, tableBottom).lineTo(ix + iw, tableBottom).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+    return index;
+  }
+
+  private drawGeneralGearPairsFlow(
+    startY: number,
+    title: string,
+    headers: string[],
+    realRows: GeneralGearPageRow[],
+    startIndex = 0,
+  ): void {
+    const x = PAGE.margin;
+    const w = this.doc.page.width - PAGE.margin * 2;
+    const rows = realRows.length > 0
+      ? realRows
+      : [{
+          amount: '',
+          name: '',
+          description: '',
+          concealment: '',
+          weight: '',
+          price: '',
+        } as GeneralGearPageRow];
+
+    let gearIndex = this.drawGeneralGearPairOnce(x, startY, w, title, headers, rows, startIndex);
+    const hasRealRows = realRows.length > 0;
+    while (hasRealRows && gearIndex < rows.length) {
+      this.doc.addPage();
+      this.paintBg();
+      gearIndex = this.drawGeneralGearPairOnce(x, PAGE.margin, w, title, headers, rows, gearIndex);
+    }
   }
 
   private measureItemEffectsCardHeight(w: number, rows: ItemEffectGlossaryRow[]): number {
@@ -2816,7 +4276,6 @@ class Painter {
     totalW: number,
     headers: string[],
     rows: RecipePageRow[],
-    effectColIndex: number,
     recipeNameColIndex: number,
     formulaColIndex: number,
   ): number[] {
@@ -2832,14 +4291,10 @@ class Painter {
       let cellPref = 0;
       let cellMin = 0;
       if (c === formulaColIndex) {
-        const icon = 11;
-        const gap = 2;
-        for (const row of rows) {
-          const tokens = tokenizeFormulaIngredients(row.formulaEn);
-          const w = tokens.length > 0 ? tokens.length * icon + Math.max(0, tokens.length - 1) * gap : 0;
-          cellPref = Math.max(cellPref, w + 8);
-          cellMin = Math.max(cellMin, w + 8);
-        }
+        // FORMULA column is flexible: do not size it by content width.
+        // Keep only a safe minimum so it can expand and consume the remaining space.
+        cellPref = 0;
+        cellMin = 28;
       } else {
         for (const row of rows) {
           const values = [
@@ -2853,7 +4308,6 @@ class Painter {
             row.minimalIngredientsCost,
             row.timeEffect,
             row.toxicity,
-            row.recipeDescription,
             row.weightPotion,
             row.pricePotion,
           ];
@@ -2876,17 +4330,17 @@ class Painter {
       minW[c] = Math.max(16, headerMin, cellMin);
     }
 
-    pref[effectColIndex] = Math.max(pref[effectColIndex]!, 120);
-    minW[effectColIndex] = Math.max(minW[effectColIndex]!, 90);
     const minCostColIndex = 7;
     minW[minCostColIndex] = Math.max(minW[minCostColIndex]!, this.textWidth('ИНГР.', 'bold', 6.6) + 8);
     pref[minCostColIndex] = Math.max(pref[minCostColIndex]!, minW[minCostColIndex]!);
 
     const widths = pref.slice();
-    const fixedIndexes = widths.map((_, i) => i).filter((i) => i !== effectColIndex);
-    let sum = widths.reduce((a, b) => a + b, 0);
-    if (sum > totalW) {
-      let need = sum - totalW;
+    const fixedIndexes = widths.map((_, i) => i).filter((i) => i !== formulaColIndex);
+    const minFormula = minW[formulaColIndex]!;
+    const sumFixed = () => fixedIndexes.reduce((a, i) => a + widths[i]!, 0);
+    let fixedSum = sumFixed();
+    if (fixedSum + minFormula > totalW) {
+      let need = fixedSum + minFormula - totalW;
       for (let loop = 0; loop < 400 && need > 0.1; loop += 1) {
         let progressed = false;
         for (const idx of fixedIndexes) {
@@ -2900,18 +4354,11 @@ class Painter {
         }
         if (!progressed) break;
       }
-      sum = widths.reduce((a, b) => a + b, 0);
-      if (sum > totalW) {
-        const can = widths[effectColIndex]! - minW[effectColIndex]!;
-        const cut = Math.min(can, sum - totalW);
-        widths[effectColIndex] -= cut;
-      }
+      fixedSum = sumFixed();
     }
-
-    const nonEffect = widths.reduce((a, b, i) => (i === effectColIndex ? a : a + b), 0);
-    widths[effectColIndex] = Math.max(minW[effectColIndex]!, totalW - nonEffect);
+    widths[formulaColIndex] = Math.max(minFormula, totalW - fixedSum);
     const diff = totalW - widths.reduce((a, b) => a + b, 0);
-    if (Math.abs(diff) > 0.1) widths[effectColIndex] += diff;
+    if (Math.abs(diff) > 0.1) widths[formulaColIndex] += diff;
     return widths;
   }
 
@@ -2929,7 +4376,7 @@ class Painter {
     const gap = 2;
     const totalW = tokens.length * icon + Math.max(0, tokens.length - 1) * gap;
     let cx = x + Math.max(2, Math.floor((w - totalW) / 2));
-    const cy = y + Math.max(1, Math.floor((h - icon) / 2));
+    const cy = y + Math.max(0, Math.round((h - icon) / 2));
     for (const token of tokens) {
       if (cx + icon > x + w - 2) break;
       const assetPath = formulaIngredientAssetPath(token, alchemyStyle);
@@ -2964,65 +4411,150 @@ class Painter {
     }
   }
 
-  private drawPage3Recipes(vm: ReturnType<typeof buildVm>) {
-    this.doc.addPage();
-    this.paintBg();
-    const tx = vm.tx;
-    const alchemyIconStyle: 'w1' | 'w2' = vm.alchemyIconStyle === 'w1' ? 'w1' : 'w2';
-    const x = PAGE.margin;
-    const y = PAGE.margin;
-    const w = this.doc.page.width - PAGE.margin * 2;
-    const recipes = Array.isArray(vm.page3Recipes) ? vm.page3Recipes : [];
-    const rows = [...recipes, ...new Array(3).fill(null).map(() => ({
+  private drawIngredientIconCell(
+    substanceEn: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    alchemyStyle: 'w1' | 'w2',
+  ) {
+    const token = String(substanceEn ?? '').trim();
+    if (!token) return;
+    const icon = 11;
+    const cx = x + Math.max(1, Math.floor((w - icon) / 2));
+    const cy = y + Math.max(0, Math.floor((h - icon) / 2) - 2);
+    const assetPath = formulaIngredientAssetPath(token, alchemyStyle);
+    if (assetPath) {
+      try {
+        this.doc.image(assetPath, cx, cy, { fit: [icon, icon] });
+        return;
+      } catch {
+        // fallback below
+      }
+    }
+    this.doc.lineWidth(0.25).strokeColor('#65748b').rect(cx, cy, icon, icon).stroke();
+  }
+
+  private fitBlueprintColumns(totalW: number, headers: string[], rows: BlueprintPageRow[]): number[] {
+    const colCount = headers.length;
+    const valuesByCol = rows.map((r) => [
+      r.amount,
+      r.name,
+      r.craftLevel,
+      r.difficultyCheck,
+      r.timeCraft,
+      r.components,
+      r.itemDesc,
+      r.priceComponents,
+      r.price,
+      r.priceItem,
+    ]);
+    const minW = new Array<number>(colCount).fill(16);
+    const prefW = new Array<number>(colCount).fill(16);
+    const flexCols = new Set([5, 6]); // Состав, Описание
+    const fixedCols = [...Array(colCount).keys()].filter((i) => !flexCols.has(i));
+
+    for (let c = 0; c < colCount; c += 1) {
+      const headerLines = String(headers[c] ?? '').split(/\r?\n/).filter(Boolean);
+      const headerPref = Math.max(...headerLines.map((line) => this.textWidth(this.headerCellText(line), 'bold', 6.5)), 0) + 8;
+      const headerMin = Math.max(...headerLines.map((line) => this.maxWordWidth(this.headerCellText(line), 'bold', 6.5)), 0) + 8;
+      let cellPref = 0;
+      let cellMin = 0;
+      for (const rowVals of valuesByCol) {
+        const v = String(rowVals[c] ?? '').replace(/\s*\r?\n\s*/g, ' ');
+        if (!v) continue;
+        if (flexCols.has(c)) {
+          cellPref = Math.max(cellPref, Math.min(180, this.minWidthForTwoLine(v, 'regular', 6.2) + 8));
+        } else {
+          cellPref = Math.max(cellPref, this.textWidth(v, 'regular', 6.2) + 8);
+        }
+        cellMin = Math.max(cellMin, this.maxWordWidth(v, 'regular', 6.2) + 8);
+      }
+      minW[c] = Math.max(16, headerMin, cellMin);
+      prefW[c] = Math.max(minW[c]!, headerPref, cellPref);
+    }
+
+    const widths = prefW.slice();
+    let fixedSum = fixedCols.reduce((sum, idx) => sum + widths[idx]!, 0);
+    let minFixedSum = fixedCols.reduce((sum, idx) => sum + minW[idx]!, 0);
+    const minFlexSum = minW[5]! + minW[6]!;
+
+    if (minFixedSum + minFlexSum > totalW) {
+      // aggressive shrink of fixed cols to minimum possible
+      const over = minFixedSum + minFlexSum - totalW;
+      if (over > 0) {
+        // nothing to do; below assignment will clamp flex columns to min, fit best effort
+      }
+      fixedSum = minFixedSum;
+      for (const idx of fixedCols) widths[idx] = minW[idx]!;
+    } else if (fixedSum + minFlexSum > totalW) {
+      let need = fixedSum + minFlexSum - totalW;
+      for (let loop = 0; loop < 400 && need > 0.1; loop += 1) {
+        let progressed = false;
+        for (const idx of fixedCols) {
+          if (need <= 0.1) break;
+          const can = widths[idx]! - minW[idx]!;
+          if (can <= 0) continue;
+          const cut = Math.min(can, Math.max(0.4, need / fixedCols.length));
+          widths[idx] -= cut;
+          need -= cut;
+          progressed = true;
+        }
+        if (!progressed) break;
+      }
+      fixedSum = fixedCols.reduce((sum, idx) => sum + widths[idx]!, 0);
+    }
+
+    const remaining = Math.max(minFlexSum, totalW - fixedSum);
+    const w5Pref = prefW[5]!;
+    const w6Pref = prefW[6]!;
+    const prefFlexSum = Math.max(1, w5Pref + w6Pref);
+    widths[5] = Math.max(minW[5]!, Math.floor((remaining * w5Pref) / prefFlexSum));
+    widths[6] = Math.max(minW[6]!, remaining - widths[5]!);
+    const diff = totalW - widths.reduce((a, b) => a + b, 0);
+    widths[6] = Math.max(minW[6]!, widths[6]! + diff);
+    return widths;
+  }
+
+  private drawBlueprintsSection(
+    x: number,
+    y: number,
+    w: number,
+    rowsIn: BlueprintPageRow[],
+    tx: ReturnType<typeof tr>,
+    extraEmptyRows: number,
+  ): number {
+    const rows = [...rowsIn, ...new Array(Math.max(0, extraEmptyRows)).fill(null).map(() => ({
       amount: '',
-      recipeGroup: '',
-      recipeName: '',
-      complexity: '',
+      name: '',
+      group: '',
+      craftLevel: '',
+      difficultyCheck: '',
       timeCraft: '',
-      formulaEn: '',
-      priceFormula: '',
-      minimalIngredientsCost: '',
-      timeEffect: '',
-      toxicity: '',
-      recipeDescription: '',
-      weightPotion: '',
-      pricePotion: '',
-    } as RecipePageRow))];
+      components: '',
+      itemDesc: '',
+      priceComponents: '',
+      price: '',
+      priceItem: '',
+    } as BlueprintPageRow))];
     const headers = [
-      tx.page3.recipesCols.qty,
-      tx.page3.recipesCols.recipeGroup,
-      tx.page3.recipesCols.recipeName,
-      tx.page3.recipesCols.complexity,
-      tx.page3.recipesCols.timeCraft,
-      tx.page3.recipesCols.formula,
-      tx.page3.recipesCols.priceFormula,
-      tx.page3.recipesCols.minimalIngredientsCost,
-      tx.page3.recipesCols.timeEffect,
-      tx.page3.recipesCols.toxicity,
-      tx.page3.recipesCols.recipeDescription,
-      tx.page3.recipesCols.weightPotion,
-      tx.page3.recipesCols.pricePotion,
+      tx.page3.blueprintsCols.qty,
+      tx.page3.blueprintsCols.name,
+      tx.page3.blueprintsCols.craftLevel,
+      tx.page3.blueprintsCols.difficultyCheck,
+      tx.page3.blueprintsCols.timeCraft,
+      tx.page3.blueprintsCols.components,
+      tx.page3.blueprintsCols.itemDesc,
+      tx.page3.blueprintsCols.priceComponents,
+      tx.page3.blueprintsCols.price,
+      tx.page3.blueprintsCols.priceItem,
     ];
 
     const ix = x + 4;
     const iy = y + PAGE.headerH + 4;
     const iw = w - 8;
-    const effectColIndex = 10;
-    const recipeNameColIndex = 2;
-    const formulaColIndex = 5;
-    const colW = this.fitRecipeColumns(iw, headers, rows, effectColIndex, recipeNameColIndex, formulaColIndex);
-
-    const rowHeights = rows.map((r) => {
-      const wrappedName = this.wrapTextTwoLines(r.recipeName || '', Math.max(10, colW[recipeNameColIndex]! - 6), 'regular', 6.2);
-      const recipeNameH = wrappedName
-        ? Math.ceil(this.doc.heightOfString(wrappedName, { width: Math.max(10, colW[recipeNameColIndex]! - 6), lineGap: 0 }))
-        : 0;
-      const effectH = r.recipeDescription
-        ? Math.ceil(this.doc.heightOfString(r.recipeDescription, { width: Math.max(12, colW[effectColIndex]! - 6), lineGap: 0 }))
-        : 0;
-      const formulaH = tokenizeFormulaIngredients(r.formulaEn).length > 0 ? 11 : 0;
-      return Math.max(11, recipeNameH + 2, effectH + 2, formulaH + 2);
-    });
+    const colW = this.fitBlueprintColumns(iw, headers, rows);
     const headerLineH = 7.0;
     const headerH = Math.max(
       12,
@@ -3031,45 +4563,30 @@ class Painter {
         return Math.ceil(lines.length * headerLineH + 2);
       }),
     );
-    const tableH = headerH + rowHeights.reduce((a, b) => a + b, 0);
-
-    const legendPairs = FORMULA_INGREDIENT_NAMES.map((name) => {
-      const label = name === 'Dog Tallow' ? tx.page3.formulaLegend.DogTallow : (tx.page3.formulaLegend as Record<string, string>)[name] ?? name;
-      return { token: name, label };
+    const rowHeights = rows.map((r) => {
+      const nameText = r.group ? `${r.name}\n${r.group}` : r.name;
+      const nameH = nameText
+        ? Math.ceil(this.doc.heightOfString(nameText, { width: Math.max(10, colW[1]! - 6), lineGap: 0 }))
+        : 0;
+      const compH = r.components
+        ? Math.ceil(this.doc.heightOfString(r.components, { width: Math.max(12, colW[5]! - 6), lineGap: 0 }))
+        : 0;
+      const descH = r.itemDesc
+        ? Math.ceil(this.doc.heightOfString(r.itemDesc, { width: Math.max(12, colW[6]! - 6), lineGap: 0 }))
+        : 0;
+      return Math.max(11, nameH + 2, compH + 2, descH + 2);
     });
-    let legendIcon = 10;
-    let legendFont = 6.1;
-    const hyphenPad = 2; // fixed distance on both sides of '-'
-    const hyphenText = '-';
-    const estimateCoreWidth = () => {
-      const hyphenW = this.textWidth(hyphenText, 'regular', legendFont);
-      return legendPairs.reduce(
-        (sum, p) => sum + legendIcon + hyphenPad + hyphenW + hyphenPad + this.textWidth(p.label, 'regular', legendFont),
-        0,
-      );
-    };
-    let legendCoreW = estimateCoreWidth();
-    // Auto-fit by slightly reducing icon+font if needed, then distribute free space as inter-item gaps.
-    while (legendCoreW > iw - 6 && legendIcon > 7) {
-      legendIcon -= 1;
-      legendFont = Math.max(5.2, legendFont - 0.2);
-      legendCoreW = estimateCoreWidth();
-    }
-    const availableLegendW = Math.max(0, iw - 6);
-    const autoGap = legendPairs.length > 1
-      ? Math.max(0, (availableLegendW - legendCoreW) / (legendPairs.length - 1))
-      : 0;
-    const legendH = Math.max(12, legendIcon + 4);
-    const outerH = PAGE.headerH + 4 + tableH + 2 + legendH + 4;
+    const tableH = headerH + rowHeights.reduce((a, b) => a + b, 0);
+    const outerH = PAGE.headerH + 4 + tableH + 4;
 
-    this.shell(x, y, w, outerH, tx.page3.recipes, COLORS.headerRecipes);
+    this.shell(x, y, w, outerH, tx.page3.blueprints, COLORS.headerBlueprints);
     this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(ix, iy, iw, tableH).stroke();
     this.doc.rect(ix, iy, iw, headerH).fill('#ffffff');
     this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(ix, iy, iw, headerH).stroke();
     let hx = ix;
     for (let i = 0; i < colW.length; i += 1) {
       if (i > 0) this.doc.moveTo(hx, iy).lineTo(hx, iy + headerH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
-      this.fontB(6.6);
+      this.fontB(6.5);
       const headerLines = String(headers[i] ?? '').toUpperCase().split(/\r?\n/).filter(Boolean);
       const blockH = headerLines.length * headerLineH;
       let hy = iy + Math.max(1, Math.floor((headerH - blockH) / 2));
@@ -3093,39 +4610,26 @@ class Painter {
       let cx = ix;
       const vals = [
         row.amount,
-        row.recipeGroup,
-        row.recipeName,
-        row.complexity,
+        row.name,
+        row.craftLevel,
+        row.difficultyCheck,
         row.timeCraft,
-        row.formulaEn,
-        row.priceFormula,
-        row.minimalIngredientsCost,
-        row.timeEffect,
-        row.toxicity,
-        row.recipeDescription,
-        row.weightPotion,
-        row.pricePotion,
+        row.components,
+        row.itemDesc,
+        row.priceComponents,
+        row.price,
+        row.priceItem,
       ];
       for (let c = 0; c < colW.length; c += 1) {
         const cw = colW[c]!;
         if (c > 0) this.doc.moveTo(cx, iy).lineTo(cx, ry + rowH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
-        if (c === formulaColIndex) {
-          this.drawFormulaImagesCell(vals[c] ?? '', cx + 1, ry + 1, cw - 2, rowH - 2, alchemyIconStyle);
-        } else if (c === effectColIndex) {
+        if (c === 1) {
+          const nameText = row.group ? `${row.name}\n${row.group}` : row.name;
           this.fontR(6.2);
-          this.doc.fillColor(COLORS.text).text(vals[c] ?? '', cx + 3, ry + 1, { width: cw - 6 });
-        } else if (c === recipeNameColIndex) {
+          this.doc.fillColor(COLORS.text).text(nameText, cx + 3, ry + 1, { width: cw - 6, lineGap: 0 });
+        } else if (c === 5 || c === 6) {
           this.fontR(6.2);
-          const wrapped = this.wrapTextTwoLines(vals[c] ?? '', Math.max(10, cw - 6), 'regular', 6.2);
-          const th = wrapped
-            ? Math.ceil(this.doc.heightOfString(wrapped, { width: Math.max(10, cw - 6), lineGap: 0 }))
-            : 0;
-          const ty = ry + Math.max(1, Math.floor((rowH - th) / 2));
-          this.doc.fillColor(COLORS.text).text(wrapped, cx + 3, ty, {
-            width: cw - 6,
-            align: 'center',
-            lineGap: 0,
-          });
+          this.doc.fillColor(COLORS.text).text(vals[c] ?? '', cx + 3, ry + 1, { width: cw - 6, lineGap: 0 });
         } else {
           this.fontR(6.2);
           const value = (vals[c] ?? '').replace(/\s*\r?\n\s*/g, ' ');
@@ -3142,26 +4646,805 @@ class Painter {
       ry += rowH;
     }
     this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+    return outerH;
+  }
 
-    const legendY = iy + tableH + 2;
-    this.doc.moveTo(ix, legendY).lineTo(ix + iw, legendY).strokeColor('#666666').lineWidth(0.25).stroke();
-    const ly = legendY + 1;
-    let lx = ix + 3;
-    for (const item of legendPairs) {
-      const asset = formulaIngredientAssetPath(item.token, alchemyIconStyle);
-      if (asset) {
-        try { this.doc.image(asset, lx, ly + 1, { fit: [legendIcon, legendIcon] }); } catch {}
+  private fitComponentsColumns(totalW: number, headers: string[], rows: ComponentPageRow[]): number[] {
+    const colCount = headers.length;
+    const nameCol = 2;
+    const fixedCols = [0, 1, 3, 4, 5];
+    const minW = new Array<number>(colCount).fill(16);
+    const prefW = new Array<number>(colCount).fill(16);
+
+    for (let c = 0; c < colCount; c += 1) {
+      const headerLines = String(headers[c] ?? '').split(/\r?\n/).filter(Boolean);
+      const headerPref = Math.max(...headerLines.map((line) => this.textWidth(this.headerCellText(line), 'bold', 6.4)), 0) + 8;
+      const headerMin = Math.max(...headerLines.map((line) => this.maxWordWidth(this.headerCellText(line), 'bold', 6.4)), 0) + 8;
+      let cellPref = 0;
+      let cellMin = 0;
+      for (const row of rows) {
+        const vals = [row.amount, row.substanceEn, row.name, row.harvestingComplexity, row.weight, row.price];
+        const v = String(vals[c] ?? '').replace(/\s*\r?\n\s*/g, ' ');
+        if (!v) continue;
+        if (c === 1) {
+          cellPref = Math.max(cellPref, 18);
+          cellMin = Math.max(cellMin, 16);
+        } else if (c === nameCol) {
+          cellPref = Math.max(cellPref, Math.min(140, this.minWidthForTwoLine(v, 'regular', 6.2) + 8));
+          cellMin = Math.max(cellMin, this.maxWordWidth(v, 'regular', 6.2) + 8);
+        } else {
+          cellPref = Math.max(cellPref, this.textWidth(v, 'regular', 6.2) + 8);
+          cellMin = Math.max(cellMin, this.maxWordWidth(v, 'regular', 6.2) + 8);
+        }
       }
-      this.fontR(legendFont);
-      const hyphenW = this.textWidth(hyphenText, 'regular', legendFont);
-      const labelW = this.textWidth(item.label, 'regular', legendFont);
-      let txX = lx + legendIcon;
-      txX += hyphenPad;
-      this.doc.fillColor(COLORS.text).text(hyphenText, txX, ly + 1, { width: hyphenW + 1, lineBreak: false, ellipsis: true });
-      txX += hyphenW + hyphenPad;
-      this.doc.fillColor(COLORS.text).text(item.label, txX, ly + 1, { width: labelW + 1, lineBreak: false, ellipsis: true });
-      lx += legendIcon + hyphenPad + hyphenW + hyphenPad + labelW + autoGap;
+      minW[c] = Math.max(16, headerMin, cellMin);
+      prefW[c] = Math.max(minW[c]!, headerPref, cellPref);
     }
+
+    const widths = prefW.slice();
+    let fixedSum = fixedCols.reduce((sum, idx) => sum + widths[idx]!, 0);
+    const minFixedSum = fixedCols.reduce((sum, idx) => sum + minW[idx]!, 0);
+    if (fixedSum > totalW - minW[nameCol]!) {
+      let need = fixedSum - (totalW - minW[nameCol]!);
+      for (let loop = 0; loop < 400 && need > 0.1; loop += 1) {
+        let progressed = false;
+        for (const idx of fixedCols) {
+          if (need <= 0.1) break;
+          const can = widths[idx]! - minW[idx]!;
+          if (can <= 0) continue;
+          const cut = Math.min(can, Math.max(0.4, need / fixedCols.length));
+          widths[idx] -= cut;
+          need -= cut;
+          progressed = true;
+        }
+        if (!progressed) break;
+      }
+      fixedSum = fixedCols.reduce((sum, idx) => sum + widths[idx]!, 0);
+    }
+    const clampedFixedSum = Math.max(minFixedSum, fixedSum);
+    widths[nameCol] = Math.max(minW[nameCol]!, totalW - clampedFixedSum);
+    let diff = totalW - widths.reduce((a, b) => a + b, 0);
+    widths[nameCol] = Math.max(minW[nameCol]!, widths[nameCol]! + diff);
+
+    // Final normalization: keep exact total width to avoid the last column drifting.
+    let sum = widths.reduce((a, b) => a + b, 0);
+    if (sum > totalW) {
+      let need = sum - totalW;
+      const reducibleOrder = [nameCol, ...fixedCols];
+      for (let loop = 0; loop < 400 && need > 0.1; loop += 1) {
+        let progressed = false;
+        for (const idx of reducibleOrder) {
+          if (need <= 0.1) break;
+          const can = widths[idx]! - minW[idx]!;
+          if (can <= 0) continue;
+          const cut = Math.min(can, Math.max(0.2, need / reducibleOrder.length));
+          widths[idx] -= cut;
+          need -= cut;
+          progressed = true;
+        }
+        if (!progressed) break;
+      }
+      sum = widths.reduce((a, b) => a + b, 0);
+    }
+    if (sum < totalW) {
+      widths[nameCol] += totalW - sum;
+      sum = totalW;
+    }
+    diff = totalW - sum;
+    if (Math.abs(diff) > 0.01) {
+      // Fallback to keep arithmetic exact.
+      widths[widths.length - 1] = Math.max(minW[widths.length - 1]!, widths[widths.length - 1]! + diff);
+    }
+    return widths;
+  }
+
+  private drawComponentsTripleTables(
+    x: number,
+    y: number,
+    w: number,
+    tables: Array<{ rows: ComponentPageRow[] }>,
+    tx: ReturnType<typeof tr>,
+    alchemyStyle: 'w1' | 'w2',
+    extraEmptyRows: number,
+  ): number {
+    const gap = 6;
+    const tableCount = 3;
+    const tableW = (w - gap * (tableCount - 1)) / tableCount;
+    const normalizedRowsByTable = Array.from({ length: tableCount }, (_, idx) =>
+      Array.isArray(tables[idx]?.rows) ? tables[idx]!.rows : [],
+    );
+    const maxDataRows = Math.max(0, ...normalizedRowsByTable.map((rows) => rows.length));
+    const targetRows = Math.max(0, maxDataRows + Math.max(0, extraEmptyRows));
+    const headers = [
+      tx.page3.componentsCols.qty,
+      tx.page3.componentsCols.sub,
+      tx.page3.componentsCols.name,
+      tx.page3.componentsCols.harvestingComplexity,
+      tx.page3.componentsCols.weight,
+      tx.page3.componentsCols.price,
+    ];
+    let maxH = 0;
+
+    for (let t = 0; t < tableCount; t += 1) {
+      const cx = x + t * (tableW + gap);
+      const rows = normalizedRowsByTable[t] ?? [];
+      const tableRows = [...rows];
+      while (tableRows.length < targetRows) {
+        tableRows.push({
+          amount: '',
+          substanceEn: '',
+          name: '',
+          harvestingComplexity: '',
+          weight: '',
+          price: '',
+        });
+      }
+      const ix = cx;
+      const iy = y;
+      const iw = tableW;
+      const outerPad = 3;
+      const txX = ix + outerPad;
+      const txY = iy + outerPad;
+      const txW = iw - outerPad * 2;
+      const colW = this.fitComponentsColumns(txW, headers, tableRows);
+      const headerH = 12;
+      const rowHeights = tableRows.map((r) => {
+        const nameH = r.name ? Math.ceil(this.doc.heightOfString(r.name, { width: Math.max(10, colW[2]! - 6), lineGap: 0 })) : 0;
+        return Math.max(13, nameH + 4);
+      });
+      const innerTableH = headerH + rowHeights.reduce((a, b) => a + b, 0);
+      const outerH = innerTableH + outerPad * 2;
+      maxH = Math.max(maxH, outerH);
+
+      this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(ix, iy, iw, outerH).stroke();
+      this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(txX, txY, txW, innerTableH).stroke();
+      this.doc.rect(txX, txY, txW, headerH).fill('#ffffff');
+      this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(txX, txY, txW, headerH).stroke();
+      let hx = txX;
+      for (let i = 0; i < colW.length; i += 1) {
+        if (i > 0) this.doc.moveTo(hx, txY).lineTo(hx, txY + headerH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        this.fontB(6.4);
+        this.doc.fillColor(COLORS.text).text(String(headers[i] ?? '').toUpperCase(), hx + 2, txY + 2, {
+          width: colW[i]! - 4,
+          align: 'center',
+          lineBreak: false,
+          ellipsis: true,
+        });
+        hx += colW[i]!;
+      }
+
+      let ry = txY + headerH;
+      for (let r = 0; r < tableRows.length; r += 1) {
+        const row = tableRows[r]!;
+        const rowH = rowHeights[r]!;
+        this.doc.moveTo(txX, ry).lineTo(txX + txW, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        let cx2 = txX;
+        const vals = [row.amount, row.substanceEn, row.name, row.harvestingComplexity, row.weight, row.price];
+        for (let c = 0; c < colW.length; c += 1) {
+          const cw = colW[c]!;
+          if (c > 0) this.doc.moveTo(cx2, ry).lineTo(cx2, ry + rowH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+          if (c === 1) {
+            this.drawIngredientIconCell(vals[c] ?? '', cx2 + 1, ry + 1, cw - 2, rowH - 2, alchemyStyle);
+          } else if (c === 2) {
+            this.fontR(6.2);
+            this.doc.fillColor(COLORS.text).text(vals[c] ?? '', cx2 + 3, ry + 1, { width: cw - 6, lineGap: 0 });
+          } else {
+            this.fontR(6.2);
+            const v = (vals[c] ?? '').replace(/\s*\r?\n\s*/g, ' ');
+            const ty = ry + Math.max(1, Math.floor((rowH - 7) / 2));
+            this.doc.fillColor(COLORS.text).text(v, cx2 + 2, ty, {
+              width: cw - 4,
+              align: 'center',
+              lineBreak: false,
+              ellipsis: true,
+            });
+          }
+          cx2 += cw;
+        }
+        ry += rowH;
+      }
+      this.doc.moveTo(txX, ry).lineTo(txX + txW, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+    }
+    return maxH;
+  }
+
+  private drawPage3Recipes(vm: ReturnType<typeof buildVm>): number {
+    this.doc.addPage();
+    this.paintBg();
+    const tx = vm.tx;
+    const alchemyIconStyle: 'w1' | 'w2' = vm.alchemyIconStyle === 'w1' ? 'w1' : 'w2';
+    const pdfTableSettings: PdfTablesSettingsVm =
+      (vm.pdfTableSettings as PdfTablesSettingsVm | undefined) ?? DEFAULT_PDF_TABLE_SETTINGS_VM;
+    const x = PAGE.margin;
+    const y = PAGE.margin;
+    const w = this.doc.page.width - PAGE.margin * 2;
+    const recipes = Array.isArray(vm.page3Recipes) ? vm.page3Recipes : [];
+    const recipeEmptyRows = pdfTableSettings.alchemyRecipes.emptyRows;
+    const shouldRenderRecipes = recipes.length > 0 || pdfTableSettings.alchemyRecipes.showIfEmpty;
+    let cy = y;
+    if (shouldRenderRecipes) {
+      const rows = [...recipes, ...new Array(Math.max(0, recipeEmptyRows)).fill(null).map(() => ({
+        amount: '',
+        recipeGroup: '',
+        recipeName: '',
+        complexity: '',
+        timeCraft: '',
+        formulaEn: '',
+        priceFormula: '',
+        minimalIngredientsCost: '',
+        timeEffect: '',
+        toxicity: '',
+        recipeDescription: '',
+        weightPotion: '',
+        pricePotion: '',
+      } as RecipePageRow))];
+      const headers = [
+        tx.page3.recipesCols.qty,
+        tx.page3.recipesCols.recipeGroup,
+        tx.page3.recipesCols.recipeName,
+        tx.page3.recipesCols.complexity,
+        tx.page3.recipesCols.timeCraft,
+        tx.page3.recipesCols.formula,
+        tx.page3.recipesCols.priceFormula,
+        tx.page3.recipesCols.minimalIngredientsCost,
+        tx.page3.recipesCols.timeEffect,
+        tx.page3.recipesCols.toxicity,
+        tx.page3.recipesCols.weightPotion,
+        tx.page3.recipesCols.pricePotion,
+      ];
+
+      const ix = x + 4;
+      const iy = y + PAGE.headerH + 4;
+      const iw = w - 8;
+      const recipeNameColIndex = 2;
+      const formulaColIndex = 5;
+      const colW = this.fitRecipeColumns(iw, headers, rows, recipeNameColIndex, formulaColIndex);
+
+      const rowHeights = rows.map((r) => {
+        const wrappedName = this.wrapTextTwoLines(r.recipeName || '', Math.max(10, colW[recipeNameColIndex]! - 6), 'regular', 6.2);
+        const recipeNameH = wrappedName
+          ? Math.ceil(this.doc.heightOfString(wrappedName, { width: Math.max(10, colW[recipeNameColIndex]! - 6), lineGap: 0 }))
+          : 0;
+        const effectMergedW = colW.slice(3).reduce((a, b) => a + b, 0);
+        const effectH = r.recipeDescription
+          ? Math.ceil(this.doc.heightOfString(r.recipeDescription, { width: Math.max(12, effectMergedW - 6), lineGap: 0 }))
+          : 0;
+        const formulaH = tokenizeFormulaIngredients(r.formulaEn).length > 0 ? 11 : 0;
+        const topH = Math.max(RECIPE_PRIMARY_MIN_HEIGHT, recipeNameH + 2, formulaH + 2);
+        const bottomH = Math.max(11, effectH + 2);
+        return { topH, bottomH, totalH: topH + bottomH };
+      });
+      const headerLineH = 7.0;
+      const headerH = Math.max(
+        12,
+        ...headers.map((h) => {
+          const lines = String(h ?? '').toUpperCase().split(/\r?\n/).filter(Boolean);
+          return Math.ceil(lines.length * headerLineH + 2);
+        }),
+      );
+      const tableH = headerH + rowHeights.reduce((a, b) => a + b.totalH, 0);
+
+      const legendPairs = FORMULA_INGREDIENT_NAMES.map((name) => {
+        const label = name === 'Dog Tallow' ? tx.page3.formulaLegend.DogTallow : (tx.page3.formulaLegend as Record<string, string>)[name] ?? name;
+        return { token: name, label };
+      });
+      let legendIcon = 10;
+      let legendFont = 6.1;
+      const hyphenPad = 2;
+      const hyphenText = '-';
+      const estimateCoreWidth = () => {
+        const hyphenW = this.textWidth(hyphenText, 'regular', legendFont);
+        return legendPairs.reduce(
+          (sum, p) => sum + legendIcon + hyphenPad + hyphenW + hyphenPad + this.textWidth(p.label, 'regular', legendFont),
+          0,
+        );
+      };
+      let legendCoreW = estimateCoreWidth();
+      while (legendCoreW > iw - 6 && legendIcon > 7) {
+        legendIcon -= 1;
+        legendFont = Math.max(5.2, legendFont - 0.2);
+        legendCoreW = estimateCoreWidth();
+      }
+      const availableLegendW = Math.max(0, iw - 6);
+      const autoGap = legendPairs.length > 1
+        ? Math.max(0, (availableLegendW - legendCoreW) / (legendPairs.length - 1))
+        : 0;
+      const legendH = Math.max(12, legendIcon + 4);
+      const outerH = PAGE.headerH + 4 + tableH + 2 + legendH + 4;
+
+      this.shell(x, y, w, outerH, tx.page3.recipes, COLORS.headerRecipes);
+      this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(ix, iy, iw, tableH).stroke();
+      this.doc.rect(ix, iy, iw, headerH).fill('#ffffff');
+      this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(ix, iy, iw, headerH).stroke();
+      let hx = ix;
+      for (let i = 0; i < colW.length; i += 1) {
+        if (i > 0) this.doc.moveTo(hx, iy).lineTo(hx, iy + headerH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        this.fontB(6.6);
+        const headerLines = String(headers[i] ?? '').toUpperCase().split(/\r?\n/).filter(Boolean);
+        const blockH = headerLines.length * headerLineH;
+        let hy = iy + Math.max(1, Math.floor((headerH - blockH) / 2));
+        for (const line of headerLines) {
+          this.doc.fillColor(COLORS.text).text(line, hx + 3, hy, {
+            width: colW[i]! - 6,
+            align: 'center',
+            lineBreak: false,
+            ellipsis: true,
+          });
+          hy += headerLineH;
+        }
+        hx += colW[i]!;
+      }
+
+      let ry = iy + headerH;
+      for (let r = 0; r < rows.length; r += 1) {
+        const row = rows[r]!;
+        const rowH = rowHeights[r]!;
+        const topH = rowH.topH;
+        const bottomH = rowH.bottomH;
+        const totalH = rowH.totalH;
+        this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        let cx = ix;
+        const vals = [
+          row.amount,
+          row.recipeGroup,
+          row.recipeName,
+          row.complexity,
+          row.timeCraft,
+          row.formulaEn,
+          row.priceFormula,
+          row.minimalIngredientsCost,
+          row.timeEffect,
+          row.toxicity,
+          row.weightPotion,
+          row.pricePotion,
+        ];
+        for (let c = 0; c < colW.length; c += 1) {
+          const cw = colW[c]!;
+          if (c > 0) {
+            const lineBottom = c <= 3 ? ry + totalH : ry + topH;
+            this.doc.moveTo(cx, ry).lineTo(cx, lineBottom).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+          }
+          if (c === formulaColIndex) {
+            this.drawFormulaImagesCell(vals[c] ?? '', cx + 1, ry, cw - 2, topH, alchemyIconStyle);
+          } else if (c === recipeNameColIndex) {
+            this.fontR(6.2);
+            const wrapped = this.wrapTextTwoLines(vals[c] ?? '', Math.max(10, cw - 6), 'regular', 6.2);
+            const th = wrapped
+              ? Math.ceil(this.doc.heightOfString(wrapped, { width: Math.max(10, cw - 6), lineGap: 0 }))
+              : 0;
+            const ty = ry + Math.max(1, Math.floor((topH - th) / 2));
+            this.doc.fillColor(COLORS.text).text(wrapped, cx + 3, ty, {
+              width: cw - 6,
+              align: 'center',
+              lineGap: 0,
+            });
+          } else {
+            this.fontR(6.2);
+            const value = (vals[c] ?? '').replace(/\s*\r?\n\s*/g, ' ');
+            const cellH = c <= 1 ? totalH : topH;
+            const ty = ry + Math.max(1, Math.floor((cellH - 7) / 2));
+            this.doc.fillColor(COLORS.text).text(value, cx + 2, ty, {
+              width: cw - 4,
+              lineBreak: false,
+              ellipsis: true,
+              align: 'center',
+            });
+          }
+          cx += cw;
+        }
+        const xAfterGroup = ix + colW[0]! + colW[1]!;
+        this.doc.moveTo(xAfterGroup, ry + topH).lineTo(ix + iw, ry + topH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        const xAfterRecipe = xAfterGroup + colW[2]!;
+        this.doc.moveTo(xAfterRecipe, ry + topH).lineTo(xAfterRecipe, ry + totalH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+        this.fontR(6.2);
+        const effectLabelY = ry + topH + Math.max(1, Math.floor((bottomH - 7) / 2));
+        this.doc.fillColor(COLORS.muted).text(tx.page3.recipesCols.recipeDescription.toUpperCase(), xAfterGroup + 2, effectLabelY, {
+          width: colW[2]! - 4,
+          align: 'center',
+          lineBreak: false,
+          ellipsis: true,
+          oblique: true,
+        });
+        this.fontR(6.2);
+        this.doc.fillColor(COLORS.muted).text(row.recipeDescription ?? '', xAfterRecipe + 3, ry + topH + 1, {
+          width: iw - (xAfterRecipe - ix) - 6,
+          oblique: true,
+        });
+        ry += totalH;
+      }
+      this.doc.moveTo(ix, ry).lineTo(ix + iw, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
+
+      const legendY = iy + tableH + 2;
+      this.doc.moveTo(ix, legendY).lineTo(ix + iw, legendY).strokeColor('#666666').lineWidth(0.25).stroke();
+      const ly = legendY + 1;
+      let lx = ix + 3;
+      for (const item of legendPairs) {
+        const asset = formulaIngredientAssetPath(item.token, alchemyIconStyle);
+        if (asset) {
+          try { this.doc.image(asset, lx, ly + 1, { fit: [legendIcon, legendIcon] }); } catch {}
+        }
+        this.fontR(legendFont);
+        const hyphenW = this.textWidth(hyphenText, 'regular', legendFont);
+        const labelW = this.textWidth(item.label, 'regular', legendFont);
+        let txX = lx + legendIcon;
+        txX += hyphenPad;
+        this.doc.fillColor(COLORS.text).text(hyphenText, txX, ly + 1, { width: hyphenW + 1, lineBreak: false, ellipsis: true });
+        txX += hyphenW + hyphenPad;
+        this.doc.fillColor(COLORS.text).text(item.label, txX, ly + 1, { width: labelW + 1, lineBreak: false, ellipsis: true });
+        lx += legendIcon + hyphenPad + hyphenW + hyphenPad + labelW + autoGap;
+      }
+      cy = y + outerH + 6;
+    }
+    const blueprints = Array.isArray(vm.page3Blueprints) ? vm.page3Blueprints : [];
+    const componentsTables = Array.isArray(vm.page3ComponentTables) ? vm.page3ComponentTables : [];
+    const shouldRenderBlueprints = blueprints.length > 0 || pdfTableSettings.blueprints.showIfEmpty;
+    if (shouldRenderBlueprints) {
+      const estimateBlueprintH = (() => {
+        const estimateRows = [...blueprints, ...new Array(Math.max(0, pdfTableSettings.blueprints.emptyRows)).fill(null).map(() => ({
+          amount: '',
+          name: '',
+          group: '',
+          craftLevel: '',
+          difficultyCheck: '',
+          timeCraft: '',
+          components: '',
+          itemDesc: '',
+          priceComponents: '',
+          price: '',
+          priceItem: '',
+        } as BlueprintPageRow))];
+        return PAGE.headerH + 4 + 12 + estimateRows.length * 11 + 4;
+      })();
+      if (cy + estimateBlueprintH > this.bottom()) {
+        this.doc.addPage();
+        this.paintBg();
+        cy = PAGE.margin;
+      }
+      const blueprintsH = this.drawBlueprintsSection(
+        x,
+        cy,
+        w,
+        blueprints,
+        tx,
+        pdfTableSettings.blueprints.emptyRows,
+      );
+      cy += blueprintsH + 6;
+    }
+
+    const hasComponentsData = componentsTables.some((t) => Array.isArray(t?.rows) && t.rows.length > 0);
+    const shouldRenderComponents = hasComponentsData || pdfTableSettings.components.showIfEmpty;
+    if (shouldRenderComponents) {
+      const estimateComponentsH = (() => {
+        const maxRows = Math.max(
+          ...componentsTables.map((t) => (Array.isArray(t?.rows) ? t.rows.length : 0)),
+          0,
+        ) + Math.max(0, pdfTableSettings.components.emptyRows);
+        return 12 + maxRows * 11;
+      })();
+      if (cy + estimateComponentsH > this.bottom()) {
+        this.doc.addPage();
+        this.paintBg();
+        cy = PAGE.margin;
+      }
+      const componentsH = this.drawComponentsTripleTables(
+        x,
+        cy,
+        w,
+        componentsTables,
+        tx,
+        alchemyIconStyle,
+        pdfTableSettings.components.emptyRows,
+      );
+      cy += componentsH + 6;
+    }
+
+    const moneyHeaders = [
+      tx.page3.moneyCols.crowns,
+      tx.page3.moneyCols.orens,
+      tx.page3.moneyCols.florens,
+      tx.page3.moneyCols.ducats,
+      tx.page3.moneyCols.bizants,
+      tx.page3.moneyCols.lintars,
+    ];
+    const moneyRow = [vm.page3Money?.crowns ?? '', '', '', '', '', ''];
+    const vehicles = Array.isArray(vm.page3Vehicles) ? vm.page3Vehicles : [];
+    const showOccupancy = vehicles.some((v) => (v.occupancy ?? '').trim() !== '');
+    const vehicleHeaders = [
+      tx.page3.transportCols.qty,
+      tx.page3.transportCols.type,
+      tx.page3.transportCols.name,
+      tx.page3.transportCols.skill,
+      tx.page3.transportCols.mod,
+      tx.page3.transportCols.speed,
+      tx.page3.transportCols.hp,
+      tx.page3.transportCols.weight,
+      tx.page3.transportCols.price,
+      ...(showOccupancy ? [tx.page3.transportCols.occupancy] : []),
+    ];
+    const vehicleRows = vehicles.length
+      ? vehicles.map((v) => [
+          v.amount,
+          v.subgroupName,
+          v.vehicleName,
+          v.base,
+          v.controlModifier,
+          v.speed,
+          v.hp,
+          v.weight,
+          v.price,
+          ...(showOccupancy ? [v.occupancy] : []),
+        ])
+      : [new Array(vehicleHeaders.length).fill('')];
+
+    const supportH = this.drawPackedTableGroup(x, cy, w, '1/2', [
+      {
+        id: 'money',
+        measure: (cw) => this.measureEqualColumnsCardHeight(cw, moneyHeaders, [moneyRow]),
+        draw: (cx, cy2, cw) => this.drawEqualColumnsCard(cx, cy2, cw, tx.page3.money, COLORS.headerPage2Blue, moneyHeaders, [moneyRow]),
+      },
+      {
+        id: 'transport',
+        measure: (cw) => this.measureDataGridCardHeight(cw, vehicleHeaders, vehicleRows, 2, undefined, undefined, true),
+        draw: (cx, cy2, cw) => this.drawDataGridCard(cx, cy2, cw, tx.page3.transport, COLORS.headerPage2Blue, vehicleHeaders, vehicleRows, 2, undefined, undefined, true, 1),
+      },
+    ], { maxMoves: 0, colGap: PAGE.gap, rowGap: 6 });
+    cy += supportH + 6;
+    const generalHeaders = [
+      tx.page3.generalGearCols.qty,
+      tx.page3.generalGearCols.name,
+      tx.page3.generalGearCols.concealment,
+      tx.page3.generalGearCols.weight,
+      tx.page3.generalGearCols.price,
+    ];
+    const realGeneralRows = Array.isArray(vm.page3GeneralGear) && vm.page3GeneralGear.length > 0
+      ? vm.page3GeneralGear
+      : [];
+    const generalRows = realGeneralRows.length > 0
+      ? realGeneralRows
+      : [{
+          amount: '',
+          name: '',
+          description: '',
+          concealment: '',
+          weight: '',
+          price: '',
+        } as GeneralGearPageRow];
+    this.page3FirstPairGuideRows = this.estimateGeneralGearPairUsage(
+      w,
+      this.bottom() - cy,
+      generalHeaders,
+      generalRows,
+      0,
+    ).guideRows;
+    const nextIndex = this.drawGeneralGearPairOnce(
+      x,
+      cy,
+      w,
+      tx.page3.generalGear,
+      generalHeaders,
+      generalRows,
+      0,
+    );
+    if (realGeneralRows.length === 0) {
+      return 0;
+    }
+    return nextIndex;
+  }
+
+  private drawPage4Magic(
+    vm: ReturnType<typeof buildVm>,
+  ): void {
+    const magic = vm.page4Magic as MagicPageVm | undefined;
+    if (!magic || !magic.shouldRender) return;
+    const pdfTableSettings: PdfTablesSettingsVm =
+      (vm.pdfTableSettings as PdfTablesSettingsVm | undefined) ?? DEFAULT_PDF_TABLE_SETTINGS_VM;
+    const tx = vm.tx;
+    const pageW = this.doc.page.width - PAGE.margin * 2;
+    const x = PAGE.margin;
+    const mkRows = (
+      rows: Array<{ cells: string[]; tooltip?: string }>,
+      ensureBlankMainRow: boolean,
+    ) => ({ rows, ensureBlankMainRow });
+
+    const tables: Array<{
+      title: string;
+      fill: string;
+      headers: string[];
+      rows: MagicTableRowVm[];
+      ensureBlankMainRow: boolean;
+      wrappedMainCols?: number[];
+      centerBodyCols?: number[];
+      leftHeaderCols?: number[];
+    }> = [];
+
+    if (magic.showGifts && magic.giftsRows.length > 0) {
+      const giftsHeaders = [
+        tx.page4.gifts.colName,
+        tx.page4.gifts.colGroup,
+        tx.page4.gifts.colSl,
+        tx.page4.gifts.colVigor,
+        tx.page4.gifts.colCost,
+      ];
+      const giftsRows = magic.giftsRows.map((r) => ({
+        cells: [r.name, r.group, r.sl, r.vigor, r.cost],
+        tooltip: r.description,
+      }));
+      const giftSet = mkRows(giftsRows, false);
+      tables.push({
+        title: tx.page4.titles.gifts,
+        fill: COLORS.headerMagicGifts,
+        headers: giftsHeaders,
+        rows: giftSet.rows,
+        ensureBlankMainRow: giftSet.ensureBlankMainRow,
+        centerBodyCols: [1, 2, 3],
+        leftHeaderCols: [4],
+      });
+    }
+
+    if (magic.showSpellsSigns && (magic.spellsSignsRows.length > 0 || pdfTableSettings.spellsSigns.showIfEmpty)) {
+      const headers = [
+        tx.page4.cols.name,
+        tx.page4.cols.element,
+        tx.page4.cols.staminaCast,
+        tx.page4.cols.staminaKeeping,
+        tx.page4.cols.effectTime,
+        tx.page4.cols.damage,
+        tx.page4.cols.distance,
+        tx.page4.cols.form,
+        tx.page4.cols.zoneSize,
+      ];
+      const rows = magic.spellsSignsRows.map((r) => ({
+        cells: [r.name, r.element, r.staminaCast, r.staminaKeeping, r.effectTime, r.damage, r.distance, r.form, r.zoneSize],
+        tooltip: r.tooltip,
+      }));
+      for (let i = 0; i < pdfTableSettings.spellsSigns.emptyRows; i += 1) {
+        rows.push({ cells: new Array(headers.length).fill(''), tooltip: '' });
+      }
+      const set = mkRows(rows, false);
+      tables.push({
+        title: tx.page4.titles.spellsSigns,
+        fill: COLORS.headerMagicSpells,
+        headers,
+        rows: set.rows,
+        ensureBlankMainRow: set.ensureBlankMainRow,
+        centerBodyCols: [1, 2, 3, 4, 5, 6],
+        leftHeaderCols: [8],
+      });
+    }
+
+    if (magic.showInvocations && (magic.invocationsRows.length > 0 || pdfTableSettings.invocations.showIfEmpty)) {
+      const headers = [
+        tx.page4.cols.name,
+        tx.page4.cols.group,
+        tx.page4.cols.staminaCast,
+        tx.page4.cols.staminaKeeping,
+        tx.page4.cols.damage,
+        tx.page4.cols.distance,
+        tx.page4.cols.zoneSize,
+        tx.page4.cols.form,
+        tx.page4.cols.effectTime,
+      ];
+      const rows = magic.invocationsRows.map((r) => ({
+        cells: [r.name, r.group, r.staminaCast, r.staminaKeeping, r.damage, r.distance, r.zoneSize, r.form, r.effectTime],
+        tooltip: r.tooltip,
+      }));
+      for (let i = 0; i < pdfTableSettings.invocations.emptyRows; i += 1) {
+        rows.push({ cells: new Array(headers.length).fill(''), tooltip: '' });
+      }
+      const set = mkRows(rows, false);
+      tables.push({
+        title: magic.invocationsTitle,
+        fill: magic.invocationsFill,
+        headers,
+        rows: set.rows,
+        ensureBlankMainRow: set.ensureBlankMainRow,
+        centerBodyCols: [1, 2, 3, 4, 5, 6],
+        leftHeaderCols: [8],
+      });
+    }
+
+    if (magic.showRituals && (magic.ritualsRows.length > 0 || pdfTableSettings.rituals.showIfEmpty)) {
+      const headers = [
+        tx.page4.cols.name,
+        tx.page4.cols.level,
+        tx.page4.cols.dc,
+        tx.page4.cols.preparingTime,
+        tx.page4.cols.staminaCast,
+        tx.page4.cols.staminaKeeping,
+        tx.page4.cols.zoneSize,
+        tx.page4.cols.form,
+        tx.page4.cols.effectTime,
+        tx.page4.cols.ingredients,
+      ];
+      const rows = magic.ritualsRows.map((r) => ({
+        cells: [r.name, r.level, r.dc, r.preparingTime, r.staminaCast, r.staminaKeeping, r.zoneSize, r.form, r.effectTime, r.ingredients],
+        tooltip: r.tooltip,
+      }));
+      for (let i = 0; i < pdfTableSettings.rituals.emptyRows; i += 1) {
+        rows.push({ cells: new Array(headers.length).fill(''), tooltip: '' });
+      }
+      const set = mkRows(rows, false);
+      tables.push({
+        title: tx.page4.titles.rituals,
+        fill: COLORS.headerMagicRituals,
+        headers,
+        rows: set.rows,
+        ensureBlankMainRow: set.ensureBlankMainRow,
+        wrappedMainCols: [9],
+        centerBodyCols: [1, 2, 3, 4, 5, 6, 7, 8],
+        leftHeaderCols: [9],
+      });
+    }
+
+    if (magic.showHexes && (magic.hexesRows.length > 0 || pdfTableSettings.hexes.showIfEmpty)) {
+      const headers = [
+        tx.page4.cols.name,
+        tx.page4.cols.level,
+        tx.page4.cols.staminaCast,
+        tx.page4.cols.removeComponents,
+        tx.page4.cols.removeInstructions,
+      ];
+      const rows = magic.hexesRows.map((r) => ({
+        cells: [r.name, r.level, r.staminaCast, r.removeComponents, r.removeInstructions],
+        tooltip: r.tooltip,
+      }));
+      for (let i = 0; i < pdfTableSettings.hexes.emptyRows; i += 1) {
+        rows.push({ cells: new Array(headers.length).fill(''), tooltip: '' });
+      }
+      const set = mkRows(rows, false);
+      tables.push({
+        title: tx.page4.titles.hexes,
+        fill: COLORS.headerMagicHexes,
+        headers,
+        rows: set.rows,
+        ensureBlankMainRow: set.ensureBlankMainRow,
+        wrappedMainCols: [3, 4],
+        centerBodyCols: [1, 2],
+      });
+    }
+
+    if (tables.length === 0) return;
+
+    this.doc.addPage();
+    this.paintBg();
+    let cy = PAGE.margin;
+    for (const table of tables) {
+      const h = this.measureMagicTableCardHeight(
+        pageW,
+        table.headers,
+        table.rows,
+        table.ensureBlankMainRow,
+        table.wrappedMainCols ?? [],
+      );
+      if (cy + h > this.bottom()) {
+        this.doc.addPage();
+        this.paintBg();
+        cy = PAGE.margin;
+      }
+      this.drawMagicTableCard(
+        x,
+        cy,
+        pageW,
+        table.title,
+        table.fill,
+        table.headers,
+        table.rows,
+        table.ensureBlankMainRow,
+        table.wrappedMainCols ?? [],
+        table.centerBodyCols ?? [],
+        table.leftHeaderCols ?? [],
+      );
+      cy += h + 6;
+    }
+  }
+
+  private estimatePage3FirstPairGeneralGearIndex(vm: ReturnType<typeof buildVm>): { nextIndex: number; guideRows: number } {
+    const probeDoc = new PDFDocument({ size: 'A4', margin: 0, compress: true });
+    probeDoc.on('data', () => {});
+    const probe = new Painter(probeDoc);
+    const nextIndex = probe.drawPage3Recipes(vm);
+    probeDoc.end();
+    return { nextIndex, guideRows: probe.page3FirstPairGuideRows };
   }
 
   private drawPackedTableGroup(
@@ -3223,7 +5506,11 @@ class Painter {
     return best.totalH;
   }
 
-  private drawPage2(vm: ReturnType<typeof buildVm>) {
+  private drawPage2(
+    vm: ReturnType<typeof buildVm>,
+    generalGearStartIndex: number,
+    page3FirstPairGuideRows: number,
+  ): { nextGeneralGearIndex: number; giftsInlinedOnPage2: boolean } {
     this.doc.addPage();
     this.paintBg();
     this.y = PAGE.margin;
@@ -3284,6 +5571,9 @@ class Painter {
     const packedH = this.drawPackedTableGroup(this.x, this.y, this.w, '1/2', items, { maxMoves: 2, colGap: PAGE.gap, rowGap: 6 });
     let cy = this.y + packedH + 6;
 
+    let giftsInlinedOnPage2 = false;
+    const pdfTableSettings: PdfTablesSettingsVm =
+      (vm.pdfTableSettings as PdfTablesSettingsVm | undefined) ?? DEFAULT_PDF_TABLE_SETTINGS_VM;
     const allies = Array.isArray(vm.page2Allies) ? vm.page2Allies : [];
     const enemies = Array.isArray(vm.page2Enemies) ? vm.page2Enemies : [];
     const itemEffects = Array.isArray(vm.page2ItemEffects) ? vm.page2ItemEffects : [];
@@ -3292,21 +5582,31 @@ class Painter {
     const alliesHeaders = isWitcher
       ? [tx.page2.alliesCols.gender, tx.page2.alliesCols.position, tx.page2.alliesCols.acquaintance, tx.page2.alliesCols.howClose, tx.page2.alliesCols.alive]
       : [tx.page2.alliesCols.gender, tx.page2.alliesCols.position, tx.page2.alliesCols.howMet, tx.page2.alliesCols.howClose, tx.page2.alliesCols.where];
-    const alliesRows = allies.map((a) =>
+    const alliesBaseRows = allies.map((a) =>
       isWitcher
         ? [a.gender, a.position, a.howMet, a.howClose, a.isAlive]
         : [a.gender, a.position, a.howMet, a.howClose, a.where],
     );
+    const alliesRows = [...alliesBaseRows];
+    for (let i = 0; i < pdfTableSettings.allies.emptyRows; i += 1) {
+      alliesRows.push(new Array(alliesHeaders.length).fill(''));
+    }
 
     const enemiesHeaders = isWitcher
       ? [tx.page2.enemiesCols.gender, tx.page2.enemiesCols.position, tx.page2.enemiesCols.power, tx.page2.enemiesCols.cause, tx.page2.enemiesCols.result, tx.page2.enemiesCols.alive]
       : [tx.page2.enemiesCols.victim, tx.page2.enemiesCols.gender, tx.page2.enemiesCols.position, tx.page2.enemiesCols.cause, tx.page2.enemiesCols.power, tx.page2.enemiesCols.level, tx.page2.enemiesCols.result];
-    const enemiesRows = enemies.map((e) =>
+    const enemiesBaseRows = enemies.map((e) =>
       isWitcher
         ? [e.gender, e.position, e.power, e.cause, e.result, e.alive]
         : [e.victim, e.gender, e.position, e.cause, e.power, e.level, e.result],
     );
-    if (alliesRows.length > 0) {
+    const enemiesRows = [...enemiesBaseRows];
+    for (let i = 0; i < pdfTableSettings.enemies.emptyRows; i += 1) {
+      enemiesRows.push(new Array(enemiesHeaders.length).fill(''));
+    }
+    const shouldRenderAllies = alliesBaseRows.length > 0 || pdfTableSettings.allies.showIfEmpty;
+    const shouldRenderEnemies = enemiesBaseRows.length > 0 || pdfTableSettings.enemies.showIfEmpty;
+    if (shouldRenderAllies) {
       const alliesH = this.measureDataGridCardHeight(this.w, alliesHeaders, alliesRows, isWitcher ? 4 : 2, alliesHeaders.length - 1, true);
       if (cy + alliesH > this.bottom()) {
         this.doc.addPage();
@@ -3317,7 +5617,7 @@ class Painter {
       cy += alliesH + 6;
     }
 
-    if (enemiesRows.length > 0) {
+    if (shouldRenderEnemies) {
       const enemiesFlexIdx = isWitcher ? 5 : 3;
       const enemiesH = this.measureDataGridCardHeight(this.w, enemiesHeaders, enemiesRows, enemiesFlexIdx, enemiesHeaders.length - 1, true);
       if (cy + enemiesH > this.bottom()) {
@@ -3337,7 +5637,120 @@ class Painter {
         cy = PAGE.margin;
       }
       this.drawItemEffectsCard(this.x, cy, this.w, tx.page2.itemEffects, itemEffects);
+      cy += effectsH + 6;
     }
+
+    const page4Magic = vm.page4Magic as MagicPageVm | undefined;
+    if (page4Magic?.onlyGiftsMagic && page4Magic.showGifts && page4Magic.giftsRows.length > 0) {
+      const giftHeaders = [
+        tx.page4.gifts.colName,
+        tx.page4.gifts.colGroup,
+        tx.page4.gifts.colSl,
+        tx.page4.gifts.colVigor,
+        tx.page4.gifts.colCost,
+      ];
+      const giftRows: MagicTableRowVm[] = page4Magic.giftsRows.map((r) => ({
+        cells: [r.name, r.group, r.sl, r.vigor, r.cost],
+        tooltip: r.description,
+      }));
+      const giftsH = this.measureMagicTableCardHeight(this.w, giftHeaders, giftRows, false);
+      if (cy + giftsH <= this.bottom()) {
+        this.drawMagicTableCard(
+          this.x,
+          cy,
+          this.w,
+          tx.page4.titles.gifts,
+          COLORS.headerMagicGifts,
+          giftHeaders,
+          giftRows,
+          false,
+          [],
+          [1, 2, 3],
+          [4],
+        );
+        cy += giftsH + 6;
+        giftsInlinedOnPage2 = true;
+      }
+    }
+
+    const generalRows = Array.isArray(vm.page3GeneralGear) ? vm.page3GeneralGear : [];
+    const generalHeaders = [
+      tx.page3.generalGearCols.qty,
+      tx.page3.generalGearCols.name,
+      tx.page3.generalGearCols.concealment,
+      tx.page3.generalGearCols.weight,
+      tx.page3.generalGearCols.price,
+    ];
+    let nextGeneralGearIndex = generalGearStartIndex;
+    if (generalRows.length > 0 && generalGearStartIndex < generalRows.length) {
+      const minStartSpace = PAGE.headerH + 24;
+      if (cy + minStartSpace > this.bottom()) {
+        this.doc.addPage();
+        this.paintBg();
+        cy = PAGE.margin;
+      }
+      nextGeneralGearIndex = this.drawGeneralGearPairOnce(
+        this.x,
+        cy,
+        this.w,
+        tx.page3.generalGear,
+        generalHeaders,
+        generalRows,
+        generalGearStartIndex,
+      );
+      cy = this.bottom();
+    }
+
+    const usableHeight = this.bottom() - PAGE.margin;
+    const freeHeight = this.bottom() - cy;
+    const freeRatio = usableHeight > 0 ? freeHeight / usableHeight : 0;
+    if (freeRatio < 0.1) {
+      return { nextGeneralGearIndex, giftsInlinedOnPage2 };
+    }
+
+    const offset = 40;
+    const startY = cy + offset;
+    const fillHeight = this.bottom() - startY;
+    if (fillHeight < 50) {
+      return { nextGeneralGearIndex, giftsInlinedOnPage2 };
+    }
+
+    const page3EmptyRowsLeft = Math.max(0, Math.trunc(page3FirstPairGuideRows));
+
+    if (freeRatio > 0.4) {
+      const sectionGap = 6;
+      const splitHeight = Math.max(0, fillHeight - sectionGap);
+      const topH = Math.floor(splitHeight / 2);
+      const bottomH = splitHeight - topH;
+      if (topH >= 50) {
+        this.drawGeneralGearEmptyPairAt(
+          this.x,
+          startY,
+          this.w,
+          topH,
+          tx.page3.generalGear,
+          generalHeaders,
+        );
+      }
+      if (bottomH >= 50) {
+        this.notesStripAtCount(this.x, startY + topH + sectionGap, this.w, bottomH, tx.sections.notes, 4);
+      }
+      return { nextGeneralGearIndex, giftsInlinedOnPage2 };
+    }
+
+    if (page3EmptyRowsLeft < 15) {
+      this.drawGeneralGearEmptyPairAt(
+        this.x,
+        startY,
+        this.w,
+        fillHeight,
+        tx.page3.generalGear,
+        generalHeaders,
+      );
+    } else {
+      this.notesStripAtCount(this.x, startY, this.w, fillHeight, tx.sections.notes, 4);
+    }
+    return { nextGeneralGearIndex, giftsInlinedOnPage2 };
   }
   draw(vm: ReturnType<typeof buildVm>) {
     const tx = vm.tx;
@@ -3429,6 +5842,10 @@ class Painter {
       const alchemyH = this.drawAlchemyCompact(rightX, this.y, rightW, potionTable);
       this.y += alchemyH + 6;
     }
+    if (vm.magicTable) {
+      const magicH = this.drawMagicSummaryCompact(rightX, this.y, rightW, vm.magicTable);
+      this.y += magicH + 6;
+    }
     {
       const notesH = this.bottom() - this.y;
       if (notesH >= 60) {
@@ -3436,8 +5853,34 @@ class Painter {
         this.y += notesH;
       }
     }
-    this.drawPage2(vm);
+    const page3FirstPairEstimate = this.estimatePage3FirstPairGeneralGearIndex(vm);
+    const page2Result = this.drawPage2(vm, page3FirstPairEstimate.nextIndex, page3FirstPairEstimate.guideRows);
     this.drawPage3Recipes(vm);
+    const shouldRenderMagicPage =
+      Boolean(vm.page4Magic?.shouldRender) &&
+      !(vm.page4Magic?.onlyGiftsMagic && page2Result.giftsInlinedOnPage2);
+    if (shouldRenderMagicPage) {
+      this.drawPage4Magic(vm);
+    }
+    const realGeneralRows = Array.isArray(vm.page3GeneralGear) ? vm.page3GeneralGear : [];
+    if (realGeneralRows.length > 0 && page2Result.nextGeneralGearIndex < realGeneralRows.length) {
+      this.doc.addPage();
+      this.paintBg();
+      const headers = [
+        tx.page3.generalGearCols.qty,
+        tx.page3.generalGearCols.name,
+        tx.page3.generalGearCols.concealment,
+        tx.page3.generalGearCols.weight,
+        tx.page3.generalGearCols.price,
+      ];
+      this.drawGeneralGearPairsFlow(
+        PAGE.margin,
+        tx.page3.generalGear,
+        headers,
+        realGeneralRows,
+        page2Result.nextGeneralGearIndex,
+      );
+    }
   }
 }
 
@@ -3468,4 +5911,3 @@ export async function generateCharacterPdfBuffer(params: {
   );
   return createPdfBuffer((doc) => new Painter(doc).draw(vm));
 }
-

@@ -41,6 +41,24 @@ type UserSettingsRow = {
 
 type UserSettingsDto = {
   useW1AlchemyIcons: boolean;
+  pdfTables: PdfTablesSettingsDto;
+};
+
+type PdfTableSettingsDto = {
+  showIfEmpty: boolean;
+  emptyRows: number;
+};
+
+type PdfTablesSettingsDto = {
+  allies: PdfTableSettingsDto;
+  enemies: PdfTableSettingsDto;
+  alchemyRecipes: PdfTableSettingsDto;
+  blueprints: PdfTableSettingsDto;
+  components: PdfTableSettingsDto;
+  spellsSigns: PdfTableSettingsDto;
+  invocations: PdfTableSettingsDto;
+  rituals: PdfTableSettingsDto;
+  hexes: PdfTableSettingsDto;
 };
 
 type WeaponPdfDetailsRow = {
@@ -94,14 +112,134 @@ type RecipePdfDetailsRow = {
   price_potion: number | string | null;
 };
 
+type BlueprintPdfDetailsRow = {
+  b_id: string;
+  blueprint_name: string | null;
+  blueprint_group: string | null;
+  craft_level: string | null;
+  difficulty_check: number | string | null;
+  time_craft: string | null;
+  item_id: string | null;
+  components: string | null;
+  item_desc: string | null;
+  price_components: number | string | null;
+  price: number | string | null;
+  price_item: number | string | null;
+};
+
+type IngredientPdfDetailsRow = {
+  i_id: string;
+  ingredient_name: string | null;
+  alchemy_substance: string | null;
+  alchemy_substance_en: string | null;
+  harvesting_complexity: number | string | null;
+  weight: string | null;
+  price: number | string | null;
+};
+
+type GeneralGearPdfDetailsRow = {
+  t_id: string;
+  gear_name: string | null;
+  group_name: string | null;
+  subgroup_name: string | null;
+  gear_description: string | null;
+  concealment: string | null;
+  weight: string | null;
+  price: number | string | null;
+};
+
+type VehiclePdfDetailsRow = {
+  wt_id: string;
+  vehicle_name: string | null;
+  subgroup_name: string | null;
+  base: number | string | null;
+  control_modifier: number | string | null;
+  speed: string | null;
+  occupancy: string | null;
+  hp: number | string | null;
+  weight: string | null;
+  price: number | string | null;
+};
+
+type MagicSpellPdfDetailsRow = {
+  ms_id: string;
+  spell_name: string | null;
+  level: string | null;
+  element: string | null;
+  stamina_cast: number | string | null;
+  stamina_keeping: number | string | null;
+  damage: string | null;
+  distance: number | string | null;
+  zone_size: string | null;
+  form: string | null;
+  effect_time: string | null;
+  effect: string | null;
+  sort_key: string | null;
+  type: string | null;
+};
+
+type MagicInvocationPdfDetailsRow = {
+  ms_id: string;
+  invocation_name: string | null;
+  level: string | null;
+  cult_or_circle: string | null;
+  stamina_cast: number | string | null;
+  stamina_keeping: number | string | null;
+  damage: string | null;
+  distance: number | string | null;
+  zone_size: string | null;
+  form: string | null;
+  effect_time: string | null;
+  effect: string | null;
+  type: string | null;
+};
+
+type MagicRitualPdfDetailsRow = {
+  ms_id: string;
+  ritual_name: string | null;
+  level: string | null;
+  dc: number | string | null;
+  preparing_time: string | null;
+  ingredients: string | null;
+  zone_size: string | null;
+  stamina_cast: number | string | null;
+  stamina_keeping: number | string | null;
+  effect_time: string | null;
+  form: string | null;
+  effect: string | null;
+  effect_tpl: string | null;
+  how_to_remove: string | null;
+  sort_key: string | null;
+};
+
+type MagicHexPdfDetailsRow = {
+  ms_id: string;
+  hex_name: string | null;
+  level: string | null;
+  stamina_cast: number | string | null;
+  effect: string | null;
+  remove_instructions: string | null;
+  remove_components: string | null;
+  tooltip: string | null;
+  sort_key: string | null;
+};
+
+type MagicGiftPdfDetailsRow = {
+  mg_id: string;
+  group_name: string | null;
+  gift_name: string | null;
+  dc: number | string | null;
+  vigor_cost: number | string | null;
+  action_cost: string | null;
+  description: string | null;
+  sort_key: string | null;
+  is_major: boolean | null;
+};
+
 type I18nResolveRow = {
   id: string;
   lang: string;
   text: string;
-};
-
-type BlueprintItemRefRow = {
-  item_id: string | null;
 };
 
 type ItemEffectLookupRow = {
@@ -119,9 +257,47 @@ type ItemEffectGlossaryRow = {
 };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ITEM_ID_RE = {
+  weapon: /^W\d+$/i,
+  armor: /^A\d+$/i,
+  potion: /^P\d+$/i,
+  recipe: /^R\d+$/i,
+  blueprint: /^B\d+$/i,
+  ingredient: /^I\d+$/i,
+  generalGear: /^T\d+$/i,
+  vehicle: /^WT\d+$/i,
+  magicSpell: /^MS\d+$/i,
+  magicGift: /^MG\d+$/i,
+  upgrade: /^U\d+$/i,
+} as const;
+const PDF_TABLE_KEYS = [
+  'allies',
+  'enemies',
+  'alchemyRecipes',
+  'blueprints',
+  'components',
+  'spellsSigns',
+  'invocations',
+  'rituals',
+  'hexes',
+] as const;
+type PdfTableKey = (typeof PDF_TABLE_KEYS)[number];
+const DEFAULT_PDF_TABLE_SETTINGS: PdfTablesSettingsDto = {
+  allies: { showIfEmpty: false, emptyRows: 0 },
+  enemies: { showIfEmpty: false, emptyRows: 0 },
+  alchemyRecipes: { showIfEmpty: true, emptyRows: 3 },
+  blueprints: { showIfEmpty: true, emptyRows: 2 },
+  components: { showIfEmpty: true, emptyRows: 3 },
+  spellsSigns: { showIfEmpty: false, emptyRows: 0 },
+  invocations: { showIfEmpty: false, emptyRows: 0 },
+  rituals: { showIfEmpty: false, emptyRows: 0 },
+  hexes: { showIfEmpty: false, emptyRows: 0 },
+};
 const DEFAULT_USER_SETTINGS: UserSettingsDto = {
   useW1AlchemyIcons: false,
+  pdfTables: DEFAULT_PDF_TABLE_SETTINGS,
 };
+const SHOP_BUNDLE_I18N_PREFIX = 'witcher_cc.wcc_profession_shop.bundle.';
 
 function getUserEmail(user: AuthUser | undefined): string | null {
   if (!user) return null;
@@ -137,18 +313,220 @@ function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
 }
 
+function looksLikeI18nKey(value: string): boolean {
+  return /^[a-z0-9_.-]+$/i.test(value) && value.length > 0;
+}
+
+function normalizeBundleI18nKey(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (trimmed.includes('.')) return trimmed;
+  return `${SHOP_BUNDLE_I18N_PREFIX}${trimmed}`;
+}
+
+function canonicalId(value: unknown, pattern: RegExp): string {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  return pattern.test(trimmed) ? trimmed : '';
+}
+
+function humanizeBundleLabel(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  const noPrefix = trimmed.replace(/^witcher_cc\.wcc_profession_shop\.bundle\./i, '');
+  return noPrefix.replace(/[_-]+/g, ' ').trim();
+}
+
+async function enrichProfessionalBundleLabelsInState(state: Record<string, unknown>, lang: string): Promise<void> {
+  const characterRaw = asRecord(state.characterRaw);
+  const profOptions = asRecord(characterRaw?.professional_gear_options);
+  const bundles = asArray(profOptions?.bundles);
+  if (bundles.length === 0) return;
+
+  const bundleRows: Array<{ bundleId: string; ids: string[]; keys: string[]; fallback: string }> = [];
+  const idsSet = new Set<string>();
+  const keysSet = new Set<string>();
+
+  for (const bundle of bundles) {
+    const rec = asRecord(bundle);
+    if (!rec) continue;
+    const bundleId = typeof rec.bundleId === 'string' ? rec.bundleId.trim() : '';
+    if (!bundleId) continue;
+
+    const ids = new Set<string>();
+    const keys = new Set<string>();
+    let fallback = humanizeBundleLabel(bundleId) || bundleId;
+
+    const displayName = rec.displayName;
+    if (typeof displayName === 'string') {
+      const raw = displayName.trim();
+      if (raw) {
+        if (UUID_RE.test(raw)) {
+          ids.add(raw);
+        } else {
+          fallback = raw;
+          if (looksLikeI18nKey(raw)) {
+            keys.add(normalizeBundleI18nKey(raw));
+          }
+        }
+      }
+    } else {
+      const obj = asRecord(displayName);
+      const i18nUuid = typeof obj?.i18n_uuid === 'string' ? obj.i18n_uuid.trim() : '';
+      if (i18nUuid && UUID_RE.test(i18nUuid)) {
+        ids.add(i18nUuid);
+      }
+    }
+
+    for (const id of ids) idsSet.add(id);
+    for (const key of keys) keysSet.add(key);
+
+    bundleRows.push({
+      bundleId,
+      ids: Array.from(ids),
+      keys: Array.from(keys),
+      fallback,
+    });
+  }
+
+  if (bundleRows.length === 0) return;
+
+  const keyToId = new Map<string, string>();
+  const keyList = Array.from(keysSet);
+  if (keyList.length > 0) {
+    const { rows: keyRows } = await db.query<{ key: string; id: string }>(
+      `
+        SELECT src.key::text AS key, ck_id(src.key)::text AS id
+        FROM unnest($1::text[]) AS src(key)
+      `,
+      [keyList],
+    );
+    for (const row of keyRows) {
+      keyToId.set(row.key, row.id);
+      idsSet.add(row.id);
+    }
+  }
+
+  const textById = new Map<string, string>();
+  const allIds = Array.from(idsSet).filter((v) => UUID_RE.test(v));
+  if (allIds.length > 0) {
+    const { rows } = await db.query<I18nResolveRow>(
+      `
+        SELECT id::text AS id, lang, text
+        FROM i18n_text
+        WHERE id = ANY($1::uuid[])
+          AND lang = ANY($2::text[])
+      `,
+      [allIds, [lang, 'en']],
+    );
+    const byId = new Map<string, Map<string, string>>();
+    for (const row of rows) {
+      const m = byId.get(row.id) ?? new Map<string, string>();
+      m.set(row.lang, row.text);
+      byId.set(row.id, m);
+    }
+    for (const id of allIds) {
+      const m = byId.get(id);
+      const resolved = m?.get(lang) ?? m?.get('en');
+      if (resolved) textById.set(id, resolved);
+    }
+  }
+
+  const resolvedBundleNames: Record<string, string> = {};
+  for (const row of bundleRows) {
+    let resolved = '';
+    for (const id of row.ids) {
+      const text = textById.get(id);
+      if (text) {
+        resolved = text;
+        break;
+      }
+    }
+    if (!resolved) {
+      for (const key of row.keys) {
+        const id = keyToId.get(key);
+        if (!id) continue;
+        const text = textById.get(id);
+        if (text) {
+          resolved = text;
+          break;
+        }
+      }
+    }
+    resolvedBundleNames[row.bundleId] = resolved || row.fallback;
+  }
+
+  const uiState = asRecord(state.ui) ?? {};
+  const existingBundleNames = asRecord(uiState.professionalBundleNames) ?? {};
+  state.ui = {
+    ...uiState,
+    professionalBundleNames: {
+      ...existingBundleNames,
+      ...resolvedBundleNames,
+    },
+  };
+}
+
 function readBooleanAt(obj: Record<string, unknown> | null, key: string): boolean | null {
   if (!obj) return null;
   const value = obj[key];
   return typeof value === 'boolean' ? value : null;
 }
 
+function readNumberAt(obj: Record<string, unknown> | null, key: string): number | null {
+  if (!obj) return null;
+  const value = obj[key];
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function normalizeEmptyRows(value: number): number {
+  const n = Math.trunc(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(50, Math.max(0, n));
+}
+
+function normalizePdfTableEntry(
+  base: PdfTableSettingsDto,
+  source: Record<string, unknown> | null,
+): PdfTableSettingsDto {
+  const showIfEmpty =
+    readBooleanAt(source, 'showIfEmpty') ??
+    readBooleanAt(source, 'show_if_empty') ??
+    base.showIfEmpty;
+  const emptyRowsRaw =
+    readNumberAt(source, 'emptyRows') ??
+    readNumberAt(source, 'empty_rows');
+  const emptyRows = emptyRowsRaw == null ? base.emptyRows : normalizeEmptyRows(emptyRowsRaw);
+  return { showIfEmpty, emptyRows };
+}
+
+function normalizePdfTablesSettingsFromUnknown(source: unknown): PdfTablesSettingsDto {
+  const root = asRecord(source);
+  const out: Partial<PdfTablesSettingsDto> = {};
+  for (const key of PDF_TABLE_KEYS) {
+    const base = DEFAULT_PDF_TABLE_SETTINGS[key];
+    const entry = asRecord(root?.[key]);
+    out[key] = normalizePdfTableEntry(base, entry);
+  }
+  return out as PdfTablesSettingsDto;
+}
+
 function normalizeUserSettingsRow(row: UserSettingsRow | undefined): UserSettingsDto {
   const settingsJson = asRecord(row?.settings_json);
   const fromCamel = readBooleanAt(settingsJson, 'useW1AlchemyIcons');
   const fromSnake = readBooleanAt(settingsJson, 'use_w1_alchemy_icons');
+  const pdfTablesSource =
+    settingsJson?.pdfTables ??
+    settingsJson?.pdf_tables ??
+    null;
   return {
     useW1AlchemyIcons: fromCamel ?? fromSnake ?? DEFAULT_USER_SETTINGS.useW1AlchemyIcons,
+    pdfTables: normalizePdfTablesSettingsFromUnknown(pdfTablesSource),
   };
 }
 
@@ -192,19 +570,24 @@ function extractCharacterSummary(rawCharacter: unknown): {
   return { name, raceCode, professionCode };
 }
 
-function readIdListFromGear(rawCharacter: Record<string, unknown>, listKey: 'weapons' | 'armors' | 'potions', idKey: string): string[] {
+function readIdListFromGear(
+  rawCharacter: Record<string, unknown>,
+  listKey: 'weapons' | 'armors' | 'potions',
+  idKey: string,
+  idPattern: RegExp,
+): string[] {
   const gear = asRecord(rawCharacter.gear);
   const list = asArray(gear?.[listKey]);
   const out: string[] = [];
   for (const item of list) {
     const rec = asRecord(item);
-    const id = typeof rec?.[idKey] === 'string' ? rec[idKey].trim() : '';
+    const id = canonicalId(rec?.[idKey], idPattern);
     if (id) out.push(id);
   }
   return Array.from(new Set(out));
 }
 
-function readIdListFromGearAny(rawCharacter: Record<string, unknown>, listKey: string, idKeys: string[]): string[] {
+function readIdListFromGearAny(rawCharacter: Record<string, unknown>, listKey: string, idKeys: string[], idPattern: RegExp): string[] {
   const gear = asRecord(rawCharacter.gear);
   const list = asArray(gear?.[listKey]);
   const out: string[] = [];
@@ -213,12 +596,71 @@ function readIdListFromGearAny(rawCharacter: Record<string, unknown>, listKey: s
     if (!rec) continue;
     let id = '';
     for (const key of idKeys) {
-      const value = typeof rec[key] === 'string' ? rec[key].trim() : '';
+      const value = canonicalId(rec[key], idPattern);
       if (value) {
         id = value;
         break;
       }
     }
+    if (id) out.push(id);
+  }
+  return Array.from(new Set(out));
+}
+
+function readIdListFromIngredients(rawCharacter: Record<string, unknown>, listKey: 'alchemy' | 'craft', idKey: string): string[] {
+  const gear = asRecord(rawCharacter.gear);
+  const ingredients = asRecord(gear?.ingredients);
+  const list = asArray(ingredients?.[listKey]);
+  const out: string[] = [];
+  for (const item of list) {
+    const rec = asRecord(item);
+    const id = canonicalId(rec?.[idKey], ITEM_ID_RE.ingredient);
+    if (id) out.push(id);
+  }
+  return Array.from(new Set(out));
+}
+
+function readIdListFromMagicGifts(rawCharacter: Record<string, unknown>): string[] {
+  const gear = asRecord(rawCharacter.gear);
+  const magic = asRecord(gear?.magic);
+  const gifts = asArray(magic?.gifts);
+  const out: string[] = [];
+  for (const item of gifts) {
+    const rec = asRecord(item);
+    const id =
+      canonicalId(rec?.mg_id, ITEM_ID_RE.magicGift) ||
+      canonicalId(rec?.id, ITEM_ID_RE.magicGift);
+    if (id) out.push(id);
+  }
+  return Array.from(new Set(out));
+}
+
+function readIdListFromMagicList(rawCharacter: Record<string, unknown>, listKey: 'spells' | 'signs' | 'rituals' | 'hexes'): string[] {
+  const gear = asRecord(rawCharacter.gear);
+  const magic = asRecord(gear?.magic);
+  const list = asArray(magic?.[listKey]);
+  const out: string[] = [];
+  for (const item of list) {
+    const rec = asRecord(item);
+    const id =
+      canonicalId(rec?.ms_id, ITEM_ID_RE.magicSpell) ||
+      canonicalId(rec?.id, ITEM_ID_RE.magicSpell);
+    if (id) out.push(id);
+  }
+  return Array.from(new Set(out));
+}
+
+function readIdListFromMagicInvocations(rawCharacter: Record<string, unknown>, invType: 'druid' | 'priest'): string[] {
+  const gear = asRecord(rawCharacter.gear);
+  const magic = asRecord(gear?.magic);
+  const invocations = asRecord(magic?.invocations);
+  const list = asArray(invocations?.[invType]);
+  const out: string[] = [];
+  for (const item of list) {
+    const rec = asRecord(item);
+    const id =
+      canonicalId(rec?.ms_id, ITEM_ID_RE.magicSpell) ||
+      canonicalId(rec?.id, ITEM_ID_RE.magicSpell);
     if (id) out.push(id);
   }
   return Array.from(new Set(out));
@@ -231,91 +673,361 @@ function patchResolvedGearFromDbViews(params: {
   armorsById: ReadonlyMap<string, ArmorPdfDetailsRow>;
   potionsById: ReadonlyMap<string, PotionPdfDetailsRow>;
   recipesById: ReadonlyMap<string, RecipePdfDetailsRow>;
+  blueprintsById: ReadonlyMap<string, BlueprintPdfDetailsRow>;
+  ingredientsById: ReadonlyMap<string, IngredientPdfDetailsRow>;
+  generalGearById: ReadonlyMap<string, GeneralGearPdfDetailsRow>;
+  vehiclesById: ReadonlyMap<string, VehiclePdfDetailsRow>;
+  magicSpellsById: ReadonlyMap<string, MagicSpellPdfDetailsRow>;
+  magicInvocationsById: ReadonlyMap<string, MagicInvocationPdfDetailsRow>;
+  magicRitualsById: ReadonlyMap<string, MagicRitualPdfDetailsRow>;
+  magicHexesById: ReadonlyMap<string, MagicHexPdfDetailsRow>;
+  giftsById: ReadonlyMap<string, MagicGiftPdfDetailsRow>;
 }) {
   const rawGear = asRecord(params.rawCharacter.gear) ?? {};
   const resolvedGear = asRecord(params.resolvedCharacter.gear) ?? {};
+  const getId = (rec: Record<string, unknown>, keys: string[], pattern: RegExp): string => {
+    for (const key of keys) {
+      const value = canonicalId(rec[key], pattern);
+      if (value) return value;
+    }
+    return '';
+  };
+  const sourceList = (rawList: unknown, resolvedList: unknown): unknown[] => {
+    const r = asArray(rawList);
+    if (r.length > 0) return r;
+    return asArray(resolvedList);
+  };
 
   const patchWeapons = asArray(rawGear.weapons).map((item) => {
     const rec = asRecord(item) ?? {};
-    const id = typeof rec.w_id === 'string' ? rec.w_id : '';
+    const id = canonicalId(rec.w_id, ITEM_ID_RE.weapon);
+    const hasId = id.length > 0;
     const d = id ? params.weaponsById.get(id) : undefined;
     return {
       ...rec,
-      w_id: id || rec.w_id,
-      weapon_name: d?.weapon_name ?? rec.weapon_name,
-      name: d?.weapon_name ?? rec.name ?? rec.weapon_name,
-      dmg: d?.dmg ?? rec.dmg,
-      dmg_types: d?.dmg_types ?? rec.dmg_types ?? rec.type,
-      type: d?.dmg_types ?? rec.type ?? rec.dmg_types,
-      reliability: d?.reliability ?? rec.reliability,
-      hands: d?.hands ?? rec.hands,
-      concealment: d?.concealment ?? rec.concealment ?? rec.conceal,
+      w_id: hasId ? id : rec.w_id,
+      weapon_name: hasId ? (d?.weapon_name ?? id) : (rec.weapon_name ?? rec.name),
+      name: hasId ? (d?.weapon_name ?? id) : (rec.name ?? rec.weapon_name),
+      dmg: hasId ? d?.dmg : rec.dmg,
+      dmg_types: hasId ? d?.dmg_types : (rec.dmg_types ?? rec.type),
+      type: hasId ? d?.dmg_types : (rec.type ?? rec.dmg_types),
+      reliability: hasId ? d?.reliability : rec.reliability,
+      hands: hasId ? d?.hands : rec.hands,
+      concealment: hasId ? d?.concealment : (rec.concealment ?? rec.conceal),
       enhancements: rec.enhancements ?? rec.enhancement ?? rec.upgrades,
-      weight: d?.weight ?? rec.weight,
-      price: d?.price ?? rec.price,
-      effect_names: d?.effect_names ?? rec.effect_names ?? rec.effect,
+      weight: hasId ? d?.weight : rec.weight,
+      price: hasId ? d?.price : rec.price,
+      effect_names: hasId ? d?.effect_names : (rec.effect_names ?? rec.effect),
     };
   });
 
   const patchArmors = asArray(rawGear.armors).map((item) => {
     const rec = asRecord(item) ?? {};
-    const id = typeof rec.a_id === 'string' ? rec.a_id : '';
+    const id = canonicalId(rec.a_id, ITEM_ID_RE.armor);
+    const hasId = id.length > 0;
     const d = id ? params.armorsById.get(id) : undefined;
     return {
       ...rec,
-      a_id: id || rec.a_id,
-      armor_name: d?.armor_name ?? rec.armor_name,
-      name: d?.armor_name ?? rec.name ?? rec.armor_name,
-      stopping_power: d?.stopping_power ?? rec.stopping_power ?? rec.sp,
-      sp: d?.stopping_power ?? rec.sp ?? rec.stopping_power,
-      encumbrance: d?.encumbrance ?? rec.encumbrance ?? rec.enc,
-      enc: d?.encumbrance ?? rec.enc ?? rec.encumbrance,
-      enhancements: rec.enhancements ?? rec.enhancement ?? rec.upgrades ?? d?.enhancements,
-      weight: d?.weight ?? rec.weight,
-      price: d?.price ?? rec.price,
-      effect_names: d?.effect_names ?? rec.effect_names ?? rec.effect,
+      a_id: hasId ? id : rec.a_id,
+      armor_name: hasId ? (d?.armor_name ?? id) : (rec.armor_name ?? rec.name),
+      name: hasId ? (d?.armor_name ?? id) : (rec.name ?? rec.armor_name),
+      stopping_power: hasId ? d?.stopping_power : (rec.stopping_power ?? rec.sp),
+      sp: hasId ? d?.stopping_power : (rec.sp ?? rec.stopping_power),
+      encumbrance: hasId ? d?.encumbrance : (rec.encumbrance ?? rec.enc),
+      enc: hasId ? d?.encumbrance : (rec.enc ?? rec.encumbrance),
+      enhancements: hasId ? d?.enhancements : (rec.enhancements ?? rec.enhancement ?? rec.upgrades),
+      weight: hasId ? d?.weight : rec.weight,
+      price: hasId ? d?.price : rec.price,
+      effect_names: hasId ? d?.effect_names : (rec.effect_names ?? rec.effect),
     };
   });
 
   const patchPotions = asArray(rawGear.potions).map((item) => {
     const rec = asRecord(item) ?? {};
-    const id = typeof rec.p_id === 'string' ? rec.p_id : '';
+    const id = canonicalId(rec.p_id, ITEM_ID_RE.potion);
+    const hasId = id.length > 0;
     const d = id ? params.potionsById.get(id) : undefined;
     return {
       ...rec,
-      p_id: id || rec.p_id,
-      potion_name: d?.potion_name ?? rec.potion_name,
-      name: d?.potion_name ?? rec.name ?? rec.potion_name,
-      toxicity: d?.toxicity ?? rec.toxicity,
-      time_effect: d?.time_effect ?? rec.time_effect ?? rec.duration,
-      duration: d?.time_effect ?? rec.duration ?? rec.time_effect,
-      effect: d?.effect ?? rec.effect,
-      weight: d?.weight ?? rec.weight,
-      price: d?.price ?? rec.price,
+      p_id: hasId ? id : rec.p_id,
+      potion_name: hasId ? (d?.potion_name ?? id) : (rec.potion_name ?? rec.name),
+      name: hasId ? (d?.potion_name ?? id) : (rec.name ?? rec.potion_name),
+      toxicity: hasId ? d?.toxicity : rec.toxicity,
+      time_effect: hasId ? d?.time_effect : (rec.time_effect ?? rec.duration),
+      duration: hasId ? d?.time_effect : (rec.duration ?? rec.time_effect),
+      effect: hasId ? d?.effect : rec.effect,
+      weight: hasId ? d?.weight : rec.weight,
+      price: hasId ? d?.price : rec.price,
     };
   });
 
   const patchRecipes = asArray(rawGear.recipes).map((item) => {
     const rec = asRecord(item) ?? {};
-    const id = typeof rec.r_id === 'string' ? rec.r_id : '';
+    const id = getId(rec, ['r_id', 'id'], ITEM_ID_RE.recipe);
+    const hasId = id.length > 0;
     const d = id ? params.recipesById.get(id) : undefined;
     return {
       ...rec,
-      r_id: id || rec.r_id,
-      recipe_name: d?.recipe_name ?? rec.recipe_name ?? rec.name,
-      name: d?.recipe_name ?? rec.name ?? rec.recipe_name,
-      recipe_group: d?.recipe_group ?? rec.recipe_group ?? rec.group,
-      craft_level: d?.craft_level ?? rec.craft_level,
-      complexity: d?.complexity ?? rec.complexity,
-      time_craft: d?.time_craft ?? rec.time_craft,
-      formula_en: d?.formula_en ?? rec.formula_en,
-      price_formula: d?.price_formula ?? rec.price_formula,
-      minimal_ingredients_cost: d?.minimal_ingredients_cost ?? rec.minimal_ingredients_cost,
-      time_effect: d?.time_effect ?? rec.time_effect,
-      toxicity: d?.toxicity ?? rec.toxicity,
-      recipe_description: d?.recipe_description ?? rec.recipe_description ?? rec.effect,
-      weight_potion: d?.weight_potion ?? rec.weight_potion ?? rec.weight,
-      price_potion: d?.price_potion ?? rec.price_potion ?? rec.price,
+      r_id: hasId ? id : rec.r_id,
+      recipe_name: hasId ? (d?.recipe_name ?? id) : (rec.recipe_name ?? rec.name),
+      name: hasId ? (d?.recipe_name ?? id) : (rec.name ?? rec.recipe_name),
+      recipe_group: hasId ? d?.recipe_group : (rec.recipe_group ?? rec.group),
+      craft_level: hasId ? d?.craft_level : rec.craft_level,
+      complexity: hasId ? d?.complexity : rec.complexity,
+      time_craft: hasId ? d?.time_craft : rec.time_craft,
+      formula_en: hasId ? d?.formula_en : rec.formula_en,
+      price_formula: hasId ? d?.price_formula : rec.price_formula,
+      minimal_ingredients_cost: hasId ? d?.minimal_ingredients_cost : rec.minimal_ingredients_cost,
+      time_effect: hasId ? d?.time_effect : rec.time_effect,
+      toxicity: hasId ? d?.toxicity : rec.toxicity,
+      recipe_description: hasId ? d?.recipe_description : (rec.recipe_description ?? rec.effect),
+      weight_potion: hasId ? d?.weight_potion : (rec.weight_potion ?? rec.weight),
+      price_potion: hasId ? d?.price_potion : (rec.price_potion ?? rec.price),
+    };
+  });
+
+  const patchBlueprints = asArray(rawGear.blueprints).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = getId(rec, ['b_id', 'bp_id', 'id'], ITEM_ID_RE.blueprint);
+    const hasId = id.length > 0;
+    const d = id ? params.blueprintsById.get(id) : undefined;
+    return {
+      ...rec,
+      b_id: hasId ? id : rec.b_id,
+      blueprint_name: hasId ? (d?.blueprint_name ?? id) : (rec.blueprint_name ?? rec.name),
+      name: hasId ? (d?.blueprint_name ?? id) : (rec.name ?? rec.blueprint_name),
+      blueprint_group: hasId ? d?.blueprint_group : (rec.blueprint_group ?? rec.group),
+      group: hasId ? d?.blueprint_group : (rec.group ?? rec.blueprint_group),
+      craft_level: hasId ? d?.craft_level : rec.craft_level,
+      difficulty_check: hasId ? d?.difficulty_check : (rec.difficulty_check ?? rec.complexity),
+      time_craft: hasId ? d?.time_craft : rec.time_craft,
+      item_id: hasId ? d?.item_id : rec.item_id,
+      components: hasId ? d?.components : rec.components,
+      item_desc: hasId ? d?.item_desc : (rec.item_desc ?? rec.description),
+      price_components: hasId ? d?.price_components : rec.price_components,
+      price: hasId ? d?.price : rec.price,
+      price_item: hasId ? d?.price_item : rec.price_item,
+    };
+  });
+
+  const rawIngredients = asRecord(rawGear.ingredients) ?? {};
+  const resolvedIngredients = asRecord(resolvedGear.ingredients) ?? {};
+  const patchIngredients = (list: unknown[]) =>
+    asArray(list).map((item) => {
+      const rec = asRecord(item) ?? {};
+      const id = canonicalId(rec.i_id, ITEM_ID_RE.ingredient);
+      const hasId = id.length > 0;
+      const d = id ? params.ingredientsById.get(id) : undefined;
+      return {
+        ...rec,
+        i_id: hasId ? id : rec.i_id,
+        ingredient_name: hasId ? (d?.ingredient_name ?? id) : (rec.ingredient_name ?? rec.name),
+        name: hasId ? (d?.ingredient_name ?? id) : (rec.name ?? rec.ingredient_name),
+        alchemy_substance: hasId ? d?.alchemy_substance : rec.alchemy_substance,
+        alchemy_substance_en: hasId ? d?.alchemy_substance_en : rec.alchemy_substance_en,
+        harvesting_complexity: hasId ? d?.harvesting_complexity : rec.harvesting_complexity,
+        weight: hasId ? d?.weight : rec.weight,
+        price: hasId ? d?.price : rec.price,
+      };
+    });
+  const patchAlchemyIngredients = patchIngredients(asArray(rawIngredients.alchemy));
+  const patchCraftIngredients = patchIngredients(asArray(rawIngredients.craft));
+  const rawGeneralGear = asArray(rawGear.general_gear);
+  const resolvedGeneralGear = asArray(resolvedGear.general_gear);
+  const sourceGeneralGear = rawGeneralGear.length > 0 ? rawGeneralGear : resolvedGeneralGear;
+  const patchGeneralGear = sourceGeneralGear.map((item, idx) => {
+    const rec = asRecord(item) ?? {};
+    const recResolved = asRecord(resolvedGeneralGear[idx]) ?? {};
+    const id =
+      getId(rec, ['t_id', 'id'], ITEM_ID_RE.generalGear) ||
+      getId(recResolved, ['t_id', 'id'], ITEM_ID_RE.generalGear);
+    const hasId = id.length > 0;
+    const d = id ? params.generalGearById.get(id) : undefined;
+    return {
+      ...recResolved,
+      ...rec,
+      t_id: hasId ? id : (rec.t_id ?? recResolved.t_id),
+      gear_name: hasId ? (d?.gear_name ?? id) : (recResolved.gear_name ?? recResolved.name ?? rec.gear_name ?? rec.name),
+      name: hasId ? (d?.gear_name ?? id) : (recResolved.name ?? recResolved.gear_name ?? rec.name ?? rec.gear_name),
+      group_name: hasId ? d?.group_name : (recResolved.group_name ?? rec.group_name),
+      subgroup_name: hasId ? d?.subgroup_name : (recResolved.subgroup_name ?? rec.subgroup_name),
+      gear_description: hasId ? d?.gear_description : (recResolved.gear_description ?? recResolved.description ?? rec.gear_description ?? rec.description),
+      description: hasId ? d?.gear_description : (recResolved.description ?? recResolved.gear_description ?? rec.description ?? rec.gear_description),
+      concealment: hasId ? d?.concealment : (recResolved.concealment ?? rec.concealment),
+      weight: hasId ? d?.weight : (recResolved.weight ?? rec.weight),
+      price: hasId ? d?.price : (recResolved.price ?? rec.price),
+    };
+  });
+  const patchVehicles = asArray(rawGear.vehicles).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = getId(rec, ['wt_id', 'id'], ITEM_ID_RE.vehicle);
+    const hasId = id.length > 0;
+    const d = id ? params.vehiclesById.get(id) : undefined;
+    return {
+      ...rec,
+      wt_id: hasId ? id : rec.wt_id,
+      vehicle_name: hasId ? (d?.vehicle_name ?? id) : (rec.vehicle_name ?? rec.name),
+      name: hasId ? (d?.vehicle_name ?? id) : (rec.name ?? rec.vehicle_name),
+      subgroup_name: hasId ? d?.subgroup_name : rec.subgroup_name,
+      base: hasId ? d?.base : rec.base,
+      control_modifier: hasId ? d?.control_modifier : rec.control_modifier,
+      speed: hasId ? d?.speed : rec.speed,
+      occupancy: hasId ? d?.occupancy : rec.occupancy,
+      hp: hasId ? d?.hp : rec.hp,
+      weight: hasId ? d?.weight : rec.weight,
+      price: hasId ? d?.price : rec.price,
+    };
+  });
+
+  const rawMagic = asRecord(rawGear.magic) ?? {};
+  const resolvedMagic = asRecord(resolvedGear.magic) ?? {};
+  const patchSpells = sourceList(rawMagic.spells, resolvedMagic.spells).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = getId(rec, ['ms_id', 'id'], ITEM_ID_RE.magicSpell);
+    const hasId = id.length > 0;
+    const d = id ? params.magicSpellsById.get(id) : undefined;
+    return {
+      ...rec,
+      ms_id: hasId ? id : (rec.ms_id ?? rec.id),
+      id: hasId ? id : (rec.id ?? rec.ms_id),
+      spell_name: hasId ? (d?.spell_name ?? id) : (rec.spell_name ?? rec.name),
+      name: hasId ? (d?.spell_name ?? id) : (rec.name ?? rec.spell_name),
+      level: hasId ? d?.level : rec.level,
+      element: hasId ? d?.element : rec.element,
+      stamina_cast: hasId ? d?.stamina_cast : rec.stamina_cast,
+      stamina_keeping: hasId ? d?.stamina_keeping : rec.stamina_keeping,
+      damage: hasId ? d?.damage : rec.damage,
+      distance: hasId ? d?.distance : rec.distance,
+      zone_size: hasId ? d?.zone_size : rec.zone_size,
+      form: hasId ? d?.form : rec.form,
+      effect_time: hasId ? d?.effect_time : rec.effect_time,
+      effect: hasId ? d?.effect : rec.effect,
+      sort_key: hasId ? d?.sort_key : rec.sort_key,
+      type: hasId ? (d?.type ?? rec.type) : rec.type,
+    };
+  });
+  const patchSigns = sourceList(rawMagic.signs, resolvedMagic.signs).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = getId(rec, ['ms_id', 'id'], ITEM_ID_RE.magicSpell);
+    const hasId = id.length > 0;
+    const d = id ? params.magicSpellsById.get(id) : undefined;
+    return {
+      ...rec,
+      ms_id: hasId ? id : (rec.ms_id ?? rec.id),
+      id: hasId ? id : (rec.id ?? rec.ms_id),
+      spell_name: hasId ? (d?.spell_name ?? id) : (rec.spell_name ?? rec.name),
+      name: hasId ? (d?.spell_name ?? id) : (rec.name ?? rec.spell_name),
+      level: hasId ? d?.level : rec.level,
+      element: hasId ? d?.element : rec.element,
+      stamina_cast: hasId ? d?.stamina_cast : rec.stamina_cast,
+      stamina_keeping: hasId ? d?.stamina_keeping : rec.stamina_keeping,
+      damage: hasId ? d?.damage : rec.damage,
+      distance: hasId ? d?.distance : rec.distance,
+      zone_size: hasId ? d?.zone_size : rec.zone_size,
+      form: hasId ? d?.form : rec.form,
+      effect_time: hasId ? d?.effect_time : rec.effect_time,
+      effect: hasId ? d?.effect : rec.effect,
+      sort_key: hasId ? d?.sort_key : rec.sort_key,
+      type: 'sign',
+    };
+  });
+  const rawInvocations = asRecord(rawMagic.invocations) ?? {};
+  const resolvedInvocations = asRecord(resolvedMagic.invocations) ?? {};
+  const patchInvocationsByType = (invType: 'druid' | 'priest') =>
+    sourceList(rawInvocations[invType], resolvedInvocations[invType]).map((item) => {
+      const rec = asRecord(item) ?? {};
+      const id = getId(rec, ['ms_id', 'id'], ITEM_ID_RE.magicSpell);
+      const hasId = id.length > 0;
+      const d = id ? params.magicInvocationsById.get(id) : undefined;
+      return {
+        ...rec,
+        ms_id: hasId ? id : (rec.ms_id ?? rec.id),
+        id: hasId ? id : (rec.id ?? rec.ms_id),
+        invocation_name: hasId ? (d?.invocation_name ?? id) : (rec.invocation_name ?? rec.name),
+        name: hasId ? (d?.invocation_name ?? id) : (rec.name ?? rec.invocation_name),
+        level: hasId ? d?.level : rec.level,
+        cult_or_circle: hasId ? d?.cult_or_circle : rec.cult_or_circle,
+        stamina_cast: hasId ? d?.stamina_cast : rec.stamina_cast,
+        stamina_keeping: hasId ? d?.stamina_keeping : rec.stamina_keeping,
+        damage: hasId ? d?.damage : rec.damage,
+        distance: hasId ? d?.distance : rec.distance,
+        zone_size: hasId ? d?.zone_size : rec.zone_size,
+        form: hasId ? d?.form : rec.form,
+        effect_time: hasId ? d?.effect_time : rec.effect_time,
+        effect: hasId ? d?.effect : rec.effect,
+        type: hasId ? (d?.type ?? invType) : (rec.type ?? invType),
+      };
+    });
+  const patchRituals = sourceList(rawMagic.rituals, resolvedMagic.rituals).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = getId(rec, ['ms_id', 'id'], ITEM_ID_RE.magicSpell);
+    const hasId = id.length > 0;
+    const d = id ? params.magicRitualsById.get(id) : undefined;
+    return {
+      ...rec,
+      ms_id: hasId ? id : (rec.ms_id ?? rec.id),
+      id: hasId ? id : (rec.id ?? rec.ms_id),
+      ritual_name: hasId ? (d?.ritual_name ?? id) : (rec.ritual_name ?? rec.name),
+      name: hasId ? (d?.ritual_name ?? id) : (rec.name ?? rec.ritual_name),
+      level: hasId ? d?.level : rec.level,
+      dc: hasId ? d?.dc : rec.dc,
+      preparing_time: hasId ? d?.preparing_time : rec.preparing_time,
+      ingredients: hasId ? d?.ingredients : rec.ingredients,
+      zone_size: hasId ? d?.zone_size : rec.zone_size,
+      stamina_cast: hasId ? d?.stamina_cast : rec.stamina_cast,
+      stamina_keeping: hasId ? d?.stamina_keeping : rec.stamina_keeping,
+      effect_time: hasId ? d?.effect_time : rec.effect_time,
+      form: hasId ? d?.form : rec.form,
+      effect: hasId ? d?.effect : rec.effect,
+      effect_tpl: hasId ? d?.effect_tpl : rec.effect_tpl,
+      how_to_remove: hasId ? d?.how_to_remove : rec.how_to_remove,
+      sort_key: hasId ? d?.sort_key : rec.sort_key,
+    };
+  });
+  const patchHexes = sourceList(rawMagic.hexes, resolvedMagic.hexes).map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = getId(rec, ['ms_id', 'id'], ITEM_ID_RE.magicSpell);
+    const hasId = id.length > 0;
+    const d = id ? params.magicHexesById.get(id) : undefined;
+    return {
+      ...rec,
+      ms_id: hasId ? id : (rec.ms_id ?? rec.id),
+      id: hasId ? id : (rec.id ?? rec.ms_id),
+      hex_name: hasId ? (d?.hex_name ?? id) : (rec.hex_name ?? rec.name),
+      name: hasId ? (d?.hex_name ?? id) : (rec.name ?? rec.hex_name),
+      level: hasId ? d?.level : rec.level,
+      stamina_cast: hasId ? d?.stamina_cast : rec.stamina_cast,
+      effect: hasId ? d?.effect : rec.effect,
+      remove_instructions: hasId ? d?.remove_instructions : rec.remove_instructions,
+      remove_components: hasId ? d?.remove_components : rec.remove_components,
+      tooltip: hasId ? d?.tooltip : rec.tooltip,
+      sort_key: hasId ? d?.sort_key : rec.sort_key,
+    };
+  });
+  const sourceGifts = (() => {
+    const rawList = asArray(rawMagic.gifts);
+    if (rawList.length > 0) return rawList;
+    return asArray(resolvedMagic.gifts);
+  })();
+  const patchGifts = sourceGifts.map((item) => {
+    const rec = asRecord(item) ?? {};
+    const id = getId(rec, ['mg_id', 'id'], ITEM_ID_RE.magicGift);
+    const hasId = id.length > 0;
+    const d = id ? params.giftsById.get(id) : undefined;
+    return {
+      ...rec,
+      mg_id: hasId ? id : (rec.mg_id ?? rec.id),
+      id: hasId ? id : (rec.id ?? rec.mg_id),
+      gift_name: hasId ? (d?.gift_name ?? id) : (rec.gift_name ?? rec.name),
+      name: hasId ? (d?.gift_name ?? id) : (rec.name ?? rec.gift_name),
+      group_name: hasId ? d?.group_name : (rec.group_name ?? rec.group),
+      group: hasId ? d?.group_name : (rec.group ?? rec.group_name),
+      dc: hasId ? d?.dc : rec.dc,
+      vigor_cost: hasId ? d?.vigor_cost : rec.vigor_cost,
+      action_cost: hasId ? d?.action_cost : rec.action_cost,
+      description: hasId ? d?.description : rec.description,
+      sort_key: hasId ? d?.sort_key : rec.sort_key,
+      is_major: hasId ? d?.is_major : rec.is_major,
     };
   });
 
@@ -324,7 +1036,28 @@ function patchResolvedGearFromDbViews(params: {
     weapons: patchWeapons,
     armors: patchArmors,
     potions: patchPotions,
+    vehicles: patchVehicles,
+    general_gear: patchGeneralGear,
     recipes: patchRecipes,
+    blueprints: patchBlueprints,
+    ingredients: {
+      ...resolvedIngredients,
+      alchemy: patchAlchemyIngredients,
+      craft: patchCraftIngredients,
+    },
+    magic: {
+      ...resolvedMagic,
+      spells: patchSpells,
+      signs: patchSigns,
+      invocations: {
+        ...resolvedInvocations,
+        druid: patchInvocationsByType('druid'),
+        priest: patchInvocationsByType('priest'),
+      },
+      rituals: patchRituals,
+      hexes: patchHexes,
+      gifts: patchGifts,
+    },
   };
 }
 
@@ -373,6 +1106,14 @@ app.post('/survey/next', async (c) => {
   try {
     const payload = await c.req.json();
     const result = await getNextQuestion(payload);
+    const lang =
+      (typeof payload?.lang === 'string' && payload.lang.trim()) ||
+      c.req.query('lang') ||
+      c.req.header('Accept-Language')?.split(',')[0]?.split('-')[0] ||
+      'en';
+    if (result?.state && typeof result.state === 'object' && !Array.isArray(result.state)) {
+      await enrichProfessionalBundleLabelsInState(result.state as Record<string, unknown>, String(lang));
+    }
     return c.json(result);
   } catch (error) {
     console.error('[survey] next question error', error);
@@ -384,6 +1125,14 @@ app.post('/survey/random-to-end', async (c) => {
   try {
     const payload = await c.req.json();
     const result = await getSurveyRandomToStable(payload);
+    const lang =
+      (typeof payload?.lang === 'string' && payload.lang.trim()) ||
+      c.req.query('lang') ||
+      c.req.header('Accept-Language')?.split(',')[0]?.split('-')[0] ||
+      'en';
+    if (result?.state && typeof result.state === 'object' && !Array.isArray(result.state)) {
+      await enrichProfessionalBundleLabelsInState(result.state as Record<string, unknown>, String(lang));
+    }
     return c.json(result);
   } catch (error) {
     console.error('[survey] random-to-end error', error);
@@ -427,10 +1176,38 @@ app.post('/i18n/resolve', async (c) => {
           ),
         )
       : [];
+    const keys = Array.isArray(payload.keys)
+      ? Array.from(
+          new Set(
+            payload.keys
+              .filter((v): v is string => typeof v === 'string')
+              .map((v) => v.trim())
+              .filter((v) => v.length > 0),
+          ),
+        )
+      : [];
 
-    if (ids.length === 0) {
-      return c.json({ texts: {} });
+    if (ids.length === 0 && keys.length === 0) {
+      return c.json({ texts: {}, keys: {} });
     }
+
+    const keyToId = new Map<string, string>();
+    if (keys.length > 0) {
+      const { rows: keyRows } = await db.query<{ key: string; id: string }>(
+        `
+          SELECT src.key::text AS key, ck_id(src.key)::text AS id
+          FROM unnest($1::text[]) AS src(key)
+        `,
+        [keys],
+      );
+      for (const row of keyRows) {
+        keyToId.set(row.key, row.id);
+      }
+    }
+    const allIds = Array.from(new Set([
+      ...ids,
+      ...Array.from(keyToId.values()).filter((v) => UUID_RE.test(v)),
+    ]));
 
     const { rows } = await db.query<I18nResolveRow>(
       `
@@ -439,7 +1216,7 @@ app.post('/i18n/resolve', async (c) => {
         WHERE id = ANY($1::uuid[])
           AND lang = ANY($2::text[])
       `,
-      [ids, [lang, 'en']],
+      [allIds, [lang, 'en']],
     );
 
     const byId = new Map<string, Map<string, string>>();
@@ -450,13 +1227,21 @@ app.post('/i18n/resolve', async (c) => {
     }
 
     const texts: Record<string, string> = {};
-    for (const id of ids) {
+    for (const id of allIds) {
       const m = byId.get(id);
       if (!m) continue;
       texts[id] = m.get(lang) ?? m.get('en') ?? id;
     }
 
-    return c.json({ texts });
+    const keyTexts: Record<string, string> = {};
+    for (const key of keys) {
+      const id = keyToId.get(key);
+      if (!id) continue;
+      const m = byId.get(id);
+      keyTexts[key] = m?.get(lang) ?? m?.get('en') ?? key;
+    }
+
+    return c.json({ texts, keys: keyTexts });
   } catch (error) {
     console.error('[i18n] resolve error', error);
     return c.json({ error: 'Failed to resolve i18n texts' }, 400);
@@ -498,9 +1283,25 @@ app.put('/user/settings', async (c) => {
   const useW1AlchemyIcons =
     readBooleanAt(bodyRec, 'useW1AlchemyIcons') ??
     readBooleanAt(bodyRec, 'use_w1_alchemy_icons');
+  const pdfTablesRaw =
+    bodyRec?.pdfTables ??
+    bodyRec?.pdf_tables ??
+    null;
+  const pdfTablesProvided = asRecord(pdfTablesRaw) != null;
+  const normalizedPdfTables = pdfTablesProvided
+    ? normalizePdfTablesSettingsFromUnknown(pdfTablesRaw)
+    : null;
 
-  if (useW1AlchemyIcons == null) {
-    return c.json({ error: 'useW1AlchemyIcons boolean is required' }, 400);
+  if (useW1AlchemyIcons == null && !pdfTablesProvided) {
+    return c.json({ error: 'At least one setting field is required' }, 400);
+  }
+
+  const patchPayload: Record<string, unknown> = {};
+  if (useW1AlchemyIcons != null) {
+    patchPayload.useW1AlchemyIcons = useW1AlchemyIcons;
+  }
+  if (normalizedPdfTables) {
+    patchPayload.pdfTables = normalizedPdfTables;
   }
 
   try {
@@ -525,7 +1326,7 @@ app.put('/user/settings', async (c) => {
         ownerEmail,
         user?.sub ?? null,
         user?.provider ?? null,
-        JSON.stringify({ useW1AlchemyIcons }),
+        JSON.stringify(patchPayload),
       ],
     );
     return c.json(normalizeUserSettingsRow(rows[0]));
@@ -778,21 +1579,45 @@ app.get('/characters/:id/pdf', async (c) => {
       ...rawCharacter,
       user_settings: {
         use_w1_alchemy_icons: userSettings.useW1AlchemyIcons,
+        pdf_tables: userSettings.pdfTables,
       },
     };
 
     const resolvedCharacter = await resolveCharacterRawI18n(rawCharacter, lang);
-    const weaponIds = readIdListFromGear(rawCharacter, 'weapons', 'w_id');
-    const armorIds = readIdListFromGear(rawCharacter, 'armors', 'a_id');
-    const potionIds = readIdListFromGear(rawCharacter, 'potions', 'p_id');
-    const recipeIds = readIdListFromGearAny(rawCharacter, 'recipes', ['r_id', 'id']);
-    const upgradeIds = readIdListFromGearAny(rawCharacter, 'upgrades', ['u_id', 'id']);
-    const blueprintIds = readIdListFromGearAny(rawCharacter, 'blueprints', ['b_id', 'bp_id', 'id']);
+    const weaponIds = readIdListFromGear(rawCharacter, 'weapons', 'w_id', ITEM_ID_RE.weapon);
+    const armorIds = readIdListFromGear(rawCharacter, 'armors', 'a_id', ITEM_ID_RE.armor);
+    const potionIds = readIdListFromGear(rawCharacter, 'potions', 'p_id', ITEM_ID_RE.potion);
+    const recipeIds = readIdListFromGearAny(rawCharacter, 'recipes', ['r_id', 'id'], ITEM_ID_RE.recipe);
+    const upgradeIds = readIdListFromGearAny(rawCharacter, 'upgrades', ['u_id', 'id'], ITEM_ID_RE.upgrade);
+    const blueprintIds = readIdListFromGearAny(rawCharacter, 'blueprints', ['b_id', 'bp_id', 'id'], ITEM_ID_RE.blueprint);
+    const generalGearIds = readIdListFromGearAny(rawCharacter, 'general_gear', ['t_id', 'id'], ITEM_ID_RE.generalGear);
+    const vehicleIds = readIdListFromGearAny(rawCharacter, 'vehicles', ['wt_id', 'id'], ITEM_ID_RE.vehicle);
+    const ingredientAlchemyIds = readIdListFromIngredients(rawCharacter, 'alchemy', 'i_id');
+    const ingredientCraftIds = readIdListFromIngredients(rawCharacter, 'craft', 'i_id');
+    const ingredientIds = Array.from(new Set([...ingredientAlchemyIds, ...ingredientCraftIds]));
+    const spellIds = readIdListFromMagicList(rawCharacter, 'spells');
+    const signIds = readIdListFromMagicList(rawCharacter, 'signs');
+    const ritualIds = readIdListFromMagicList(rawCharacter, 'rituals');
+    const hexIds = readIdListFromMagicList(rawCharacter, 'hexes');
+    const invocationDruidIds = readIdListFromMagicInvocations(rawCharacter, 'druid');
+    const invocationPriestIds = readIdListFromMagicInvocations(rawCharacter, 'priest');
+    const magicSpellLikeIds = Array.from(new Set([...spellIds, ...signIds]));
+    const magicInvocationIds = Array.from(new Set([...invocationDruidIds, ...invocationPriestIds]));
+    const giftIds = readIdListFromMagicGifts(rawCharacter);
 
     const weaponsById = new Map<string, WeaponPdfDetailsRow>();
     const armorsById = new Map<string, ArmorPdfDetailsRow>();
     const potionsById = new Map<string, PotionPdfDetailsRow>();
     const recipesById = new Map<string, RecipePdfDetailsRow>();
+    const blueprintsById = new Map<string, BlueprintPdfDetailsRow>();
+    const ingredientsById = new Map<string, IngredientPdfDetailsRow>();
+    const generalGearById = new Map<string, GeneralGearPdfDetailsRow>();
+    const vehiclesById = new Map<string, VehiclePdfDetailsRow>();
+    const magicSpellsById = new Map<string, MagicSpellPdfDetailsRow>();
+    const magicInvocationsById = new Map<string, MagicInvocationPdfDetailsRow>();
+    const magicRitualsById = new Map<string, MagicRitualPdfDetailsRow>();
+    const magicHexesById = new Map<string, MagicHexPdfDetailsRow>();
+    const giftsById = new Map<string, MagicGiftPdfDetailsRow>();
     const itemEffectsGlossary: ItemEffectGlossaryRow[] = [];
 
     try {
@@ -862,20 +1687,155 @@ app.get('/characters/:id/pdf', async (c) => {
     }
 
     try {
-      const blueprintItemIds: string[] = [];
       if (blueprintIds.length > 0) {
-        const { rows } = await db.query<BlueprintItemRefRow>(
+        const { rows } = await db.query<BlueprintPdfDetailsRow>(
           `
-            SELECT item_id
+            SELECT b_id, blueprint_name, blueprint_group, craft_level, difficulty_check, time_craft,
+                   item_id, components, item_desc, price_components, price, price_item
             FROM wcc_item_blueprints_v
             WHERE lang = $1 AND b_id = ANY($2::text[])
           `,
           [lang, blueprintIds],
         );
-        for (const row of rows) {
-          const itemId = typeof row.item_id === 'string' ? row.item_id.trim() : '';
-          if (itemId) blueprintItemIds.push(itemId);
-        }
+        rows.forEach((r) => blueprintsById.set(r.b_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf blueprint lookup failed', error);
+    }
+
+    try {
+      if (ingredientIds.length > 0) {
+        const { rows } = await db.query<IngredientPdfDetailsRow>(
+          `
+            SELECT i_id, ingredient_name, alchemy_substance, alchemy_substance_en, harvesting_complexity, weight, price
+            FROM wcc_item_ingredients_v
+            WHERE lang = $1 AND i_id = ANY($2::text[])
+          `,
+          [lang, ingredientIds],
+        );
+        rows.forEach((r) => ingredientsById.set(r.i_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf ingredient lookup failed', error);
+    }
+
+    try {
+      if (generalGearIds.length > 0) {
+        const { rows } = await db.query<GeneralGearPdfDetailsRow>(
+          `
+            SELECT t_id, gear_name, group_name, subgroup_name, gear_description, concealment, weight, price
+            FROM wcc_item_general_gear_v
+            WHERE lang = $1 AND t_id = ANY($2::text[])
+          `,
+          [lang, generalGearIds],
+        );
+        rows.forEach((r) => generalGearById.set(r.t_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf general gear lookup failed', error);
+    }
+
+    try {
+      if (vehicleIds.length > 0) {
+        const { rows } = await db.query<VehiclePdfDetailsRow>(
+          `
+            SELECT wt_id, vehicle_name, subgroup_name, base, control_modifier, speed, occupancy, hp, weight, price
+            FROM wcc_item_vehicles_v
+            WHERE lang = $1 AND wt_id = ANY($2::text[])
+          `,
+          [lang, vehicleIds],
+        );
+        rows.forEach((r) => vehiclesById.set(r.wt_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf vehicle lookup failed', error);
+    }
+
+    try {
+      if (magicSpellLikeIds.length > 0) {
+        const { rows } = await db.query<MagicSpellPdfDetailsRow>(
+          `
+            SELECT ms_id, spell_name, level, element, stamina_cast, stamina_keeping, damage, distance, zone_size, form, effect_time, effect, sort_key, type
+            FROM wcc_magic_spells_v
+            WHERE lang = $1 AND ms_id = ANY($2::text[])
+          `,
+          [lang, magicSpellLikeIds],
+        );
+        rows.forEach((r) => magicSpellsById.set(r.ms_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf spells/signs lookup failed', error);
+    }
+
+    try {
+      if (magicInvocationIds.length > 0) {
+        const { rows } = await db.query<MagicInvocationPdfDetailsRow>(
+          `
+            SELECT ms_id, invocation_name, level, cult_or_circle, stamina_cast, stamina_keeping, damage, distance, zone_size, form, effect_time, effect, type
+            FROM wcc_magic_invocations_v
+            WHERE lang = $1 AND ms_id = ANY($2::text[])
+          `,
+          [lang, magicInvocationIds],
+        );
+        rows.forEach((r) => magicInvocationsById.set(r.ms_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf invocations lookup failed', error);
+    }
+
+    try {
+      if (ritualIds.length > 0) {
+        const { rows } = await db.query<MagicRitualPdfDetailsRow>(
+          `
+            SELECT ms_id, ritual_name, level, dc, preparing_time, ingredients, zone_size, stamina_cast, stamina_keeping, effect_time, form, effect, effect_tpl, how_to_remove, sort_key
+            FROM wcc_magic_rituals_v
+            WHERE lang = $1 AND ms_id = ANY($2::text[])
+          `,
+          [lang, ritualIds],
+        );
+        rows.forEach((r) => magicRitualsById.set(r.ms_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf rituals lookup failed', error);
+    }
+
+    try {
+      if (hexIds.length > 0) {
+        const { rows } = await db.query<MagicHexPdfDetailsRow>(
+          `
+            SELECT ms_id, hex_name, level, stamina_cast, effect, remove_instructions, remove_components, tooltip, sort_key
+            FROM wcc_magic_hexes_v
+            WHERE lang = $1 AND ms_id = ANY($2::text[])
+          `,
+          [lang, hexIds],
+        );
+        rows.forEach((r) => magicHexesById.set(r.ms_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf hexes lookup failed', error);
+    }
+
+    try {
+      if (giftIds.length > 0) {
+        const { rows } = await db.query<MagicGiftPdfDetailsRow>(
+          `
+            SELECT mg_id, group_name, gift_name, dc, vigor_cost, action_cost, description, sort_key, is_major
+            FROM wcc_magic_gifts_v
+            WHERE lang = $1 AND mg_id = ANY($2::text[])
+          `,
+          [lang, giftIds],
+        );
+        rows.forEach((r) => giftsById.set(r.mg_id, r));
+      }
+    } catch (error) {
+      console.error('[characters] pdf gifts lookup failed', error);
+    }
+
+    try {
+      const blueprintItemIds: string[] = [];
+      for (const row of blueprintsById.values()) {
+        const itemId = typeof row.item_id === 'string' ? row.item_id.trim() : '';
+        if (itemId) blueprintItemIds.push(itemId);
       }
 
       const itemIdsForEffects = Array.from(
@@ -958,6 +1918,15 @@ app.get('/characters/:id/pdf', async (c) => {
       armorsById,
       potionsById,
       recipesById,
+      blueprintsById,
+      ingredientsById,
+      generalGearById,
+      vehiclesById,
+      magicSpellsById,
+      magicInvocationsById,
+      magicRitualsById,
+      magicHexesById,
+      giftsById,
     });
 
     const skillsCatalog = await getSkillsCatalog({ lang }).catch(() => ({ skills: [] as Array<{ id: string; param: string | null; name: string }> }));

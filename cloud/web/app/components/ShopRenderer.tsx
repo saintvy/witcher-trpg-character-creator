@@ -96,6 +96,13 @@ function looksLikeUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
+function humanizeBundleLabel(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const noPrefix = trimmed.replace(/^witcher_cc\.wcc_profession_shop\.bundle\./i, "");
+  return noPrefix.replace(/[_-]+/g, " ").trim();
+}
+
 function displayText(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (typeof value === "string") return value;
@@ -406,6 +413,20 @@ export function ShopRenderer(props: {
   const [showAllItems, setShowAllItems] = useState(false);
   const [magicNoTokensWarningText, setMagicNoTokensWarningText] = useState<string | null>(null);
   const budgetSummaryRef = useRef<HTMLDivElement>(null);
+
+  const resolvedBundleNamesById = useMemo(() => {
+    const uiState = isRecord((state as any)?.ui) ? ((state as any).ui as Record<string, unknown>) : null;
+    const source = uiState && isRecord(uiState.professionalBundleNames)
+      ? (uiState.professionalBundleNames as Record<string, unknown>)
+      : {};
+    const out: Record<string, string> = {};
+    for (const [bundleId, value] of Object.entries(source)) {
+      if (typeof value === "string" && value.trim()) {
+        out[bundleId] = value.trim();
+      }
+    }
+    return out;
+  }, [state]);
 
   // Get all budgets, defaulting to old format for backward compatibility
   const budgets = useMemo(() => {
@@ -1656,18 +1677,17 @@ export function ShopRenderer(props: {
 
           {professionalOptions.bundles.map((bundle) => {
             const checked = Boolean(bundleCheckedById[bundle.bundleId]);
-            const displayName = (() => {
-              if (typeof bundle.displayName === 'string') {
-                return looksLikeUuid(bundle.displayName) ? bundle.bundleId : bundle.displayName;
+            const fallbackDisplayName = (() => {
+              if (typeof bundle.displayName === "string" && bundle.displayName.trim()) {
+                if (!looksLikeUuid(bundle.displayName.trim())) return bundle.displayName.trim();
               }
-              if (bundle.displayName && typeof bundle.displayName === 'object' && !Array.isArray(bundle.displayName)) {
-                const obj = bundle.displayName as any;
-                const shown = displayText(obj);
+              if (bundle.displayName && typeof bundle.displayName === "object" && !Array.isArray(bundle.displayName)) {
+                const shown = displayText(bundle.displayName).trim();
                 if (shown && !looksLikeUuid(shown)) return shown;
-                if (typeof obj.i18n_uuid === 'string') return bundle.bundleId;
               }
-              return bundle.bundleId;
+              return humanizeBundleLabel(bundle.bundleId) || bundle.bundleId;
             })();
+            const displayName = resolvedBundleNamesById[bundle.bundleId] ?? fallbackDisplayName;
 
             const itemsBySource: Record<string, ProfessionalBundleItem[]> = {};
             for (const it of bundle.items) {
