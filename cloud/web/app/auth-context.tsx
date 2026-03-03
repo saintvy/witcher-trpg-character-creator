@@ -16,6 +16,7 @@ type AuthSession = {
   provider: Exclude<AuthProviderKind, "none">;
   idToken: string;
   accessToken?: string;
+  refreshToken?: string;
   expiresAt?: number; // epoch seconds
   user: AuthUser;
 };
@@ -45,9 +46,14 @@ const SESSION_STORAGE_KEY = "wcc.auth.session";
 const PKCE_VERIFIER_KEY = "wcc.auth.pkceVerifier";
 const PKCE_STATE_KEY = "wcc.auth.pkceState";
 const RETURN_TO_KEY = "wcc.auth.returnTo";
+const REFRESH_LEEWAY_SECONDS = 300;
+const FOCUS_REFRESH_LEEWAY_SECONDS = 120;
 
 let currentIdToken: string | null = null;
+let currentSession: AuthSession | null = null;
 let googleScriptPromise: Promise<void> | null = null;
+let sessionListener: ((session: AuthSession | null) => void) | null = null;
+let cognitoRefreshPromise: Promise<AuthSession | null> | null = null;
 
 export function getCurrentAuthIdToken(): string | null {
   return currentIdToken;
@@ -55,6 +61,15 @@ export function getCurrentAuthIdToken(): string | null {
 
 function setCurrentAuthIdToken(token: string | null): void {
   currentIdToken = token;
+}
+
+function commitSession(session: AuthSession | null, notifyListener = true): void {
+  currentSession = session;
+  writeStoredSession(session);
+  setCurrentAuthIdToken(session?.idToken ?? null);
+  if (notifyListener) {
+    sessionListener?.(session);
+  }
 }
 
 function parseJwtClaims(token: string): Record<string, unknown> {
@@ -94,13 +109,19 @@ function isExpired(expiresAt?: number): boolean {
   return expiresAt <= now + 30;
 }
 
-function readStoredSession(): AuthSession | null {
+function shouldRefreshSoon(expiresAt?: number, leewaySeconds = REFRESH_LEEWAY_SECONDS): boolean {
+  if (!expiresAt) return false;
+  const now = Math.floor(Date.now() / 1000);
+  return expiresAt <= now + leewaySeconds;
+}
+
+function readStoredSession(options?: { allowExpired?: boolean }): AuthSession | null {
   try {
     const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
     if (!raw) return null;
     const session = JSON.parse(raw) as AuthSession;
     if (!session?.idToken || !session?.user) return null;
-    if (isExpired(session.expiresAt)) return null;
+    if (!options?.allowExpired && isExpired(session.expiresAt)) return null;
     return session;
   } catch {
     return null;
@@ -113,6 +134,102 @@ function writeStoredSession(session: AuthSession | null): void {
     return;
   }
   window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+}
+
+async function refreshCognitoSession(force = false): Promise<AuthSession | null> {
+  if (typeof window === "undefined") return null;
+
+  const active = currentSession ?? readStoredSession({ allowExpired: true });
+  if (!active) return null;
+
+  if (active.provider !== "cognito") {
+    if (isExpired(active.expiresAt)) {
+      commitSession(null);
+      return null;
+    }
+    return active;
+  }
+
+  const needsRefresh = force || shouldRefreshSoon(active.expiresAt);
+  if (!needsRefresh) {
+    return active;
+  }
+
+  if (!active.refreshToken || !COGNITO_DOMAIN || !COGNITO_CLIENT_ID) {
+    if (isExpired(active.expiresAt)) {
+      commitSession(null);
+      return null;
+    }
+    return active;
+  }
+
+  if (cognitoRefreshPromise) {
+    return cognitoRefreshPromise;
+  }
+
+  cognitoRefreshPromise = (async () => {
+    try {
+      const body = new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: COGNITO_CLIENT_ID,
+        refresh_token: active.refreshToken!,
+      });
+
+      const response = await fetch(`${COGNITO_DOMAIN}/oauth2/token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: body.toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Cognito refresh failed (${response.status})`);
+      }
+
+      const tokenData = (await response.json()) as {
+        id_token?: string;
+        access_token?: string;
+        refresh_token?: string;
+        expires_in?: number;
+      };
+
+      if (!tokenData.id_token) {
+        throw new Error("Cognito refresh response does not include id_token");
+      }
+
+      const claims = parseJwtClaims(tokenData.id_token);
+      const nextSession: AuthSession = {
+        provider: "cognito",
+        idToken: tokenData.id_token,
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token || active.refreshToken,
+        expiresAt:
+          typeof tokenData.expires_in === "number"
+            ? Math.floor(Date.now() / 1000) + tokenData.expires_in
+            : parseJwtExp(tokenData.id_token),
+        user: claimsToUser(claims),
+      };
+
+      commitSession(nextSession);
+      return nextSession;
+    } catch {
+      if (!force && !isExpired(active.expiresAt)) {
+        return active;
+      }
+      commitSession(null);
+      return null;
+    } finally {
+      cognitoRefreshPromise = null;
+    }
+  })();
+
+  return cognitoRefreshPromise;
+}
+
+export async function ensureFreshAuthIdToken(force = false): Promise<string | null> {
+  const nextSession = await refreshCognitoSession(force);
+  return nextSession?.idToken ?? null;
 }
 
 function loadGoogleScript(): Promise<void> {
@@ -197,8 +314,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const cognitoCallbackHandledRef = useRef(false);
 
   useEffect(() => {
+    const handler = (nextSession: AuthSession | null) => {
+      setSession(nextSession);
+    };
+    sessionListener = handler;
+    return () => {
+      if (sessionListener === handler) {
+        sessionListener = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const initial = readStoredSession();
     setSession(initial);
+    currentSession = initial;
     setCurrentAuthIdToken(initial?.idToken ?? null);
     setMounted(true);
   }, []);
@@ -206,13 +336,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!mounted) return;
     if (session && isExpired(session.expiresAt)) {
+      if (session.provider === "cognito" && session.refreshToken) {
+        void ensureFreshAuthIdToken(true);
+        return;
+      }
       setSession(null);
-      writeStoredSession(null);
-      setCurrentAuthIdToken(null);
       return;
     }
-    writeStoredSession(session);
-    setCurrentAuthIdToken(session?.idToken ?? null);
+    commitSession(session, false);
   }, [mounted, session]);
 
   useEffect(() => {
@@ -289,6 +420,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const tokenData = (await response.json()) as {
           id_token?: string;
           access_token?: string;
+          refresh_token?: string;
           expires_in?: number;
         };
 
@@ -306,6 +438,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           provider: "cognito",
           idToken: tokenData.id_token,
           accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
           expiresAt,
           user: claimsToUser(claims),
         };
@@ -331,6 +464,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsBusy(false);
       }
     })();
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    if (!session || session.provider !== "cognito") return;
+    if (!session.expiresAt) return;
+
+    const now = Math.floor(Date.now() / 1000);
+    const delayMs = Math.max(0, (session.expiresAt - REFRESH_LEEWAY_SECONDS - now) * 1000);
+    const timer = window.setTimeout(() => {
+      void ensureFreshAuthIdToken(false);
+    }, delayMs);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [mounted, session?.provider, session?.expiresAt]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    if (AUTH_PROVIDER !== "cognito") return;
+
+    const refreshIfNeeded = () => {
+      const active = currentSession ?? readStoredSession({ allowExpired: true });
+      if (!active || active.provider !== "cognito") return;
+      if (shouldRefreshSoon(active.expiresAt, FOCUS_REFRESH_LEEWAY_SECONDS)) {
+        void ensureFreshAuthIdToken(true);
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshIfNeeded();
+      }
+    };
+
+    window.addEventListener("focus", refreshIfNeeded);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", refreshIfNeeded);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [mounted]);
 
   const acceptGoogleCredential = useCallback((credential: string) => {

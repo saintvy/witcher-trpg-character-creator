@@ -1,31 +1,34 @@
 "use client";
 
-import { getCurrentAuthIdToken } from "./auth-context";
-
-function isHeaders(headers: HeadersInit | undefined): headers is Headers {
-  return typeof Headers !== "undefined" && headers instanceof Headers;
-}
+import { ensureFreshAuthIdToken, getCurrentAuthIdToken } from "./auth-context";
 
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  const token = getCurrentAuthIdToken();
+  const baseRequest = new Request(input, init);
+  const token = (await ensureFreshAuthIdToken(false)) ?? getCurrentAuthIdToken();
   if (!token) {
-    return fetch(input, init);
+    return fetch(baseRequest);
   }
 
-  const nextInit: RequestInit = { ...init };
   const authValue = `Bearer ${token}`;
+  const requestHeaders = new Headers(baseRequest.headers);
+  requestHeaders.set("Authorization", authValue);
+  const withAuth = new Request(baseRequest, { headers: requestHeaders });
 
-  if (isHeaders(nextInit.headers)) {
-    nextInit.headers = new Headers(nextInit.headers);
-    nextInit.headers.set("Authorization", authValue);
-    return fetch(input, nextInit);
+  let response = await fetch(withAuth);
+  if (response.status !== 401) {
+    return response;
   }
 
-  nextInit.headers = {
-    ...(nextInit.headers ?? {}),
-    Authorization: authValue,
-  };
+  const refreshedToken = await ensureFreshAuthIdToken(true);
+  if (!refreshedToken) {
+    return response;
+  }
 
-  return fetch(input, nextInit);
+  const retryRequest = new Request(baseRequest);
+  const retryHeaders = new Headers(retryRequest.headers);
+  retryHeaders.set("Authorization", `Bearer ${refreshedToken}`);
+  const retryWithAuth = new Request(retryRequest, { headers: retryHeaders });
+  response = await fetch(retryWithAuth);
+
+  return response;
 }
-
