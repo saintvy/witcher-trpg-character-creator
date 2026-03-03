@@ -298,7 +298,7 @@ WITH
 
 <table class="skills_branch_1">
     <tr>
-        <td class="header">Cultist</td>
+        <td class="header">The Cultist</td>
     </tr>
     <tr>
         <td class="opt_content">
@@ -362,7 +362,7 @@ WITH
 
 <table class="skills_branch_2">
     <tr>
-        <td class="header">Preacher</td>
+        <td class="header">The Preacher</td>
     </tr>
     <tr>
         <td class="opt_content">
@@ -386,7 +386,7 @@ WITH
 
 <table class="skills_branch_3">
     <tr>
-        <td class="header">Fanatic</td>
+        <td class="header">The Fanatic</td>
     </tr>
     <tr>
         <td class="opt_content">
@@ -644,9 +644,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.культист.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.проповедник.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.фанатик.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.priest.2.exp_toc.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.priest.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.priest.3.name')::text
       )
     )
   ) AS body;
@@ -705,4 +705,3 @@ SELECT
     )
   ) AS body
 FROM meta;
-

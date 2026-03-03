@@ -4,9 +4,8 @@ import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
 
 export default function SheetPage() {
-  const { lang, mounted } = useLanguage();
-  // Use default language until mounted to avoid hydration mismatch
-  const displayLang = mounted ? lang : "en";
+  const { lang } = useLanguage();
+  const displayLang = lang;
 
   const content = {
     en: {

@@ -82,8 +82,7 @@ type SaveCharacterResponse = {
 
 export default function BuilderPage() {
   const { lang, mounted } = useLanguage();
-  // Use default language until mounted to avoid hydration mismatch
-  const displayLang = mounted ? lang : "en";
+  const displayLang = lang;
   const [runSeed, setRunSeed] = useState(() => {
     try {
       const existing = sessionStorage.getItem(RUN_SEED_STORAGE_KEY);
@@ -1847,7 +1846,7 @@ export default function BuilderPage() {
                 {isStatsSkillsNode && (
                   <StatsSkillsRenderer
                     questionId={question.id}
-                    lang={lang}
+                    lang={displayLang}
                     state={state}
                     disabled={loading}
                     onSubmit={(payload) => {

@@ -4,8 +4,8 @@ import { useLanguage } from "./language-context";
 import { Topbar } from "./components/Topbar";
 
 export default function HomePage() {
-  const { lang, mounted } = useLanguage();
-  const displayLang = mounted ? lang : "en";
+  const { lang } = useLanguage();
+  const displayLang = lang;
 
   const content = {
     en: {

@@ -1543,7 +1543,7 @@ app.get('/characters/:id/pdf', async (c) => {
   const requestedLang = (c.req.query('lang') || c.req.header('Accept-Language')?.split(',')[0]?.split('-')[0] || 'en')
     .trim()
     .toLowerCase();
-  const lang = requestedLang === 'ru' ? 'ru' : 'en';
+  const lang = requestedLang || 'en';
 
   try {
     const { rows } = await db.query<SavedCharacterRow>(

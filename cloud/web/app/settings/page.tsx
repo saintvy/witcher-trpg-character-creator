@@ -95,7 +95,6 @@ function mergePdfTables(source: unknown): PdfTablesSettings {
 export default function SettingsPage() {
   const { lang, mounted } = useLanguage();
   const { isAuthenticated } = useAuth();
-  const displayLang = mounted ? lang : "en";
 
   const [useW1AlchemyIcons, setUseW1AlchemyIcons] = useState(false);
   const [pdfTables, setPdfTables] = useState<PdfTablesSettings>(cloneDefaultPdfTables);
@@ -166,7 +165,7 @@ export default function SettingsPage() {
     },
   } as const;
 
-  const t = content[displayLang];
+  const t = content[lang];
 
   useEffect(() => {
     if (!mounted || !isAuthenticated) {

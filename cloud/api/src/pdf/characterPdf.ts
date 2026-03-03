@@ -1,8 +1,9 @@
-﻿import * as fs from 'node:fs';
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import PDFDocument from 'pdfkit';
+import { loadCharacterPdfI18n, type CharacterPdfI18n } from './i18n.js';
 
-type Lang = 'en' | 'ru';
+type Lang = string;
 type Row = { cells: string[] };
 type Table = { title: string; columns: string[]; rows: Row[] };
 type SkillCatalogLite = { param: string | null; name?: string };
@@ -267,296 +268,357 @@ const FORMULA_INGREDIENT_FILENAME_OVERRIDE: Record<string, string> = {
 
 const formulaAssetPathCache = new Map<string, string | null>();
 
-function tr(lang: Lang) {
+function createTxTemplate() {
   return {
-    title: lang === 'ru' ? 'Лист персонажа' : 'Character Sheet',
-    subtitle: lang === 'ru' ? 'Таверна "Сало и Огурчики" — облачный экспорт' : 'The Pickles and Lard Tavern — cloud export',
-    top: {
-      base: lang === 'ru' ? 'БАЗОВЫЕ ДАННЫЕ' : 'BASE DATA',
-      main: lang === 'ru' ? 'ОСНОВНЫЕ ПАРАМЕТРЫ' : 'MAIN STATS',
-      extra: lang === 'ru' ? 'ДОП. ПАРАМЕТРЫ' : 'EXTRA STATS',
-      cons: lang === 'ru' ? 'РАСХОДУЕМЫЕ' : 'CONSUMABLES',
-      avatar: lang === 'ru' ? 'АВАТАР' : 'AVATAR',
-    },
+    title: '',
+    subtitle: '',
+    top: { base: '', main: '', extra: '', cons: '', avatar: '' },
     cols: {
-      n: lang === 'ru' ? 'Название' : 'Name',
-      v: lang === 'ru' ? 'Знач.' : 'Val',
-      b: lang === 'ru' ? 'Бонус' : 'Bonus',
-      max: lang === 'ru' ? 'МАКС' : 'MAX',
-      cur: lang === 'ru' ? 'ТЕК' : 'CUR',
-      qty: '#',
-      dmg: lang === 'ru' ? 'Урон' : 'DMG',
-      type: lang === 'ru' ? 'Тип' : 'Type',
-      rel: lang === 'ru' ? 'Н' : 'Rel',
-      hands: lang === 'ru' ? 'ХВАТ' : 'HANDS',
-      conceal: lang === 'ru' ? 'СКР' : 'CONC',
-      enh: lang === 'ru' ? 'УС' : 'ENH',
-      wt: lang === 'ru' ? 'ВЕС' : 'WEIGHT',
-      price: lang === 'ru' ? 'ЦЕНА' : 'PRICE',
-      sp: lang === 'ru' ? 'ПБ' : 'SP',
-      enc: lang === 'ru' ? 'СД' : 'Enc',
-      tox: lang === 'ru' ? 'Токс' : 'Tox',
-      time: lang === 'ru' ? 'Время' : 'Time',
-      effect: lang === 'ru' ? 'Эффект' : 'Effect',
-      field: lang === 'ru' ? 'Поле' : 'Field',
-      note: lang === 'ru' ? 'Примечание' : 'Note',
+      n: '', v: '', b: '', max: '', cur: '', qty: '', dmg: '', type: '', rel: '', hands: '', conceal: '', enh: '', wt: '',
+      price: '', sp: '', enc: '', tox: '', time: '', effect: '', field: '', note: '',
     },
     labels: {
-      name: lang === 'ru' ? 'Имя' : 'Name',
-      race: lang === 'ru' ? 'Раса' : 'Race',
-      gender: lang === 'ru' ? 'Пол' : 'Gender',
-      age: lang === 'ru' ? 'Возраст' : 'Age',
-      profession: lang === 'ru' ? 'Профессия' : 'Profession',
-      def: lang === 'ru' ? 'Определяющий навык' : 'Defining skill',
-      carry: lang === 'ru' ? 'Переносимый вес' : 'Carry',
-      hp: lang === 'ru' ? 'Здоровье' : 'HP',
-      sta: lang === 'ru' ? 'Выносливость' : 'STA',
-      resolve: lang === 'ru' ? 'Решимость' : 'Resolve',
-      luck: lang === 'ru' ? 'Удача' : 'Luck',
-      enc: lang === 'ru' ? 'Переносимый вес' : 'Carry',
-      rec: lang === 'ru' ? 'Отдых' : 'Recovery',
-      stun: lang === 'ru' ? 'Уст.' : 'Stun',
-      run: lang === 'ru' ? 'Бег' : 'Run',
-      leap: lang === 'ru' ? 'Прыж.' : 'Leap',
-      punch: lang === 'ru' ? 'Уд.р.' : 'Punch',
-      kick: lang === 'ru' ? 'Уд.н.' : 'Kick',
-      vigor: lang === 'ru' ? 'Энергия' : 'Vigor',
+      name: '', race: '', gender: '', age: '', profession: '', def: '', carry: '', hp: '', sta: '', resolve: '', luck: '', enc: '',
+      rec: '', stun: '', run: '', leap: '', punch: '', kick: '', vigor: '',
     },
-    statsAbbr: lang === 'ru'
-      ? { INT: 'ИНТ', REF: 'РЕФ', DEX: 'ЛОВ', BODY: 'ТЕЛ', SPD: 'СКР', EMP: 'ЭМП', CRA: 'РЕМ', WILL: 'ВОЛ', LUCK: 'УДА', VIGOR: 'ЭНЕРГИЯ' }
-      : { INT: 'INT', REF: 'REF', DEX: 'DEX', BODY: 'BODY', SPD: 'SPD', EMP: 'EMP', CRA: 'CRA', WILL: 'WILL', LUCK: 'LUCK', VIGOR: 'VIGOR' },
-    statsFull: lang === 'ru'
-      ? { INT: 'ИНТЕЛЛЕКТ', REF: 'РЕФЛЕКСЫ', DEX: 'ЛОВКОСТЬ', BODY: 'ТЕЛО', SPD: 'СКОРОСТЬ', EMP: 'ЭМПАТИЯ', CRA: 'РЕМЕСЛО', WILL: 'ВОЛЯ', OTHER: 'ПРОЧЕЕ' }
-      : { INT: 'INTELLIGENCE', REF: 'REFLEXES', DEX: 'DEXTERITY', BODY: 'BODY', SPD: 'SPEED', EMP: 'EMPATHY', CRA: 'CRAFT', WILL: 'WILL', OTHER: 'OTHER' },
-    baseWord: lang === 'ru' ? 'Основа' : 'Base',
-    sections: {
-      skills: lang === 'ru' ? 'НАВЫКИ' : 'SKILLS',
-      prof: lang === 'ru' ? 'ПРОФЕССИОНАЛЬНЫЕ НАВЫКИ' : 'PROFESSIONAL SKILLS',
-      perks: lang === 'ru' ? 'ПЕРКИ' : 'PERKS',
-      weapons: lang === 'ru' ? 'ОРУЖИЕ' : 'WEAPONS',
-      armor: lang === 'ru' ? 'БРОНЯ' : 'ARMOR',
-      alchemy: lang === 'ru' ? 'АЛХИМИЯ' : 'ALCHEMY',
-      magic: lang === 'ru' ? 'МАГИЯ' : 'MAGIC',
-      lore: lang === 'ru' ? 'ЛОР И БИОГРАФИЯ' : 'LORE & BIOGRAPHY',
-      notes: lang === 'ru' ? 'ЗАМЕТКИ' : 'NOTES',
-      recipes: lang === 'ru' ? 'РЕЦЕПТЫ' : 'RECIPES',
-    },
+    statsAbbr: { INT: '', REF: '', DEX: '', BODY: '', SPD: '', EMP: '', CRA: '', WILL: '', LUCK: '', VIGOR: '' },
+    statsFull: { INT: '', REF: '', DEX: '', BODY: '', SPD: '', EMP: '', CRA: '', WILL: '', OTHER: '' },
+    baseWord: '',
+    sections: { skills: '', prof: '', perks: '', weapons: '', armor: '', alchemy: '', magic: '', lore: '', notes: '', recipes: '' },
     page1: {
-      magicCols: {
-        type: lang === 'ru' ? 'ТИП' : 'TYPE',
-        name: lang === 'ru' ? 'НАЗВАНИЕ' : 'NAME',
-        element: lang === 'ru' ? 'ЭЛЕМЕНТ' : 'ELEMENT',
-        vigor: lang === 'ru' ? 'ВЫН' : 'VIG',
-        vigorKeep: lang === 'ru' ? 'ВЫН+' : 'VIG+',
-        damage: lang === 'ru' ? 'УРОН' : 'DMG',
-        time: lang === 'ru' ? 'ВРЕМЯ' : 'TIME',
-        distance: lang === 'ru' ? 'ДИСТ' : 'DIST',
-        size: lang === 'ru' ? 'РАЗМЕР' : 'SIZE',
-        form: lang === 'ru' ? 'ФОРМА' : 'FORM',
-      },
-      magicTypes: {
-        sign: lang === 'ru' ? 'Знак' : 'Sign',
-        spell: lang === 'ru' ? 'Закл.' : 'Spell',
-        invocation: lang === 'ru' ? 'Инв.' : 'Inv.',
-      },
+      magicCols: { type: '', name: '', element: '', vigor: '', vigorKeep: '', damage: '', time: '', distance: '', size: '', form: '' },
+      magicTypes: { sign: '', spell: '', invocation: '' },
     },
     page2: {
-      socialStatusRace: lang === 'ru' ? 'СОЦИАЛЬНЫЙ СТАТУС' : 'SOCIAL STATUS',
-      lore: lang === 'ru' ? 'ЛОР' : 'LORE',
-      style: lang === 'ru' ? 'СТИЛЬ' : 'STYLE',
-      values: lang === 'ru' ? 'ЦЕННОСТИ' : 'VALUES',
-      lifePath: lang === 'ru' ? 'ЖИЗНЕННЫЙ ПУТЬ' : 'LIFE PATH',
-      siblings: lang === 'ru' ? 'БРАТЬЯ И СЁСТРЫ' : 'SIBLINGS',
-      allies: lang === 'ru' ? 'СОЮЗНИКИ' : 'ALLIES',
-      enemies: lang === 'ru' ? 'ВРАГИ' : 'ENEMIES',
-      itemEffects: lang === 'ru' ? 'ЭФФЕКТЫ ПРЕДМЕТОВ' : 'ITEM EFFECTS',
-      socialStatus: {
-        equal: lang === 'ru' ? 'Равенство' : 'Equal',
-        tolerated: lang === 'ru' ? 'Терпимость' : 'Tolerated',
-        hated: lang === 'ru' ? 'Ненависть' : 'Hated',
-        fearedSuffix: lang === 'ru' ? 'и Опасение' : 'and Feared',
-      },
+      socialStatusRace: '', lore: '', style: '', values: '', lifePath: '', siblings: '', allies: '', enemies: '', itemEffects: '',
+      socialStatus: { equal: '', tolerated: '', hated: '', fearedSuffix: '' },
       loreLabels: {
-        homeland: lang === 'ru' ? 'Родина' : 'Homeland',
-        homeLanguage: lang === 'ru' ? 'Родной язык' : 'Home language',
-        familyStatus: lang === 'ru' ? 'Статус семьи' : 'Family status',
-        familyFate: lang === 'ru' ? 'Судьба семьи' : 'Family fate',
-        parentsFate: lang === 'ru' ? 'Судьба родителей' : 'Parents fate',
-        friend: lang === 'ru' ? 'Друг' : 'Friend',
-        school: lang === 'ru' ? 'Школа' : 'School',
-        initiation: lang === 'ru' ? 'Посвящение' : 'Initiation',
-        diseases: lang === 'ru' ? 'Болезни и проклятия' : 'Diseases and curses',
-        importantEvent: lang === 'ru' ? 'Самое важное событие' : 'Most important event',
-        trainings: lang === 'ru' ? 'Тренировки' : 'Trainings',
-        currentSituation: lang === 'ru' ? 'Текущая ситуация' : 'Current situation',
+        homeland: '', homeLanguage: '', familyStatus: '', familyFate: '', parentsFate: '', friend: '', school: '', initiation: '',
+        diseases: '', importantEvent: '', trainings: '', currentSituation: '',
       },
-      styleCols: {
-        clothing: lang === 'ru' ? 'Одежда' : 'Clothing',
-        personality: lang === 'ru' ? 'Характер' : 'Personality',
-        hairStyle: lang === 'ru' ? 'Причёска' : 'Hairstyle',
-        affectations: lang === 'ru' ? 'Украшения' : 'Affectations',
-      },
-      valuesCols: {
-        valuedPerson: lang === 'ru' ? 'Кого ценит' : 'Valued person',
-        value: lang === 'ru' ? 'Что ценит' : 'Value',
-        feelingsOnPeople: lang === 'ru' ? 'Мысли об окружающих' : 'Feelings on people',
-      },
-      lifeEventCols: {
-        period: lang === 'ru' ? 'Период' : 'Period',
-        type: lang === 'ru' ? 'Тип' : 'Type',
-        description: lang === 'ru' ? 'Описание' : 'Description',
-      },
-      siblingsCols: {
-        age: lang === 'ru' ? 'Возраст' : 'Age',
-        gender: lang === 'ru' ? 'Пол' : 'Sex',
-        attitude: lang === 'ru' ? 'Отношение' : 'Attitude',
-        personality: lang === 'ru' ? 'Характер' : 'Personality',
-      },
-      alliesCols: {
-        gender: lang === 'ru' ? 'Пол' : 'Sex',
-        position: lang === 'ru' ? 'Кто' : 'Who',
-        where: lang === 'ru' ? 'Где он сейчас' : 'Where now',
-        acquaintance: lang === 'ru' ? 'Знакомство' : 'Acquaintance',
-        howMet: lang === 'ru' ? 'Как встретились' : 'How met',
-        howClose: lang === 'ru' ? 'Близость' : 'Closeness',
-        alive: lang === 'ru' ? 'Жив ли' : 'Alive',
-      },
-      enemiesCols: {
-        gender: lang === 'ru' ? 'Пол' : 'Sex',
-        position: lang === 'ru' ? 'Кто' : 'Who',
-        victim: lang === 'ru' ? 'Жертва' : 'Victim',
-        cause: lang === 'ru' ? 'Причина' : 'Cause',
-        power: lang === 'ru' ? 'Сила' : 'Power',
-        level: lang === 'ru' ? 'Мощь' : 'Level',
-        result: lang === 'ru' ? 'Итог' : 'Result',
-        alive: lang === 'ru' ? 'Жив ли' : 'Alive',
-        howFar: lang === 'ru' ? 'Насколько далеко' : 'How far',
-      },
+      styleCols: { clothing: '', personality: '', hairStyle: '', affectations: '' },
+      valuesCols: { valuedPerson: '', value: '', feelingsOnPeople: '' },
+      lifeEventCols: { period: '', type: '', description: '' },
+      siblingsCols: { age: '', gender: '', attitude: '', personality: '' },
+      alliesCols: { gender: '', position: '', where: '', acquaintance: '', howMet: '', howClose: '', alive: '' },
+      enemiesCols: { gender: '', position: '', victim: '', cause: '', power: '', level: '', result: '', alive: '', howFar: '' },
     },
     page3: {
-      recipes: lang === 'ru' ? 'РЕЦЕПТЫ' : 'RECIPES',
-      blueprints: lang === 'ru' ? 'ЧЕРТЕЖИ' : 'BLUEPRINTS',
-      money: lang === 'ru' ? 'ДЕНЬГИ' : 'MONEY',
-      transport: lang === 'ru' ? 'ТРАНСПОРТ' : 'TRANSPORT',
-      generalGear: lang === 'ru' ? 'ОБЩЕЕ СНАРЯЖЕНИЕ' : 'GENERAL GEAR',
+      recipes: '', blueprints: '', money: '', transport: '', generalGear: '',
       recipesCols: {
-        qty: '#',
-        recipeGroup: lang === 'ru' ? 'ГРУППА' : 'GROUP',
-        recipeName: lang === 'ru' ? 'РЕЦЕПТ' : 'RECIPE',
-        complexity: lang === 'ru' ? 'СЛ' : 'DC',
-        timeCraft: lang === 'ru' ? 'ВРЕМЯ\nКРАФТА' : 'CRAFT\nTIME',
-        formula: lang === 'ru' ? 'ФОРМУЛА' : 'FORMULA',
-        priceFormula: lang === 'ru' ? 'ЦЕНА\nФ-ЛЫ' : 'F-LA\nPRICE',
-        minimalIngredientsCost: lang === 'ru' ? 'МИН.\nЦЕНА\nИНГР.' : 'MIN.\nINGR.\nCOST',
-        timeEffect: lang === 'ru' ? 'ВРЕМЯ\nЭФФЕКТА' : 'EFFECT\nTIME',
-        toxicity: lang === 'ru' ? 'ТОКС.' : 'TOX.',
-        recipeDescription: lang === 'ru' ? 'ЭФФЕКТ' : 'EFFECT',
-        weightPotion: lang === 'ru' ? 'ВЕС' : 'WEIGHT',
-        pricePotion: lang === 'ru' ? 'ЦЕНА' : 'PRICE',
+        qty: '', recipeGroup: '', recipeName: '', complexity: '', timeCraft: '', formula: '', priceFormula: '', minimalIngredientsCost: '',
+        timeEffect: '', toxicity: '', recipeDescription: '', weightPotion: '', pricePotion: '',
       },
       blueprintsCols: {
-        qty: '#',
-        name: lang === 'ru' ? 'ИМЯ' : 'NAME',
-        craftLevel: lang === 'ru' ? 'УРОВ.' : 'LEVEL',
-        difficultyCheck: lang === 'ru' ? 'СЛ' : 'DC',
-        timeCraft: lang === 'ru' ? 'ВРЕМЯ\nКРАФТА' : 'CRAFT\nTIME',
-        components: lang === 'ru' ? 'СОСТАВ' : 'COMPONENTS',
-        itemDesc: lang === 'ru' ? 'ОПИСАНИЕ' : 'DESC',
-        priceComponents: lang === 'ru' ? 'ДОПЛАТА' : 'SURCHARGE',
-        price: lang === 'ru' ? 'ЦЕНА\nСХЕМЫ' : 'BLUEPRINT\nCOST',
-        priceItem: lang === 'ru' ? 'ЦЕНА\nВЕЩИ' : 'ITEM\nCOST',
+        qty: '', name: '', craftLevel: '', difficultyCheck: '', timeCraft: '', components: '', itemDesc: '', priceComponents: '', price: '',
+        priceItem: '',
       },
-      componentsCols: {
-        qty: '#',
-        sub: lang === 'ru' ? 'C' : 'S',
-        name: lang === 'ru' ? 'КОМПОНЕНТ' : 'COMPONENT',
-        harvestingComplexity: lang === 'ru' ? 'СЛ' : 'DC',
-        weight: lang === 'ru' ? 'ВЕС' : 'WEIGHT',
-        price: lang === 'ru' ? 'Ц' : 'PR',
-      },
-      moneyCols: {
-        crowns: lang === 'ru' ? 'КРОНЫ' : 'CROWNS',
-        orens: lang === 'ru' ? 'ОРЕНЫ' : 'ORENS',
-        florens: lang === 'ru' ? 'ФЛОРЕНЫ' : 'FLORENS',
-        ducats: lang === 'ru' ? 'ДУКАТЫ' : 'DUCATS',
-        bizants: lang === 'ru' ? 'БИЗАНТЫ' : 'BIZANTS',
-        lintars: lang === 'ru' ? 'ЛИНТАРЫ' : 'LINTARS',
-      },
-      transportCols: {
-        qty: '#',
-        type: lang === 'ru' ? 'ТИП' : 'TYPE',
-        name: lang === 'ru' ? 'ТРАНСПОРТ' : 'VEHICLE',
-        skill: lang === 'ru' ? 'НАВЫК' : 'SKILL',
-        mod: lang === 'ru' ? 'МОД.' : 'MOD.',
-        speed: lang === 'ru' ? 'СКОР.' : 'SPEED',
-        hp: lang === 'ru' ? 'ПЗ' : 'HP',
-        weight: lang === 'ru' ? 'ВЕС' : 'WEIGHT',
-        price: lang === 'ru' ? 'ЦЕНА' : 'PRICE',
-        occupancy: lang === 'ru' ? 'МЕСТА' : 'SEATS',
-      },
-      generalGearCols: {
-        qty: '#',
-        name: lang === 'ru' ? 'ИМЯ' : 'NAME',
-        concealment: lang === 'ru' ? 'СКР' : 'CONC',
-        weight: lang === 'ru' ? 'ВЕС' : 'WEIGHT',
-        price: lang === 'ru' ? 'ЦЕНА' : 'PRICE',
-      },
+      componentsCols: { qty: '', sub: '', name: '', harvestingComplexity: '', weight: '', price: '' },
+      moneyCols: { crowns: '', orens: '', florens: '', ducats: '', bizants: '', lintars: '' },
+      transportCols: { qty: '', type: '', name: '', skill: '', mod: '', speed: '', hp: '', weight: '', price: '', occupancy: '' },
+      generalGearCols: { qty: '', name: '', concealment: '', weight: '', price: '' },
       formulaLegend: {
-        Hydragenum: lang === 'ru' ? 'Гидраген' : 'Hydragenum',
-        Fulgur: lang === 'ru' ? 'Фульгор' : 'Fulgur',
-        Vermilion: lang === 'ru' ? 'Киноварь' : 'Vermilion',
-        Aether: lang === 'ru' ? 'Эфир' : 'Aether',
-        Vitriol: lang === 'ru' ? 'Купорос' : 'Vitriol',
-        Sol: lang === 'ru' ? 'Солнце' : 'Sol',
-        Rebis: lang === 'ru' ? 'Ребис' : 'Rebis',
-        Quebrith: lang === 'ru' ? 'Квебрит' : 'Quebrith',
-        Caelum: lang === 'ru' ? 'Аер' : 'Caelum',
-        Mutagen: lang === 'ru' ? 'Мутаген' : 'Mutagen',
-        Spirits: lang === 'ru' ? 'Алкоголь' : 'Spirits',
-        DogTallow: lang === 'ru' ? 'Собачье сало' : 'Dog Tallow',
+        Hydragenum: '', Fulgur: '', Vermilion: '', Aether: '', Vitriol: '', Sol: '', Rebis: '', Quebrith: '', Caelum: '', Mutagen: '',
+        Spirits: '', DogTallow: '',
       },
     },
     page4: {
-      titles: {
-        spellsSigns: lang === 'ru' ? 'ЗАКЛИНАНИЯ / ЗНАКИ' : 'SPELLS / SIGNS',
-        invocationsPriest: lang === 'ru' ? 'ИНВОКАЦИИ ЖРЕЦА' : 'PRIEST INVOCATIONS',
-        invocationsDruid: lang === 'ru' ? 'ИНВОКАЦИИ ДРУИДА' : 'DRUID INVOCATIONS',
-        rituals: lang === 'ru' ? 'РИТУАЛЫ' : 'RITUALS',
-        hexes: lang === 'ru' ? 'ПОРЧИ' : 'HEXES',
-        gifts: lang === 'ru' ? 'МАГИЧЕСКИЕ ДАРЫ' : 'MAGICAL GIFTS',
-      },
+      titles: { spellsSigns: '', invocationsPriest: '', invocationsDruid: '', rituals: '', hexes: '', gifts: '' },
       cols: {
-        name: lang === 'ru' ? 'ИМЯ' : 'NAME',
-        element: lang === 'ru' ? 'ЭЛЕМЕНТ' : 'ELEMENT',
-        level: lang === 'ru' ? 'УРОВЕНЬ' : 'LEVEL',
-        group: lang === 'ru' ? 'ГРУППА' : 'GROUP',
-        staminaCast: lang === 'ru' ? 'ВЫН' : 'STA',
-        staminaKeeping: lang === 'ru' ? 'ВЫН+' : 'STA+',
-        damage: lang === 'ru' ? 'УРОН' : 'DAMAGE',
-        distance: lang === 'ru' ? 'ДИСТ.' : 'RNG.',
-        zoneSize: lang === 'ru' ? 'ЗОНА' : 'AREA',
-        form: lang === 'ru' ? 'ФОРМА' : 'FORM',
-        preparingTime: lang === 'ru' ? 'ПОДГ.' : 'PREP',
-        dc: lang === 'ru' ? 'СЛ' : 'DC',
-        effectTime: lang === 'ru' ? 'ВРЕМЯ' : 'TIME',
-        ingredients: lang === 'ru' ? 'КОМПОНЕНТЫ' : 'COMPONENTS',
-        removeComponents: lang === 'ru' ? 'КОМПОНЕНТЫ ДЛЯ СНЯТИЯ' : 'REMOVE COMPONENTS',
-        removeInstructions: lang === 'ru' ? 'КАК СНЯТЬ' : 'HOW TO REMOVE',
+        name: '', element: '', level: '', group: '', staminaCast: '', staminaKeeping: '', damage: '', distance: '', zoneSize: '', form: '',
+        preparingTime: '', dc: '', effectTime: '', ingredients: '', removeComponents: '', removeInstructions: '',
       },
-      gifts: {
-        colName: lang === 'ru' ? 'ИМЯ' : 'NAME',
-        colGroup: lang === 'ru' ? 'ГРУППА' : 'GROUP',
-        colSl: lang === 'ru' ? 'СЛ' : 'DC',
-        colVigor: lang === 'ru' ? 'ВЫН' : 'STA',
-        colCost: lang === 'ru' ? 'СТОИМОСТЬ' : 'COST',
-        costAction: lang === 'ru' ? 'действие' : 'action',
-        costFullAction: lang === 'ru' ? 'полное действие' : 'full action',
-      },
+      gifts: { colName: '', colGroup: '', colSl: '', colVigor: '', colCost: '', costAction: '', costFullAction: '' },
     },
-    avatarPlaceholder: lang === 'ru' ? 'Портрет не загружен' : 'Portrait not provided',
+    avatarPlaceholder: '',
   };
 }
 
+type Tx = ReturnType<typeof createTxTemplate>;
+
+function buildTxFromI18n(i18n: CharacterPdfI18n): Tx {
+  return populateTxFromI18n(createTxTemplate(), i18n);
+}
+
+function populateTxFromI18n(tx: Tx, i18n: CharacterPdfI18n): Tx {
+  const p1 = i18n.page1;
+  const p2 = i18n.page2;
+  const p4 = i18n.page4;
+  const ex = i18n.extra;
+
+  tx.title = p1.titleSuffix;
+  tx.subtitle = ex.subtitle;
+
+  tx.top.base = p1.section.baseData;
+  tx.top.main = p1.section.mainParams;
+  tx.top.extra = p1.section.extraParams;
+  tx.top.cons = p1.section.consumables;
+  tx.top.avatar = p1.section.avatar;
+
+  tx.cols.n = p1.base.name;
+  tx.cols.v = ex.cols.value;
+  tx.cols.b = ex.cols.bonus;
+  tx.cols.max = p1.consumables.colMax;
+  tx.cols.cur = p1.consumables.colCur;
+  tx.cols.qty = p1.tables.weapons.colQty;
+  tx.cols.dmg = p1.tables.weapons.colDmg;
+  tx.cols.type = p1.tables.weapons.colType;
+  tx.cols.rel = p1.tables.weapons.colReliability;
+  tx.cols.hands = p1.tables.weapons.colHands;
+  tx.cols.conceal = p1.tables.weapons.colConcealment;
+  tx.cols.enh = p1.tables.weapons.colEnh;
+  tx.cols.wt = p1.tables.weapons.colWeight;
+  tx.cols.price = p1.tables.weapons.colPrice;
+  tx.cols.sp = p1.tables.armors.colSp;
+  tx.cols.enc = p1.tables.armors.colEnc;
+  tx.cols.tox = p1.tables.potions.colTox;
+  tx.cols.time = p1.tables.potions.colTime;
+  tx.cols.effect = p1.tables.potions.colEffect;
+  tx.cols.field = ex.cols.field;
+  tx.cols.note = ex.cols.note;
+
+  tx.labels.name = p1.base.name;
+  tx.labels.race = p1.base.race;
+  tx.labels.gender = p1.base.gender;
+  tx.labels.age = p1.base.age;
+  tx.labels.profession = p1.base.profession;
+  tx.labels.def = p1.base.definingSkill;
+  tx.labels.carry = p1.consumables.label.carry;
+  tx.labels.hp = p1.consumables.label.hp;
+  tx.labels.sta = p1.consumables.label.sta;
+  tx.labels.resolve = p1.consumables.label.resolve;
+  tx.labels.luck = p1.consumables.label.luck;
+  tx.labels.rec = p1.derived.rest;
+  tx.labels.stun = p1.derived.stability;
+  tx.labels.run = p1.derived.run;
+  tx.labels.leap = p1.derived.leap;
+  tx.labels.punch = p1.derived.punch;
+  tx.labels.kick = p1.derived.kick;
+  tx.labels.vigor = p1.derived.vigor;
+
+  tx.statsAbbr.INT = p1.stats.abbr.INT;
+  tx.statsAbbr.REF = p1.stats.abbr.REF;
+  tx.statsAbbr.DEX = p1.stats.abbr.DEX;
+  tx.statsAbbr.BODY = p1.stats.abbr.BODY;
+  tx.statsAbbr.SPD = p1.stats.abbr.SPD;
+  tx.statsAbbr.EMP = p1.stats.abbr.EMP;
+  tx.statsAbbr.CRA = p1.stats.abbr.CRA;
+  tx.statsAbbr.WILL = p1.stats.abbr.WILL;
+  tx.statsAbbr.LUCK = ex.stats.abbr.LUCK;
+  tx.statsAbbr.VIGOR = ex.stats.abbr.VIGOR;
+
+  tx.statsFull.INT = p1.stats.name.INT;
+  tx.statsFull.REF = p1.stats.name.REF;
+  tx.statsFull.DEX = p1.stats.name.DEX;
+  tx.statsFull.BODY = p1.stats.name.BODY;
+  tx.statsFull.SPD = p1.stats.name.SPD;
+  tx.statsFull.EMP = p1.stats.name.EMP;
+  tx.statsFull.CRA = p1.stats.name.CRA;
+  tx.statsFull.WILL = p1.stats.name.WILL;
+  tx.statsFull.OTHER = p1.stats.name.OTHER;
+
+  tx.baseWord = ex.baseWord;
+
+  tx.sections.skills = ex.sections.skills;
+  tx.sections.prof = p1.section.professional;
+  tx.sections.perks = ex.sections.perks;
+  tx.sections.weapons = p1.tables.weapons.title;
+  tx.sections.armor = p1.tables.armors.title;
+  tx.sections.alchemy = p1.tables.potions.title;
+  tx.sections.magic = ex.sections.magic;
+  tx.sections.lore = p2.section.lore;
+  tx.sections.notes = p1.tables.notes.title;
+  tx.sections.recipes = p2.section.recipes;
+
+  tx.page1.magicCols.type = p1.tables.magic.colType;
+  tx.page1.magicCols.name = p1.tables.magic.colName;
+  tx.page1.magicCols.element = p1.tables.magic.colElement;
+  tx.page1.magicCols.vigor = p1.tables.magic.colVigor;
+  tx.page1.magicCols.vigorKeep = p1.tables.magic.colVigorKeep;
+  tx.page1.magicCols.damage = p1.tables.magic.colDamage;
+  tx.page1.magicCols.time = p1.tables.magic.colTime;
+  tx.page1.magicCols.distance = p1.tables.magic.colDistance;
+  tx.page1.magicCols.size = p1.tables.magic.colSize;
+  tx.page1.magicCols.form = p1.tables.magic.colForm;
+
+  tx.page1.magicTypes.sign = p1.magicType.sign;
+  tx.page1.magicTypes.spell = p1.magicType.spell;
+  tx.page1.magicTypes.invocation = p1.magicType.invocation;
+
+  tx.page2.socialStatusRace = p2.section.socialStatus;
+  tx.page2.lore = p2.section.lore;
+  tx.page2.style = p2.section.style;
+  tx.page2.values = p2.section.values;
+  tx.page2.lifePath = p2.section.lifePath;
+  tx.page2.siblings = p2.section.siblings;
+  tx.page2.allies = p2.section.allies;
+  tx.page2.enemies = p2.section.enemies;
+  tx.page2.itemEffects = p4.effects.title;
+
+  tx.page2.socialStatus.equal = p2.tables.socialStatus.statusEqual;
+  tx.page2.socialStatus.tolerated = p2.tables.socialStatus.statusTolerated;
+  tx.page2.socialStatus.hated = p2.tables.socialStatus.statusHated;
+  tx.page2.socialStatus.fearedSuffix = `${p2.tables.socialStatus.and} ${p2.tables.socialStatus.statusFeared}`.trim();
+
+  tx.page2.loreLabels.homeland = p2.lore.homeland;
+  tx.page2.loreLabels.homeLanguage = p2.lore.homeLanguage;
+  tx.page2.loreLabels.familyStatus = p2.lore.familyStatus;
+  tx.page2.loreLabels.familyFate = p2.lore.familyFate;
+  tx.page2.loreLabels.parentsFate = p2.lore.parentsFate;
+  tx.page2.loreLabels.friend = p2.lore.friend;
+  tx.page2.loreLabels.school = p2.lore.school;
+  tx.page2.loreLabels.initiation = p2.lore.witcherInitiationMoment;
+  tx.page2.loreLabels.diseases = p2.lore.diseasesAndCurses;
+  tx.page2.loreLabels.importantEvent = p2.lore.mostImportantEvent;
+  tx.page2.loreLabels.trainings = p2.lore.trainings;
+  tx.page2.loreLabels.currentSituation = p2.lore.currentSituation;
+
+  tx.page2.styleCols.clothing = p2.tables.style.colClothing;
+  tx.page2.styleCols.personality = p2.tables.style.colPersonality;
+  tx.page2.styleCols.hairStyle = p2.tables.style.colHairStyle;
+  tx.page2.styleCols.affectations = p2.tables.style.colAffectations;
+
+  tx.page2.valuesCols.valuedPerson = p2.tables.values.colValuedPerson;
+  tx.page2.valuesCols.value = p2.tables.values.colValue;
+  tx.page2.valuesCols.feelingsOnPeople = p2.tables.values.colFeelingsOnPeople;
+
+  tx.page2.lifeEventCols.period = p2.tables.lifeEvents.colPeriod;
+  tx.page2.lifeEventCols.type = p2.tables.lifeEvents.colType;
+  tx.page2.lifeEventCols.description = p2.tables.lifeEvents.colDesc;
+
+  tx.page2.siblingsCols.age = p2.tables.siblings.colAge;
+  tx.page2.siblingsCols.gender = p2.tables.siblings.colGender;
+  tx.page2.siblingsCols.attitude = p2.tables.siblings.colAttitude;
+  tx.page2.siblingsCols.personality = p2.tables.siblings.colPersonality;
+
+  tx.page2.alliesCols.gender = p2.tables.allies.colGender;
+  tx.page2.alliesCols.position = p2.tables.allies.colPosition;
+  tx.page2.alliesCols.where = p2.tables.allies.colWhere;
+  tx.page2.alliesCols.acquaintance = p2.tables.allies.colAcquaintance;
+  tx.page2.alliesCols.howMet = p2.tables.allies.colHowMet;
+  tx.page2.alliesCols.howClose = p2.tables.allies.colHowClose;
+  tx.page2.alliesCols.alive = p2.tables.allies.colAlive;
+
+  tx.page2.enemiesCols.gender = p2.tables.enemies.colGender;
+  tx.page2.enemiesCols.position = p2.tables.enemies.colPosition;
+  tx.page2.enemiesCols.victim = p2.tables.enemies.colVictim;
+  tx.page2.enemiesCols.cause = p2.tables.enemies.colCause;
+  tx.page2.enemiesCols.power = p2.tables.enemies.colPower;
+  tx.page2.enemiesCols.level = p2.tables.enemies.colLevel;
+  tx.page2.enemiesCols.result = p2.tables.enemies.colResult;
+  tx.page2.enemiesCols.alive = p2.tables.enemies.colAlive;
+  tx.page2.enemiesCols.howFar = p2.tables.enemies.colHowFar;
+
+  tx.page3.recipes = p2.section.recipes;
+  tx.page3.blueprints = p2.section.blueprints;
+  tx.page3.money = p2.section.money;
+  tx.page3.transport = p2.section.vehicles;
+  tx.page3.generalGear = p2.section.generalGear;
+
+  tx.page3.recipesCols.qty = p2.tables.recipes.colQty;
+  tx.page3.recipesCols.recipeGroup = p2.tables.recipes.colRecipeGroup;
+  tx.page3.recipesCols.recipeName = p2.tables.recipes.colRecipeName;
+  tx.page3.recipesCols.complexity = p2.tables.recipes.colComplexity;
+  tx.page3.recipesCols.timeCraft = p2.tables.recipes.colTimeCraft;
+  tx.page3.recipesCols.formula = p2.tables.recipes.colFormula;
+  tx.page3.recipesCols.priceFormula = p2.tables.recipes.colPriceFormula;
+  tx.page3.recipesCols.minimalIngredientsCost = p2.tables.recipes.colMinimalIngredientsCost;
+  tx.page3.recipesCols.timeEffect = p2.tables.recipes.colTimeEffect;
+  tx.page3.recipesCols.toxicity = p2.tables.recipes.colToxicity;
+  tx.page3.recipesCols.recipeDescription = p2.tables.recipes.colRecipeDescription;
+  tx.page3.recipesCols.weightPotion = p2.tables.recipes.colWeightPotion;
+  tx.page3.recipesCols.pricePotion = p2.tables.recipes.colPricePotion;
+
+  tx.page3.blueprintsCols.qty = p2.tables.blueprints.colQty;
+  tx.page3.blueprintsCols.name = p2.tables.blueprints.colName;
+  tx.page3.blueprintsCols.craftLevel = p2.tables.blueprints.colCraftLevel;
+  tx.page3.blueprintsCols.difficultyCheck = p2.tables.blueprints.colDifficultyCheck;
+  tx.page3.blueprintsCols.timeCraft = p2.tables.blueprints.colTimeCraft;
+  tx.page3.blueprintsCols.components = p2.tables.blueprints.colComponents;
+  tx.page3.blueprintsCols.itemDesc = p2.tables.blueprints.colItemDesc;
+  tx.page3.blueprintsCols.priceComponents = p2.tables.blueprints.colPriceComponents;
+  tx.page3.blueprintsCols.price = p2.tables.blueprints.colPrice;
+  tx.page3.blueprintsCols.priceItem = p2.tables.blueprints.colPriceItem;
+
+  tx.page3.componentsCols.qty = p2.tables.components.colQty;
+  tx.page3.componentsCols.sub = p2.tables.components.colSub;
+  tx.page3.componentsCols.name = p2.tables.components.colName;
+  tx.page3.componentsCols.harvestingComplexity = p2.tables.components.colHarvestingComplexity;
+  tx.page3.componentsCols.weight = p2.tables.components.colWeight;
+  tx.page3.componentsCols.price = p2.tables.components.colPrice;
+
+  tx.page3.moneyCols.crowns = p2.tables.money.colCrowns;
+  tx.page3.moneyCols.orens = p2.tables.money.colOrens;
+  tx.page3.moneyCols.florens = p2.tables.money.colFlorens;
+  tx.page3.moneyCols.ducats = p2.tables.money.colDucats;
+  tx.page3.moneyCols.bizants = p2.tables.money.colBizants;
+  tx.page3.moneyCols.lintars = p2.tables.money.colLintars;
+
+  tx.page3.transportCols.qty = p2.tables.vehicles.colQty;
+  tx.page3.transportCols.type = p2.tables.vehicles.colType;
+  tx.page3.transportCols.name = p2.tables.vehicles.colVehicle;
+  tx.page3.transportCols.skill = p2.tables.vehicles.colSkill;
+  tx.page3.transportCols.mod = p2.tables.vehicles.colMod;
+  tx.page3.transportCols.speed = p2.tables.vehicles.colSpeed;
+  tx.page3.transportCols.hp = p2.tables.vehicles.colHp;
+  tx.page3.transportCols.weight = p2.tables.vehicles.colWeight;
+  tx.page3.transportCols.price = p2.tables.vehicles.colPrice;
+  tx.page3.transportCols.occupancy = p2.tables.vehicles.colOccupancy;
+
+  tx.page3.generalGearCols.qty = p2.tables.vehicles.colQty;
+  tx.page3.generalGearCols.name = p2.tables.generalGear.colName;
+  tx.page3.generalGearCols.concealment = p2.tables.generalGear.colConcealment;
+  tx.page3.generalGearCols.weight = p2.tables.generalGear.colWeight;
+  tx.page3.generalGearCols.price = p2.tables.generalGear.colPrice;
+
+  tx.page3.formulaLegend.Hydragenum = p2.formulaLegend.Hydragenum;
+  tx.page3.formulaLegend.Fulgur = p2.formulaLegend.Fulgur;
+  tx.page3.formulaLegend.Vermilion = p2.formulaLegend.Vermilion;
+  tx.page3.formulaLegend.Aether = p2.formulaLegend.Aether;
+  tx.page3.formulaLegend.Vitriol = p2.formulaLegend.Vitriol;
+  tx.page3.formulaLegend.Sol = p2.formulaLegend.Sol;
+  tx.page3.formulaLegend.Rebis = p2.formulaLegend.Rebis;
+  tx.page3.formulaLegend.Quebrith = p2.formulaLegend.Quebrith;
+  tx.page3.formulaLegend.Caelum = p2.formulaLegend.Caelum;
+  tx.page3.formulaLegend.Mutagen = p2.formulaLegend.Mutagen;
+  tx.page3.formulaLegend.Spirits = p2.formulaLegend.Spirits;
+  tx.page3.formulaLegend.DogTallow = p2.formulaLegend['Dog Tallow'];
+
+  tx.page4.titles.spellsSigns = ex.page4.titles.spellsSigns;
+  tx.page4.titles.invocationsPriest = p4.source.invocationsPriestTitle;
+  tx.page4.titles.invocationsDruid = p4.source.invocationsDruidTitle;
+  tx.page4.titles.rituals = p4.source.magicRitualsTitle;
+  tx.page4.titles.hexes = p4.source.magicHexesTitle;
+  tx.page4.titles.gifts = p4.source.magicGiftsTitle;
+
+  tx.page4.cols.name = p4.column.name;
+  tx.page4.cols.element = p4.column.element;
+  tx.page4.cols.level = p4.column.level;
+  tx.page4.cols.group = p4.column.group;
+  tx.page4.cols.staminaCast = p4.column.staminaCast;
+  tx.page4.cols.staminaKeeping = p4.column.staminaKeeping;
+  tx.page4.cols.damage = p4.column.damage;
+  tx.page4.cols.distance = p4.column.distance;
+  tx.page4.cols.zoneSize = p4.column.zoneSize;
+  tx.page4.cols.form = p4.column.form;
+  tx.page4.cols.preparingTime = p4.column.preparingTime;
+  tx.page4.cols.dc = p4.column.dc;
+  tx.page4.cols.effectTime = p4.column.effectTime;
+  tx.page4.cols.ingredients = ex.page4.cols.ingredients;
+  tx.page4.cols.removeComponents = ex.page4.cols.removeComponents;
+  tx.page4.cols.removeInstructions = ex.page4.cols.removeInstructions;
+
+  tx.page4.gifts.colName = p4.gifts.colName;
+  tx.page4.gifts.colGroup = p4.gifts.colGroup;
+  tx.page4.gifts.colSl = p4.gifts.colSl;
+  tx.page4.gifts.colVigor = p4.gifts.colVigor;
+  tx.page4.gifts.colCost = p4.gifts.colCost;
+  tx.page4.gifts.costAction = p4.gifts.costAction;
+  tx.page4.gifts.costFullAction = p4.gifts.costFullAction;
+
+  tx.avatarPlaceholder = p1.avatarPlaceholder;
+  return tx;
+}
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
 }
@@ -660,10 +722,9 @@ function normalizeComponentsMultiline(rawValue: string): string {
 function stripRitualComponentsFromEffect(rawValue: string): string {
   const value = String(rawValue ?? '').trim();
   if (!value) return '';
-  const match = /\n\s*\n(?:Компоненты:|Components:)\s*\n/i;
-  const idx = value.search(match);
-  if (idx < 0) return value;
-  return value.slice(0, idx).trim();
+  const sections = value.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean);
+  if (sections.length <= 1) return value;
+  return sections[0] ?? value;
 }
 
 function formatDiseaseOrCurseEntry(entry: unknown): string {
@@ -786,18 +847,15 @@ function tokenizeFormulaIngredients(formulaEn: string): string[] {
   return tokens;
 }
 
-function buildVm(resolved: Record<string, unknown>, raw: Record<string, unknown>, lang: Lang) {
-  return buildVmWithCatalog(resolved, raw, lang, undefined, undefined);
-}
-
 function buildVmWithCatalog(
   resolved: Record<string, unknown>,
   raw: Record<string, unknown>,
   lang: Lang,
+  pdfI18n: CharacterPdfI18n,
   skillsCatalogById?: ReadonlyMap<string, SkillCatalogLite>,
   itemEffectsGlossary?: ReadonlyArray<ItemEffectGlossaryRow>,
 ) {
-  const tx = tr(lang);
+  const tx = buildTxFromI18n(pdfI18n);
   const userSettings =
     asRecord(raw.user_settings) ??
     asRecord(raw.userSettings) ??
@@ -885,23 +943,17 @@ function buildVmWithCatalog(
     if (skillId === 'brawling') return 'REF';
     return null;
   };
+  const languagePrefix = pdfI18n.page1.skills.languagePrefix;
+  const languageBySuffix: Record<string, string> = {
+    common_speech: pdfI18n.page1.skills.languageCommonSpeech,
+    elder_speech: pdfI18n.page1.skills.languageElderSpeech,
+    dwarvish: pdfI18n.page1.skills.languageDwarvish,
+  };
   const languageSkillFallbackName = (id: string): string => {
     if (!id.startsWith('language_')) return '';
     const suffix = id.slice('language_'.length);
-    if (lang === 'ru') {
-      const map: Record<string, string> = {
-        common_speech: 'Язык: Всеобщий',
-        elder_speech: 'Язык: Старшая речь',
-        dwarvish: 'Язык: Краснолюдский',
-      };
-      return map[suffix] ?? `Язык: ${suffix.replace(/_/g, ' ')}`;
-    }
-    const map: Record<string, string> = {
-      common_speech: 'Language Common Speech',
-      elder_speech: 'Language Elder Speech',
-      dwarvish: 'Language Dwarvish',
-    };
-    return map[suffix] ?? pretty(id);
+    const languageName = languageBySuffix[suffix] ?? suffix.replace(/_/g, ' ');
+    return `${languagePrefix}${languageName}`.trim();
   };
   for (const [skillId, rawValue] of Object.entries(rawSkillsCommon)) {
     const v = statValue(asRecord(rawValue)).full;
@@ -951,15 +1003,19 @@ function buildVmWithCatalog(
 
   const prof = asRecord(asRecord(resolved.skills)?.professional) ?? {};
   const branchNames = asArray(prof.branches).map((x) => text(x, '')).filter(Boolean);
+  const branchColumnTitle = pdfI18n.extra.prof.branchCol;
+  const branchTitlePattern = pdfI18n.page1.defaults.branchTitle;
+  const formatBranchTitle = (n: number): string =>
+    branchTitlePattern.includes('{n}') ? branchTitlePattern.replace('{n}', String(n)) : `${branchTitlePattern} ${n}`;
   const profRows: Row[] = [];
   for (let b = 1; b <= 3; b += 1) {
     for (let s = 1; s <= 3; s += 1) {
       const rec = asRecord(prof[`skill_${b}_${s}`]);
       const name = text(rec?.name ?? rec?.label ?? rec?.id, '');
-      if (name) profRows.push({ cells: [branchNames[b - 1] || `Branch ${b}`, name] });
+      if (name) profRows.push({ cells: [branchNames[b - 1] || formatBranchTitle(b), name] });
     }
   }
-  const profTable: Table = { title: tx.sections.prof, columns: [lang === 'ru' ? 'Ветка' : 'Branch', tx.cols.n], rows: profRows.length ? profRows : [{ cells: ['—', '—'] }] };
+  const profTable: Table = { title: tx.sections.prof, columns: [branchColumnTitle, tx.cols.n], rows: profRows.length ? profRows : [{ cells: ['-', '-'] }] };
   const profBranches: ProfBranch[] = (['blue', 'mint', 'rose'] as const).map((color, idx) => {
     const rows: ProfBranchRow[] = [];
     for (let slot = 1; slot <= 3; slot += 1) {
@@ -972,7 +1028,7 @@ function buildVmWithCatalog(
       if (name) rows.push({ name, paramAbbr });
     }
     return {
-      title: branchNames[idx] || `${lang === 'ru' ? 'Ветка' : 'Branch'} ${idx + 1}`,
+      title: branchNames[idx] || formatBranchTitle(idx + 1),
       color,
       rows,
     };
@@ -992,14 +1048,14 @@ function buildVmWithCatalog(
 
   const perksTable: Table = {
     title: tx.sections.perks,
-    columns: [lang === 'ru' ? 'ПЕРК' : 'PERK', tx.cols.effect],
+    columns: [pdfI18n.page1.tables.perks.colPerk, tx.cols.effect],
     rows: asArray(resolved.perks).map((p) => {
       const s = text(p, '');
       const i = s.indexOf(':');
-      return i >= 0 ? { cells: [s.slice(0, i).trim(), s.slice(i + 1).trim()] } : { cells: [s || '—', ''] };
+      return i >= 0 ? { cells: [s.slice(0, i).trim(), s.slice(i + 1).trim()] } : { cells: [s || '-', ''] };
     }),
   };
-  if (!perksTable.rows.length) perksTable.rows.push({ cells: ['—', '—'] });
+  if (!perksTable.rows.length) perksTable.rows.push({ cells: ['-', '-'] });
 
   const gear = asRecord(resolved.gear) ?? {};
   const makeItemName = (rec: Record<string, unknown>) => text(rec.name ?? rec.weapon_name ?? rec.armor_name ?? rec.potion_name ?? rec.spell_name ?? rec.invocation_name ?? rec.gift_name ?? rec.w_id ?? rec.a_id ?? rec.p_id);
@@ -1157,10 +1213,10 @@ function buildVmWithCatalog(
   ]
     .join(' ')
     .toLowerCase();
-  const isMage = containsAnyNeedle(lowerProfession, ['mage', 'маг']);
-  const isWitcherProfession = containsAnyNeedle(lowerProfession, ['witcher', 'ведьмак', 'ведьмач']);
-  const isDruid = containsAnyNeedle(lowerProfession, ['druid', 'друид']);
-  const isPriest = containsAnyNeedle(lowerProfession, ['priest', 'жрец']) || isDruid;
+  const isMage = containsAnyNeedle(lowerProfession, ['mage', '\u043c\u0430\u0433']);
+  const isWitcherProfession = containsAnyNeedle(lowerProfession, ['witcher', '\u0432\u0435\u0434\u044c\u043c\u0430\u043a', '\u0432\u0435\u0434\u044c\u043c\u0430\u0447\u043a\u0430']);
+  const isDruid = containsAnyNeedle(lowerProfession, ['druid', '\u0434\u0440\u0443\u0438\u0434']);
+  const isPriest = containsAnyNeedle(lowerProfession, ['priest', '\u0436\u0440\u0435\u0446']) || isDruid;
   const vigorRec = asRecord(rawStats.vigor ?? rawStats.VIGOR ?? stats.vigor ?? stats.VIGOR) ?? {};
   const hasVigor =
     (num(vigorRec.cur) ?? 0) +
@@ -1355,14 +1411,14 @@ function buildVmWithCatalog(
   const loreRows: Row[] = [];
   const addLore = (label: string, v: unknown) => { const s = text(v, ''); if (s) loreRows.push({ cells: [label, s] }); };
   if (lore) {
-    addLore(lang === 'ru' ? 'Родина' : 'Homeland', lore.homeland);
-    addLore(lang === 'ru' ? 'Семья' : 'Family', lore.family_fate);
-    addLore(lang === 'ru' ? 'Родители' : 'Parents', lore.parents_fate);
-    addLore(lang === 'ru' ? 'Друг' : 'Friend', lore.friend);
+    addLore(tx.page2.loreLabels.homeland, lore.homeland);
+    addLore(tx.page2.loreLabels.familyFate, lore.family_fate);
+    addLore(tx.page2.loreLabels.parentsFate, lore.parents_fate);
+    addLore(tx.page2.loreLabels.friend, lore.friend);
   }
   const joinArr = (label: string, v: unknown) => { const arr = asArray(v).map((x) => text(x, '')).filter(Boolean); if (arr.length) loreRows.push({ cells: [label, arr.join(' | ')] }); };
-  joinArr(lang === 'ru' ? 'Союзники' : 'Allies', resolved.allies);
-  joinArr(lang === 'ru' ? 'Соц. статус' : 'Social status', resolved.social_status);
+  joinArr(tx.page2.allies, resolved.allies);
+  joinArr(tx.page2.socialStatusRace, resolved.social_status);
 
   const loreBlocks: LoreBlock[] = [];
   const pushLore = (label: string, value: unknown) => {
@@ -1501,7 +1557,7 @@ function buildVmWithCatalog(
     skillSidebarGroups,
     profBranches,
     weaponsTable: weapons.length ? { title: tx.sections.weapons, columns: [' ', tx.cols.qty, tx.sections.weapons, tx.cols.dmg, tx.cols.type, tx.cols.rel, tx.cols.hands, tx.cols.conceal, tx.cols.enh, tx.cols.wt, tx.cols.price], rows: weapons } : null,
-    armorTable: armors.length ? { title: tx.sections.armor, columns: [' ', tx.cols.qty, tx.sections.armor, lang === 'ru' ? 'ПБ/Н' : 'SP', tx.cols.enc, lang === 'ru' ? 'УБ' : 'ENH', tx.cols.wt, tx.cols.price], rows: armors } : null,
+    armorTable: armors.length ? { title: tx.sections.armor, columns: [' ', tx.cols.qty, tx.sections.armor, tx.cols.sp, tx.cols.enc, tx.cols.enh, tx.cols.wt, tx.cols.price], rows: armors } : null,
     potionTable: potions.length ? { title: tx.sections.alchemy, columns: [tx.cols.qty, tx.cols.n, tx.cols.tox, tx.cols.time, tx.cols.effect, tx.cols.wt, tx.cols.price], rows: potions } : null,
     magicTable: magicRows.length
       ? {
@@ -1702,6 +1758,7 @@ function valueCellsFromStatish(rec: Record<string, unknown> | null): ValueCells 
 
 type FractionalGroup = '1/2' | '1/3' | '1/4';
 type PackedPlacement = { itemIndex: number; col: number; y: number; h: number };
+type Vm = ReturnType<typeof buildVmWithCatalog>;
 
 function moveIndexOrder(order: number[], from: number, to: number): number[] {
   if (from === to) return order.slice();
@@ -1769,10 +1826,25 @@ class Painter {
   private ensure(h: number) { if (this.y + h <= this.bottom()) return; this.doc.addPage(); this.paintBg(); this.y = PAGE.margin; }
   private fontB(n: number) { this.doc.font(FONTS.bold).fontSize(n); }
   private fontR(n: number) { this.doc.font(FONTS.regular).fontSize(n); }
+  private normalizeResolvedTextForRender(label: string): string {
+    return String(label ?? '').replace(/<br\s*\/?>/gi, '\n').replace(/\r\n?/g, '\n').trim();
+  }
+  private headerTitleText(label: string): string {
+    return this.normalizeResolvedTextForRender(label).replace(/\n+/g, ' ').toLocaleUpperCase();
+  }
+  private headerCellLines(label: string): string[] {
+    const normalized = this.normalizeResolvedTextForRender(label);
+    const lines = normalized
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const safeLines = lines.length > 0 ? lines : [normalized.trim()];
+    return safeLines.map((line) => line.toLocaleUpperCase().replace(/\s+/g, '\u00A0'));
+  }
   private boxHeader(x: number, y: number, w: number, t: string, fill: string) {
     this.doc.rect(x, y, w, PAGE.headerH).fill(fill);
     this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, PAGE.headerH).stroke();
-    this.fontB(8.4); this.doc.fillColor(COLORS.text).text(t, x + 4, y + 3, { width: w - 8, lineBreak: false, ellipsis: true });
+    this.fontB(8.4); this.doc.fillColor(COLORS.text).text(this.headerTitleText(t), x + 4, y + 3, { width: w - 8, lineBreak: false, ellipsis: true });
   }
   private shell(x: number, y: number, w: number, h: number, t: string, fill: string) {
     this.boxHeader(x, y, w, t, fill);
@@ -1963,7 +2035,7 @@ class Painter {
     this.doc.rect(x, cy, w, subHeaderH).fill(COLORS.headerDefault);
     this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(x, cy, w, subHeaderH).stroke();
     this.fontB(7.2);
-    this.doc.fillColor(COLORS.text).text(extraTitle, x + 4, cy + 3, { width: w - 8, lineBreak: false, ellipsis: true });
+    this.doc.fillColor(COLORS.text).text(this.headerTitleText(extraTitle), x + 4, cy + 3, { width: w - 8, lineBreak: false, ellipsis: true });
     cy += subHeaderH;
 
     const extraPairs: Array<[Row | undefined, Row | undefined]> = [
@@ -1984,7 +2056,7 @@ class Painter {
     const ty = y + PAGE.headerH;
     this.doc.rect(x, ty, w, headH).fill(COLORS.headerDefault);
     this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(x, ty, w, headH).stroke();
-    const header0 = (table.columns[0] ?? '').replace(/^Название$/i, 'ПАРАМЕТР');
+    const header0 = this.headerCellText(table.columns[0] ?? '');
     const valuesCol1 = rows.map((r) => r?.cells[1] ?? '');
     const valuesCol0 = rows.map((r) => r?.cells[0] ?? '');
     this.fontB(6.8);
@@ -2008,8 +2080,8 @@ class Painter {
     const c2 = x + nameW + maxW;
     this.fontB(6.8);
     this.doc.fillColor(COLORS.text).text(header0, x + 3, ty + 2, { width: c1 - x - 6, lineBreak: false, ellipsis: true });
-    this.doc.fillColor(COLORS.text).text(table.columns[1] ?? '', c1 + 2, ty + 2, { width: c2 - c1 - 4, align: 'center', lineBreak: false, ellipsis: true });
-    this.doc.fillColor(COLORS.text).text(table.columns[2] ?? '', c2 + 2, ty + 2, { width: x + w - c2 - 4, align: 'center', lineBreak: false, ellipsis: true });
+    this.doc.fillColor(COLORS.text).text(this.headerCellText(table.columns[1] ?? ''), c1 + 2, ty + 2, { width: c2 - c1 - 4, align: 'center', lineBreak: false, ellipsis: true });
+    this.doc.fillColor(COLORS.text).text(this.headerCellText(table.columns[2] ?? ''), c2 + 2, ty + 2, { width: x + w - c2 - 4, align: 'center', lineBreak: false, ellipsis: true });
     let ry = ty + headH;
     for (let i = 0; i < 5; i += 1) {
       this.doc.moveTo(x, ry).lineTo(x + w, ry).strokeColor(COLORS.line).lineWidth(0.25).stroke();
@@ -2195,7 +2267,7 @@ class Painter {
     const gap = PAGE.gap;
     const colW = (w - gap * 2) / 3;
     this.fontB(8.4);
-    this.doc.fillColor(COLORS.text).text(title, x + 4, y + 3, { width: w - 8, lineBreak: false, ellipsis: true });
+    this.doc.fillColor(COLORS.text).text(this.headerTitleText(title), x + 4, y + 3, { width: w - 8, lineBreak: false, ellipsis: true });
     const by = y + titleH;
     const branchLayouts = branches.slice(0, 3).map((b, idx) => {
       const bx = x + idx * (colW + gap);
@@ -2232,7 +2304,7 @@ class Painter {
       this.doc.rect(bx, by, colW, PAGE.headerH).fill(fill);
       this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(bx, by, colW, PAGE.headerH).stroke();
       this.fontB(8.4);
-      this.doc.fillColor(COLORS.text).text(b.title.toUpperCase(), bx + 4, by + 3, { width: colW - 8, lineBreak: false, ellipsis: true });
+      this.doc.fillColor(COLORS.text).text(this.headerTitleText(b.title), bx + 4, by + 3, { width: colW - 8, lineBreak: false, ellipsis: true });
       let ry = by + PAGE.headerH;
       for (let i = 0; i < 3; i += 1) {
         const rowH = rowHeights[i] ?? 13;
@@ -2253,7 +2325,6 @@ class Painter {
     return titleH + maxBranchH;
   }
   private drawPerksCompact(x: number, y: number, w: number, table: Table): number {
-    const tableLang: 'ru' | 'en' = /[А-Яа-яЁё]/.test(`${table.title} ${table.columns.join(' ')}`) ? 'ru' : 'en';
     const rows = table.rows.slice(0, 6).map((r) => ({
       name: stripHtmlTags((r.cells[0] ?? '').trim()),
       effect: stripHtmlTags((r.cells[1] ?? '').trim()),
@@ -2276,8 +2347,8 @@ class Painter {
     this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, headerH).stroke();
     this.doc.moveTo(x + nameW, y).lineTo(x + nameW, y + h).strokeColor(COLORS.line).lineWidth(0.25).stroke();
     this.fontB(8.4);
-    this.doc.fillColor(COLORS.text).text((table.columns[0] ?? (tableLang === 'ru' ? 'ПЕРК' : 'PERK')).toUpperCase(), x + 4, y + 3, { width: nameW - 8, lineBreak: false, ellipsis: true });
-    this.doc.fillColor(COLORS.text).text((table.columns[1] ?? (tableLang === 'ru' ? 'ЭФФЕКТ' : 'EFFECT')).toUpperCase(), x + nameW + 2, y + 3, { width: w - nameW - 4, align: 'center', lineBreak: false, ellipsis: true });
+    this.doc.fillColor(COLORS.text).text(this.headerCellText(table.columns[0] ?? ''), x + 4, y + 3, { width: nameW - 8, lineBreak: false, ellipsis: true });
+    this.doc.fillColor(COLORS.text).text(this.headerCellText(table.columns[1] ?? ''), x + nameW + 2, y + 3, { width: w - nameW - 4, align: 'center', lineBreak: false, ellipsis: true });
     let cy = y + headerH;
     for (let i = 0; i < rows.length; i += 1) {
       const row = rows[i]!;
@@ -2319,18 +2390,18 @@ class Painter {
     }))];
     const headers = (table.columns.length >= 11
       ? table.columns
-      : [' ', '#', 'ОРУЖИЕ', 'УРОН', 'ТИП', 'Н', 'ХВАТ', 'СКР', 'УС', 'ВЕС', 'ЦЕНА']).map((h, i) => (i === 0 ? ' ' : String(h || '').toUpperCase()));
+      : [' ', '#', '', '', '', '', '', '', '', '', '']).map((h, i) => (i === 0 ? ' ' : this.headerCellText(String(h ?? ''))));
     const checkW = 14;
     const fitDefs: Array<{ key: keyof (typeof rows)[number]; header: string; min: number }> = [
-      { key: 'qty', header: headers[1] ?? '#', min: 12 },
-      { key: 'dmg', header: headers[3] ?? 'УРОН', min: 20 },
-      { key: 'type', header: headers[4] ?? 'ТИП', min: 16 },
-      { key: 'rel', header: headers[5] ?? 'Н', min: 14 },
-      { key: 'hands', header: headers[6] ?? 'ХВАТ', min: 20 },
-      { key: 'conceal', header: headers[7] ?? 'СКР', min: 18 },
-      { key: 'enh', header: headers[8] ?? 'УС', min: 16 },
-      { key: 'wt', header: headers[9] ?? 'ВЕС', min: 18 },
-      { key: 'price', header: headers[10] ?? 'ЦЕНА', min: 20 },
+      { key: 'qty', header: headers[1] ?? '', min: 12 },
+      { key: 'dmg', header: headers[3] ?? '', min: 20 },
+      { key: 'type', header: headers[4] ?? '', min: 16 },
+      { key: 'rel', header: headers[5] ?? '', min: 14 },
+      { key: 'hands', header: headers[6] ?? '', min: 20 },
+      { key: 'conceal', header: headers[7] ?? '', min: 18 },
+      { key: 'enh', header: headers[8] ?? '', min: 16 },
+      { key: 'wt', header: headers[9] ?? '', min: 18 },
+      { key: 'price', header: headers[10] ?? '', min: 20 },
     ];
     const fitWidths = fitDefs.map((d) => {
       this.fontB(6.5);
@@ -2451,15 +2522,15 @@ class Painter {
     }));
     const totalRows = Math.max(srcRows.length + 3, 6);
     const rows = [...srcRows, ...new Array(Math.max(0, totalRows - srcRows.length)).fill(null).map(() => ({ qty: '', name: '', sp: '', enc: '', enh: '', wt: '', price: '', effect: '' }))];
-    const headers = (table.columns.length >= 8 ? table.columns : [' ', '#', 'БРОНЯ', 'ПБ/Н', 'СД', 'УБ', 'ВЕС', 'ЦЕНА']).map((h, i) => (i === 0 ? ' ' : String(h || '').toUpperCase()));
+    const headers = (table.columns.length >= 8 ? table.columns : [' ', '#', '', '', '', '', '', '']).map((h, i) => (i === 0 ? ' ' : this.headerCellText(String(h ?? ''))));
     const checkW = 14;
     const fitDefs: Array<{ key: keyof (typeof rows)[number]; header: string; min: number }> = [
-      { key: 'qty', header: headers[1] ?? '#', min: 12 },
-      { key: 'sp', header: headers[3] ?? 'SP', min: 22 },
-      { key: 'enc', header: headers[4] ?? 'ENC', min: 18 },
-      { key: 'enh', header: headers[5] ?? 'ENH', min: 18 },
-      { key: 'wt', header: headers[6] ?? 'WT', min: 20 },
-      { key: 'price', header: headers[7] ?? 'PRICE', min: 22 },
+      { key: 'qty', header: headers[1] ?? '', min: 12 },
+      { key: 'sp', header: headers[3] ?? '', min: 22 },
+      { key: 'enc', header: headers[4] ?? '', min: 18 },
+      { key: 'enh', header: headers[5] ?? '', min: 18 },
+      { key: 'wt', header: headers[6] ?? '', min: 20 },
+      { key: 'price', header: headers[7] ?? '', min: 22 },
     ];
     const fitWidths = fitDefs.map((d) => {
       this.fontB(6.5);
@@ -2549,17 +2620,15 @@ class Painter {
     }));
     const totalRows = Math.max(srcRows.length + 3, 3);
     const rows = [...srcRows, ...new Array(Math.max(0, totalRows - srcRows.length)).fill(null).map(() => ({ qty: '', name: '', tox: '', time: '', effect: '', wt: '', price: '' }))];
-    const tableLang: 'ru' | 'en' = /[А-Яа-яЁё]/.test(`${table.title} ${table.columns.join(' ')}`) ? 'ru' : 'en';
-    const headers = (table.columns.length >= 7 ? table.columns : ['#', 'АЛХИМИЯ', 'ТОКС', 'ВРЕМЯ', 'ЭФФЕКТ', 'ВЕС', 'ЦЕНА'])
-      .map((h) => String(h || '').toUpperCase());
-    headers[1] = tableLang === 'ru' ? 'ХИМИКАТ' : 'CHEMICAL';
+    const headers = (table.columns.length >= 7 ? table.columns : ['#', '', '', '', '', '', ''])
+      .map((h) => this.headerCellText(String(h ?? '')));
     const fitDefs: Array<{ key: keyof (typeof rows)[number]; header: string; min: number }> = [
-      { key: 'qty', header: headers[0] ?? '#', min: 14 },
-      { key: 'name', header: headers[1] ?? 'АЛХИМИЯ', min: 56 },
-      { key: 'tox', header: headers[2] ?? 'ТОКС', min: 22 },
-      { key: 'time', header: headers[3] ?? 'ВРЕМЯ', min: 30 },
-      { key: 'wt', header: headers[5] ?? 'ВЕС', min: 20 },
-      { key: 'price', header: headers[6] ?? 'ЦЕНА', min: 22 },
+      { key: 'qty', header: headers[0] ?? '', min: 14 },
+      { key: 'name', header: headers[1] ?? '', min: 56 },
+      { key: 'tox', header: headers[2] ?? '', min: 22 },
+      { key: 'time', header: headers[3] ?? '', min: 30 },
+      { key: 'wt', header: headers[5] ?? '', min: 20 },
+      { key: 'price', header: headers[6] ?? '', min: 22 },
     ];
     const fitWidths = fitDefs.map((d) => {
       this.fontB(6.5);
@@ -2652,19 +2721,19 @@ class Painter {
     ];
     const headers = (table.columns.length >= 10
       ? table.columns
-      : ['ТИП', 'НАЗВАНИЕ', 'ЭЛЕМЕНТ', 'ВЫН', 'ВЫН+', 'УРОН', 'ВРЕМЯ', 'ДИСТ', 'РАЗМЕР', 'ФОРМА'])
-      .map((h) => String(h || '').toUpperCase());
+      : ['', '', '', '', '', '', '', '', '', ''])
+      .map((h) => this.headerCellText(String(h ?? '')));
 
     const fitDefs: Array<{ key: keyof (typeof rows)[number]; header: string; min: number }> = [
-      { key: 'type', header: headers[0] ?? 'ТИП', min: 32 },
-      { key: 'element', header: headers[2] ?? 'ЭЛЕМЕНТ', min: 34 },
-      { key: 'vigor', header: headers[3] ?? 'ВЫН', min: 22 },
-      { key: 'vigorKeep', header: headers[4] ?? 'ВЫН+', min: 24 },
-      { key: 'damage', header: headers[5] ?? 'УРОН', min: 28 },
-      { key: 'time', header: headers[6] ?? 'ВРЕМЯ', min: 28 },
-      { key: 'distance', header: headers[7] ?? 'ДИСТ', min: 26 },
-      { key: 'size', header: headers[8] ?? 'РАЗМЕР', min: 30 },
-      { key: 'form', header: headers[9] ?? 'ФОРМА', min: 46 },
+      { key: 'type', header: headers[0] ?? '', min: 32 },
+      { key: 'element', header: headers[2] ?? '', min: 34 },
+      { key: 'vigor', header: headers[3] ?? '', min: 22 },
+      { key: 'vigorKeep', header: headers[4] ?? '', min: 24 },
+      { key: 'damage', header: headers[5] ?? '', min: 28 },
+      { key: 'time', header: headers[6] ?? '', min: 28 },
+      { key: 'distance', header: headers[7] ?? '', min: 26 },
+      { key: 'size', header: headers[8] ?? '', min: 30 },
+      { key: 'form', header: headers[9] ?? '', min: 46 },
     ];
     const fitWidths = fitDefs.map((d) => {
       this.fontB(6.5);
@@ -2801,7 +2870,7 @@ class Painter {
   }
 
   private headerCellText(label: string): string {
-    return String(label ?? '').toUpperCase().replace(/\s+/g, '\u00A0');
+    return this.headerCellLines(label).join(' ');
   }
 
   private headerCellWidth(label: string, size = 6.8): number {
@@ -2959,7 +3028,7 @@ class Painter {
       const tooltipH = tooltip ? Math.max(11, this.measureRichTextHeight(Math.max(12, ix - 6), tooltip, 6.2, 8) + 2) : 0;
       return sum + mainH + tooltipH;
     }, 0);
-    const headerH = 12;
+    const headerH = this.measureHeaderRowHeight(colW, headers);
     const tableH = headerH + mainRowsH;
     return PAGE.headerH + 4 + tableH + 4;
   }
@@ -3056,24 +3125,43 @@ class Painter {
     align: 'left' | 'center' | 'right' | Array<'left' | 'center' | 'right'> = 'left',
     paddingX = 3,
   ) {
-    const h = 12;
+    const lineGap = 0;
+    const h = this.measureHeaderRowHeight(colW, labels, paddingX, 6.8);
     this.doc.rect(x, y, colW.reduce((a, b) => a + b, 0), h).fill('#ffffff');
     this.doc.lineWidth(0.25).strokeColor(COLORS.line).rect(x, y, colW.reduce((a, b) => a + b, 0), h).stroke();
     let cx = x;
     this.fontB(6.8);
     for (let i = 0; i < colW.length; i += 1) {
       if (i > 0) this.doc.moveTo(cx, y).lineTo(cx, y + h).strokeColor(COLORS.line).lineWidth(0.25).stroke();
-      const label = this.headerCellText(String(labels[i] ?? ''));
+      const label = this.headerCellLines(String(labels[i] ?? '')).join('\n');
       const currentAlign = Array.isArray(align) ? (align[i] ?? 'left') : align;
       this.doc.fillColor(COLORS.text).text(label, cx + paddingX, y + 1, {
         width: colW[i]! - paddingX * 2,
-        lineBreak: false,
-        ellipsis: true,
+        lineGap,
+        lineBreak: true,
+        height: h - 2,
         align: currentAlign,
       });
       cx += colW[i]!;
     }
     return h;
+  }
+  private measureHeaderRowHeight(
+    colW: number[],
+    labels: string[],
+    paddingX = 3,
+    fontSize = 6.8,
+  ): number {
+    const lineGap = 0;
+    this.fontB(fontSize);
+    return Math.max(
+      12,
+      ...colW.map((cw, i) => {
+        const text = this.headerCellLines(String(labels[i] ?? '')).join('\n');
+        const height = Math.ceil(this.doc.heightOfString(text, { width: Math.max(8, cw - paddingX * 2), lineGap, lineBreak: true })) + 2;
+        return Math.max(12, height);
+      }),
+    );
   }
   private notesStripAtCount(x: number, y: number, w: number, h: number, title: string, count: number) {
     if (h < 50 || count <= 0) return 0;
@@ -3116,13 +3204,15 @@ class Painter {
       : [{ groupName: '—', statusLabel: '—', isFeared: false }];
     const values = safeGroups.map((g) => (g.isFeared ? `${g.statusLabel} ${fearedSuffix}` : g.statusLabel));
     const layout = this.computeSocialStatusLayout(Math.max(20, w - 8), safeGroups.map((g) => g.groupName), values);
-    const outerH = PAGE.headerH + 4 + 12 + layout.rowH + 4;
+    const headerLabels = safeGroups.map((g) => g.groupName);
+    const headerH = this.measureHeaderRowHeight(layout.colW, headerLabels);
+    const outerH = PAGE.headerH + 4 + headerH + layout.rowH + 4;
     this.shell(x, y, w, outerH, title, COLORS.headerSocial);
     const ix = x + 4;
     const iy = y + PAGE.headerH + 4;
     const iw = w - 8;
     const colW = layout.colW;
-    const headerH = this.drawHeaderRow(ix, iy, colW, safeGroups.map((g) => g.groupName));
+    this.drawHeaderRow(ix, iy, colW, headerLabels);
     const rowH = layout.rowH;
     const rowY = iy + headerH;
     const tableH = headerH + rowH;
@@ -3142,7 +3232,8 @@ class Painter {
   private measurePage2SocialStatusCardHeight(w: number, headers: string[], values: string[]): number {
     const iw = Math.max(20, w - 8);
     const layout = this.computeSocialStatusLayout(iw, headers, values);
-    return PAGE.headerH + 4 + 12 + layout.rowH + 4;
+    const headerH = this.measureHeaderRowHeight(layout.colW, headers);
+    return PAGE.headerH + 4 + headerH + layout.rowH + 4;
   }
 
   private computeSocialStatusLayout(
@@ -3408,9 +3499,9 @@ class Painter {
     );
     const headerH = this.drawHeaderRow(ix, iy, colW, headers);
     const rowH = Math.max(
-      12,
+      14,
       ...colW.map((cw, idx) =>
-        Math.ceil(this.doc.heightOfString(row[idx] ?? '', { width: Math.max(12, cw - 6), lineGap: 0 })) + 2,
+        Math.ceil(this.doc.heightOfString(row[idx] ?? '', { width: Math.max(12, cw - 6), lineGap: 0 })) + 4,
       ),
     );
     const rowY = iy + headerH;
@@ -3421,7 +3512,7 @@ class Painter {
     for (let i = 0; i < colW.length; i += 1) {
       if (i > 0) this.doc.moveTo(cx, iy).lineTo(cx, rowY + rowH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
       this.fontR(6.8);
-      this.doc.fillColor(COLORS.text).text(row[i] ?? '', cx + 3, rowY + 1, { width: colW[i]! - 6, lineGap: 0 });
+      this.doc.fillColor(COLORS.text).text(row[i] ?? '', cx + 3, rowY + 2, { width: colW[i]! - 6, lineGap: 0 });
       cx += colW[i]!;
     }
     this.doc.moveTo(ix, rowY + rowH).lineTo(ix + iw, rowY + rowH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
@@ -3462,13 +3553,14 @@ class Painter {
       [Math.max(30, min0), Math.max(30, min1), Math.max(30, min2)],
       minLast,
     );
+    const headerH = this.measureHeaderRowHeight(colW, headers);
     const rowH = Math.max(
-      12,
+      14,
       ...colW.map((cw, idx) =>
-        Math.ceil(this.doc.heightOfString(row[idx] ?? '', { width: Math.max(12, cw - 6), lineGap: 0 })) + 2,
+        Math.ceil(this.doc.heightOfString(row[idx] ?? '', { width: Math.max(12, cw - 6), lineGap: 0 })) + 4,
       ),
     );
-    return PAGE.headerH + 4 + 12 + rowH + 4;
+    return PAGE.headerH + 4 + headerH + rowH + 4;
   }
 
   private drawValuesCard(x: number, y: number, w: number, title: string, v: ValuesTableVm, cols: { valuedPerson: string; value: string; feelingsOnPeople: string }): number {
@@ -3520,8 +3612,9 @@ class Painter {
       this.maxWordWidth(row[2]!, 'regular', 6.8) + 8,
     );
     const colW = this.fitFixedPlusFlexibleLast(iw, [pref0, pref1], [Math.max(30, min0), Math.max(30, min1)], minLast);
+    const headerH = this.measureHeaderRowHeight(colW, headers);
     const rowH = Math.max(12, Math.ceil(this.doc.heightOfString(row[2] ?? '', { width: Math.max(12, colW[2]! - 6) })) + 2);
-    return PAGE.headerH + 4 + 12 + rowH + 4;
+    return PAGE.headerH + 4 + headerH + rowH + 4;
   }
 
   private drawLifePathCard(
@@ -3579,11 +3672,13 @@ class Painter {
     const periodW = Math.min(Math.max(38, maxPeriod + 8), Math.floor(iw * 0.26));
     const typeW = Math.min(Math.max(38, maxType + 8), Math.floor(iw * 0.26));
     const descW = Math.max(70, iw - periodW - typeW);
+    const colW = [periodW, typeW, descW];
+    const headerH = this.measureHeaderRowHeight(colW, [cols.period, cols.type, cols.description]);
     const totalRowsH = tableRows.reduce(
       (acc, r) => acc + Math.max(12, Math.ceil(this.doc.heightOfString(r.description ?? '', { width: descW - 6 })) + 2),
       0,
     );
-    return PAGE.headerH + 4 + 12 + totalRowsH + 4;
+    return PAGE.headerH + 4 + headerH + totalRowsH + 4;
   }
 
   private fitColumnsWithFlexible(
@@ -3986,7 +4081,7 @@ class Painter {
       weight: '',
       price: '',
     }]);
-    const headerH = 12;
+    const headerH = this.measureHeaderRowHeight(colW, headers);
     const tableBottom = tableH;
     let used = headerH;
     let index = startIndex;
@@ -4016,7 +4111,7 @@ class Painter {
       weight: '',
       price: '',
     }]);
-    const headerH = 12;
+    const headerH = this.measureHeaderRowHeight(colW, headers);
     let used = headerH;
     let index = startIndex;
     const nameColW = colW[1] ?? 120;
@@ -4331,7 +4426,10 @@ class Painter {
     }
 
     const minCostColIndex = 7;
-    minW[minCostColIndex] = Math.max(minW[minCostColIndex]!, this.textWidth('ИНГР.', 'bold', 6.6) + 8);
+    minW[minCostColIndex] = Math.max(
+      minW[minCostColIndex]!,
+      this.maxWordWidth(this.headerCellText(headers[minCostColIndex] ?? ''), 'bold', 6.6) + 8,
+    );
     pref[minCostColIndex] = Math.max(pref[minCostColIndex]!, minW[minCostColIndex]!);
 
     const widths = pref.slice();
@@ -4452,7 +4550,7 @@ class Painter {
     ]);
     const minW = new Array<number>(colCount).fill(16);
     const prefW = new Array<number>(colCount).fill(16);
-    const flexCols = new Set([5, 6]); // Состав, Описание
+    const flexCols = new Set([5, 6]); // components, item description
     const fixedCols = [...Array(colCount).keys()].filter((i) => !flexCols.has(i));
 
     for (let c = 0; c < colCount; c += 1) {
@@ -4522,7 +4620,7 @@ class Painter {
     y: number,
     w: number,
     rowsIn: BlueprintPageRow[],
-    tx: ReturnType<typeof tr>,
+    tx: Tx,
     extraEmptyRows: number,
   ): number {
     const rows = [...rowsIn, ...new Array(Math.max(0, extraEmptyRows)).fill(null).map(() => ({
@@ -4743,7 +4841,7 @@ class Painter {
     y: number,
     w: number,
     tables: Array<{ rows: ComponentPageRow[] }>,
-    tx: ReturnType<typeof tr>,
+    tx: Tx,
     alchemyStyle: 'w1' | 'w2',
     extraEmptyRows: number,
   ): number {
@@ -4787,7 +4885,7 @@ class Painter {
       const txY = iy + outerPad;
       const txW = iw - outerPad * 2;
       const colW = this.fitComponentsColumns(txW, headers, tableRows);
-      const headerH = 12;
+      const headerH = this.measureHeaderRowHeight(colW, headers, 2, 6.4);
       const rowHeights = tableRows.map((r) => {
         const nameH = r.name ? Math.ceil(this.doc.heightOfString(r.name, { width: Math.max(10, colW[2]! - 6), lineGap: 0 })) : 0;
         return Math.max(13, nameH + 4);
@@ -4804,11 +4902,12 @@ class Painter {
       for (let i = 0; i < colW.length; i += 1) {
         if (i > 0) this.doc.moveTo(hx, txY).lineTo(hx, txY + headerH).strokeColor(COLORS.line).lineWidth(0.25).stroke();
         this.fontB(6.4);
-        this.doc.fillColor(COLORS.text).text(String(headers[i] ?? '').toUpperCase(), hx + 2, txY + 2, {
+        this.doc.fillColor(COLORS.text).text(this.headerCellLines(String(headers[i] ?? '')).join('\n'), hx + 2, txY + 1, {
           width: colW[i]! - 4,
           align: 'center',
-          lineBreak: false,
-          ellipsis: true,
+          lineBreak: true,
+          lineGap: 0,
+          height: headerH - 2,
         });
         hx += colW[i]!;
       }
@@ -4848,7 +4947,7 @@ class Painter {
     return maxH;
   }
 
-  private drawPage3Recipes(vm: ReturnType<typeof buildVm>): number {
+  private drawPage3Recipes(vm: Vm): number {
     this.doc.addPage();
     this.paintBg();
     const tx = vm.tx;
@@ -5232,7 +5331,7 @@ class Painter {
   }
 
   private drawPage4Magic(
-    vm: ReturnType<typeof buildVm>,
+    vm: Vm,
   ): void {
     const magic = vm.page4Magic as MagicPageVm | undefined;
     if (!magic || !magic.shouldRender) return;
@@ -5438,7 +5537,7 @@ class Painter {
     }
   }
 
-  private estimatePage3FirstPairGeneralGearIndex(vm: ReturnType<typeof buildVm>): { nextIndex: number; guideRows: number } {
+  private estimatePage3FirstPairGeneralGearIndex(vm: Vm): { nextIndex: number; guideRows: number } {
     const probeDoc = new PDFDocument({ size: 'A4', margin: 0, compress: true });
     probeDoc.on('data', () => {});
     const probe = new Painter(probeDoc);
@@ -5507,7 +5606,7 @@ class Painter {
   }
 
   private drawPage2(
-    vm: ReturnType<typeof buildVm>,
+    vm: Vm,
     generalGearStartIndex: number,
     page3FirstPairGuideRows: number,
   ): { nextGeneralGearIndex: number; giftsInlinedOnPage2: boolean } {
@@ -5752,7 +5851,7 @@ class Painter {
     }
     return { nextGeneralGearIndex, giftsInlinedOnPage2 };
   }
-  draw(vm: ReturnType<typeof buildVm>) {
+  draw(vm: Vm) {
     const tx = vm.tx;
     this.ensure(190);
     const freeW = this.w - PAGE.gap * 3;
@@ -5822,7 +5921,7 @@ class Painter {
     {
       const armorTable = vm.armorTable ?? {
         title: tx.sections.armor,
-        columns: [' ', tx.cols.qty, tx.sections.armor, vm.lang === 'ru' ? 'ПБ/Н' : 'SP', tx.cols.enc, vm.lang === 'ru' ? 'УБ' : 'ENH', tx.cols.wt, tx.cols.price],
+        columns: [' ', tx.cols.qty, tx.sections.armor, tx.cols.sp, tx.cols.enc, tx.cols.enh, tx.cols.wt, tx.cols.price],
         rows: [],
       };
       const dollW = Math.floor(rightW * 0.15);
@@ -5902,12 +6001,16 @@ export async function generateCharacterPdfBuffer(params: {
   skillsCatalogById?: ReadonlyMap<string, SkillCatalogLite>;
   itemEffectsGlossary?: ReadonlyArray<ItemEffectGlossaryRow>;
 }): Promise<Buffer> {
+  const pdfI18n = await loadCharacterPdfI18n(params.lang);
+
   const vm = buildVmWithCatalog(
     params.resolvedCharacter,
     params.rawCharacter,
     params.lang,
+    pdfI18n,
     params.skillsCatalogById,
     params.itemEffectsGlossary,
   );
   return createPdfBuffer((doc) => new Painter(doc).draw(vm));
 }
+

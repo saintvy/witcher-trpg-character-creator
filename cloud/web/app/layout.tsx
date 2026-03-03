@@ -13,9 +13,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
 function Sidebar() {
   const pathname = usePathname();
-  const { lang, mounted } = useLanguage();
+  const { lang } = useLanguage();
   const { mounted: authMounted, provider, isAuthenticated } = useAuth();
-  const displayLang = mounted ? lang : "en";
+  const displayLang = lang;
   const [characterCount, setCharacterCount] = useState<number | null>(null);
 
   const content = {

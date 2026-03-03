@@ -3248,9 +3248,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.обольститель.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.информатор.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.интриган.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.bard.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.bard.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.bard.3.name')::text
       )
     )
   ) AS body;
@@ -4531,9 +4531,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.магический_клинок.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.мутант.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.убийца.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.witcher.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.witcher.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.witcher.3.name')::text
       )
     )
   ) AS body
@@ -5321,9 +5321,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.хирург.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.травник.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.анатом.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.doctor.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.doctor.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.doctor.3.name')::text
       )
     )
   ) AS body;
@@ -5990,9 +5990,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.политик.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.учёный.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.архимаг.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.mage.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.mage.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.mage.3.name')::text
       )
     )
   ) AS body;
@@ -6713,9 +6713,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.стрелок.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.охотник_за_головами.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.потрошитель.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.man_at_arms.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.man_at_arms.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.man_at_arms.3.name')::text
       )
     )
   ) AS body;
@@ -7585,9 +7585,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.проповедник.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.друид.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.фанатик.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.priest.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.priest.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.priest.3.name')::text
       )
     )
   ) AS body;
@@ -8262,9 +8262,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.вор.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.атаман.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.контрабандист.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.criminal.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.criminal.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.criminal.3.name')::text
       )
     )
   ) AS body;
@@ -8878,9 +8878,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.оружейник.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.алхимик.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.мастер.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.craftsman.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.craftsman.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.craftsman.3.name')::text
       )
     )
   ) AS body;
@@ -9653,9 +9653,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.посредник.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.человек_со_связями.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.торговец.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.merchant.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.merchant.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.merchant.3.name')::text
       )
     )
   ) AS body;
@@ -10007,7 +10007,7 @@ WITH
 
 <table class="skills_branch_1">
     <tr>
-        <td class="header">Initiate</td>
+        <td class="header">The Initiate</td>
     </tr>
     <tr>
         <td class="opt_content">
@@ -10031,7 +10031,7 @@ WITH
 
 <table class="skills_branch_2">
     <tr>
-        <td class="header">Mystic Sage</td>
+        <td class="header">The Mystic Sage</td>
     </tr>
     <tr>
         <td class="opt_content">
@@ -10066,7 +10066,7 @@ WITH
 
 <table class="skills_branch_3">
     <tr>
-        <td class="header">Militant</td>
+        <td class="header">The Militant</td>
     </tr>
     <tr>
         <td class="opt_content">
@@ -10373,9 +10373,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.посвященный.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.таинственный_мудрец.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.воинствующий.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.druid.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.druid.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.druid.3.name')::text
       )
     )
   ) AS body;
@@ -10739,7 +10739,7 @@ WITH
 
 <table class="skills_branch_1">
     <tr>
-        <td class="header">Cultist</td>
+        <td class="header">The Cultist</td>
     </tr>
     <tr>
         <td class="opt_content">
@@ -10803,7 +10803,7 @@ WITH
 
 <table class="skills_branch_2">
     <tr>
-        <td class="header">Preacher</td>
+        <td class="header">The Preacher</td>
     </tr>
     <tr>
         <td class="opt_content">
@@ -10827,7 +10827,7 @@ WITH
 
 <table class="skills_branch_3">
     <tr>
-        <td class="header">Fanatic</td>
+        <td class="header">The Fanatic</td>
     </tr>
     <tr>
         <td class="opt_content">
@@ -11085,9 +11085,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.культист.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.проповедник.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.фанатик.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.priest.2.exp_toc.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.priest.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.priest.3.name')::text
       )
     )
   ) AS body;
@@ -11146,7 +11146,6 @@ SELECT
     )
   ) AS body
 FROM meta;
-
 
 -- <<< END sql/005_profession_11_priest_exp_toc.sql
 
@@ -31381,47 +31380,6 @@ VALUES
   (ck_id('witcher_cc.pdf.page1.magic.type.invocation'), 'pdf', 'page1.magic.type.invocation', 'en', 'Inv.')
 ON CONFLICT (id, lang) DO NOTHING;
 
--- Fix: professional branch titles use branch_name_id derived from RU branch name.
--- Add EN texts for these RU-derived ids so JSON resolves correctly for lang=en.
-INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-VALUES
-  (ck_id('witcher_cc.wcc_skills.branch.обольститель.name'), 'wcc_skills', 'branch_name', 'en', 'The Charmer'),
-  (ck_id('witcher_cc.wcc_skills.branch.информатор.name'), 'wcc_skills', 'branch_name', 'en', 'The Informant'),
-  (ck_id('witcher_cc.wcc_skills.branch.интриган.name'), 'wcc_skills', 'branch_name', 'en', 'The Manipulator'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.магический_клинок.name'), 'wcc_skills', 'branch_name', 'en', 'The Spellsword'),
-  (ck_id('witcher_cc.wcc_skills.branch.мутант.name'), 'wcc_skills', 'branch_name', 'en', 'The Mutant'),
-  (ck_id('witcher_cc.wcc_skills.branch.убийца.name'), 'wcc_skills', 'branch_name', 'en', 'The Slayer'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.политик.name'), 'wcc_skills', 'branch_name', 'en', 'The Politician'),
-  (ck_id('witcher_cc.wcc_skills.branch.учёный.name'), 'wcc_skills', 'branch_name', 'en', 'The Scientist'),
-  (ck_id('witcher_cc.wcc_skills.branch.архимаг.name'), 'wcc_skills', 'branch_name', 'en', 'The Arch Mage'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.хирург.name'), 'wcc_skills', 'branch_name', 'en', 'The Surgeon'),
-  (ck_id('witcher_cc.wcc_skills.branch.травник.name'), 'wcc_skills', 'branch_name', 'en', 'The Herbalist'),
-  (ck_id('witcher_cc.wcc_skills.branch.анатом.name'), 'wcc_skills', 'branch_name', 'en', 'The Anatomist'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.стрелок.name'), 'wcc_skills', 'branch_name', 'en', 'The Marksman'),
-  (ck_id('witcher_cc.wcc_skills.branch.охотник_за_головами.name'), 'wcc_skills', 'branch_name', 'en', 'The Bounty Hunter'),
-  (ck_id('witcher_cc.wcc_skills.branch.потрошитель.name'), 'wcc_skills', 'branch_name', 'en', 'The Butcher'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.проповедник.name'), 'wcc_skills', 'branch_name', 'en', 'The Preacher'),
-  (ck_id('witcher_cc.wcc_skills.branch.друид.name'), 'wcc_skills', 'branch_name', 'en', 'The Druid'),
-  (ck_id('witcher_cc.wcc_skills.branch.фанатик.name'), 'wcc_skills', 'branch_name', 'en', 'The Fanatic'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.вор.name'), 'wcc_skills', 'branch_name', 'en', 'The Thief'),
-  (ck_id('witcher_cc.wcc_skills.branch.атаман.name'), 'wcc_skills', 'branch_name', 'en', 'The Leader'),
-  (ck_id('witcher_cc.wcc_skills.branch.контрабандист.name'), 'wcc_skills', 'branch_name', 'en', 'The Smuggler'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.оружейник.name'), 'wcc_skills', 'branch_name', 'en', 'The Weaponsmith'),
-  (ck_id('witcher_cc.wcc_skills.branch.алхимик.name'), 'wcc_skills', 'branch_name', 'en', 'The Alchemist'),
-  (ck_id('witcher_cc.wcc_skills.branch.мастер.name'), 'wcc_skills', 'branch_name', 'en', 'The Master'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.посредник.name'), 'wcc_skills', 'branch_name', 'en', 'The Middleman'),
-  (ck_id('witcher_cc.wcc_skills.branch.человек_со_связями.name'), 'wcc_skills', 'branch_name', 'en', 'The Connected'),
-  (ck_id('witcher_cc.wcc_skills.branch.торговец.name'), 'wcc_skills', 'branch_name', 'en', 'The Merchant')
-ON CONFLICT (id, lang) DO NOTHING;
-
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
 VALUES
   -- sections
@@ -31857,6 +31815,109 @@ CREATE TABLE IF NOT EXISTS wcc_user_settings (
 );
 
 -- <<< END sql/103_user_settings.sql
+
+-- >>> BEGIN sql/104_cloud_pdf_i18n_extras.sql
+
+\echo '104_cloud_pdf_i18n_extras.sql'
+
+-- Cloud PDF extra labels that are not covered by legacy page1/page2/page4 keysets.
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.pdf.cloud.subtitle'), 'pdf', 'cloud.subtitle', 'ru', 'Облачный экспорт'),
+  (ck_id('witcher_cc.pdf.cloud.subtitle'), 'pdf', 'cloud.subtitle', 'en', 'Cloud export'),
+
+  (ck_id('witcher_cc.pdf.cloud.base_word'), 'pdf', 'cloud.base_word', 'ru', 'Основа'),
+  (ck_id('witcher_cc.pdf.cloud.base_word'), 'pdf', 'cloud.base_word', 'en', 'Base'),
+
+  (ck_id('witcher_cc.pdf.cloud.cols.value'), 'pdf', 'cloud.cols.value', 'ru', 'Знач.'),
+  (ck_id('witcher_cc.pdf.cloud.cols.value'), 'pdf', 'cloud.cols.value', 'en', 'Val'),
+  (ck_id('witcher_cc.pdf.cloud.cols.bonus'), 'pdf', 'cloud.cols.bonus', 'ru', 'Бонус'),
+  (ck_id('witcher_cc.pdf.cloud.cols.bonus'), 'pdf', 'cloud.cols.bonus', 'en', 'Bonus'),
+  (ck_id('witcher_cc.pdf.cloud.cols.field'), 'pdf', 'cloud.cols.field', 'ru', 'Поле'),
+  (ck_id('witcher_cc.pdf.cloud.cols.field'), 'pdf', 'cloud.cols.field', 'en', 'Field'),
+  (ck_id('witcher_cc.pdf.cloud.cols.note'), 'pdf', 'cloud.cols.note', 'ru', 'Примечание'),
+  (ck_id('witcher_cc.pdf.cloud.cols.note'), 'pdf', 'cloud.cols.note', 'en', 'Note'),
+
+  (ck_id('witcher_cc.pdf.cloud.sections.skills'), 'pdf', 'cloud.sections.skills', 'ru', 'Навыки'),
+  (ck_id('witcher_cc.pdf.cloud.sections.skills'), 'pdf', 'cloud.sections.skills', 'en', 'Skills'),
+  (ck_id('witcher_cc.pdf.cloud.sections.perks'), 'pdf', 'cloud.sections.perks', 'ru', 'Перки'),
+  (ck_id('witcher_cc.pdf.cloud.sections.perks'), 'pdf', 'cloud.sections.perks', 'en', 'Perks'),
+  (ck_id('witcher_cc.pdf.cloud.sections.magic'), 'pdf', 'cloud.sections.magic', 'ru', 'Магия'),
+  (ck_id('witcher_cc.pdf.cloud.sections.magic'), 'pdf', 'cloud.sections.magic', 'en', 'Magic'),
+
+  (ck_id('witcher_cc.pdf.cloud.stats.abbr.LUCK'), 'pdf', 'cloud.stats.abbr.LUCK', 'ru', 'УДА'),
+  (ck_id('witcher_cc.pdf.cloud.stats.abbr.LUCK'), 'pdf', 'cloud.stats.abbr.LUCK', 'en', 'LUCK'),
+  (ck_id('witcher_cc.pdf.cloud.stats.abbr.VIGOR'), 'pdf', 'cloud.stats.abbr.VIGOR', 'ru', 'ЭНЕРГИЯ'),
+  (ck_id('witcher_cc.pdf.cloud.stats.abbr.VIGOR'), 'pdf', 'cloud.stats.abbr.VIGOR', 'en', 'VIGOR'),
+
+  (ck_id('witcher_cc.pdf.cloud.prof.branch_col'), 'pdf', 'cloud.prof.branch_col', 'ru', 'Ветка'),
+  (ck_id('witcher_cc.pdf.cloud.prof.branch_col'), 'pdf', 'cloud.prof.branch_col', 'en', 'Branch'),
+
+  (ck_id('witcher_cc.pdf.cloud.page4.titles.spells_signs'), 'pdf', 'cloud.page4.titles.spells_signs', 'ru', 'Заклинания / Знаки'),
+  (ck_id('witcher_cc.pdf.cloud.page4.titles.spells_signs'), 'pdf', 'cloud.page4.titles.spells_signs', 'en', 'Spells / Signs'),
+  (ck_id('witcher_cc.pdf.cloud.page4.cols.ingredients'), 'pdf', 'cloud.page4.cols.ingredients', 'ru', 'Компоненты'),
+  (ck_id('witcher_cc.pdf.cloud.page4.cols.ingredients'), 'pdf', 'cloud.page4.cols.ingredients', 'en', 'Components'),
+  (ck_id('witcher_cc.pdf.cloud.page4.cols.remove_components'), 'pdf', 'cloud.page4.cols.remove_components', 'ru', 'Компоненты для снятия'),
+  (ck_id('witcher_cc.pdf.cloud.page4.cols.remove_components'), 'pdf', 'cloud.page4.cols.remove_components', 'en', 'Remove components'),
+  (ck_id('witcher_cc.pdf.cloud.page4.cols.remove_instructions'), 'pdf', 'cloud.page4.cols.remove_instructions', 'ru', 'Как снять'),
+  (ck_id('witcher_cc.pdf.cloud.page4.cols.remove_instructions'), 'pdf', 'cloud.page4.cols.remove_instructions', 'en', 'How to remove')
+ON CONFLICT (id, lang) DO UPDATE
+  SET text = EXCLUDED.text;
+
+-- <<< END sql/104_cloud_pdf_i18n_extras.sql
+
+-- >>> BEGIN sql/105_migrate_legacy_prof_branch_ids.sql
+
+\echo '105_migrate_legacy_prof_branch_ids.sql'
+
+-- Migrate legacy professional branch UUIDs stored in saved raw characters.
+-- Legacy IDs were generated from RU branch names:
+--   ck_id('witcher_cc.wcc_skills.branch.<ru_branch_name>.name')
+-- New canonical IDs are taken from wcc_skills.branch_name_id.
+
+WITH legacy_map AS (
+  SELECT DISTINCT
+    ck_id(
+      'witcher_cc.wcc_skills.branch.'
+      || LOWER(REPLACE(REPLACE(REPLACE(iru.text, ' ', '_'), '/', '_'), '&', 'and'))
+      || '.name'
+    )::text AS old_id,
+    ws.branch_name_id::text AS new_id
+  FROM wcc_skills ws
+  JOIN i18n_text iru
+    ON iru.id = ws.branch_name_id
+   AND iru.lang = 'ru'
+  WHERE ws.skill_type = 'professional'
+    AND ws.branch_name_id IS NOT NULL
+),
+updated AS (
+  UPDATE wcc_user_characters uc
+  SET raw_character_json = jsonb_set(
+    uc.raw_character_json,
+    '{skills,professional,branches}',
+    (
+      SELECT jsonb_agg(to_jsonb(COALESCE(lm.new_id, e.value)) ORDER BY e.ord)
+      FROM jsonb_array_elements_text(uc.raw_character_json #> '{skills,professional,branches}')
+           WITH ORDINALITY AS e(value, ord)
+      LEFT JOIN legacy_map lm
+        ON lm.old_id = e.value
+    ),
+    true
+  )
+  WHERE jsonb_typeof(uc.raw_character_json #> '{skills,professional,branches}') = 'array'
+    AND EXISTS (
+      SELECT 1
+      FROM jsonb_array_elements_text(uc.raw_character_json #> '{skills,professional,branches}') AS v(value)
+      JOIN legacy_map lm
+        ON lm.old_id = v.value
+    )
+  RETURNING id
+)
+SELECT COUNT(*) AS migrated_rows
+FROM updated;
+
+
+-- <<< END sql/105_migrate_legacy_prof_branch_ids.sql
 
 -- >>> BEGIN sql/items/001_wcc_items_dict.sql
 
@@ -35059,39 +35120,49 @@ DROP MATERIALIZED VIEW IF EXISTS wcc_item_weapons_v;
 CREATE MATERIALIZED VIEW wcc_item_weapons_v AS
 SELECT wiw.w_id
      , wiw.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iic.text AS weapon_class
-     , i.text AS weapon_name
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iic_lang.text, iic_en.text) AS weapon_class
+     , coalesce(i_lang.text, i_en.text) AS weapon_name
      , wiw.dmg
      , coalesce(wiw.weight, 0) AS weight
      , coalesce(wiw.price, 0) AS price
      , coalesce(wiw.hands, 0) AS hands
      , coalesce(wiw.reliability, 0) AS reliability
      , coalesce(wiw.enhancements, 0) AS enhancements
-     , iav.text AS availability
-     , icb.text AS crafted_by
-     , icon.text AS concealment
+     , coalesce(iav_lang.text, iav_en.text) AS availability
+     , coalesce(icb_lang.text, icb_en.text) AS crafted_by
+     , coalesce(icon_lang.text, icon_en.text) AS concealment
      , concat_ws(', ',
-         CASE WHEN wiw.is_piercing IS NOT NULL THEN idp.text ELSE NULL END,
-         CASE WHEN wiw.is_slashing IS NOT NULL THEN ids.text ELSE NULL END,
-         CASE WHEN wiw.is_bludgeoning IS NOT NULL THEN idb.text ELSE NULL END,
-         CASE WHEN wiw.is_elemental IS NOT NULL THEN ide.text ELSE NULL END
+         CASE WHEN wiw.is_piercing IS NOT NULL THEN coalesce(idp_lang.text, idp_en.text) ELSE NULL END,
+         CASE WHEN wiw.is_slashing IS NOT NULL THEN coalesce(ids_lang.text, ids_en.text) ELSE NULL END,
+         CASE WHEN wiw.is_bludgeoning IS NOT NULL THEN coalesce(idb_lang.text, idb_en.text) ELSE NULL END,
+         CASE WHEN wiw.is_elemental IS NOT NULL THEN coalesce(ide_lang.text, ide_en.text) ELSE NULL END
        ) AS dmg_types
-     , ef.effect_names
-     , ef.effect_descriptions
-     , i.lang
+     , coalesce(ef_lang.effect_names, ef_en.effect_names) AS effect_names
+     , coalesce(ef_lang.effect_descriptions, ef_en.effect_descriptions) AS effect_descriptions
+     , i_lang.lang
   FROM wcc_item_weapons wiw
-  JOIN i18n_text i ON i.id = wiw.name_id
-  JOIN i18n_text iic ON iic.id = wiw.weapon_class_id AND iic.lang = i.lang
+  JOIN i18n_text i_lang ON i_lang.id = wiw.name_id
+  LEFT JOIN i18n_text i_en ON i_en.id = wiw.name_id AND i_en.lang = 'en'
+  LEFT JOIN i18n_text iic_lang ON iic_lang.id = wiw.weapon_class_id AND iic_lang.lang = i_lang.lang
+  LEFT JOIN i18n_text iic_en ON iic_en.id = wiw.weapon_class_id AND iic_en.lang = 'en'
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = wiw.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = i.lang
-  LEFT JOIN i18n_text iav ON iav.id = wiw.availability_id AND iav.lang = i.lang
-  LEFT JOIN i18n_text icb ON icb.id = wiw.crafted_by_id AND icb.lang = i.lang
-  LEFT JOIN i18n_text icon ON icon.id = wiw.concealment_id AND icon.lang = i.lang
-  LEFT JOIN i18n_text idp ON idp.id = wiw.is_piercing AND idp.lang = i.lang
-  LEFT JOIN i18n_text ids ON ids.id = wiw.is_slashing AND ids.lang = i.lang
-  LEFT JOIN i18n_text idb ON idb.id = wiw.is_bludgeoning AND idb.lang = i.lang
-  LEFT JOIN i18n_text ide ON ide.id = wiw.is_elemental AND ide.lang = i.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = i_lang.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text iav_lang ON iav_lang.id = wiw.availability_id AND iav_lang.lang = i_lang.lang
+  LEFT JOIN i18n_text iav_en ON iav_en.id = wiw.availability_id AND iav_en.lang = 'en'
+  LEFT JOIN i18n_text icb_lang ON icb_lang.id = wiw.crafted_by_id AND icb_lang.lang = i_lang.lang
+  LEFT JOIN i18n_text icb_en ON icb_en.id = wiw.crafted_by_id AND icb_en.lang = 'en'
+  LEFT JOIN i18n_text icon_lang ON icon_lang.id = wiw.concealment_id AND icon_lang.lang = i_lang.lang
+  LEFT JOIN i18n_text icon_en ON icon_en.id = wiw.concealment_id AND icon_en.lang = 'en'
+  LEFT JOIN i18n_text idp_lang ON idp_lang.id = wiw.is_piercing AND idp_lang.lang = i_lang.lang
+  LEFT JOIN i18n_text idp_en ON idp_en.id = wiw.is_piercing AND idp_en.lang = 'en'
+  LEFT JOIN i18n_text ids_lang ON ids_lang.id = wiw.is_slashing AND ids_lang.lang = i_lang.lang
+  LEFT JOIN i18n_text ids_en ON ids_en.id = wiw.is_slashing AND ids_en.lang = 'en'
+  LEFT JOIN i18n_text idb_lang ON idb_lang.id = wiw.is_bludgeoning AND idb_lang.lang = i_lang.lang
+  LEFT JOIN i18n_text idb_en ON idb_en.id = wiw.is_bludgeoning AND idb_en.lang = 'en'
+  LEFT JOIN i18n_text ide_lang ON ide_lang.id = wiw.is_elemental AND ide_lang.lang = i_lang.lang
+  LEFT JOIN i18n_text ide_en ON ide_en.id = wiw.is_elemental AND ide_en.lang = 'en'
   LEFT JOIN (
     SELECT ite.item_id
          , ie.lang
@@ -35117,8 +35188,34 @@ SELECT wiw.w_id
       LEFT JOIN i18n_text iec ON iec.id = ec.description_id AND iec.lang = ie.lang
      WHERE ite.item_id LIKE 'W%'
      GROUP BY ite.item_id, ie.lang
-  ) ef ON wiw.w_id = ef.item_id AND ef.lang = i.lang
- ORDER BY i.text;
+  ) ef_lang ON wiw.w_id = ef_lang.item_id AND ef_lang.lang = i_lang.lang
+  LEFT JOIN (
+    SELECT ite.item_id
+         , ie.lang
+         , string_agg(
+             replace(coalesce(ie.text, ''), '<mod>', coalesce(ite.modifier::text, ''))
+             || coalesce(nullif('[' || coalesce(iec.text, '') || ']', '[]'), ''),
+             E'\n'
+             ORDER BY ite.e_e_id
+           ) AS effect_names
+         , string_agg(CASE WHEN e.description_id is not null then
+             replace(coalesce(ie.text, ''), '<mod>', coalesce(ite.modifier::text, ''))
+             || ' -' || coalesce(nullif(' [' || coalesce(iec.text, '') || ']', ' []'), '')
+             || ' ' || replace(coalesce(ide.text, ''), '<mod>', coalesce(ite.modifier::text, ''))
+             end,
+             E'\n'
+             ORDER BY ite.e_e_id
+           ) AS effect_descriptions
+      FROM wcc_item_to_effects ite
+      LEFT JOIN wcc_item_effects e ON e.e_id = ite.e_e_id
+      LEFT JOIN i18n_text ie ON ie.id = e.name_id
+      LEFT JOIN i18n_text ide ON ide.id = e.description_id AND ide.lang = ie.lang
+      LEFT JOIN wcc_item_effect_conditions ec ON ec.ec_id = ite.ec_ec_id
+      LEFT JOIN i18n_text iec ON iec.id = ec.description_id AND iec.lang = ie.lang
+     WHERE ite.item_id LIKE 'W%'
+     GROUP BY ite.item_id, ie.lang
+  ) ef_en ON wiw.w_id = ef_en.item_id AND ef_en.lang = 'en'
+ ORDER BY coalesce(i_lang.text, i_en.text);
 
 -- Helpful indexes for shop queries
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_weapons_v_wid_lang_uidx ON wcc_item_weapons_v (w_id, lang);
@@ -35139,30 +35236,37 @@ DROP MATERIALIZED VIEW IF EXISTS wcc_item_armors_v;
 CREATE MATERIALIZED VIEW wcc_item_armors_v AS
 SELECT ia.a_id
      , ia.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS armor_name
-     , ibp.text AS body_part
-     , iac.text AS armor_class
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS armor_name
+     , coalesce(ibp_lang.text, ibp_en.text) AS body_part
+     , coalesce(iac_lang.text, iac_en.text) AS armor_class
      , coalesce(ia.stopping_power, ia.reliability, 0) AS stopping_power
      , coalesce(ia.enhancements, 0) AS enhancements
      , coalesce(ia.encumbrance, 0) AS encumbrance
      , coalesce(ia.weight, 0) AS weight
      , coalesce(ia.price, 0) AS price
-     , iav.text AS availability
-     , icb.text AS crafted_by
-     , ef.effect_names
-     , ef.effect_descriptions
-     , idesc.text AS armor_description
-     , iname.lang
+     , coalesce(iav_lang.text, iav_en.text) AS availability
+     , coalesce(icb_lang.text, icb_en.text) AS crafted_by
+     , coalesce(ef_lang.effect_names, ef_en.effect_names) AS effect_names
+     , coalesce(ef_lang.effect_descriptions, ef_en.effect_descriptions) AS effect_descriptions
+     , coalesce(idesc_lang.text, idesc_en.text) AS armor_description
+     , iname_lang.lang
   FROM wcc_item_armors ia
-  JOIN i18n_text iname ON iname.id = ia.name_id
-  LEFT JOIN i18n_text idesc ON idesc.id = ia.description_id AND idesc.lang = iname.lang
+  JOIN i18n_text iname_lang ON iname_lang.id = ia.name_id
+  LEFT JOIN i18n_text iname_en ON iname_en.id = ia.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text idesc_lang ON idesc_lang.id = ia.description_id AND idesc_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text idesc_en ON idesc_en.id = ia.description_id AND idesc_en.lang = 'en'
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = ia.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = iname.lang
-  LEFT JOIN i18n_text ibp ON ibp.id = ia.body_part_id AND ibp.lang = iname.lang
-  LEFT JOIN i18n_text iac ON iac.id = ia.armor_class_id AND iac.lang = iname.lang
-  LEFT JOIN i18n_text iav ON iav.id = ia.availability_id AND iav.lang = iname.lang
-  LEFT JOIN i18n_text icb ON icb.id = ia.crafted_by_id AND icb.lang = iname.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text ibp_lang ON ibp_lang.id = ia.body_part_id AND ibp_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text ibp_en ON ibp_en.id = ia.body_part_id AND ibp_en.lang = 'en'
+  LEFT JOIN i18n_text iac_lang ON iac_lang.id = ia.armor_class_id AND iac_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text iac_en ON iac_en.id = ia.armor_class_id AND iac_en.lang = 'en'
+  LEFT JOIN i18n_text iav_lang ON iav_lang.id = ia.availability_id AND iav_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text iav_en ON iav_en.id = ia.availability_id AND iav_en.lang = 'en'
+  LEFT JOIN i18n_text icb_lang ON icb_lang.id = ia.crafted_by_id AND icb_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text icb_en ON icb_en.id = ia.crafted_by_id AND icb_en.lang = 'en'
   LEFT JOIN (
     SELECT ite.item_id
          , ie.lang
@@ -35188,8 +35292,34 @@ SELECT ia.a_id
       LEFT JOIN i18n_text iec ON iec.id = ec.description_id AND iec.lang = ie.lang
      WHERE ite.item_id LIKE 'A%'
      GROUP BY ite.item_id, ie.lang
-  ) ef ON ia.a_id = ef.item_id AND ef.lang = iname.lang
- ORDER BY iname.text;
+  ) ef_lang ON ia.a_id = ef_lang.item_id AND ef_lang.lang = iname_lang.lang
+  LEFT JOIN (
+    SELECT ite.item_id
+         , ie.lang
+         , string_agg(
+             replace(coalesce(ie.text, ''), '<mod>', coalesce(ite.modifier::text, ''))
+             || coalesce(nullif('[' || coalesce(iec.text, '') || ']', '[]'), ''),
+             E'\n'
+             ORDER BY ite.e_e_id
+           ) AS effect_names
+         , string_agg(CASE WHEN e.description_id is not null then
+             replace(coalesce(ie.text, ''), '<mod>', coalesce(ite.modifier::text, ''))
+             || ' -' || coalesce(nullif(' [' || coalesce(iec.text, '') || ']', ' []'), '')
+             || ' ' || replace(coalesce(ide.text, ''), '<mod>', coalesce(ite.modifier::text, ''))
+             end,
+             E'\n'
+             ORDER BY ite.e_e_id
+           ) AS effect_descriptions
+      FROM wcc_item_to_effects ite
+      LEFT JOIN wcc_item_effects e ON e.e_id = ite.e_e_id
+      LEFT JOIN i18n_text ie ON ie.id = e.name_id
+      LEFT JOIN i18n_text ide ON ide.id = e.description_id AND ide.lang = ie.lang
+      LEFT JOIN wcc_item_effect_conditions ec ON ec.ec_id = ite.ec_ec_id
+      LEFT JOIN i18n_text iec ON iec.id = ec.description_id AND iec.lang = ie.lang
+     WHERE ite.item_id LIKE 'A%'
+     GROUP BY ite.item_id, ie.lang
+  ) ef_en ON ia.a_id = ef_en.item_id AND ef_en.lang = 'en'
+ ORDER BY coalesce(iname_lang.text, iname_en.text);
 
 -- Helpful indexes for shop queries
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_armors_v_aid_lang_uidx ON wcc_item_armors_v (a_id, lang);
@@ -35674,26 +35804,33 @@ DROP MATERIALIZED VIEW IF EXISTS wcc_item_general_gear_v;
 CREATE MATERIALIZED VIEW wcc_item_general_gear_v AS
 SELECT ig.t_id
      , ig.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS gear_name
-     , igroup.text AS group_name
-     , isubgroup.text AS subgroup_name
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS gear_name
+     , coalesce(igroup_lang.text, igroup_en.text) AS group_name
+     , coalesce(isubgroup_lang.text, isubgroup_en.text) AS subgroup_name
      , coalesce(ig.weight, 0) AS weight
      , coalesce(ig.price, 0) AS price
-     , iav.text AS availability
-     , iconc.text AS concealment
-     , idesc.text AS gear_description
-     , iname.lang
+     , coalesce(iav_lang.text, iav_en.text) AS availability
+     , coalesce(iconc_lang.text, iconc_en.text) AS concealment
+     , coalesce(idesc_lang.text, idesc_en.text) AS gear_description
+     , iname_lang.lang
   FROM wcc_item_general_gear ig
-  JOIN i18n_text iname ON iname.id = ig.name_id
-  LEFT JOIN i18n_text idesc ON idesc.id = ig.description_id AND idesc.lang = iname.lang
-  LEFT JOIN i18n_text isubgroup ON isubgroup.id = ig.subgroup_name_id AND isubgroup.lang = iname.lang
+  JOIN i18n_text iname_lang ON iname_lang.id = ig.name_id
+  LEFT JOIN i18n_text iname_en ON iname_en.id = ig.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text idesc_lang ON idesc_lang.id = ig.description_id AND idesc_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text idesc_en ON idesc_en.id = ig.description_id AND idesc_en.lang = 'en'
+  LEFT JOIN i18n_text isubgroup_lang ON isubgroup_lang.id = ig.subgroup_name_id AND isubgroup_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text isubgroup_en ON isubgroup_en.id = ig.subgroup_name_id AND isubgroup_en.lang = 'en'
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = ig.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = iname.lang
-  LEFT JOIN i18n_text igroup ON igroup.id = ig.group_key_id AND igroup.lang = iname.lang
-  LEFT JOIN i18n_text iav ON iav.id = ig.availability_id AND iav.lang = iname.lang
-  LEFT JOIN i18n_text iconc ON iconc.id = ig.concealment_id AND iconc.lang = iname.lang
- ORDER BY isubgroup.text, iname.text;
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text igroup_lang ON igroup_lang.id = ig.group_key_id AND igroup_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text igroup_en ON igroup_en.id = ig.group_key_id AND igroup_en.lang = 'en'
+  LEFT JOIN i18n_text iav_lang ON iav_lang.id = ig.availability_id AND iav_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text iav_en ON iav_en.id = ig.availability_id AND iav_en.lang = 'en'
+  LEFT JOIN i18n_text iconc_lang ON iconc_lang.id = ig.concealment_id AND iconc_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text iconc_en ON iconc_en.id = ig.concealment_id AND iconc_en.lang = 'en'
+ ORDER BY coalesce(isubgroup_lang.text, isubgroup_en.text), coalesce(iname_lang.text, iname_en.text);
 
 -- Helpful indexes for shop queries
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_general_gear_v_tid_lang_uidx ON wcc_item_general_gear_v (t_id, lang);
@@ -36057,10 +36194,10 @@ DROP MATERIALIZED VIEW IF EXISTS wcc_item_recipes_v;
 CREATE MATERIALIZED VIEW wcc_item_recipes_v AS
 SELECT ir.r_id
      , ir.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS recipe_name
-     , igroup.text AS recipe_group
-     , icl.text AS craft_level
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS recipe_name
+     , coalesce(igroup_lang.text, igroup_en.text) AS recipe_group
+     , coalesce(icl_lang.text, icl_en.text) AS craft_level
      , coalesce(ir.weight, 0) AS weight_potion
      , coalesce(ir.minimal_ingredients_cost, 0) AS minimal_ingredients_cost
      , coalesce(ir.price_potion, 0) AS price_potion
@@ -36069,34 +36206,52 @@ SELECT ir.r_id
      , coalesce(ir.complexity, 0) AS complexity
      , CASE 
          WHEN ir.time_craft_val IS NOT NULL AND ir.time_craft_unit_id IS NOT NULL THEN
-           ir.time_craft_val || ' ' || coalesce(itcu.text, '')
+           ir.time_craft_val || ' ' || coalesce(itcu_lang.text, itcu_en.text, '')
          WHEN ir.time_craft_val IS NOT NULL THEN ir.time_craft_val
          ELSE NULL
        END AS time_craft
      , CASE 
          WHEN ir.time_effect_val IS NOT NULL AND ir.time_effect_unit_id IS NOT NULL THEN
-           ir.time_effect_val || ' ' || coalesce(iteu.text, '')
+           ir.time_effect_val || ' ' || coalesce(iteu_lang.text, iteu_en.text, '')
          WHEN ir.time_effect_val IS NOT NULL THEN ir.time_effect_val
          ELSE NULL
        END AS time_effect
      , ir.toxicity
-     , formula_ingredients.formula_text AS formula
+     , coalesce(formula_ingredients_lang.formula_text, formula_ingredients_en.formula_text) AS formula
      , formula_en_ingredients.formula_en_text AS formula_en
-     , iav.text AS availability
-     , idesc.text AS recipe_description
-     , iname.lang
+     , coalesce(iav_lang.text, iav_en.text) AS availability
+     , coalesce(idesc_lang.text, idesc_en.text) AS recipe_description
+     , iname_lang.lang
   FROM wcc_item_recipes ir
-  JOIN i18n_text iname ON iname.id = ir.name_id
-  LEFT JOIN i18n_text idesc ON idesc.id = ir.description_id AND idesc.lang = iname.lang
+  JOIN i18n_text iname_lang ON iname_lang.id = ir.name_id
+  LEFT JOIN i18n_text iname_en ON iname_en.id = ir.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text idesc_lang ON idesc_lang.id = ir.description_id AND idesc_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text idesc_en ON idesc_en.id = ir.description_id AND idesc_en.lang = 'en'
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = ir.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = iname.lang
-  LEFT JOIN i18n_text igroup ON igroup.id = ir.group_id AND igroup.lang = iname.lang
-  LEFT JOIN i18n_text icl ON icl.id = ir.craft_level_id AND icl.lang = iname.lang
-  LEFT JOIN i18n_text iav ON iav.id = ir.availability_id AND iav.lang = iname.lang
-  LEFT JOIN i18n_text itcu ON itcu.id = ir.time_craft_unit_id AND itcu.lang = iname.lang
-  LEFT JOIN i18n_text iteu ON iteu.id = ir.time_effect_unit_id AND iteu.lang = iname.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text igroup_lang ON igroup_lang.id = ir.group_id AND igroup_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text igroup_en ON igroup_en.id = ir.group_id AND igroup_en.lang = 'en'
+  LEFT JOIN i18n_text icl_lang ON icl_lang.id = ir.craft_level_id AND icl_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text icl_en ON icl_en.id = ir.craft_level_id AND icl_en.lang = 'en'
+  LEFT JOIN i18n_text iav_lang ON iav_lang.id = ir.availability_id AND iav_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text iav_en ON iav_en.id = ir.availability_id AND iav_en.lang = 'en'
+  LEFT JOIN i18n_text itcu_lang ON itcu_lang.id = ir.time_craft_unit_id AND itcu_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text itcu_en ON itcu_en.id = ir.time_craft_unit_id AND itcu_en.lang = 'en'
+  LEFT JOIN i18n_text iteu_lang ON iteu_lang.id = ir.time_effect_unit_id AND iteu_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text iteu_en ON iteu_en.id = ir.time_effect_unit_id AND iteu_en.lang = 'en'
   LEFT JOIN (
     -- Expand formula array, join on i18n, then group back as readable list
+    SELECT ir2.r_id
+         , i18n.lang
+         , string_agg(i18n.text, E',\n' ORDER BY pos) AS formula_text
+      FROM wcc_item_recipes ir2
+      CROSS JOIN LATERAL unnest(ir2.formula) WITH ORDINALITY AS formula_entry(formula_uuid, pos)
+     JOIN i18n_text i18n ON i18n.id = formula_entry.formula_uuid AND i18n.entity = 'items' AND i18n.entity_field = 'dict'
+     WHERE ir2.formula IS NOT NULL
+     GROUP BY ir2.r_id, i18n.lang
+  ) formula_ingredients_lang ON ir.r_id = formula_ingredients_lang.r_id AND formula_ingredients_lang.lang = iname_lang.lang
+  LEFT JOIN (
     SELECT ir2.r_id
          , i18n.lang
          , string_agg(i18n.text, E',\n' ORDER BY pos) AS formula_text
@@ -36105,7 +36260,7 @@ SELECT ir.r_id
       JOIN i18n_text i18n ON i18n.id = formula_entry.formula_uuid AND i18n.entity = 'items' AND i18n.entity_field = 'dict'
      WHERE ir2.formula IS NOT NULL
      GROUP BY ir2.r_id, i18n.lang
-  ) formula_ingredients ON ir.r_id = formula_ingredients.r_id AND formula_ingredients.lang = iname.lang
+  ) formula_ingredients_en ON ir.r_id = formula_ingredients_en.r_id AND formula_ingredients_en.lang = 'en'
   LEFT JOIN (
     -- Same as formula_ingredients but always English, space-separated (for PDF formula images)
     SELECT ir2.r_id
@@ -36117,7 +36272,7 @@ SELECT ir.r_id
      GROUP BY ir2.r_id
   ) formula_en_ingredients ON ir.r_id = formula_en_ingredients.r_id
  WHERE ir.group_id != ck_id('reciples.group.medicine') OR ir.group_id IS NULL
- ORDER BY iname.text;
+ ORDER BY coalesce(iname_lang.text, iname_en.text);
 
 -- Helpful indexes for shop queries
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_recipes_v_rid_lang_uidx ON wcc_item_recipes_v (r_id, lang);
@@ -36139,25 +36294,29 @@ DROP MATERIALIZED VIEW IF EXISTS wcc_item_ingredients_v;
 CREATE MATERIALIZED VIEW wcc_item_ingredients_v AS
 SELECT ii.i_id
      , ii.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS ingredient_name
-     , igrp.text AS ingredient_group
-     , iav.text AS availability
-     , iingr.text AS alchemy_substance
-     , iingr_en.text AS alchemy_substance_en
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS ingredient_name
+     , coalesce(igrp_lang.text, igrp_en.text) AS ingredient_group
+     , coalesce(iav_lang.text, iav_en.text) AS availability
+     , coalesce(iingr_lang.text, iingr_en.text) AS alchemy_substance
+     , coalesce(iingr_en.text, iingr_lang.text) AS alchemy_substance_en
      , coalesce(ii.harvesting_complexity, 0) AS harvesting_complexity
      , coalesce(ii.weight, 0) AS weight
      , coalesce(ii.price, 0) AS price
-     , iname.lang
+     , iname_lang.lang
   FROM wcc_item_ingredients ii
-  JOIN i18n_text iname ON iname.id = ii.name_id
+  JOIN i18n_text iname_lang ON iname_lang.id = ii.name_id
+  LEFT JOIN i18n_text iname_en ON iname_en.id = ii.name_id AND iname_en.lang = 'en'
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = ii.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = iname.lang
-  LEFT JOIN i18n_text igrp ON igrp.id = ii.group_id AND igrp.lang = iname.lang
-  LEFT JOIN i18n_text iav ON iav.id = ii.availability_id AND iav.lang = iname.lang
-  LEFT JOIN i18n_text iingr ON iingr.id = ii.ingredient_id AND iingr.lang = iname.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text igrp_lang ON igrp_lang.id = ii.group_id AND igrp_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text igrp_en ON igrp_en.id = ii.group_id AND igrp_en.lang = 'en'
+  LEFT JOIN i18n_text iav_lang ON iav_lang.id = ii.availability_id AND iav_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text iav_en ON iav_en.id = ii.availability_id AND iav_en.lang = 'en'
+  LEFT JOIN i18n_text iingr_lang ON iingr_lang.id = ii.ingredient_id AND iingr_lang.lang = iname_lang.lang
   LEFT JOIN i18n_text iingr_en ON iingr_en.id = ii.ingredient_id AND iingr_en.lang = 'en'
- ORDER BY iname.text;
+ ORDER BY coalesce(iname_lang.text, iname_en.text);
 
 -- Helpful indexes for shop queries
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_ingredients_v_iid_lang_uidx ON wcc_item_ingredients_v (i_id, lang);
@@ -36217,30 +36376,36 @@ DROP MATERIALIZED VIEW IF EXISTS wcc_item_potions_v;
 CREATE MATERIALIZED VIEW wcc_item_potions_v AS
 SELECT ip.p_id
      , ip.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS potion_name
-     , igroup.text AS potion_group
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS potion_name
+     , coalesce(igroup_lang.text, igroup_en.text) AS potion_group
      , coalesce(ip.weight, 0) AS weight
      , coalesce(ip.price, 0) AS price
      , CASE 
          WHEN ip.time_effect_val IS NOT NULL AND ip.time_effect_unit_id IS NOT NULL THEN
-           ip.time_effect_val || ' ' || coalesce(iteu.text, '')
+           ip.time_effect_val || ' ' || coalesce(iteu_lang.text, iteu_en.text, '')
          WHEN ip.time_effect_val IS NOT NULL THEN ip.time_effect_val
          ELSE NULL
        END AS time_effect
      , ip.toxicity
-     , iav.text AS availability
-     , ieffect.text AS effect
-     , iname.lang
+     , coalesce(iav_lang.text, iav_en.text) AS availability
+     , coalesce(ieffect_lang.text, ieffect_en.text) AS effect
+     , iname_lang.lang
   FROM wcc_item_potions ip
-  JOIN i18n_text iname ON iname.id = ip.name_id
-  LEFT JOIN i18n_text ieffect ON ieffect.id = ip.effect_id AND ieffect.lang = iname.lang
+  JOIN i18n_text iname_lang ON iname_lang.id = ip.name_id
+  LEFT JOIN i18n_text iname_en ON iname_en.id = ip.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text ieffect_lang ON ieffect_lang.id = ip.effect_id AND ieffect_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text ieffect_en ON ieffect_en.id = ip.effect_id AND ieffect_en.lang = 'en'
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = ip.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = iname.lang
-  LEFT JOIN i18n_text igroup ON igroup.id = ip.group_id AND igroup.lang = iname.lang
-  LEFT JOIN i18n_text iav ON iav.id = ip.availability_id AND iav.lang = iname.lang
-  LEFT JOIN i18n_text iteu ON iteu.id = ip.time_effect_unit_id AND iteu.lang = iname.lang
-ORDER BY iname.text;
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text igroup_lang ON igroup_lang.id = ip.group_id AND igroup_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text igroup_en ON igroup_en.id = ip.group_id AND igroup_en.lang = 'en'
+  LEFT JOIN i18n_text iav_lang ON iav_lang.id = ip.availability_id AND iav_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text iav_en ON iav_en.id = ip.availability_id AND iav_en.lang = 'en'
+  LEFT JOIN i18n_text iteu_lang ON iteu_lang.id = ip.time_effect_unit_id AND iteu_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text iteu_en ON iteu_en.id = ip.time_effect_unit_id AND iteu_en.lang = 'en'
+ORDER BY coalesce(iname_lang.text, iname_en.text);
 
 -- Helpful indexes for shop queries
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_potions_v_pid_lang_uidx ON wcc_item_potions_v (p_id, lang);
@@ -36910,9 +37075,9 @@ DROP MATERIALIZED VIEW IF EXISTS wcc_item_vehicles_v;
 CREATE MATERIALIZED VIEW wcc_item_vehicles_v AS
 SELECT iv.wt_id
      , iv.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS vehicle_name
-     , isubgrp.text AS subgroup_name
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS vehicle_name
+     , coalesce(isubgrp_lang.text, isubgrp_en.text) AS subgroup_name
      , iv.base
      , iv.control_modifier
      , iv.speed
@@ -36921,15 +37086,20 @@ SELECT iv.wt_id
      , iv.hp
      , coalesce(iv.weight, 0) AS weight
      , coalesce(iv.price, 0) AS price
-     , iname.lang
+     , iname_lang.lang
   FROM wcc_item_vehicles iv
-  JOIN i18n_text iname ON iname.id = iv.name_id
-  LEFT JOIN i18n_text isubgrp
-    ON isubgrp.id = iv.subgroup_id
-   AND isubgrp.lang = iname.lang
+  JOIN i18n_text iname_lang ON iname_lang.id = iv.name_id
+  LEFT JOIN i18n_text iname_en ON iname_en.id = iv.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text isubgrp_lang
+    ON isubgrp_lang.id = iv.subgroup_id
+   AND isubgrp_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text isubgrp_en
+    ON isubgrp_en.id = iv.subgroup_id
+   AND isubgrp_en.lang = 'en'
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = iv.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = iname.lang
- ORDER BY iname.text;
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = iname_lang.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+ ORDER BY coalesce(iname_lang.text, iname_en.text);
 
 -- Helpful indexes for shop queries
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_item_vehicles_v_wtid_lang_uidx ON wcc_item_vehicles_v (wt_id, lang);
@@ -37632,9 +37802,9 @@ SET
 
 CREATE MATERIALIZED VIEW wcc_item_blueprints_v AS
 WITH langs AS (
-  SELECT 'ru'::text AS lang
-  UNION ALL
-  SELECT 'en'::text AS lang
+  SELECT DISTINCT i.lang
+    FROM wcc_item_blueprints b
+    JOIN i18n_text i ON i.id = b.name_id
 ),
 components_expanded AS (
   SELECT b.b_id
@@ -37654,100 +37824,103 @@ components_pretty AS (
        , ce.lang
        , string_agg(
            CASE
-             WHEN ce.qty IS NOT NULL THEN (i18n.text || ' (' || ce.qty::text || ')')
-             ELSE i18n.text
+             WHEN ce.qty IS NOT NULL THEN (coalesce(i18n_lang.text, i18n_en.text, '') || ' (' || ce.qty::text || ')')
+             ELSE coalesce(i18n_lang.text, i18n_en.text, '')
            END,
            E',\n' ORDER BY ce.pos
          ) AS components
     FROM components_expanded ce
-    LEFT JOIN i18n_text i18n
-      ON i18n.id = ce.comp_name_id
-     AND i18n.lang = ce.lang
+    LEFT JOIN i18n_text i18n_lang
+      ON i18n_lang.id = ce.comp_name_id
+     AND i18n_lang.lang = ce.lang
+    LEFT JOIN i18n_text i18n_en
+      ON i18n_en.id = ce.comp_name_id
+     AND i18n_en.lang = 'en'
    GROUP BY ce.b_id, ce.lang
 )
 SELECT b.b_id
      , b.item_id
      , b.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS blueprint_name
-     , iav.text AS availability
-     , COALESCE(ibg.text, igroup.text) AS blueprint_group
-     , icl.text AS craft_level
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS blueprint_name
+     , coalesce(iav_lang.text, iav_en.text) AS availability
+     , COALESCE(ibg_lang.text, ibg_en.text, igroup_lang.text, igroup_en.text) AS blueprint_group
+     , coalesce(icl_lang.text, icl_en.text) AS craft_level
      , b.difficulty_check
      , CASE
          WHEN b.time_value IS NOT NULL AND b.time_unit_id IS NOT NULL THEN
-           b.time_value::text || ' ' || COALESCE(itcu.text, '')
+           b.time_value::text || ' ' || COALESCE(itcu_lang.text, itcu_en.text, '')
          WHEN b.time_value IS NOT NULL THEN b.time_value::text
          ELSE NULL
        END AS time_craft
      , cp.components
      , CASE
-         WHEN b.item_id LIKE 'W%' AND w.w_id IS NOT NULL THEN
+         WHEN b.item_id LIKE 'W%' AND coalesce(w_lang.w_id, w_en.w_id) IS NOT NULL THEN
            replace(
              replace(
                replace(
                  replace(
                    replace(
                      replace(
-                       coalesce(tpl_w.text, ''),
-                       '{dmg}', coalesce(w.dmg::text, '')
+                       coalesce(tpl_w_lang.text, tpl_w_en.text, ''),
+                       '{dmg}', coalesce(w_lang.dmg::text, w_en.dmg::text, '')
                      ),
-                     '{reliability}', coalesce(w.reliability::text, '')
+                     '{reliability}', coalesce(w_lang.reliability::text, w_en.reliability::text, '')
                    ),
-                   '{hands}', coalesce(w.hands::text, '')
+                   '{hands}', coalesce(w_lang.hands::text, w_en.hands::text, '')
                  ),
-                 '{concealment}', coalesce(w.concealment::text, '')
+                 '{concealment}', coalesce(w_lang.concealment::text, w_en.concealment::text, '')
                ),
-               '{enhancements}', coalesce(w.enhancements::text, '')
+               '{enhancements}', coalesce(w_lang.enhancements::text, w_en.enhancements::text, '')
              ),
-             '{effect_names}', coalesce(w.effect_names::text, '')
+             '{effect_names}', coalesce(w_lang.effect_names::text, w_en.effect_names::text, '')
            )
-         WHEN b.item_id LIKE 'A%' AND a.a_id IS NOT NULL THEN
+         WHEN b.item_id LIKE 'A%' AND coalesce(a_lang.a_id, a_en.a_id) IS NOT NULL THEN
            replace(
              replace(
                replace(
                  replace(
-                   coalesce(tpl_a.text, ''),
-                   '{stopping_power}', coalesce(a.stopping_power::text, '')
+                   coalesce(tpl_a_lang.text, tpl_a_en.text, ''),
+                   '{stopping_power}', coalesce(a_lang.stopping_power::text, a_en.stopping_power::text, '')
                  ),
-                 '{encumbrance}', coalesce(a.encumbrance::text, '')
+                 '{encumbrance}', coalesce(a_lang.encumbrance::text, a_en.encumbrance::text, '')
                ),
-               '{enhancements}', coalesce(a.enhancements::text, '')
+               '{enhancements}', coalesce(a_lang.enhancements::text, a_en.enhancements::text, '')
              ),
-             '{effect_names}', coalesce(a.effect_names::text, '')
+             '{effect_names}', coalesce(a_lang.effect_names::text, a_en.effect_names::text, '')
            )
-         WHEN b.item_id LIKE 'I%' AND ing.i_id IS NOT NULL THEN
+         WHEN b.item_id LIKE 'I%' AND coalesce(ing_lang.i_id, ing_en.i_id) IS NOT NULL THEN
            replace(
-             coalesce(tpl_i.text, ''),
-             '{weight}', coalesce(ing.weight::text, '')
+             coalesce(tpl_i_lang.text, tpl_i_en.text, ''),
+             '{weight}', coalesce(ing_lang.weight::text, ing_en.weight::text, '')
            )
-         WHEN b.item_id LIKE 'T%' AND gg.t_id IS NOT NULL THEN
-           replace(
-             replace(
-               replace(
-                 replace(
-                   coalesce(tpl_t.text, ''),
-                   '{group_name}', coalesce(gg.group_name::text, '')
-                 ),
-                 '{gear_description}', coalesce(gg.gear_description::text, '')
-               ),
-               '{concealment}', coalesce(gg.concealment::text, '')
-             ),
-             '{weight}', coalesce(gg.weight::text, '')
-           )
-         WHEN b.item_id LIKE 'U%' AND upg.u_id IS NOT NULL THEN
+         WHEN b.item_id LIKE 'T%' AND coalesce(gg_lang.t_id, gg_en.t_id) IS NOT NULL THEN
            replace(
              replace(
                replace(
                  replace(
-                   coalesce(tpl_u.text, ''),
-                   '{upgrade_group}', coalesce(upg.upgrade_group::text, '')
+                   coalesce(tpl_t_lang.text, tpl_t_en.text, ''),
+                   '{group_name}', coalesce(gg_lang.group_name::text, gg_en.group_name::text, '')
                  ),
-                 '{target}', coalesce(upg.target::text, '')
+                 '{gear_description}', coalesce(gg_lang.gear_description::text, gg_en.gear_description::text, '')
                ),
-               '{effect_names}', coalesce(upg.effect_names::text, '')
+               '{concealment}', coalesce(gg_lang.concealment::text, gg_en.concealment::text, '')
              ),
-             '{slots}', coalesce(upg.slots::text, '')
+             '{weight}', coalesce(gg_lang.weight::text, gg_en.weight::text, '')
+           )
+         WHEN b.item_id LIKE 'U%' AND coalesce(upg_lang.u_id, upg_en.u_id) IS NOT NULL THEN
+           replace(
+             replace(
+               replace(
+                 replace(
+                   coalesce(tpl_u_lang.text, tpl_u_en.text, ''),
+                   '{upgrade_group}', coalesce(upg_lang.upgrade_group::text, upg_en.upgrade_group::text, '')
+                 ),
+                 '{target}', coalesce(upg_lang.target::text, upg_en.target::text, '')
+               ),
+               '{effect_names}', coalesce(upg_lang.effect_names::text, upg_en.effect_names::text, '')
+             ),
+             '{slots}', coalesce(upg_lang.slots::text, upg_en.slots::text, '')
            )
          ELSE NULL
        END AS item_desc
@@ -37758,25 +37931,42 @@ SELECT b.b_id
   FROM wcc_item_blueprints b
   CROSS JOIN langs l
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = b.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = l.lang
-  LEFT JOIN i18n_text iname ON iname.id = b.name_id AND iname.lang = l.lang
-  LEFT JOIN i18n_text iav ON iav.id = b.availability_id AND iav.lang = l.lang
-  LEFT JOIN i18n_text igroup ON igroup.id = b.group_id AND igroup.lang = l.lang
-  LEFT JOIN i18n_text ibg ON ibg.id = ck_id('blueprint_groups.' || b.group_id::text) AND ibg.lang = l.lang
-  LEFT JOIN i18n_text icl ON icl.id = b.craft_level_id AND icl.lang = l.lang
-  LEFT JOIN i18n_text itcu ON itcu.id = b.time_unit_id AND itcu.lang = l.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = l.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text iname_lang ON iname_lang.id = b.name_id AND iname_lang.lang = l.lang
+  LEFT JOIN i18n_text iname_en ON iname_en.id = b.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text iav_lang ON iav_lang.id = b.availability_id AND iav_lang.lang = l.lang
+  LEFT JOIN i18n_text iav_en ON iav_en.id = b.availability_id AND iav_en.lang = 'en'
+  LEFT JOIN i18n_text igroup_lang ON igroup_lang.id = b.group_id AND igroup_lang.lang = l.lang
+  LEFT JOIN i18n_text igroup_en ON igroup_en.id = b.group_id AND igroup_en.lang = 'en'
+  LEFT JOIN i18n_text ibg_lang ON ibg_lang.id = ck_id('blueprint_groups.' || b.group_id::text) AND ibg_lang.lang = l.lang
+  LEFT JOIN i18n_text ibg_en ON ibg_en.id = ck_id('blueprint_groups.' || b.group_id::text) AND ibg_en.lang = 'en'
+  LEFT JOIN i18n_text icl_lang ON icl_lang.id = b.craft_level_id AND icl_lang.lang = l.lang
+  LEFT JOIN i18n_text icl_en ON icl_en.id = b.craft_level_id AND icl_en.lang = 'en'
+  LEFT JOIN i18n_text itcu_lang ON itcu_lang.id = b.time_unit_id AND itcu_lang.lang = l.lang
+  LEFT JOIN i18n_text itcu_en ON itcu_en.id = b.time_unit_id AND itcu_en.lang = 'en'
   LEFT JOIN components_pretty cp ON cp.b_id = b.b_id AND cp.lang = l.lang
-  LEFT JOIN wcc_item_weapons_v w ON w.w_id = b.item_id AND w.lang = l.lang
+  LEFT JOIN wcc_item_weapons_v w_lang ON w_lang.w_id = b.item_id AND w_lang.lang = l.lang
+  LEFT JOIN wcc_item_weapons_v w_en ON w_en.w_id = b.item_id AND w_en.lang = 'en'
   LEFT JOIN wcc_item_armors ia ON ia.a_id = b.item_id
-  LEFT JOIN wcc_item_armors_v a ON a.a_id = b.item_id AND a.lang = l.lang
-  LEFT JOIN wcc_item_ingredients_v ing ON ing.i_id = b.item_id AND ing.lang = l.lang
-  LEFT JOIN wcc_item_general_gear_v gg ON gg.t_id = b.item_id AND gg.lang = l.lang
-  LEFT JOIN wcc_item_upgrades_v upg ON upg.u_id = b.item_id AND upg.lang = l.lang
-  LEFT JOIN i18n_text tpl_w ON tpl_w.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.weapon') AND tpl_w.lang = l.lang
-  LEFT JOIN i18n_text tpl_a ON tpl_a.id = CASE WHEN ia.body_part_id = ck_id('bodypart.shield') THEN ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor_shield') ELSE ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor') END AND tpl_a.lang = l.lang
-  LEFT JOIN i18n_text tpl_i ON tpl_i.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.ingredient') AND tpl_i.lang = l.lang
-  LEFT JOIN i18n_text tpl_t ON tpl_t.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.general_gear') AND tpl_t.lang = l.lang
-  LEFT JOIN i18n_text tpl_u ON tpl_u.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.upgrade') AND tpl_u.lang = l.lang
+  LEFT JOIN wcc_item_armors_v a_lang ON a_lang.a_id = b.item_id AND a_lang.lang = l.lang
+  LEFT JOIN wcc_item_armors_v a_en ON a_en.a_id = b.item_id AND a_en.lang = 'en'
+  LEFT JOIN wcc_item_ingredients_v ing_lang ON ing_lang.i_id = b.item_id AND ing_lang.lang = l.lang
+  LEFT JOIN wcc_item_ingredients_v ing_en ON ing_en.i_id = b.item_id AND ing_en.lang = 'en'
+  LEFT JOIN wcc_item_general_gear_v gg_lang ON gg_lang.t_id = b.item_id AND gg_lang.lang = l.lang
+  LEFT JOIN wcc_item_general_gear_v gg_en ON gg_en.t_id = b.item_id AND gg_en.lang = 'en'
+  LEFT JOIN wcc_item_upgrades_v upg_lang ON upg_lang.u_id = b.item_id AND upg_lang.lang = l.lang
+  LEFT JOIN wcc_item_upgrades_v upg_en ON upg_en.u_id = b.item_id AND upg_en.lang = 'en'
+  LEFT JOIN i18n_text tpl_w_lang ON tpl_w_lang.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.weapon') AND tpl_w_lang.lang = l.lang
+  LEFT JOIN i18n_text tpl_w_en ON tpl_w_en.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.weapon') AND tpl_w_en.lang = 'en'
+  LEFT JOIN i18n_text tpl_a_lang ON tpl_a_lang.id = CASE WHEN ia.body_part_id = ck_id('bodypart.shield') THEN ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor_shield') ELSE ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor') END AND tpl_a_lang.lang = l.lang
+  LEFT JOIN i18n_text tpl_a_en ON tpl_a_en.id = CASE WHEN ia.body_part_id = ck_id('bodypart.shield') THEN ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor_shield') ELSE ck_id('witcher_cc.items.blueprint.item_desc_tpl.armor') END AND tpl_a_en.lang = 'en'
+  LEFT JOIN i18n_text tpl_i_lang ON tpl_i_lang.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.ingredient') AND tpl_i_lang.lang = l.lang
+  LEFT JOIN i18n_text tpl_i_en ON tpl_i_en.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.ingredient') AND tpl_i_en.lang = 'en'
+  LEFT JOIN i18n_text tpl_t_lang ON tpl_t_lang.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.general_gear') AND tpl_t_lang.lang = l.lang
+  LEFT JOIN i18n_text tpl_t_en ON tpl_t_en.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.general_gear') AND tpl_t_en.lang = 'en'
+  LEFT JOIN i18n_text tpl_u_lang ON tpl_u_lang.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.upgrade') AND tpl_u_lang.lang = l.lang
+  LEFT JOIN i18n_text tpl_u_en ON tpl_u_en.id = ck_id('witcher_cc.items.blueprint.item_desc_tpl.upgrade') AND tpl_u_en.lang = 'en'
  ORDER BY blueprint_name;
 
 -- Helpful indexes for shop queries
@@ -39007,42 +39197,49 @@ SET
 
 CREATE MATERIALIZED VIEW wcc_magic_spells_v AS
 WITH langs AS (
-  SELECT 'ru'::text AS lang
-  UNION ALL
-  SELECT 'en'::text AS lang
+  SELECT DISTINCT i.lang
+    FROM wcc_magic_spells s
+    JOIN i18n_text i ON i.id = s.name_id
 )
 SELECT s.ms_id
      , s.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS spell_name
-     , ilevel.text AS level
-     , ielement.text AS element
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS spell_name
+     , coalesce(ilevel_lang.text, ilevel_en.text) AS level
+     , coalesce(ielement_lang.text, ielement_en.text) AS element
      , s.stamina_cast
      , s.stamina_keeping
      , s.damage
      , s.distance
      , s.zone_size
-     , iform.text AS form
+     , coalesce(iform_lang.text, iform_en.text) AS form
      , CASE
          WHEN s.effect_time_value IS NOT NULL AND s.effect_time_unit_id IS NOT NULL THEN
-           s.effect_time_value || ' ' || COALESCE(itcu.text, '')
+           s.effect_time_value || ' ' || COALESCE(itcu_lang.text, itcu_en.text, '')
          WHEN s.effect_time_value IS NOT NULL THEN s.effect_time_value
          ELSE NULL
        END AS effect_time
-     , ieffect.text AS effect
-     , (COALESCE(ielement.text,'') || '|' || COALESCE(iname.text,'')) AS sort_key
+     , coalesce(ieffect_lang.text, ieffect_en.text) AS effect
+     , (coalesce(ielement_lang.text, ielement_en.text, '') || '|' || coalesce(iname_lang.text, iname_en.text, '')) AS sort_key
      , s.type
      , l.lang
   FROM wcc_magic_spells s
   CROSS JOIN langs l
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = s.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = l.lang
-  JOIN i18n_text iname ON iname.id = s.name_id AND iname.lang = l.lang
-  LEFT JOIN i18n_text ilevel ON ilevel.id = s.level_id AND ilevel.lang = l.lang
-  LEFT JOIN i18n_text ielement ON ielement.id = s.element_id AND ielement.lang = l.lang
-  LEFT JOIN i18n_text iform ON iform.id = s.form_id AND iform.lang = l.lang
-  LEFT JOIN i18n_text itcu ON itcu.id = s.effect_time_unit_id AND itcu.lang = l.lang
-  LEFT JOIN i18n_text ieffect ON ieffect.id = s.effect_id AND ieffect.lang = l.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = l.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text iname_lang ON iname_lang.id = s.name_id AND iname_lang.lang = l.lang
+  LEFT JOIN i18n_text iname_en ON iname_en.id = s.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text ilevel_lang ON ilevel_lang.id = s.level_id AND ilevel_lang.lang = l.lang
+  LEFT JOIN i18n_text ilevel_en ON ilevel_en.id = s.level_id AND ilevel_en.lang = 'en'
+  LEFT JOIN i18n_text ielement_lang ON ielement_lang.id = s.element_id AND ielement_lang.lang = l.lang
+  LEFT JOIN i18n_text ielement_en ON ielement_en.id = s.element_id AND ielement_en.lang = 'en'
+  LEFT JOIN i18n_text iform_lang ON iform_lang.id = s.form_id AND iform_lang.lang = l.lang
+  LEFT JOIN i18n_text iform_en ON iform_en.id = s.form_id AND iform_en.lang = 'en'
+  LEFT JOIN i18n_text itcu_lang ON itcu_lang.id = s.effect_time_unit_id AND itcu_lang.lang = l.lang
+  LEFT JOIN i18n_text itcu_en ON itcu_en.id = s.effect_time_unit_id AND itcu_en.lang = 'en'
+  LEFT JOIN i18n_text ieffect_lang ON ieffect_lang.id = s.effect_id AND ieffect_lang.lang = l.lang
+  LEFT JOIN i18n_text ieffect_en ON ieffect_en.id = s.effect_id AND ieffect_en.lang = 'en'
  ORDER BY spell_name;
 
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_magic_spells_v_ms_lang_uidx ON wcc_magic_spells_v (ms_id, lang);
@@ -39062,9 +39259,9 @@ CREATE INDEX IF NOT EXISTS wcc_magic_spells_v_lang_sort_idx ON wcc_magic_spells_
 
 CREATE MATERIALIZED VIEW wcc_magic_hexes_v AS
 WITH langs AS (
-  SELECT 'ru'::text AS lang
-  UNION ALL
-  SELECT 'en'::text AS lang
+  SELECT DISTINCT i18n.lang
+    FROM wcc_magic_hexes h
+    JOIN i18n_text i18n ON i18n.id = h.name_id
 ),
 components_expanded AS (
   SELECT h.ms_id
@@ -39084,26 +39281,29 @@ components_pretty AS (
        , ce.lang
        , E'\n - ' || string_agg(
            CASE
-             WHEN ce.qty IS NOT NULL THEN (COALESCE(i18n.text,'') || ' (' || ce.qty::text || ')')
-             ELSE COALESCE(i18n.text,'')
+             WHEN ce.qty IS NOT NULL THEN (coalesce(i18n_lang.text, i18n_en.text, '') || ' (' || ce.qty::text || ')')
+             ELSE coalesce(i18n_lang.text, i18n_en.text, '')
            END,
            E',\n - ' ORDER BY ce.pos
          ) AS remove_components
     FROM components_expanded ce
-    LEFT JOIN i18n_text i18n
-      ON i18n.id = ce.comp_name_id
-     AND i18n.lang = ce.lang
+    LEFT JOIN i18n_text i18n_lang
+      ON i18n_lang.id = ce.comp_name_id
+     AND i18n_lang.lang = ce.lang
+    LEFT JOIN i18n_text i18n_en
+      ON i18n_en.id = ce.comp_name_id
+     AND i18n_en.lang = 'en'
    GROUP BY ce.ms_id, ce.lang
 ),
 hex_rows AS (
   SELECT h.ms_id
        , h.dlc_dlc_id AS dlc_id
-       , idlcs.text AS dlc
-       , iname.text AS hex_name
-       , ilevel.text AS level
+       , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+       , coalesce(iname_lang.text, iname_en.text) AS hex_name
+       , coalesce(ilevel_lang.text, ilevel_en.text) AS level
        , h.stamina_cast
-       , ieffect.text AS effect
-       , iremove.text AS remove_instructions
+       , coalesce(ieffect_lang.text, ieffect_en.text) AS effect
+       , coalesce(iremove_lang.text, iremove_en.text) AS remove_instructions
        , cp.remove_components
        , CASE h.level_id
            WHEN ck_id('level.novice') THEN 1
@@ -39117,11 +39317,16 @@ hex_rows AS (
     FROM wcc_magic_hexes h
     CROSS JOIN langs l
     JOIN wcc_dlcs dlcs ON dlcs.dlc_id = h.dlc_dlc_id
-    JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = l.lang
-    JOIN i18n_text iname ON iname.id = h.name_id AND iname.lang = l.lang
-    LEFT JOIN i18n_text ilevel ON ilevel.id = h.level_id AND ilevel.lang = l.lang
-    LEFT JOIN i18n_text ieffect ON ieffect.id = h.effect_id AND ieffect.lang = l.lang
-    LEFT JOIN i18n_text iremove ON iremove.id = h.remove_instructions_id AND iremove.lang = l.lang
+    LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = l.lang
+    LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+    LEFT JOIN i18n_text iname_lang ON iname_lang.id = h.name_id AND iname_lang.lang = l.lang
+    LEFT JOIN i18n_text iname_en ON iname_en.id = h.name_id AND iname_en.lang = 'en'
+    LEFT JOIN i18n_text ilevel_lang ON ilevel_lang.id = h.level_id AND ilevel_lang.lang = l.lang
+    LEFT JOIN i18n_text ilevel_en ON ilevel_en.id = h.level_id AND ilevel_en.lang = 'en'
+    LEFT JOIN i18n_text ieffect_lang ON ieffect_lang.id = h.effect_id AND ieffect_lang.lang = l.lang
+    LEFT JOIN i18n_text ieffect_en ON ieffect_en.id = h.effect_id AND ieffect_en.lang = 'en'
+    LEFT JOIN i18n_text iremove_lang ON iremove_lang.id = h.remove_instructions_id AND iremove_lang.lang = l.lang
+    LEFT JOIN i18n_text iremove_en ON iremove_en.id = h.remove_instructions_id AND iremove_en.lang = 'en'
     LEFT JOIN components_pretty cp ON cp.ms_id = h.ms_id AND cp.lang = l.lang
 )
 SELECT hr.ms_id
@@ -39136,7 +39341,7 @@ SELECT hr.ms_id
      , replace(
          replace(
            replace(
-             COALESCE(itpl.text, E'Описание:{effect}\nКак снять:{remove}\nИнгредиенты ритуала снятия:{components}'),
+             COALESCE(itpl_lang.text, itpl_en.text, ''),
              '{effect}',
              COALESCE(hr.effect, '')
            ),
@@ -39149,12 +39354,14 @@ SELECT hr.ms_id
      , lpad(hr.level_sort::text, 2, '0') || '|' || COALESCE(hr.hex_name,'') AS sort_key
      , hr.lang
   FROM hex_rows hr
-  LEFT JOIN i18n_text itpl ON itpl.id = ck_id('witcher_cc.magic.hex.tooltip_tpl') AND itpl.lang = hr.lang
+  LEFT JOIN i18n_text itpl_lang ON itpl_lang.id = ck_id('witcher_cc.magic.hex.tooltip_tpl') AND itpl_lang.lang = hr.lang
+  LEFT JOIN i18n_text itpl_en ON itpl_en.id = ck_id('witcher_cc.magic.hex.tooltip_tpl') AND itpl_en.lang = 'en'
  ORDER BY hex_name;
 
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_magic_hexes_v_ms_lang_uidx ON wcc_magic_hexes_v (ms_id, lang);
 CREATE INDEX IF NOT EXISTS wcc_magic_hexes_v_lang_dlc_idx ON wcc_magic_hexes_v (lang, dlc_id);
 CREATE INDEX IF NOT EXISTS wcc_magic_hexes_v_lang_sort_idx ON wcc_magic_hexes_v (lang, sort_key);
+
 
 
 
@@ -39168,29 +39375,29 @@ CREATE INDEX IF NOT EXISTS wcc_magic_hexes_v_lang_sort_idx ON wcc_magic_hexes_v 
 
 CREATE MATERIALIZED VIEW wcc_magic_invocations_v AS
 WITH langs AS (
-  SELECT 'ru'::text AS lang
-  UNION ALL
-  SELECT 'en'::text AS lang
+  SELECT DISTINCT i18n.lang
+    FROM wcc_magic_invocations i
+    JOIN i18n_text i18n ON i18n.id = i.name_id
 )
 SELECT i.ms_id
      , i.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS invocation_name
-     , ilevel.text AS level
-     , icult.text AS cult_or_circle
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS invocation_name
+     , coalesce(ilevel_lang.text, ilevel_en.text) AS level
+     , coalesce(icult_lang.text, icult_en.text) AS cult_or_circle
      , i.stamina_cast
      , i.stamina_keeping
      , i.damage
      , i.distance
      , i.zone_size
-     , iform.text AS form
+     , coalesce(iform_lang.text, iform_en.text) AS form
      , CASE
          WHEN i.effect_time_value IS NOT NULL AND i.effect_time_unit_id IS NOT NULL THEN
-           i.effect_time_value || ' ' || COALESCE(itcu.text, '')
+           i.effect_time_value || ' ' || COALESCE(itcu_lang.text, itcu_en.text, '')
          WHEN i.effect_time_value IS NOT NULL THEN i.effect_time_value
          ELSE NULL
        END AS effect_time
-     , ieffect.text AS effect
+     , coalesce(ieffect_lang.text, ieffect_en.text) AS effect
      , CASE
          WHEN i.magic_type_id = ck_id('magic.gruid_invocations') THEN 'druid'
          WHEN i.magic_type_id = ck_id('magic.priest_invocations') THEN 'priest'
@@ -39200,13 +39407,20 @@ SELECT i.ms_id
   FROM wcc_magic_invocations i
   CROSS JOIN langs l
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = i.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = l.lang
-  JOIN i18n_text iname ON iname.id = i.name_id AND iname.lang = l.lang
-  LEFT JOIN i18n_text ilevel ON ilevel.id = i.level_id AND ilevel.lang = l.lang
-  LEFT JOIN i18n_text icult ON icult.id = i.cult_or_circle_id AND icult.lang = l.lang
-  LEFT JOIN i18n_text iform ON iform.id = i.form_id AND iform.lang = l.lang
-  LEFT JOIN i18n_text itcu ON itcu.id = i.effect_time_unit_id AND itcu.lang = l.lang
-  LEFT JOIN i18n_text ieffect ON ieffect.id = i.effect_id AND ieffect.lang = l.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = l.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text iname_lang ON iname_lang.id = i.name_id AND iname_lang.lang = l.lang
+  LEFT JOIN i18n_text iname_en ON iname_en.id = i.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text ilevel_lang ON ilevel_lang.id = i.level_id AND ilevel_lang.lang = l.lang
+  LEFT JOIN i18n_text ilevel_en ON ilevel_en.id = i.level_id AND ilevel_en.lang = 'en'
+  LEFT JOIN i18n_text icult_lang ON icult_lang.id = i.cult_or_circle_id AND icult_lang.lang = l.lang
+  LEFT JOIN i18n_text icult_en ON icult_en.id = i.cult_or_circle_id AND icult_en.lang = 'en'
+  LEFT JOIN i18n_text iform_lang ON iform_lang.id = i.form_id AND iform_lang.lang = l.lang
+  LEFT JOIN i18n_text iform_en ON iform_en.id = i.form_id AND iform_en.lang = 'en'
+  LEFT JOIN i18n_text itcu_lang ON itcu_lang.id = i.effect_time_unit_id AND itcu_lang.lang = l.lang
+  LEFT JOIN i18n_text itcu_en ON itcu_en.id = i.effect_time_unit_id AND itcu_en.lang = 'en'
+  LEFT JOIN i18n_text ieffect_lang ON ieffect_lang.id = i.effect_id AND ieffect_lang.lang = l.lang
+  LEFT JOIN i18n_text ieffect_en ON ieffect_en.id = i.effect_id AND ieffect_en.lang = 'en'
  ORDER BY invocation_name;
 
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_magic_invocations_v_ms_lang_uidx ON wcc_magic_invocations_v (ms_id, lang);
@@ -39226,9 +39440,9 @@ CREATE INDEX IF NOT EXISTS wcc_magic_invocations_v_lang_level_idx ON wcc_magic_i
 
 CREATE MATERIALIZED VIEW wcc_magic_rituals_v AS
 WITH langs AS (
-  SELECT 'ru'::text AS lang
-  UNION ALL
-  SELECT 'en'::text AS lang
+  SELECT DISTINCT i18n.lang
+    FROM wcc_magic_rituals r
+    JOIN i18n_text i18n ON i18n.id = r.name_id
 ),
 components_expanded AS (
   SELECT r.ms_id
@@ -39248,22 +39462,25 @@ components_pretty AS (
        , ce.lang
        , E'\n - ' || string_agg(
            CASE
-             WHEN ce.qty IS NOT NULL THEN (COALESCE(i18n.text,'') || ' (' || ce.qty::text || ')')
-             ELSE COALESCE(i18n.text,'')
+             WHEN ce.qty IS NOT NULL THEN (COALESCE(i18n_lang.text, i18n_en.text, '') || ' (' || ce.qty::text || ')')
+             ELSE COALESCE(i18n_lang.text, i18n_en.text, '')
            END,
            E',\n - ' ORDER BY ce.pos
          ) AS ingredients
     FROM components_expanded ce
-    LEFT JOIN i18n_text i18n
-      ON i18n.id = ce.comp_name_id
-     AND i18n.lang = ce.lang
+    LEFT JOIN i18n_text i18n_lang
+      ON i18n_lang.id = ce.comp_name_id
+     AND i18n_lang.lang = ce.lang
+    LEFT JOIN i18n_text i18n_en
+      ON i18n_en.id = ce.comp_name_id
+     AND i18n_en.lang = 'en'
    GROUP BY ce.ms_id, ce.lang
 )
 SELECT r.ms_id
      , r.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
-     , iname.text AS ritual_name
-     , ilevel.text AS level
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
+     , coalesce(iname_lang.text, iname_en.text) AS ritual_name
+     , coalesce(ilevel_lang.text, ilevel_en.text) AS level
      , CASE r.level_id
          WHEN ck_id('level.novice') THEN 1
          WHEN ck_id('level.journeyman') THEN 2
@@ -39273,45 +39490,40 @@ SELECT r.ms_id
          WHEN ck_id('craft.level.grand_master') THEN 6
          ELSE 99
        END AS level_sort
-     , iform.text AS form
+     , coalesce(iform_lang.text, iform_en.text) AS form
      , r.dc
-     , r.preparing_time_value::text || ' ' || (SELECT text FROM i18n_text t WHERE t.id = ck_id('time.unit.round') AND t.lang = l.lang) AS preparing_time
+     , r.preparing_time_value::text || ' ' || COALESCE(iunit_round_lang.text, iunit_round_en.text, '') AS preparing_time
      , cp.ingredients
      , r.zone_size
      , r.stamina_cast
      , r.stamina_keeping
      , CASE
          WHEN r.effect_time_value IS NOT NULL AND r.effect_time_unit_id IS NOT NULL THEN
-           r.effect_time_value || ' ' || COALESCE(itcu.text, '')
+           r.effect_time_value || ' ' || COALESCE(itcu_lang.text, itcu_en.text, '')
          WHEN r.effect_time_value IS NOT NULL THEN r.effect_time_value
          ELSE NULL
        END AS effect_time
      , CASE
          WHEN cp.ingredients IS NOT NULL THEN
-           COALESCE(ieffect.text, '') || E'\n\n' || 
-           CASE l.lang
-             WHEN 'ru' THEN 'Компоненты:'
-             WHEN 'en' THEN 'Components:'
-             ELSE 'Components:'
-           END || E'\n' || cp.ingredients
+           COALESCE(ieffect_lang.text, ieffect_en.text, '') || E'\n\n' || cp.ingredients
          ELSE
-           COALESCE(ieffect.text, '')
+           COALESCE(ieffect_lang.text, ieffect_en.text, '')
        END AS effect
      , CASE
          WHEN cp.ingredients IS NOT NULL THEN
            replace(
              replace(
-               COALESCE(itpl.text, E'Описание:{effect}\nИнгредиенты:{ingredients}'),
+               COALESCE(itpl_lang.text, itpl_en.text, ''),
                '{effect}',
-               COALESCE(ieffect.text, '')
+               COALESCE(ieffect_lang.text, ieffect_en.text, '')
              ),
              '{ingredients}',
              COALESCE(cp.ingredients, '')
            )
          ELSE
-           COALESCE(ieffect.text, '')
+           COALESCE(ieffect_lang.text, ieffect_en.text, '')
        END AS effect_tpl
-     , iremove.text AS how_to_remove
+     , coalesce(iremove_lang.text, iremove_en.text) AS how_to_remove
      , lpad(
          CASE r.level_id
            WHEN ck_id('level.novice') THEN 1
@@ -39324,19 +39536,29 @@ SELECT r.ms_id
          END::text,
          2,
          '0'
-       ) || '|' || COALESCE(iname.text,'') AS sort_key
+       ) || '|' || COALESCE(iname_lang.text, iname_en.text,'') AS sort_key
      , l.lang
   FROM wcc_magic_rituals r
   CROSS JOIN langs l
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = r.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = l.lang
-  JOIN i18n_text iname ON iname.id = r.name_id AND iname.lang = l.lang
-  LEFT JOIN i18n_text ilevel ON ilevel.id = r.level_id AND ilevel.lang = l.lang
-  LEFT JOIN i18n_text iform ON iform.id = r.form_id AND iform.lang = l.lang
-  LEFT JOIN i18n_text itcu ON itcu.id = r.effect_time_unit_id AND itcu.lang = l.lang
-  LEFT JOIN i18n_text ieffect ON ieffect.id = r.effect_id AND ieffect.lang = l.lang
-  LEFT JOIN i18n_text iremove ON iremove.id = r.how_to_remove_id AND iremove.lang = l.lang
-  LEFT JOIN i18n_text itpl ON itpl.id = ck_id('witcher_cc.magic.ritual.effect_tpl') AND itpl.lang = l.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = l.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text iname_lang ON iname_lang.id = r.name_id AND iname_lang.lang = l.lang
+  LEFT JOIN i18n_text iname_en ON iname_en.id = r.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text ilevel_lang ON ilevel_lang.id = r.level_id AND ilevel_lang.lang = l.lang
+  LEFT JOIN i18n_text ilevel_en ON ilevel_en.id = r.level_id AND ilevel_en.lang = 'en'
+  LEFT JOIN i18n_text iform_lang ON iform_lang.id = r.form_id AND iform_lang.lang = l.lang
+  LEFT JOIN i18n_text iform_en ON iform_en.id = r.form_id AND iform_en.lang = 'en'
+  LEFT JOIN i18n_text itcu_lang ON itcu_lang.id = r.effect_time_unit_id AND itcu_lang.lang = l.lang
+  LEFT JOIN i18n_text itcu_en ON itcu_en.id = r.effect_time_unit_id AND itcu_en.lang = 'en'
+  LEFT JOIN i18n_text ieffect_lang ON ieffect_lang.id = r.effect_id AND ieffect_lang.lang = l.lang
+  LEFT JOIN i18n_text ieffect_en ON ieffect_en.id = r.effect_id AND ieffect_en.lang = 'en'
+  LEFT JOIN i18n_text iremove_lang ON iremove_lang.id = r.how_to_remove_id AND iremove_lang.lang = l.lang
+  LEFT JOIN i18n_text iremove_en ON iremove_en.id = r.how_to_remove_id AND iremove_en.lang = 'en'
+  LEFT JOIN i18n_text itpl_lang ON itpl_lang.id = ck_id('witcher_cc.magic.ritual.effect_tpl') AND itpl_lang.lang = l.lang
+  LEFT JOIN i18n_text itpl_en ON itpl_en.id = ck_id('witcher_cc.magic.ritual.effect_tpl') AND itpl_en.lang = 'en'
+  LEFT JOIN i18n_text iunit_round_lang ON iunit_round_lang.id = ck_id('time.unit.round') AND iunit_round_lang.lang = l.lang
+  LEFT JOIN i18n_text iunit_round_en ON iunit_round_en.id = ck_id('time.unit.round') AND iunit_round_en.lang = 'en'
   LEFT JOIN components_pretty cp ON cp.ms_id = r.ms_id AND cp.lang = l.lang
  ORDER BY ritual_name;
 
@@ -39344,8 +39566,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS wcc_magic_rituals_v_ms_lang_uidx ON wcc_magic_
 CREATE INDEX IF NOT EXISTS wcc_magic_rituals_v_lang_dlc_idx ON wcc_magic_rituals_v (lang, dlc_id);
 CREATE INDEX IF NOT EXISTS wcc_magic_rituals_v_lang_level_idx ON wcc_magic_rituals_v (lang, level);
 CREATE INDEX IF NOT EXISTS wcc_magic_rituals_v_lang_sort_idx ON wcc_magic_rituals_v (lang, sort_key);
-
-
 
 -- <<< END sql/items/034_wcc_magic_rituals_v.sql
 
@@ -39883,10 +40103,10 @@ WITH
         (249, 'one_with_nature', 'One With Nature', NULL, 'professional', 1, 2, 'The Druid', false, 'priest'),
         (250, 'nature_s_signs', 'Nature''s Signs', 'int', 'professional', 2, 2, 'The Druid', false, 'priest'),
         (251, 'nature_s_ally', 'Nature''s Ally', 'will', 'professional', 3, 2, 'The Druid', false, 'priest'),
-        -- Priest branch 2 (DLC exp_toc): Cultist
-        (291, 'mystagogue', 'Mystagogue', 'emp', 'professional', 1, 2, 'Cultist', false, 'priest'),
-        (292, 'cult_mystery', 'Cult Mystery', 'will', 'professional', 2, 2, 'Cultist', false, 'priest'),
-        (293, 'blessings', 'Blessings', 'will', 'professional', 3, 2, 'Cultist', false, 'priest'),
+        -- Priest branch 2 (DLC exp_toc): The Cultist
+        (291, 'mystagogue', 'Mystagogue', 'emp', 'professional', 1, 2, 'The Cultist', false, 'priest'),
+        (292, 'cult_mystery', 'Cult Mystery', 'will', 'professional', 2, 2, 'The Cultist', false, 'priest'),
+        (293, 'blessings', 'Blessings', 'will', 'professional', 3, 2, 'The Cultist', false, 'priest'),
         -- Priest branch 3: The Fanatic
         (252, 'bloody_rituals', 'Bloody Rituals', 'will', 'professional', 1, 3, 'The Fanatic', false, 'priest'),
         (253, 'zeal', 'Fervor', 'emp', 'professional', 2, 3, 'The Fanatic', false, 'priest'),
@@ -39927,18 +40147,18 @@ WITH
         (279, 'haggle', 'Haggle', 'emp', 'professional', 1, 3, 'The Merchant', false, 'merchant'),
         (280, 'merchant_sense', 'Merchant Sense', 'int', 'professional', 2, 3, 'The Merchant', false, 'merchant'),
         (281, 'merchant_king', 'Merchant King', 'int', 'professional', 3, 3, 'The Merchant', false, 'merchant'),
-        -- Druid branch 1: Initiate
-        (282, 'nature_attunement', 'Nature Attunement', NULL, 'professional', 1, 1, 'Initiate', false, 'druid'),
-        (283, 'read_nature', 'Read Nature', 'int', 'professional', 2, 1, 'Initiate', false, 'druid'),
-        (284, 'animal_compact', 'Animal Compact', 'will', 'professional', 3, 1, 'Initiate', false, 'druid'),
-        -- Druid branch 2: Mystic Sage
-        (285, 'lore_keeper', 'Lore Keeper', NULL, 'professional', 1, 2, 'Mystic Sage', false, 'druid'),
-        (286, 'blood_and_bones', 'Blood and Bones', 'will', 'professional', 2, 2, 'Mystic Sage', false, 'druid'),
-        (287, 'bestial_form', 'Bestial Form', NULL, 'professional', 3, 2, 'Mystic Sage', false, 'druid'),
-        -- Druid branch 3: Militant
-        (288, 'beast_healer', 'Beast Healer', 'cra', 'professional', 1, 3, 'Militant', false, 'druid'),
-        (289, 'sacred_grove', 'Sacred Grove', 'will', 'professional', 2, 3, 'Militant', false, 'druid'),
-        (290, 'grove_guardian', 'Grove Guardian', 'will', 'professional', 3, 3, 'Militant', false, 'druid')
+        -- Druid branch 1: The Initiate
+        (282, 'nature_attunement', 'Nature Attunement', NULL, 'professional', 1, 1, 'The Initiate', false, 'druid'),
+        (283, 'read_nature', 'Read Nature', 'int', 'professional', 2, 1, 'The Initiate', false, 'druid'),
+        (284, 'animal_compact', 'Animal Compact', 'will', 'professional', 3, 1, 'The Initiate', false, 'druid'),
+        -- Druid branch 2: The Mystic Sage
+        (285, 'lore_keeper', 'Lore Keeper', NULL, 'professional', 1, 2, 'The Mystic Sage', false, 'druid'),
+        (286, 'blood_and_bones', 'Blood and Bones', 'will', 'professional', 2, 2, 'The Mystic Sage', false, 'druid'),
+        (287, 'bestial_form', 'Bestial Form', NULL, 'professional', 3, 2, 'The Mystic Sage', false, 'druid'),
+        -- Druid branch 3: The Militant
+        (288, 'beast_healer', 'Beast Healer', 'cra', 'professional', 1, 3, 'The Militant', false, 'druid'),
+        (289, 'sacred_grove', 'Sacred Grove', 'will', 'professional', 2, 3, 'The Militant', false, 'druid'),
+        (290, 'grove_guardian', 'Grove Guardian', 'will', 'professional', 3, 3, 'The Militant', false, 'druid')
       ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
   ),
   ins_prof_skill_names AS (
@@ -39952,8 +40172,21 @@ WITH
   ins_branch_names AS (
     INSERT INTO i18n_text (id, entity, entity_field, lang, text)
     SELECT DISTINCT
-      ck_id(meta.su_su_id || '.wcc_skills.branch.' || 
-        LOWER(REPLACE(REPLACE(REPLACE(raw_prof_skills.branch_name, ' ', '_'), '/', '_'), '&', 'and')) || '.name') AS id
+      ck_id(
+        meta.su_su_id
+        || '.wcc_skills.branch.'
+        || raw_prof_skills.prof_id
+        || '.'
+        || raw_prof_skills.branch_num::text
+        || CASE
+             WHEN raw_prof_skills.prof_id = 'priest'
+               AND raw_prof_skills.branch_num = 2
+               AND raw_prof_skills.skill_id IN ('mystagogue', 'cult_mystery', 'blessings')
+             THEN '.exp_toc'
+             ELSE ''
+           END
+        || '.name'
+      ) AS id
          , meta.entity, 'branch_name', raw_prof_skills.lang, raw_prof_skills.branch_name
       FROM raw_prof_skills
       CROSS JOIN meta
@@ -39972,8 +40205,21 @@ SELECT DISTINCT
   raw_prof_skills.branch_num::integer AS branch_number,
   CASE 
     WHEN raw_prof_skills.branch_name IS NOT NULL THEN
-      ck_id(meta.su_su_id || '.wcc_skills.branch.' || 
-        LOWER(REPLACE(REPLACE(REPLACE(raw_prof_skills.branch_name, ' ', '_'), '/', '_'), '&', 'and')) || '.name')
+      ck_id(
+        meta.su_su_id
+        || '.wcc_skills.branch.'
+        || raw_prof_skills.prof_id
+        || '.'
+        || raw_prof_skills.branch_num::text
+        || CASE
+             WHEN raw_prof_skills.prof_id = 'priest'
+               AND raw_prof_skills.branch_num = 2
+               AND raw_prof_skills.skill_id IN ('mystagogue', 'cult_mystery', 'blessings')
+             THEN '.exp_toc'
+             ELSE ''
+           END
+        || '.name'
+      )
     ELSE NULL
   END AS branch_name_id,
   raw_prof_skills.is_difficult,
@@ -40596,7 +40842,6 @@ WHERE skill_id IN (
 )
 ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
 
-
 -- <<< END sql/items/035_profession_tables.sql
 
 -- >>> BEGIN sql/items/036_wcc_magic_gifts.sql
@@ -40801,35 +41046,51 @@ SET
 
 CREATE MATERIALIZED VIEW wcc_magic_gifts_v AS
 WITH langs AS (
-  SELECT 'ru'::text AS lang
-  UNION ALL
-  SELECT 'en'::text AS lang
+  SELECT DISTINCT i18n.lang
+    FROM wcc_magic_gifts g
+    JOIN i18n_text i18n ON i18n.id = g.name_id
 )
 SELECT g.mg_id
      , g.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
      , (g.group_id = ck_id('witcher_cc.magic.gift.group.major')) AS is_major
-     , igroup.text AS group_name
-     , iname.text AS gift_name
+     , coalesce(igroup_lang.text, igroup_en.text) AS group_name
+     , coalesce(iname_lang.text, iname_en.text) AS gift_name
      , g.dc
      , g.vigor_cost
-     , iac.text AS action_cost
-     , ieffect.text AS effect
-     , iside.text AS side_effect
-     , replace(replace(COALESCE(itpl.text, 'Эффект: {effect}' || E'\n' || 'Побочный эффект: {side_effect}'), '{effect}', COALESCE(ieffect.text, '')), '{side_effect}', COALESCE(iside.text, '')) AS description
-     , (COALESCE(igroup.text,'') || '|' || COALESCE(iname.text,'')) AS sort_key
+     , coalesce(iac_lang.text, iac_en.text) AS action_cost
+     , coalesce(ieffect_lang.text, ieffect_en.text) AS effect
+     , coalesce(iside_lang.text, iside_en.text) AS side_effect
+     , replace(
+         replace(
+           coalesce(itpl_lang.text, itpl_en.text, ''),
+           '{effect}',
+           coalesce(ieffect_lang.text, ieffect_en.text, '')
+         ),
+         '{side_effect}',
+         coalesce(iside_lang.text, iside_en.text, '')
+       ) AS description
+     , (coalesce(igroup_lang.text, igroup_en.text, '') || '|' || coalesce(iname_lang.text, iname_en.text, '')) AS sort_key
      , l.lang
   FROM wcc_magic_gifts g
   CROSS JOIN langs l
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = g.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = l.lang
-  JOIN i18n_text igroup ON igroup.id = g.group_id AND igroup.lang = l.lang
-  JOIN i18n_text iname ON iname.id = g.name_id AND iname.lang = l.lang
-  LEFT JOIN i18n_text iac ON iac.lang = l.lang
-    AND iac.id = CASE WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.minor') THEN ck_id('witcher_cc.magic.gift.action_cost.minor') WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.major') THEN ck_id('witcher_cc.magic.gift.action_cost.major') END
-  LEFT JOIN i18n_text ieffect ON ieffect.id = g.effect_id AND ieffect.lang = l.lang
-  LEFT JOIN i18n_text iside ON iside.id = g.side_effect_id AND iside.lang = l.lang
-  LEFT JOIN i18n_text itpl ON itpl.id = ck_id('witcher_cc.magic.gift.description_tpl') AND itpl.lang = l.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = l.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text igroup_lang ON igroup_lang.id = g.group_id AND igroup_lang.lang = l.lang
+  LEFT JOIN i18n_text igroup_en ON igroup_en.id = g.group_id AND igroup_en.lang = 'en'
+  LEFT JOIN i18n_text iname_lang ON iname_lang.id = g.name_id AND iname_lang.lang = l.lang
+  LEFT JOIN i18n_text iname_en ON iname_en.id = g.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text iac_lang ON iac_lang.lang = l.lang
+    AND iac_lang.id = CASE WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.minor') THEN ck_id('witcher_cc.magic.gift.action_cost.minor') WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.major') THEN ck_id('witcher_cc.magic.gift.action_cost.major') END
+  LEFT JOIN i18n_text iac_en ON iac_en.lang = 'en'
+    AND iac_en.id = CASE WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.minor') THEN ck_id('witcher_cc.magic.gift.action_cost.minor') WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.major') THEN ck_id('witcher_cc.magic.gift.action_cost.major') END
+  LEFT JOIN i18n_text ieffect_lang ON ieffect_lang.id = g.effect_id AND ieffect_lang.lang = l.lang
+  LEFT JOIN i18n_text ieffect_en ON ieffect_en.id = g.effect_id AND ieffect_en.lang = 'en'
+  LEFT JOIN i18n_text iside_lang ON iside_lang.id = g.side_effect_id AND iside_lang.lang = l.lang
+  LEFT JOIN i18n_text iside_en ON iside_en.id = g.side_effect_id AND iside_en.lang = 'en'
+  LEFT JOIN i18n_text itpl_lang ON itpl_lang.id = ck_id('witcher_cc.magic.gift.description_tpl') AND itpl_lang.lang = l.lang
+  LEFT JOIN i18n_text itpl_en ON itpl_en.id = ck_id('witcher_cc.magic.gift.description_tpl') AND itpl_en.lang = 'en'
  ORDER BY gift_name;
 
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_magic_gifts_v_mg_lang_uidx ON wcc_magic_gifts_v (mg_id, lang);

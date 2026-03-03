@@ -117,9 +117,9 @@ function triggerDownload(blob: Blob, fileName: string): void {
 }
 
 export default function CharactersPage() {
-  const { lang, mounted } = useLanguage();
+  const { lang } = useLanguage();
   const { mounted: authMounted, provider, isAuthenticated } = useAuth();
-  const displayLang = (mounted ? lang : "en") as "en" | "ru";
+  const displayLang = lang;
   const importInputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<CharacterListItem[]>([]);
   const [loading, setLoading] = useState(true);

@@ -225,47 +225,6 @@ VALUES
   (ck_id('witcher_cc.pdf.page1.magic.type.invocation'), 'pdf', 'page1.magic.type.invocation', 'en', 'Inv.')
 ON CONFLICT (id, lang) DO NOTHING;
 
--- Fix: professional branch titles use branch_name_id derived from RU branch name.
--- Add EN texts for these RU-derived ids so JSON resolves correctly for lang=en.
-INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-VALUES
-  (ck_id('witcher_cc.wcc_skills.branch.обольститель.name'), 'wcc_skills', 'branch_name', 'en', 'The Charmer'),
-  (ck_id('witcher_cc.wcc_skills.branch.информатор.name'), 'wcc_skills', 'branch_name', 'en', 'The Informant'),
-  (ck_id('witcher_cc.wcc_skills.branch.интриган.name'), 'wcc_skills', 'branch_name', 'en', 'The Manipulator'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.магический_клинок.name'), 'wcc_skills', 'branch_name', 'en', 'The Spellsword'),
-  (ck_id('witcher_cc.wcc_skills.branch.мутант.name'), 'wcc_skills', 'branch_name', 'en', 'The Mutant'),
-  (ck_id('witcher_cc.wcc_skills.branch.убийца.name'), 'wcc_skills', 'branch_name', 'en', 'The Slayer'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.политик.name'), 'wcc_skills', 'branch_name', 'en', 'The Politician'),
-  (ck_id('witcher_cc.wcc_skills.branch.учёный.name'), 'wcc_skills', 'branch_name', 'en', 'The Scientist'),
-  (ck_id('witcher_cc.wcc_skills.branch.архимаг.name'), 'wcc_skills', 'branch_name', 'en', 'The Arch Mage'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.хирург.name'), 'wcc_skills', 'branch_name', 'en', 'The Surgeon'),
-  (ck_id('witcher_cc.wcc_skills.branch.травник.name'), 'wcc_skills', 'branch_name', 'en', 'The Herbalist'),
-  (ck_id('witcher_cc.wcc_skills.branch.анатом.name'), 'wcc_skills', 'branch_name', 'en', 'The Anatomist'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.стрелок.name'), 'wcc_skills', 'branch_name', 'en', 'The Marksman'),
-  (ck_id('witcher_cc.wcc_skills.branch.охотник_за_головами.name'), 'wcc_skills', 'branch_name', 'en', 'The Bounty Hunter'),
-  (ck_id('witcher_cc.wcc_skills.branch.потрошитель.name'), 'wcc_skills', 'branch_name', 'en', 'The Butcher'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.проповедник.name'), 'wcc_skills', 'branch_name', 'en', 'The Preacher'),
-  (ck_id('witcher_cc.wcc_skills.branch.друид.name'), 'wcc_skills', 'branch_name', 'en', 'The Druid'),
-  (ck_id('witcher_cc.wcc_skills.branch.фанатик.name'), 'wcc_skills', 'branch_name', 'en', 'The Fanatic'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.вор.name'), 'wcc_skills', 'branch_name', 'en', 'The Thief'),
-  (ck_id('witcher_cc.wcc_skills.branch.атаман.name'), 'wcc_skills', 'branch_name', 'en', 'The Leader'),
-  (ck_id('witcher_cc.wcc_skills.branch.контрабандист.name'), 'wcc_skills', 'branch_name', 'en', 'The Smuggler'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.оружейник.name'), 'wcc_skills', 'branch_name', 'en', 'The Weaponsmith'),
-  (ck_id('witcher_cc.wcc_skills.branch.алхимик.name'), 'wcc_skills', 'branch_name', 'en', 'The Alchemist'),
-  (ck_id('witcher_cc.wcc_skills.branch.мастер.name'), 'wcc_skills', 'branch_name', 'en', 'The Master'),
-
-  (ck_id('witcher_cc.wcc_skills.branch.посредник.name'), 'wcc_skills', 'branch_name', 'en', 'The Middleman'),
-  (ck_id('witcher_cc.wcc_skills.branch.человек_со_связями.name'), 'wcc_skills', 'branch_name', 'en', 'The Connected'),
-  (ck_id('witcher_cc.wcc_skills.branch.торговец.name'), 'wcc_skills', 'branch_name', 'en', 'The Merchant')
-ON CONFLICT (id, lang) DO NOTHING;
-
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
 VALUES
   -- sections
