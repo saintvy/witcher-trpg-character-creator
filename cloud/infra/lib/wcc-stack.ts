@@ -185,7 +185,7 @@ export class WccStack extends cdk.Stack {
     // ================================================================
     // 3. LAMBDA (API)
     // ================================================================
-    // NodejsFunction bundles cloud/api + workspace dependencies (including @wcc/core)
+    // NodejsFunction bundles cloud/api + workspace dependencies.
     // into a single deployable Lambda asset.
     const apiFunction = new lambdaNodejs.NodejsFunction(this, 'WccApiFunction', {
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -206,7 +206,7 @@ export class WccStack extends cdk.Stack {
           },
           afterBundling(inputDir, outputDir) {
             return [
-              `node -e "const fs=require('fs'); const path=require('path'); const [inDir,outDir]=process.argv.slice(1); const src=path.join(inDir,'packages','core','src','data','defaultCharacter.json'); const dst=path.join(outDir,'defaultCharacter.json'); fs.copyFileSync(src,dst);" "${inputDir}" "${outputDir}"`,
+              `node -e "const fs=require('fs'); const path=require('path'); const [inDir,outDir]=process.argv.slice(1); const src=path.join(inDir,'cloud','api','src','core','data','defaultCharacter.json'); const dst=path.join(outDir,'defaultCharacter.json'); fs.copyFileSync(src,dst);" "${inputDir}" "${outputDir}"`,
               `node -e "const fs=require('fs'); const path=require('path'); const [inDir,outDir]=process.argv.slice(1); const srcDir=path.join(inDir,'cloud','api','src','pdf','fonts'); const dstDir=path.join(outDir,'pdf-fonts'); if(fs.existsSync(srcDir)){ fs.mkdirSync(dstDir,{recursive:true}); for(const name of fs.readdirSync(srcDir)){ fs.copyFileSync(path.join(srcDir,name), path.join(dstDir,name)); } }" "${inputDir}" "${outputDir}"`,
               `node -e "const fs=require('fs'); const path=require('path'); const [inDir,outDir]=process.argv.slice(1); const srcDir=path.join(inDir,'cloud','api','src','pdf','assets'); const dstDir=path.join(outDir,'assets'); const copy=(src,dst)=>{ const st=fs.statSync(src); if(st.isDirectory()){ fs.mkdirSync(dst,{recursive:true}); for(const name of fs.readdirSync(src)){ copy(path.join(src,name), path.join(dst,name)); } return; } fs.mkdirSync(path.dirname(dst),{recursive:true}); fs.copyFileSync(src,dst); }; if(fs.existsSync(srcDir)){ copy(srcDir,dstDir); }" "${inputDir}" "${outputDir}"`,
               `node -e "const fs=require('fs'); const path=require('path'); const [inDir,outDir]=process.argv.slice(1); const srcDir=path.join(inDir,'node_modules','pdfkit','js','data'); const dstDir=path.join(outDir,'data'); if(fs.existsSync(srcDir)){ fs.mkdirSync(dstDir,{recursive:true}); for(const name of fs.readdirSync(srcDir)){ const src=path.join(srcDir,name); if(fs.statSync(src).isFile()) fs.copyFileSync(src, path.join(dstDir,name)); } }" "${inputDir}" "${outputDir}"`,

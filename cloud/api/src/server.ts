@@ -1,7 +1,7 @@
 import 'dotenv-flow/config';
 import { serve } from '@hono/node-server';
 import { app } from './app.js';
-import { db } from '@wcc/core';
+import { db } from './core/index.js';
 
 const port = Number(process.env.PORT || 4100);
 const server = serve({ fetch: app.fetch, port }, () => {

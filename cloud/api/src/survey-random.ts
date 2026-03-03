@@ -1,5 +1,5 @@
 import jsonLogic from 'json-logic-js';
-import { getNextQuestion } from '@wcc/core';
+import { getNextQuestion } from './core/index.js';
 
 type AnswerValue =
   | { type: 'number'; data: number }

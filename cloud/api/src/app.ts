@@ -10,7 +10,7 @@ import {
   getSkillsCatalog,
   resolveCharacterRawI18n,
   db,
-} from '@wcc/core';
+} from './core/index.js';
 import { generateCharacterPdfBuffer } from './pdf/characterPdf.js';
 
 type AppEnv = {
