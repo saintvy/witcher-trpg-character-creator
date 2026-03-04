@@ -2152,6 +2152,16 @@ app.put('/characters/:id/avatar', async (c) => {
     fileBytes = new Uint8Array(arrayBuffer);
   }
 
+  // Basic signature check for common image formats (JPEG, PNG, WEBP, BMP)
+  const isJpeg = fileBytes.length > 2 && fileBytes[0] === 0xff && fileBytes[1] === 0xd8;
+  const isPng = fileBytes.length > 8 && fileBytes[0] === 0x89 && fileBytes[1] === 0x50 && fileBytes[2] === 0x4e && fileBytes[3] === 0x47;
+  const isWebp = fileBytes.length > 12 && fileBytes[8] === 0x57 && fileBytes[9] === 0x45 && fileBytes[10] === 0x42 && fileBytes[11] === 0x50;
+  const isBmp = fileBytes.length > 2 && fileBytes[0] === 0x42 && fileBytes[1] === 0x4d;
+
+  if (!isJpeg && !isPng && !isWebp && !isBmp) {
+    return c.json({ error: 'Unsupported file type. Allowed: jpg, png, webp, bmp' }, 415);
+  }
+
   try {
     const url = await saveAvatarToStorage(id, fileBytes);
 

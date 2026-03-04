@@ -274,7 +274,7 @@ function createTxTemplate() {
     subtitle: '',
     top: { base: '', main: '', extra: '', cons: '', avatar: '' },
     cols: {
-      n: '', v: '', b: '', max: '', cur: '', qty: '', dmg: '', type: '', rel: '', hands: '', conceal: '', enh: '', wt: '',
+      n: '', v: '', b: '', max: '', cur: '', qty: '', dmg: '', type: '', rel: '', hands: '', conceal: '', enh: '', armorEnh: '', wt: '',
       price: '', sp: '', enc: '', tox: '', time: '', effect: '', field: '', note: '',
     },
     labels: {
@@ -367,6 +367,7 @@ function populateTxFromI18n(tx: Tx, i18n: CharacterPdfI18n): Tx {
   tx.cols.hands = p1.tables.weapons.colHands;
   tx.cols.conceal = p1.tables.weapons.colConcealment;
   tx.cols.enh = p1.tables.weapons.colEnh;
+  tx.cols.armorEnh = p1.tables.armors.colEnh;
   tx.cols.wt = p1.tables.weapons.colWeight;
   tx.cols.price = p1.tables.weapons.colPrice;
   tx.cols.sp = p1.tables.armors.colSp;
@@ -1557,7 +1558,7 @@ function buildVmWithCatalog(
     skillSidebarGroups,
     profBranches,
     weaponsTable: weapons.length ? { title: tx.sections.weapons, columns: [' ', tx.cols.qty, tx.sections.weapons, tx.cols.dmg, tx.cols.type, tx.cols.rel, tx.cols.hands, tx.cols.conceal, tx.cols.enh, tx.cols.wt, tx.cols.price], rows: weapons } : null,
-    armorTable: armors.length ? { title: tx.sections.armor, columns: [' ', tx.cols.qty, tx.sections.armor, tx.cols.sp, tx.cols.enc, tx.cols.enh, tx.cols.wt, tx.cols.price], rows: armors } : null,
+    armorTable: armors.length ? { title: tx.sections.armor, columns: [' ', tx.cols.qty, tx.sections.armor, tx.cols.sp, tx.cols.enc, tx.cols.armorEnh, tx.cols.wt, tx.cols.price], rows: armors } : null,
     potionTable: potions.length ? { title: tx.sections.alchemy, columns: [tx.cols.qty, tx.sections.alchemy, tx.cols.tox, tx.cols.time, tx.cols.effect, tx.cols.wt, tx.cols.price], rows: potions } : null,
     magicTable: magicRows.length
       ? {
@@ -5942,7 +5943,7 @@ class Painter {
     {
       const armorTable = vm.armorTable ?? {
         title: tx.sections.armor,
-        columns: [' ', tx.cols.qty, tx.sections.armor, tx.cols.sp, tx.cols.enc, tx.cols.enh, tx.cols.wt, tx.cols.price],
+        columns: [' ', tx.cols.qty, tx.sections.armor, tx.cols.sp, tx.cols.enc, tx.cols.armorEnh, tx.cols.wt, tx.cols.price],
         rows: [],
       };
       const dollW = Math.floor(rightW * 0.15);

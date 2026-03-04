@@ -324,7 +324,7 @@ export function AvatarPopup({ characterId, lang, onClose }: AvatarPopupProps) {
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept="image/*"
+                            accept="image/png, image/jpeg, image/jpg, image/bmp, image/webp"
                             style={{ display: "none" }}
                             onChange={onFileChange}
                         />

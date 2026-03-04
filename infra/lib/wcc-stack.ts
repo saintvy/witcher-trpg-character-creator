@@ -129,6 +129,12 @@ export class WccStack extends cdk.Stack {
       'Allow Lambda to call Secrets Manager through VPCE',
     );
 
+    lambdaSecurityGroup.addEgressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(443),
+      'Allow HTTPS to S3 Gateway Endpoint (isolated subnet drops all other internet bounds)',
+    );
+
     // DNS queries for private hostname resolution inside the VPC
     // (RDS endpoint + Secrets Manager private DNS).
     lambdaSecurityGroup.addEgressRule(
