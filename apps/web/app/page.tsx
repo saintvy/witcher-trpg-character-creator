@@ -15,9 +15,20 @@ export default function HomePage() {
       welcome:
         "Kick the mud off your boots, grab a stool, and park yourself by the fire before the bard starts charging for every verse.\nTonight the ale is bold, the rumors are louder than the lute, and the dice are itching to ruin somebody's plans magnificently.\nIf your witcher survives the contract, we'll cheer; if he accidentally adopts a cursed goat, we'll cheer even louder.\nSo grin, roll the bones, keep silver in your sleeve, and try not to arm-wrestle anyone with suspiciously yellow eyes.",
       whatsNew: "What's New",
-      launchTitle: "First portal launch: February 24, 2026",
-      launchText:
-        "The site first went online with basic functionality: navigation, the characters page, core settings, and a working path to the character builder.",
+      news: [
+        {
+          title: "March 4, 2026: Avatars",
+          text: "Added the ability to add and change a character's avatar.",
+        },
+        {
+          title: "March 3, 2026: PDF charsheet",
+          text: "Added the ability to generate and download a PDF character sheet.",
+        },
+        {
+          title: "February 24, 2026: First portal launch",
+          text: "The site first went online with basic functionality: navigation, the characters page, core settings, and a working path to the character builder.",
+        },
+      ],
     },
     ru: {
       title: "Доска объявлений",
@@ -26,9 +37,20 @@ export default function HomePage() {
       welcome:
         "Скидывай дорожную пыль с сапог, подсаживайся к огню и хватай кружку, пока бард не начал брать плату за каждый куплет.\nСегодня эль крепкий, слухи громче лютни, а кубы уже чешутся кому-нибудь эффектно испортить планы.\nЕсли твой ведьмак вернется с контракта героем, мы поднимем тост; если притащит домой проклятого козла, поднимем два.\nТак что улыбайся, бросай кости, держи серебро в рукаве и не меряйся силой с тем, у кого слишком желтые глаза.",
       whatsNew: "Что нового",
-      launchTitle: "Первый запуск портала: 24 февраля 2026",
-      launchText:
-        "Сайт впервые вышел онлайн с базовым функционалом: навигация, страница персонажей, базовые настройки и рабочий переход в конструктор персонажа.",
+      news: [
+        {
+          title: "4 марта 2026: Аватары",
+          text: "Добавлена возможность добавлять и менять аватар персонажа.",
+        },
+        {
+          title: "3 марта 2026: PDF чарник",
+          text: "Добавлена возможность генерировать и скачивать PDF чарник персонажа.",
+        },
+        {
+          title: "24 февраля 2026: Первый запуск портала",
+          text: "Сайт впервые вышел онлайн с базовым функционалом: навигация, страница персонажей, базовые настройки и рабочий переход в конструктор персонажа.",
+        },
+      ],
     },
   } as const;
 
@@ -80,13 +102,17 @@ export default function HomePage() {
           {t.whatsNew}
         </div>
 
-        <div className="card">
-          <div className="timeline-list" style={{ marginTop: 0 }}>
-            <div className="timeline-item">
-              <div className="timeline-label" style={{ color: accentColor }}>{t.launchTitle}</div>
-              <div className="timeline-text">{t.launchText}</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {t.news.map((item, index) => (
+            <div className="card" key={index}>
+              <div className="timeline-list" style={{ marginTop: 0 }}>
+                <div className="timeline-item" style={{ paddingBottom: 0 }}>
+                  <div className="timeline-label" style={{ color: accentColor }}>{item.title}</div>
+                  {item.text && <div className="timeline-text">{item.text}</div>}
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </section>
     </>

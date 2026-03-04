@@ -28,6 +28,7 @@ type SavedCharacterRow = {
   created_at: string;
   raw_character_json?: unknown;
   answers_export_json?: unknown;
+  avatar_url?: string | null;
 };
 
 type CountRow = {
@@ -1548,7 +1549,7 @@ app.get('/characters/:id/pdf', async (c) => {
   try {
     const { rows } = await db.query<SavedCharacterRow>(
       `
-        SELECT id::text AS id, name, raw_character_json
+        SELECT id::text AS id, name, raw_character_json, avatar_url
         FROM wcc_user_characters
         WHERE id = $1::uuid AND owner_email = $2
       `,
@@ -1933,12 +1934,26 @@ app.get('/characters/:id/pdf', async (c) => {
     const skillsCatalogById = new Map(
       (Array.isArray(skillsCatalog.skills) ? skillsCatalog.skills : []).map((s) => [s.id, { param: s.param, name: s.name }] as const),
     );
+
+    let avatarBuffer: Buffer | undefined = undefined;
+    if (row.avatar_url) {
+      try {
+        const avatarRes = await loadAvatarFromStorage(row.avatar_url);
+        if (avatarRes) {
+          avatarBuffer = avatarRes.data;
+        }
+      } catch (e) {
+        console.warn('[characters] pdf avatar load failed', e);
+      }
+    }
+
     const pdfBuffer = await generateCharacterPdfBuffer({
       rawCharacter: rawCharacterForPdf,
       resolvedCharacter,
       lang,
       skillsCatalogById,
       itemEffectsGlossary,
+      avatarBuffer,
     });
 
     const fileName = `${safeFileNameBase(row.name, 'character')}-sheet.pdf`;

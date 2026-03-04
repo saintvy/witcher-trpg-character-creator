@@ -833,7 +833,7 @@ function formulaIngredientAssetPath(englishName: string, alchemyStyle: 'w1' | 'w
 function tokenizeFormulaIngredients(formulaEn: string): string[] {
   const rawTokens = String(formulaEn ?? '').trim().split(/\s+/).filter(Boolean);
   const tokens: string[] = [];
-  for (let i = 0; i < rawTokens.length; ) {
+  for (let i = 0; i < rawTokens.length;) {
     const two = i + 1 < rawTokens.length ? `${rawTokens[i]} ${rawTokens[i + 1]}`.trim() : '';
     if (two && MULTI_WORD_FORMULA_INGREDIENTS.has(two)) {
       tokens.push(two);
@@ -853,6 +853,7 @@ function buildVmWithCatalog(
   pdfI18n: CharacterPdfI18n,
   skillsCatalogById?: ReadonlyMap<string, SkillCatalogLite>,
   itemEffectsGlossary?: ReadonlyArray<ItemEffectGlossaryRow>,
+  avatarBuffer?: Buffer,
 ) {
   const tx = buildTxFromI18n(pdfI18n);
   const userSettings =
@@ -888,7 +889,7 @@ function buildVmWithCatalog(
     { label: tx.labels.profession, value: text(resolved.profession ?? logic.profession ?? logic.profession_code) },
   ];
 
-  const mainStats = ['INT','REF','DEX','BODY','SPD','EMP','CRA','WILL','LUCK','vigor'].map((k) => {
+  const mainStats = ['INT', 'REF', 'DEX', 'BODY', 'SPD', 'EMP', 'CRA', 'WILL', 'LUCK', 'vigor'].map((k) => {
     const statCells = valueCellsFromStatish(asRecord(rawStats[k] ?? stats[k]));
     const abbr =
       k === 'vigor'
@@ -991,7 +992,7 @@ function buildVmWithCatalog(
     });
     skillSidebarGrouped.set(key, sidebarArr);
   }
-  const skillTables: Table[] = ['INT','REF','DEX','BODY','SPD','EMP','CRA','WILL','OTHER']
+  const skillTables: Table[] = ['INT', 'REF', 'DEX', 'BODY', 'SPD', 'EMP', 'CRA', 'WILL', 'OTHER']
     .map((key) => {
       const rows = (grouped.get(key) ?? []).sort((a, b) => (a.cells[0] ?? '').localeCompare(b.cells[0] ?? '', lang === 'ru' ? 'ru' : 'en'));
       if (!rows.length) return null;
@@ -1033,7 +1034,7 @@ function buildVmWithCatalog(
     };
   });
 
-  const skillSidebarGroups: SkillSidebarGroup[] = ['INT','REF','DEX','BODY','SPD','EMP','CRA','WILL','OTHER']
+  const skillSidebarGroups: SkillSidebarGroup[] = ['INT', 'REF', 'DEX', 'BODY', 'SPD', 'EMP', 'CRA', 'WILL', 'OTHER']
     .map((id) => {
       const rows = (skillSidebarGrouped.get(id) ?? []).sort((a, b) => a.name.localeCompare(b.name, lang === 'ru' ? 'ru' : 'en'));
       if (!rows.length) return null;
@@ -1219,8 +1220,8 @@ function buildVmWithCatalog(
   const vigorRec = asRecord(rawStats.vigor ?? rawStats.VIGOR ?? stats.vigor ?? stats.VIGOR) ?? {};
   const hasVigor =
     (num(vigorRec.cur) ?? 0) +
-      (num(vigorRec.bonus ?? vigorRec.mod) ?? 0) +
-      (num(vigorRec.race_bonus) ?? 0) >
+    (num(vigorRec.bonus ?? vigorRec.mod) ?? 0) +
+    (num(vigorRec.race_bonus) ?? 0) >
     0;
 
   const spellsMerged = mergeMagicRowsByIndex(asArray(magic.spells), asArray(rawMagic.spells));
@@ -1480,24 +1481,24 @@ function buildVmWithCatalog(
 
   const lifeEvents: LifeEventRow[] = Array.isArray(lore?.lifeEvents)
     ? lore.lifeEvents
-        .map((e) => asRecord(e) ?? {})
-        .map((rec) => ({
-          period: text(rec.timePeriod, ''),
-          type: text(rec.eventType, ''),
-          description: text(rec.description, ''),
-        }))
-        .filter((r) => r.period || r.type || r.description)
+      .map((e) => asRecord(e) ?? {})
+      .map((rec) => ({
+        period: text(rec.timePeriod, ''),
+        type: text(rec.eventType, ''),
+        description: text(rec.description, ''),
+      }))
+      .filter((r) => r.period || r.type || r.description)
     : [];
   const siblings: SiblingRow[] = Array.isArray(lore?.siblings)
     ? lore.siblings
-        .map((s) => asRecord(s) ?? {})
-        .map((rec) => ({
-          age: text(rec.age, ''),
-          gender: text(rec.gender, ''),
-          attitude: text(rec.attitude, ''),
-          personality: text(rec.personality, ''),
-        }))
-        .filter((r) => r.age || r.gender || r.attitude || r.personality)
+      .map((s) => asRecord(s) ?? {})
+      .map((rec) => ({
+        age: text(rec.age, ''),
+        gender: text(rec.gender, ''),
+        attitude: text(rec.attitude, ''),
+        personality: text(rec.personality, ''),
+      }))
+      .filter((r) => r.age || r.gender || r.attitude || r.personality)
     : [];
 
   const isWitcher = text(logic.race, '').trim().toLowerCase() === 'witcher';
@@ -1560,21 +1561,21 @@ function buildVmWithCatalog(
     potionTable: potions.length ? { title: tx.sections.alchemy, columns: [tx.cols.qty, tx.sections.alchemy, tx.cols.tox, tx.cols.time, tx.cols.effect, tx.cols.wt, tx.cols.price], rows: potions } : null,
     magicTable: magicRows.length
       ? {
-          title: tx.sections.magic,
-          columns: [
-            tx.page1.magicCols.type,
-            tx.page1.magicCols.name,
-            tx.page1.magicCols.element,
-            tx.page1.magicCols.vigor,
-            tx.page1.magicCols.vigorKeep,
-            tx.page1.magicCols.damage,
-            tx.page1.magicCols.time,
-            tx.page1.magicCols.distance,
-            tx.page1.magicCols.size,
-            tx.page1.magicCols.form,
-          ],
-          rows: magicRows,
-        }
+        title: tx.sections.magic,
+        columns: [
+          tx.page1.magicCols.type,
+          tx.page1.magicCols.name,
+          tx.page1.magicCols.element,
+          tx.page1.magicCols.vigor,
+          tx.page1.magicCols.vigorKeep,
+          tx.page1.magicCols.damage,
+          tx.page1.magicCols.time,
+          tx.page1.magicCols.distance,
+          tx.page1.magicCols.size,
+          tx.page1.magicCols.form,
+        ],
+        rows: magicRows,
+      }
       : null,
     loreTable: loreRows.length ? { title: tx.sections.lore, columns: [tx.cols.field, tx.cols.note], rows: loreRows } : null,
     page2SocialStatus: socialStatusGroups,
@@ -1594,6 +1595,7 @@ function buildVmWithCatalog(
     page3Money,
     page3GeneralGear,
     page4Magic,
+    avatarBuffer,
   };
 }
 
@@ -1890,9 +1892,9 @@ class Painter {
     });
 
     this.doc.moveTo(x, cy).lineTo(x + w, cy).strokeColor(COLORS.line).lineWidth(0.25).stroke();
-      this.fontB(7.0);
-      this.doc.fillColor(COLORS.text).text(definingLabel, x + 4, cy + 2, { width: w - 8, lineBreak: false, ellipsis: true });
-      cy += rowH;
+    this.fontB(7.0);
+    this.doc.fillColor(COLORS.text).text(definingLabel, x + 4, cy + 2, { width: w - 8, lineBreak: false, ellipsis: true });
+    cy += rowH;
 
     // No horizontal line between "Defining skill" label row and its value row.
     this.fontR(6.85);
@@ -4295,13 +4297,13 @@ class Painter {
     const rows = realRows.length > 0
       ? realRows
       : [{
-          amount: '',
-          name: '',
-          description: '',
-          concealment: '',
-          weight: '',
-          price: '',
-        } as GeneralGearPageRow];
+        amount: '',
+        name: '',
+        description: '',
+        concealment: '',
+        weight: '',
+        price: '',
+      } as GeneralGearPageRow];
 
     let gearIndex = this.drawGeneralGearPairOnce(x, startY, w, title, headers, rows, startIndex);
     const hasRealRows = realRows.length > 0;
@@ -5160,7 +5162,7 @@ class Painter {
       for (const item of legendPairs) {
         const asset = formulaIngredientAssetPath(item.token, alchemyIconStyle);
         if (asset) {
-          try { this.doc.image(asset, lx, ly + 1, { fit: [legendIcon, legendIcon] }); } catch {}
+          try { this.doc.image(asset, lx, ly + 1, { fit: [legendIcon, legendIcon] }); } catch { }
         }
         this.fontR(legendFont);
         const hyphenW = this.textWidth(hyphenText, 'regular', legendFont);
@@ -5262,17 +5264,17 @@ class Painter {
     ];
     const vehicleRows = vehicles.length
       ? vehicles.map((v) => [
-          v.amount,
-          v.subgroupName,
-          v.vehicleName,
-          v.base,
-          v.controlModifier,
-          v.speed,
-          v.hp,
-          v.weight,
-          v.price,
-          ...(showOccupancy ? [v.occupancy] : []),
-        ])
+        v.amount,
+        v.subgroupName,
+        v.vehicleName,
+        v.base,
+        v.controlModifier,
+        v.speed,
+        v.hp,
+        v.weight,
+        v.price,
+        ...(showOccupancy ? [v.occupancy] : []),
+      ])
       : [new Array(vehicleHeaders.length).fill('')];
 
     const supportH = this.drawPackedTableGroup(x, cy, w, '1/2', [
@@ -5301,13 +5303,13 @@ class Painter {
     const generalRows = realGeneralRows.length > 0
       ? realGeneralRows
       : [{
-          amount: '',
-          name: '',
-          description: '',
-          concealment: '',
-          weight: '',
-          price: '',
-        } as GeneralGearPageRow];
+        amount: '',
+        name: '',
+        description: '',
+        concealment: '',
+        weight: '',
+        price: '',
+      } as GeneralGearPageRow];
     this.page3FirstPairGuideRows = this.estimateGeneralGearPairUsage(
       w,
       this.bottom() - cy,
@@ -5539,7 +5541,7 @@ class Painter {
 
   private estimatePage3FirstPairGeneralGearIndex(vm: Vm): { nextIndex: number; guideRows: number } {
     const probeDoc = new PDFDocument({ size: 'A4', margin: 0, compress: true });
-    probeDoc.on('data', () => {});
+    probeDoc.on('data', () => { });
     const probe = new Painter(probeDoc);
     const nextIndex = probe.drawPage3Recipes(vm);
     probeDoc.end();
@@ -5569,11 +5571,11 @@ class Painter {
 
     let best:
       | {
-          order: number[];
-          placements: PackedPlacement[];
-          totalH: number;
-          sumH: number;
-        }
+        order: number[];
+        placements: PackedPlacement[];
+        totalH: number;
+        sumH: number;
+      }
       | null = null;
 
     for (const order of candidates) {
@@ -5619,23 +5621,23 @@ class Painter {
       measure: (cw: number) => number;
       draw: (cx: number, cy: number, cw: number) => number;
     }> = [
-      {
-        id: 'social',
-        measure: (cw) => {
-          const groups = (vm.page2SocialStatus ?? []).length
-            ? (vm.page2SocialStatus ?? [])
-            : [{ groupName: '—', statusLabel: '—', isFeared: false }];
-          const values = groups.map((g) => (g.isFeared ? `${g.statusLabel} ${tx.page2.socialStatus.fearedSuffix}` : g.statusLabel));
-          return this.measurePage2SocialStatusCardHeight(cw, groups.map((g) => g.groupName), values);
+        {
+          id: 'social',
+          measure: (cw) => {
+            const groups = (vm.page2SocialStatus ?? []).length
+              ? (vm.page2SocialStatus ?? [])
+              : [{ groupName: '—', statusLabel: '—', isFeared: false }];
+            const values = groups.map((g) => (g.isFeared ? `${g.statusLabel} ${tx.page2.socialStatus.fearedSuffix}` : g.statusLabel));
+            return this.measurePage2SocialStatusCardHeight(cw, groups.map((g) => g.groupName), values);
+          },
+          draw: (cx, cy, cw) => this.drawPage2SocialStatusCard(cx, cy, cw, tx.page2.socialStatusRace, vm.page2SocialStatus ?? [], tx.page2.socialStatus.fearedSuffix),
         },
-        draw: (cx, cy, cw) => this.drawPage2SocialStatusCard(cx, cy, cw, tx.page2.socialStatusRace, vm.page2SocialStatus ?? [], tx.page2.socialStatus.fearedSuffix),
-      },
-      {
-        id: 'lore',
-        measure: (cw) => this.measureLoreCardHeight(cw, tx.page2.lore, vm.page2LoreBlocks ?? []),
-        draw: (cx, cy, cw) => this.drawLoreCard(cx, cy, cw, tx.page2.lore, vm.page2LoreBlocks ?? []),
-      },
-    ];
+        {
+          id: 'lore',
+          measure: (cw) => this.measureLoreCardHeight(cw, tx.page2.lore, vm.page2LoreBlocks ?? []),
+          draw: (cx, cy, cw) => this.drawLoreCard(cx, cy, cw, tx.page2.lore, vm.page2LoreBlocks ?? []),
+        },
+      ];
     if (Array.isArray(vm.page2Siblings) && vm.page2Siblings.length > 0) {
       const siblingsHeaders = [
         tx.page2.siblingsCols.age,
@@ -5894,9 +5896,28 @@ class Painter {
       topH,
     );
     this.shell(x4, topY, cw, topH, tx.top.avatar, COLORS.headerDefault);
-    this.doc.rect(x4 + 4, topY + PAGE.headerH + 4, cw - 8, topH - PAGE.headerH - 8).fill('#ddd2be');
-    this.doc.lineWidth(0.4).strokeColor('#8f826b').rect(x4 + 4, topY + PAGE.headerH + 4, cw - 8, topH - PAGE.headerH - 8).stroke();
-    this.fontR(7); this.doc.fillColor(COLORS.muted).text(tx.avatarPlaceholder, x4 + 8, topY + topH - 18, { width: cw - 16, align: 'center', lineBreak: false, ellipsis: true });
+    const avX = x4 + 4;
+    const avY = topY + PAGE.headerH + 4;
+    const avW = cw - 8;
+    const avH = topH - PAGE.headerH - 8;
+
+    if (vm.avatarBuffer) {
+      try {
+        this.doc.save();
+        this.doc.rect(avX, avY, avW, avH).clip();
+        this.doc.image(vm.avatarBuffer, avX, avY, { width: avW, height: avH });
+        this.doc.restore();
+      } catch (err) {
+        console.warn('[pdfkit] failed to draw avatar', err);
+        this.doc.rect(avX, avY, avW, avH).fill('#ddd2be');
+        this.fontR(7); this.doc.fillColor(COLORS.muted).text(tx.avatarPlaceholder, x4 + 8, topY + topH - 18, { width: cw - 16, align: 'center', lineBreak: false, ellipsis: true });
+      }
+    } else {
+      this.doc.rect(avX, avY, avW, avH).fill('#ddd2be');
+      this.fontR(7); this.doc.fillColor(COLORS.muted).text(tx.avatarPlaceholder, x4 + 8, topY + topH - 18, { width: cw - 16, align: 'center', lineBreak: false, ellipsis: true });
+    }
+
+    this.doc.lineWidth(0.4).strokeColor('#8f826b').rect(avX, avY, avW, avH).stroke();
     this.y = topY + topH + PAGE.gap;
 
     const leftColumnH = this.bottom() - this.y;
@@ -6000,6 +6021,7 @@ export async function generateCharacterPdfBuffer(params: {
   lang: Lang;
   skillsCatalogById?: ReadonlyMap<string, SkillCatalogLite>;
   itemEffectsGlossary?: ReadonlyArray<ItemEffectGlossaryRow>;
+  avatarBuffer?: Buffer;
 }): Promise<Buffer> {
   const pdfI18n = await loadCharacterPdfI18n(params.lang);
 
@@ -6010,6 +6032,7 @@ export async function generateCharacterPdfBuffer(params: {
     pdfI18n,
     params.skillsCatalogById,
     params.itemEffectsGlossary,
+    params.avatarBuffer,
   );
   return createPdfBuffer((doc) => new Painter(doc).draw(vm));
 }
