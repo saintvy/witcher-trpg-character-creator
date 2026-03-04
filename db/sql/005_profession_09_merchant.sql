@@ -709,9 +709,9 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
       jsonb_build_array(
-        ck_id('witcher_cc.wcc_skills.branch.посредник.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.человек_со_связями.name')::text,
-        ck_id('witcher_cc.wcc_skills.branch.торговец.name')::text
+        ck_id('witcher_cc.wcc_skills.branch.merchant.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.merchant.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.merchant.3.name')::text
       )
     )
   ) AS body;

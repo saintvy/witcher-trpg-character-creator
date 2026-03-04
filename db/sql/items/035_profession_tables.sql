@@ -530,10 +530,10 @@ WITH
         (249, 'one_with_nature', 'One With Nature', NULL, 'professional', 1, 2, 'The Druid', false, 'priest'),
         (250, 'nature_s_signs', 'Nature''s Signs', 'int', 'professional', 2, 2, 'The Druid', false, 'priest'),
         (251, 'nature_s_ally', 'Nature''s Ally', 'will', 'professional', 3, 2, 'The Druid', false, 'priest'),
-        -- Priest branch 2 (DLC exp_toc): Cultist
-        (291, 'mystagogue', 'Mystagogue', 'emp', 'professional', 1, 2, 'Cultist', false, 'priest'),
-        (292, 'cult_mystery', 'Cult Mystery', 'will', 'professional', 2, 2, 'Cultist', false, 'priest'),
-        (293, 'blessings', 'Blessings', 'will', 'professional', 3, 2, 'Cultist', false, 'priest'),
+        -- Priest branch 2 (DLC exp_toc): The Cultist
+        (291, 'mystagogue', 'Mystagogue', 'emp', 'professional', 1, 2, 'The Cultist', false, 'priest'),
+        (292, 'cult_mystery', 'Cult Mystery', 'will', 'professional', 2, 2, 'The Cultist', false, 'priest'),
+        (293, 'blessings', 'Blessings', 'will', 'professional', 3, 2, 'The Cultist', false, 'priest'),
         -- Priest branch 3: The Fanatic
         (252, 'bloody_rituals', 'Bloody Rituals', 'will', 'professional', 1, 3, 'The Fanatic', false, 'priest'),
         (253, 'zeal', 'Fervor', 'emp', 'professional', 2, 3, 'The Fanatic', false, 'priest'),
@@ -574,18 +574,18 @@ WITH
         (279, 'haggle', 'Haggle', 'emp', 'professional', 1, 3, 'The Merchant', false, 'merchant'),
         (280, 'merchant_sense', 'Merchant Sense', 'int', 'professional', 2, 3, 'The Merchant', false, 'merchant'),
         (281, 'merchant_king', 'Merchant King', 'int', 'professional', 3, 3, 'The Merchant', false, 'merchant'),
-        -- Druid branch 1: Initiate
-        (282, 'nature_attunement', 'Nature Attunement', NULL, 'professional', 1, 1, 'Initiate', false, 'druid'),
-        (283, 'read_nature', 'Read Nature', 'int', 'professional', 2, 1, 'Initiate', false, 'druid'),
-        (284, 'animal_compact', 'Animal Compact', 'will', 'professional', 3, 1, 'Initiate', false, 'druid'),
-        -- Druid branch 2: Mystic Sage
-        (285, 'lore_keeper', 'Lore Keeper', NULL, 'professional', 1, 2, 'Mystic Sage', false, 'druid'),
-        (286, 'blood_and_bones', 'Blood and Bones', 'will', 'professional', 2, 2, 'Mystic Sage', false, 'druid'),
-        (287, 'bestial_form', 'Bestial Form', NULL, 'professional', 3, 2, 'Mystic Sage', false, 'druid'),
-        -- Druid branch 3: Militant
-        (288, 'beast_healer', 'Beast Healer', 'cra', 'professional', 1, 3, 'Militant', false, 'druid'),
-        (289, 'sacred_grove', 'Sacred Grove', 'will', 'professional', 2, 3, 'Militant', false, 'druid'),
-        (290, 'grove_guardian', 'Grove Guardian', 'will', 'professional', 3, 3, 'Militant', false, 'druid')
+        -- Druid branch 1: The Initiate
+        (282, 'nature_attunement', 'Nature Attunement', NULL, 'professional', 1, 1, 'The Initiate', false, 'druid'),
+        (283, 'read_nature', 'Read Nature', 'int', 'professional', 2, 1, 'The Initiate', false, 'druid'),
+        (284, 'animal_compact', 'Animal Compact', 'will', 'professional', 3, 1, 'The Initiate', false, 'druid'),
+        -- Druid branch 2: The Mystic Sage
+        (285, 'lore_keeper', 'Lore Keeper', NULL, 'professional', 1, 2, 'The Mystic Sage', false, 'druid'),
+        (286, 'blood_and_bones', 'Blood and Bones', 'will', 'professional', 2, 2, 'The Mystic Sage', false, 'druid'),
+        (287, 'bestial_form', 'Bestial Form', NULL, 'professional', 3, 2, 'The Mystic Sage', false, 'druid'),
+        -- Druid branch 3: The Militant
+        (288, 'beast_healer', 'Beast Healer', 'cra', 'professional', 1, 3, 'The Militant', false, 'druid'),
+        (289, 'sacred_grove', 'Sacred Grove', 'will', 'professional', 2, 3, 'The Militant', false, 'druid'),
+        (290, 'grove_guardian', 'Grove Guardian', 'will', 'professional', 3, 3, 'The Militant', false, 'druid')
       ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
   ),
   ins_prof_skill_names AS (
@@ -599,8 +599,21 @@ WITH
   ins_branch_names AS (
     INSERT INTO i18n_text (id, entity, entity_field, lang, text)
     SELECT DISTINCT
-      ck_id(meta.su_su_id || '.wcc_skills.branch.' || 
-        LOWER(REPLACE(REPLACE(REPLACE(raw_prof_skills.branch_name, ' ', '_'), '/', '_'), '&', 'and')) || '.name') AS id
+      ck_id(
+        meta.su_su_id
+        || '.wcc_skills.branch.'
+        || raw_prof_skills.prof_id
+        || '.'
+        || raw_prof_skills.branch_num::text
+        || CASE
+             WHEN raw_prof_skills.prof_id = 'priest'
+               AND raw_prof_skills.branch_num = 2
+               AND raw_prof_skills.skill_id IN ('mystagogue', 'cult_mystery', 'blessings')
+             THEN '.exp_toc'
+             ELSE ''
+           END
+        || '.name'
+      ) AS id
          , meta.entity, 'branch_name', raw_prof_skills.lang, raw_prof_skills.branch_name
       FROM raw_prof_skills
       CROSS JOIN meta
@@ -619,8 +632,21 @@ SELECT DISTINCT
   raw_prof_skills.branch_num::integer AS branch_number,
   CASE 
     WHEN raw_prof_skills.branch_name IS NOT NULL THEN
-      ck_id(meta.su_su_id || '.wcc_skills.branch.' || 
-        LOWER(REPLACE(REPLACE(REPLACE(raw_prof_skills.branch_name, ' ', '_'), '/', '_'), '&', 'and')) || '.name')
+      ck_id(
+        meta.su_su_id
+        || '.wcc_skills.branch.'
+        || raw_prof_skills.prof_id
+        || '.'
+        || raw_prof_skills.branch_num::text
+        || CASE
+             WHEN raw_prof_skills.prof_id = 'priest'
+               AND raw_prof_skills.branch_num = 2
+               AND raw_prof_skills.skill_id IN ('mystagogue', 'cult_mystery', 'blessings')
+             THEN '.exp_toc'
+             ELSE ''
+           END
+        || '.name'
+      )
     ELSE NULL
   END AS branch_name_id,
   raw_prof_skills.is_difficult,
@@ -1242,4 +1268,3 @@ WHERE skill_id IN (
   'haggle', 'merchant_sense', 'merchant_king'
 )
 ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
-

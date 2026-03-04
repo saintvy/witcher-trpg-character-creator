@@ -1,9 +1,9 @@
 import crypto from 'node:crypto';
-import { db } from '../../db/pool.js';
+import { db } from '../../core/index.js';
 
 type DeepKeyTree = { [k: string]: string | DeepKeyTree };
 
-const CK_ID_NAMESPACE = '12345678-9098-7654-3212-345678909876';
+const CK_ID_NAMESPACE = '348ce630-ac0d-49e3-8d22-d7a2aa677825';
 
 function ck_id(src: string): string {
   const hash = crypto.createHash('md5').update(CK_ID_NAMESPACE + src).digest('hex');
@@ -34,6 +34,10 @@ function mapLeafStrings<T extends DeepKeyTree>(tree: T, mapFn: (value: string) =
     else out[k] = mapLeafStrings(v, mapFn);
   }
   return out;
+}
+
+function normalizeResolvedText(value: string): string {
+  return String(value ?? '').replace(/<br\s*\/?>/gi, '\n').replace(/\r\n?/g, '\n').trim();
 }
 
 // Reuse the same i18n keys as in magic shop (node 096) so columns match 1:1.
@@ -149,8 +153,8 @@ export async function loadCharacterPdfPage4I18n(lang: string): Promise<Character
     const id = keyToId.get(key);
     if (!id) return key;
     const rec = byId.get(id);
-    if (rec?.[lang]) return rec[lang];
-    if (lang !== 'en' && rec?.['en']) return rec['en'];
+    if (rec?.[lang]) return normalizeResolvedText(rec[lang]);
+    if (lang !== 'en' && rec?.['en']) return normalizeResolvedText(rec['en']);
     return key;
   };
 

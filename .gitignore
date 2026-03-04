@@ -9,9 +9,15 @@ dist
 # Env
 .env
 .env.local
+.env.*.local
 
 # CDK
 cdk.out
+infra/generated/
+
+# App build output
+apps/api/dist
+apps/web/out
 
 # DB
 db/data

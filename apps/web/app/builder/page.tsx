@@ -2,8 +2,10 @@
 
 import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import jsonLogic from "json-logic-js";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
+import { apiFetch } from "../api-fetch";
 import { ShopRenderer } from "../components/ShopRenderer";
 import { StatsSkillsRenderer } from "../components/StatsSkillsRenderer";
 
@@ -56,9 +58,10 @@ type NextQuestionResponse = {
   historyQuestions?: HistoryQuestion[];
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 const RUN_SEED_STORAGE_KEY = "wcc_builder_run_seed";
 const RUN_PROGRESS_STORAGE_PREFIX = "wcc_builder_progress";
+const BUILDER_IMPORT_HANDOFF_STORAGE_KEY = "wcc_builder_import_handoff";
 const IMPORT_EXPORT_SCHEMA_VERSION = 1;
 
 type BuilderProgressExport = {
@@ -70,10 +73,18 @@ type BuilderProgressExport = {
   ts: number;
 };
 
+type SaveCharacterResponse = {
+  id?: string;
+  name?: string | null;
+  race?: string | null;
+  profession?: string | null;
+  createdAt?: string;
+};
+
 export default function BuilderPage() {
+  const router = useRouter();
   const { lang, mounted } = useLanguage();
-  // Use default language until mounted to avoid hydration mismatch
-  const displayLang = mounted ? lang : "en";
+  const displayLang = lang;
   const [runSeed, setRunSeed] = useState(() => {
     try {
       const existing = sessionStorage.getItem(RUN_SEED_STORAGE_KEY);
@@ -110,6 +121,9 @@ export default function BuilderPage() {
   const [generatePdfError, setGeneratePdfError] = useState<string | null>(null);
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
   const [copyGenerateSuccess, setCopyGenerateSuccess] = useState(false);
+  const [savingCharacter, setSavingCharacter] = useState(false);
+  const [saveCharacterError, setSaveCharacterError] = useState<string | null>(null);
+  const [saveCharacterSuccess, setSaveCharacterSuccess] = useState<string | null>(null);
   const historyContainerRef = useRef<HTMLDivElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const didInitRef = useRef(false);
@@ -160,6 +174,21 @@ export default function BuilderPage() {
   }, [progressStorageKey]);
 
   const normalizeImportedAnswers = useCallback((value: unknown): AnswerInput[] | null => {
+    const patchImportedStringValue = (raw: string): string => {
+      try {
+        const parsed = JSON.parse(raw) as unknown;
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return raw;
+        const rec = parsed as Record<string, unknown>;
+        if (!Array.isArray(rec.purchases)) return raw;
+        if (rec.ignoreWarnings === true) return raw;
+        // Backward compatibility for old exports: allow replaying overspent shop payloads
+        // when the original run proceeded via "ignore warnings".
+        return JSON.stringify({ ...rec, ignoreWarnings: true });
+      } catch {
+        return raw;
+      }
+    };
+
     if (!Array.isArray(value)) return null;
     const out: AnswerInput[] = [];
     for (const item of value) {
@@ -177,7 +206,7 @@ export default function BuilderPage() {
         if (valueObj.type === "number" && typeof valueObj.data === "number" && Number.isFinite(valueObj.data)) {
           normalized = { ...normalized, value: { type: "number", data: valueObj.data } };
         } else if (valueObj.type === "string" && typeof valueObj.data === "string") {
-          normalized = { ...normalized, value: { type: "string", data: valueObj.data } };
+          normalized = { ...normalized, value: { type: "string", data: patchImportedStringValue(valueObj.data) } };
         } else {
           return null;
         }
@@ -376,7 +405,7 @@ export default function BuilderPage() {
       setError(null);
       try {
         const effectiveSeed = seedOverride ?? runSeed;
-        const response = await fetch(`${API_URL}/survey/next`, {
+        const response = await apiFetch(`${API_URL}/survey/next`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ answers, lang, seed: effectiveSeed }),
@@ -390,6 +419,45 @@ export default function BuilderPage() {
         const payload: NextQuestionResponse = JSON.parse(responseText);
         
         // Сохраняем отформатированный JSON для debug
+        const nextAnswers = payload.historyAnswers ?? answers;
+        saveAnswers(nextAnswers, effectiveSeed);
+        setLastResponseJson(JSON.stringify(payload, null, 2));
+        setHistory(nextAnswers);
+        setHistoryQuestions(payload.historyQuestions ?? []);
+        setState(payload.state ?? {});
+        setDone(Boolean(payload.done));
+        setQuestion(payload.question ?? null);
+        setOptions(payload.answerOptions ?? []);
+        return payload;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [lang, runSeed, saveAnswers],
+  );
+
+  const fetchRandomToEnd = useCallback(
+    async (answers: AnswerInput[], seedOverride?: string): Promise<NextQuestionResponse | null> => {
+      setLoading(true);
+      setError(null);
+      try {
+        const effectiveSeed = seedOverride ?? runSeed;
+        const response = await apiFetch(`${API_URL}/survey/random-to-end`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answers, lang, seed: effectiveSeed }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Survey API responded with status ${response.status}`);
+        }
+
+        const responseText = await response.text();
+        const payload: NextQuestionResponse = JSON.parse(responseText);
+
         const nextAnswers = payload.historyAnswers ?? answers;
         saveAnswers(nextAnswers, effectiveSeed);
         setLastResponseJson(JSON.stringify(payload, null, 2));
@@ -1020,55 +1088,17 @@ export default function BuilderPage() {
     }
 
     setAutoRandomising(true);
-    let currentQuestion: Question | null = question;
-    let currentOptions = options;
-    let currentState = state;
-    let currentHistory = history;
-    let currentDone = done;
-    let safety = 0;
-
     try {
-      while (currentQuestion && !currentDone) {
-        if (!canRandomiseQuestionFor(currentQuestion, currentOptions, currentState)) {
-          break;
-        }
-
-        const randomAnswer = buildRandomAnswer(currentQuestion, currentOptions, currentState);
-        if (!randomAnswer) {
-          break;
-        }
-
-        const nextHistory = [...currentHistory, randomAnswer];
-        const payload = await fetchNext(nextHistory);
-        if (!payload) {
-          break;
-        }
-
-        currentHistory = payload.historyAnswers ?? nextHistory;
-        currentState = payload.state ?? {};
-        currentDone = Boolean(payload.done);
-        currentQuestion = payload.question ?? null;
-        currentOptions = payload.answerOptions ?? [];
-
-        safety += 1;
-        if (safety > 5000) {
-          break;
-        }
-      }
+      await fetchRandomToEnd(history);
     } finally {
       setAutoRandomising(false);
     }
   }, [
     autoRandomising,
-    buildRandomAnswer,
-    canRandomiseQuestionFor,
-    done,
-    fetchNext,
+    fetchRandomToEnd,
     history,
     loading,
-    options,
     question,
-    state,
   ]);
 
   const content = {
@@ -1286,7 +1316,7 @@ export default function BuilderPage() {
           ? (state as any).characterRaw
           : state;
 
-    const response = await fetch(`${API_URL}/generate-character?lang=${lang}`, {
+    const response = await apiFetch(`${API_URL}/generate-character?lang=${lang}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -1326,7 +1356,7 @@ export default function BuilderPage() {
           ? { ...(baseJson as any), avatarDataUrl }
           : baseJson;
 
-      const res = await fetch(`${API_URL}/character/pdf`, {
+      const res = await apiFetch(`${API_URL}/character/pdf`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ character: characterJson, options }),
@@ -1479,6 +1509,79 @@ export default function BuilderPage() {
     URL.revokeObjectURL(url);
   }, [history, lang, runSeed]);
 
+  const buildExportPayload = useCallback((): BuilderProgressExport => {
+    return {
+      v: IMPORT_EXPORT_SCHEMA_VERSION,
+      kind: "wcc_builder_progress",
+      seed: runSeed,
+      lang,
+      answers: history,
+      ts: Date.now(),
+    };
+  }, [history, lang, runSeed]);
+
+  const saveCharacter = useCallback(async () => {
+    const rawCharacter =
+      state && typeof state === "object" && !Array.isArray(state) && "characterRaw" in (state as any)
+        ? (state as any).characterRaw
+        : null;
+
+    if (!rawCharacter || typeof rawCharacter !== "object" || Array.isArray(rawCharacter)) {
+      setSaveCharacterError(
+        displayLang === "ru"
+          ? "Не найден raw JSON персонажа для сохранения."
+          : "Raw character JSON is not available for saving.",
+      );
+      return;
+    }
+
+    try {
+      setSavingCharacter(true);
+      setSaveCharacterError(null);
+      setSaveCharacterSuccess(null);
+
+      const response = await apiFetch(`${API_URL}/characters`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rawCharacter,
+          answersExport: buildExportPayload(),
+        }),
+      });
+
+      if (!response.ok) {
+        let message = `Request failed with status ${response.status}`;
+        try {
+          const err = (await response.json()) as { error?: unknown };
+          if (typeof err?.error === "string" && err.error.trim().length > 0) {
+            message = err.error;
+          }
+        } catch {
+          const text = await response.text().catch(() => "");
+          if (text.trim().length > 0) message = text;
+        }
+        throw new Error(message);
+      }
+
+      const result = (await response.json()) as SaveCharacterResponse;
+      setSaveCharacterSuccess(
+        displayLang === "ru"
+          ? `Персонаж сохранён${result.id ? ` (#${result.id.slice(0, 8)})` : ""}.`
+          : `Character saved${result.id ? ` (#${result.id.slice(0, 8)})` : ""}.`,
+      );
+      try {
+        window.dispatchEvent(new Event("wcc:characters-changed"));
+      } catch {
+        // ignore browser event failures
+      }
+      router.push("/characters");
+    } catch (error) {
+      setSaveCharacterError(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSavingCharacter(false);
+    }
+  }, [buildExportPayload, displayLang, router, state]);
+
   const openImportPicker = useCallback(() => {
     importInputRef.current?.click();
   }, []);
@@ -1525,6 +1628,51 @@ export default function BuilderPage() {
     },
     [displayLang, fetchNext, normalizeImportedAnswers, runSeed],
   );
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(BUILDER_IMPORT_HANDOFF_STORAGE_KEY);
+      if (!raw) return;
+      sessionStorage.removeItem(BUILDER_IMPORT_HANDOFF_STORAGE_KEY);
+
+      void (async () => {
+        try {
+          setError(null);
+          const parsed = JSON.parse(raw) as unknown;
+
+          let importedSeed = runSeed;
+          let rawAnswers: unknown = parsed;
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            const rec = parsed as Record<string, unknown>;
+            if (typeof rec.seed === "string" && rec.seed.trim().length > 0) {
+              importedSeed = rec.seed.trim();
+            }
+            if ("answers" in rec) {
+              rawAnswers = rec.answers;
+            }
+          }
+
+          const importedAnswers = normalizeImportedAnswers(rawAnswers);
+          if (!importedAnswers) {
+            throw new Error(displayLang === "ru" ? "Некорректный формат файла импорта." : "Invalid import file format.");
+          }
+
+          try {
+            sessionStorage.setItem(RUN_SEED_STORAGE_KEY, importedSeed);
+          } catch {
+            // ignore storage failures
+          }
+
+          setRunSeed(importedSeed);
+          await fetchNext(importedAnswers, importedSeed);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
+        }
+      })();
+    } catch {
+      // ignore storage failures
+    }
+  }, [displayLang, fetchNext, normalizeImportedAnswers, runSeed]);
 
   return (
     <>
@@ -1615,94 +1763,12 @@ export default function BuilderPage() {
                 {displayLang === "ru" ? "История пуста" : "History is empty"}
               </div>
             )}
-            <div className="wizard-footer">
-              <div className="wizard-footer-row">
-                <button
-                  type="button"
-                  onClick={() => setShowDebug(true)}
-                  className="debug-btn"
-                >
-                  🐛 {displayLang === "ru" ? "Debug" : "Debug"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void pickAvatar()}
-                  className="debug-btn"
-                  disabled={loadingGeneratePdf || loadingGenerateResult}
-                  title={displayLang === "ru" ? "Выбрать изображение для аватара" : "Pick avatar image"}
-                >
-                  {avatarDataUrl ? (displayLang === "ru" ? "Avatar ✓" : "Avatar ✓") : "Avatar"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowGenerateResult(true);
-                    void loadGenerateResult();
-                  }}
-                  className="debug-btn"
-                  disabled={loadingGenerateResult}
-                >
-                  {loadingGenerateResult ? "⏳" : "✨"} {displayLang === "ru" ? "Generate" : "Generate"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void downloadPdf({ alchemy_style: "w2" })}
-                  className="debug-btn"
-                  disabled={loadingGeneratePdf || loadingGenerateResult}
-                  title={displayLang === "ru" ? "Скачать PDF чарника (w2)" : "Download character PDF (w2)"}
-                >
-                  {loadingGeneratePdf ? "⏳" : "PDF"} w2
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void downloadPdf({ alchemy_style: "w1" })}
-                  className="debug-btn"
-                  disabled={loadingGeneratePdf || loadingGenerateResult}
-                  title={displayLang === "ru" ? "Скачать PDF чарника (w1)" : "Download character PDF (w1)"}
-                >
-                  {loadingGeneratePdf ? "⏳" : "PDF"} w1
-                </button>
-              </div>
-              <div className="wizard-footer-row wizard-footer-row-secondary">
-                <button
-                  type="button"
-                  onClick={exportProgress}
-                  className="debug-btn wizard-footer-half"
-                >
-                  Export
-                </button>
-                <button
-                  type="button"
-                  onClick={openImportPicker}
-                  className="debug-btn wizard-footer-half"
-                >
-                  Import
-                </button>
-              </div>
-              <input
-                ref={importInputRef}
-                type="file"
-                accept="application/json,.json"
-                onChange={(event) => void importProgress(event)}
-                style={{ display: "none" }}
-              />
-            </div>
-            {generatePdfError && (
-              <div style={{ marginTop: "6px", color: "#ef4444", fontSize: "12px" }}>
-                {displayLang === "ru" ? `PDF ошибка: ${generatePdfError}` : `PDF error: ${generatePdfError}`}
-              </div>
-            )}
           </div>
           <div className="wizard-body">
             <div className="section-title-row">
               <div>
                 <div className="section-title">
                   {questionPathTitle ?? question?.id ?? "Loading..."}
-                </div>
-                <div className="section-note">
-                  {displayLang === "ru"
-                    ? "Поля и структуры должны соответствовать API контракту персонажа."
-                    : "Fields and structures must match the character API contract."}
                 </div>
               </div>
               {canRandomiseQuestion && (
@@ -1733,24 +1799,33 @@ export default function BuilderPage() {
 
             {done && (
               <div className="survey-done">
-                <p>{displayLang === "ru" ? "Опрос завершён." : "Survey completed."}</p>
+                <p>
+                  {displayLang === "ru"
+                    ? "Опрос окончен. Если хочешь что-то поправить, вернись к нужному вопросу через историю слева."
+                    : "Survey completed. If you want to adjust anything, return to the needed question via the history on the left."}
+                </p>
                 <button
                   type="button"
-                  onClick={() => {
-                    clearSavedAnswers();
-                    void fetchNext([]);
-                  }}
-                  disabled={loading}
+                  onClick={() => void saveCharacter()}
+                  disabled={loading || savingCharacter}
                   className="btn btn-primary"
                 >
-                  {displayLang === "ru" ? "Начать заново" : "Restart"}
+                  {savingCharacter
+                    ? (displayLang === "ru" ? "Сохраняем..." : "Saving...")
+                    : (displayLang === "ru" ? "Сохранить персонажа" : "Save Character")}
                 </button>
+                {saveCharacterSuccess ? (
+                  <div style={{ marginTop: 8, color: "#48e29b", fontSize: 12 }}>{saveCharacterSuccess}</div>
+                ) : null}
+                {saveCharacterError ? (
+                  <div style={{ marginTop: 8, color: "#ef4444", fontSize: 12 }}>{saveCharacterError}</div>
+                ) : null}
               </div>
             )}
 
             {!done && question && (
               <div className={loading ? "survey-loading" : ""}>
-                {bodyMarkup && (
+                {bodyMarkup && !isStatsSkillsNode && (
                   <div
                     className="survey-question-body"
                     dangerouslySetInnerHTML={bodyMarkup}
@@ -1774,7 +1849,7 @@ export default function BuilderPage() {
                 {isStatsSkillsNode && (
                   <StatsSkillsRenderer
                     questionId={question.id}
-                    lang={lang}
+                    lang={displayLang}
                     state={state}
                     disabled={loading}
                     onSubmit={(payload) => {

@@ -4,35 +4,51 @@
 
 CREATE MATERIALIZED VIEW wcc_magic_gifts_v AS
 WITH langs AS (
-  SELECT 'ru'::text AS lang
-  UNION ALL
-  SELECT 'en'::text AS lang
+  SELECT DISTINCT i18n.lang
+    FROM wcc_magic_gifts g
+    JOIN i18n_text i18n ON i18n.id = g.name_id
 )
 SELECT g.mg_id
      , g.dlc_dlc_id AS dlc_id
-     , idlcs.text AS dlc
+     , coalesce(idlcs_lang.text, idlcs_en.text) AS dlc
      , (g.group_id = ck_id('witcher_cc.magic.gift.group.major')) AS is_major
-     , igroup.text AS group_name
-     , iname.text AS gift_name
+     , coalesce(igroup_lang.text, igroup_en.text) AS group_name
+     , coalesce(iname_lang.text, iname_en.text) AS gift_name
      , g.dc
      , g.vigor_cost
-     , iac.text AS action_cost
-     , ieffect.text AS effect
-     , iside.text AS side_effect
-     , replace(replace(COALESCE(itpl.text, 'Эффект: {effect}' || E'\n' || 'Побочный эффект: {side_effect}'), '{effect}', COALESCE(ieffect.text, '')), '{side_effect}', COALESCE(iside.text, '')) AS description
-     , (COALESCE(igroup.text,'') || '|' || COALESCE(iname.text,'')) AS sort_key
+     , coalesce(iac_lang.text, iac_en.text) AS action_cost
+     , coalesce(ieffect_lang.text, ieffect_en.text) AS effect
+     , coalesce(iside_lang.text, iside_en.text) AS side_effect
+     , replace(
+         replace(
+           coalesce(itpl_lang.text, itpl_en.text, ''),
+           '{effect}',
+           coalesce(ieffect_lang.text, ieffect_en.text, '')
+         ),
+         '{side_effect}',
+         coalesce(iside_lang.text, iside_en.text, '')
+       ) AS description
+     , (coalesce(igroup_lang.text, igroup_en.text, '') || '|' || coalesce(iname_lang.text, iname_en.text, '')) AS sort_key
      , l.lang
   FROM wcc_magic_gifts g
   CROSS JOIN langs l
   JOIN wcc_dlcs dlcs ON dlcs.dlc_id = g.dlc_dlc_id
-  JOIN i18n_text idlcs ON idlcs.id = dlcs.name_id AND idlcs.lang = l.lang
-  JOIN i18n_text igroup ON igroup.id = g.group_id AND igroup.lang = l.lang
-  JOIN i18n_text iname ON iname.id = g.name_id AND iname.lang = l.lang
-  LEFT JOIN i18n_text iac ON iac.lang = l.lang
-    AND iac.id = CASE WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.minor') THEN ck_id('witcher_cc.magic.gift.action_cost.minor') WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.major') THEN ck_id('witcher_cc.magic.gift.action_cost.major') END
-  LEFT JOIN i18n_text ieffect ON ieffect.id = g.effect_id AND ieffect.lang = l.lang
-  LEFT JOIN i18n_text iside ON iside.id = g.side_effect_id AND iside.lang = l.lang
-  LEFT JOIN i18n_text itpl ON itpl.id = ck_id('witcher_cc.magic.gift.description_tpl') AND itpl.lang = l.lang
+  LEFT JOIN i18n_text idlcs_lang ON idlcs_lang.id = dlcs.name_id AND idlcs_lang.lang = l.lang
+  LEFT JOIN i18n_text idlcs_en ON idlcs_en.id = dlcs.name_id AND idlcs_en.lang = 'en'
+  LEFT JOIN i18n_text igroup_lang ON igroup_lang.id = g.group_id AND igroup_lang.lang = l.lang
+  LEFT JOIN i18n_text igroup_en ON igroup_en.id = g.group_id AND igroup_en.lang = 'en'
+  LEFT JOIN i18n_text iname_lang ON iname_lang.id = g.name_id AND iname_lang.lang = l.lang
+  LEFT JOIN i18n_text iname_en ON iname_en.id = g.name_id AND iname_en.lang = 'en'
+  LEFT JOIN i18n_text iac_lang ON iac_lang.lang = l.lang
+    AND iac_lang.id = CASE WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.minor') THEN ck_id('witcher_cc.magic.gift.action_cost.minor') WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.major') THEN ck_id('witcher_cc.magic.gift.action_cost.major') END
+  LEFT JOIN i18n_text iac_en ON iac_en.lang = 'en'
+    AND iac_en.id = CASE WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.minor') THEN ck_id('witcher_cc.magic.gift.action_cost.minor') WHEN g.group_id = ck_id('witcher_cc.magic.gift.group.major') THEN ck_id('witcher_cc.magic.gift.action_cost.major') END
+  LEFT JOIN i18n_text ieffect_lang ON ieffect_lang.id = g.effect_id AND ieffect_lang.lang = l.lang
+  LEFT JOIN i18n_text ieffect_en ON ieffect_en.id = g.effect_id AND ieffect_en.lang = 'en'
+  LEFT JOIN i18n_text iside_lang ON iside_lang.id = g.side_effect_id AND iside_lang.lang = l.lang
+  LEFT JOIN i18n_text iside_en ON iside_en.id = g.side_effect_id AND iside_en.lang = 'en'
+  LEFT JOIN i18n_text itpl_lang ON itpl_lang.id = ck_id('witcher_cc.magic.gift.description_tpl') AND itpl_lang.lang = l.lang
+  LEFT JOIN i18n_text itpl_en ON itpl_en.id = ck_id('witcher_cc.magic.gift.description_tpl') AND itpl_en.lang = 'en'
  ORDER BY gift_name;
 
 CREATE UNIQUE INDEX IF NOT EXISTS wcc_magic_gifts_v_mg_lang_uidx ON wcc_magic_gifts_v (mg_id, lang);
