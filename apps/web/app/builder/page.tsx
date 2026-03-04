@@ -412,7 +412,23 @@ export default function BuilderPage() {
         });
 
         if (!response.ok) {
-          throw new Error(`Survey API responded with status ${response.status}`);
+          let details = "";
+          const errorText = await response.text().catch(() => "");
+          if (errorText.trim()) {
+            try {
+              const parsed = JSON.parse(errorText) as Record<string, unknown>;
+              details =
+                (typeof parsed.error === "string" && parsed.error) ||
+                (typeof parsed.details === "string" && parsed.details) ||
+                (typeof parsed.message === "string" && parsed.message) ||
+                errorText;
+            } catch {
+              details = errorText;
+            }
+          }
+          throw new Error(
+            `Survey API responded with status ${response.status}${details ? `: ${details}` : ""}`,
+          );
         }
 
         const responseText = await response.text();
@@ -452,7 +468,23 @@ export default function BuilderPage() {
         });
 
         if (!response.ok) {
-          throw new Error(`Survey API responded with status ${response.status}`);
+          let details = "";
+          const errorText = await response.text().catch(() => "");
+          if (errorText.trim()) {
+            try {
+              const parsed = JSON.parse(errorText) as Record<string, unknown>;
+              details =
+                (typeof parsed.error === "string" && parsed.error) ||
+                (typeof parsed.details === "string" && parsed.details) ||
+                (typeof parsed.message === "string" && parsed.message) ||
+                errorText;
+            } catch {
+              details = errorText;
+            }
+          }
+          throw new Error(
+            `Survey API responded with status ${response.status}${details ? `: ${details}` : ""}`,
+          );
         }
 
         const responseText = await response.text();

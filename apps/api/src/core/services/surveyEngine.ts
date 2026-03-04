@@ -3313,7 +3313,9 @@ async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
     nextSkillsCur[skillId] = clamped;
 
     const cost = difficultyBySkillId.get(skillId) ? 2 : 1;
-    const tokens = clamped * cost;
+    // Budget is spent only on points allocated at this node, not on pre-existing baseline.
+    const allocatedInNode = Math.max(0, clamped - baseline);
+    const tokens = allocatedInNode * cost;
     if (professionalSet.has(skillId)) spentProfessional += tokens;
     else spentCommon += tokens;
   }

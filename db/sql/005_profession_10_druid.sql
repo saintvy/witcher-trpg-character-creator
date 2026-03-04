@@ -11,14 +11,16 @@ WITH
   INSERT INTO rules (ru_id, name, body)
   VALUES
     (ck_id('witcher_cc.rules.is_dlc_exp_toc_enabled'), 'is_dlc_exp_toc_enabled', '{"in":["exp_toc",{"var":["dlcs",[]]}]}'::jsonb)
-  ON CONFLICT (ru_id) DO NOTHING
-  RETURNING ru_id
+  ON CONFLICT (ru_id) DO UPDATE
+  SET name = EXCLUDED.name,
+      body = EXCLUDED.body
+  RETURNING body AS exp_toc_expr
 )
 , rule_parts AS (
   SELECT
     (SELECT r.body FROM rules r WHERE r.name = 'is_human' ORDER BY r.ru_id LIMIT 1) AS is_human_expr,
     (SELECT r.body FROM rules r WHERE r.name = 'is_elf' ORDER BY r.ru_id LIMIT 1) AS is_elf_expr,
-    (SELECT r.body FROM rules r WHERE r.ru_id = ck_id('witcher_cc.rules.is_dlc_exp_toc_enabled') LIMIT 1) AS exp_toc_expr
+    (SELECT er.exp_toc_expr FROM ensure_rules er LIMIT 1) AS exp_toc_expr
 )
 , vis_rules AS (
   INSERT INTO rules (ru_id, name, body)
