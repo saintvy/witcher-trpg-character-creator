@@ -39,8 +39,8 @@ function getRaceVisual(race: string | null, lang: "en" | "ru") {
     gnome: { ru: "Гном", en: "Gnome", dot: "#6cb6ff", border: "rgba(108,182,255,0.45)", bg: "rgba(108,182,255,0.08)", text: "#b6dbff" },
     halfling: { ru: "Низушек", en: "Halfling", dot: "#d6a65d", border: "rgba(214,166,93,0.45)", bg: "rgba(214,166,93,0.08)", text: "#ecd2a5" },
     vran: { ru: "Вран", en: "Vran", dot: "#8e6dd9", border: "rgba(142,109,217,0.45)", bg: "rgba(142,109,217,0.08)", text: "#ccb9f5" },
-    werebubb: { ru: "Баболак", en: "Werebubb", dot: "#9b7f63", border: "rgba(155,127,99,0.45)", bg: "rgba(155,127,99,0.08)", text: "#d4c1af" },
-    werebubbs: { ru: "Баболаки", en: "Werebubbs", dot: "#9b7f63", border: "rgba(155,127,99,0.45)", bg: "rgba(155,127,99,0.08)", text: "#d4c1af" },
+    werebbubb: { ru: "Баболак", en: "Werebbubb", dot: "#9b7f63", border: "rgba(155,127,99,0.45)", bg: "rgba(155,127,99,0.08)", text: "#d4c1af" },
+    werebbubbs: { ru: "Баболаки", en: "Werebbubbs", dot: "#9b7f63", border: "rgba(155,127,99,0.45)", bg: "rgba(155,127,99,0.08)", text: "#d4c1af" },
     bobolak: { ru: "Баболак", en: "Bobolak", dot: "#9b7f63", border: "rgba(155,127,99,0.45)", bg: "rgba(155,127,99,0.08)", text: "#d4c1af" },
     bobolok: { ru: "Баболак", en: "Bobolak", dot: "#9b7f63", border: "rgba(155,127,99,0.45)", bg: "rgba(155,127,99,0.08)", text: "#d4c1af" },
   };

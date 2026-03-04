@@ -98,7 +98,7 @@ WITH
   || 'army''s humans. Humans can be fine folks. They''re varied in nature and usually a pretty resilient race. They tend to get '
   || 'swept up in causes and fears pretty easily, though. They''re the dominant species on the Continent right now and they know '
   || 'it. Heh. It''s easy to speak ill of ''em. They just about destroyed the elder races, wiped out the vran, killed all but a '
-  || 'few hundred of the werebubbs, built their cities on top of elderfolk cities, and depending on where you are they''re '
+  || 'few hundred of the werebbubbs, built their cities on top of elderfolk cities, and depending on where you are they''re '
   || 'still killing elderfolk by the score every day. But they''re not all bad. Heh, most mages are human and they may '
   || 'destabilize countries and plunge the world into chaos, but they''ve also made the world better with magic and science. '
   || 'Human are a clever bunch, and in a pinch, a human you know well will probably have your back.
@@ -1655,7 +1655,7 @@ SELECT 'character', 'wcc_race_vran',
     )
   );
 
--- Опция ответа: Баболаки / Werebubs
+-- Опция ответа: Баболаки / Werebbubbs
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
                 , 'wcc_race' AS qu_id
@@ -1699,17 +1699,17 @@ $$<h1 style="color:#c8762b;">Баболаки</h1>
   </tr>
 </table>$$),
         ('en',
-$$<h1 style="color:#c8762b;">Werebubs</h1>
-Werebbubs are among the less humanoid Elder Races to be nearly destroyed by the Landing of the Exiles many centuries ago. Much like their vran counterparts, werebbubs lived in the lowland valleys and mountainous foothills of the Continent, practicing age-old traditions, and seeking to live in relative harmony with the land around them. The werebbubs were and still are a proud race with a long history of heroics and valor. In fact, instead of worshiping gods, werebbubs worship the memories of their ancestors and the spirits of the legendary heroes and heroines. Werebbubs are raised with stories of great warriors and wise sages who used their gifts to help their people and defeat terrifying enemies.
+$$<h1 style="color:#c8762b;">Werebbubbs</h1>
+Werebbubbs are among the less humanoid Elder Races to be nearly destroyed by the Landing of the Exiles many centuries ago. Much like their vran counterparts, werebbubbs lived in the lowland valleys and mountainous foothills of the Continent, practicing age-old traditions, and seeking to live in relative harmony with the land around them. The werebbubbs were and still are a proud race with a long history of heroics and valor. In fact, instead of worshiping gods, werebbubbs worship the memories of their ancestors and the spirits of the legendary heroes and heroines. Werebbubbs are raised with stories of great warriors and wise sages who used their gifts to help their people and defeat terrifying enemies.
 <h2 style="color:#c8762b;">Perks</h2>
 <h3>🟡 Lionhearted</h3>
-Werebbubs are not the largest race on the continent but they are among the bravest. Their culture values heroism and young Werebbubs hear tales of ancient ancestral heroes. Werebbubs gain an inherent [+1 to Courage].
+Werebbubbs are not the largest race on the continent but they are among the bravest. Their culture values heroism and young Werebbubbs hear tales of ancient ancestral heroes. Werebbubbs gain an inherent [+1 to Courage].
 <h3>🟡 Strange Physiology</h3>
-A werebbub’s body and metabolism work in a manner entirely alien to humans and most other elder races. When grievously wounded, some aspect of a werebbub’s physiology goes into high gear, often allowing them to survive wound that would quickly kill any other person. Whenever a werebbub takes a Critical Wound, they can roll an Endurance check with a DC equal to the DC required to Stabilize the Critical Wound. If they succeed, the Critical Wound is immediately considered Stabilized. Players may only make this roll in the moment the werebbub takes the wound and cannot be attempted again in the case of a failure.
+A werebbubb’s body and metabolism work in a manner entirely alien to humans and most other elder races. When grievously wounded, some aspect of a werebbubb’s physiology goes into high gear, often allowing them to survive wound that would quickly kill any other person. Whenever a werebbubb takes a Critical Wound, they can roll an Endurance check with a DC equal to the DC required to Stabilize the Critical Wound. If they succeed, the Critical Wound is immediately considered Stabilized. Players may only make this roll in the moment the werebbubb takes the wound and cannot be attempted again in the case of a failure.
 <h3>🟡 Razor Teeth</h3>
-While werebbub don’t possess the powerful jaws and venomous fangs of the vran, their teeth are razor sharp and honed to a fine edge. A werebbub can make a Melee attack with their fangs which deals 2d6 damage and has Improved Armor Piercing.
+While werebbubb don’t possess the powerful jaws and venomous fangs of the vran, their teeth are razor sharp and honed to a fine edge. A werebbubb can make a Melee attack with their fangs which deals 2d6 damage and has Improved Armor Piercing.
 <h3>🟡 Poor Eyesight</h3>
-In general, werebbub suffer from poor eyesight. While their keen hearing allows them to navigate the world without any significant problems, they are far from the most perceptive race on the Continent. Werebbubs take an inherent -4 on Awareness checks thanks to this poor vision. If a werebbub is called on to make a perception check based only on hearing (such as hearing footsteps upstairs or listening for growling wolves) this penalty does not apply.
+In general, werebbubb suffer from poor eyesight. While their keen hearing allows them to navigate the world without any significant problems, they are far from the most perceptive race on the Continent. Werebbubbs take an inherent -4 on Awareness checks thanks to this poor vision. If a werebbubb is called on to make a perception check based only on hearing (such as hearing footsteps upstairs or listening for growling wolves) this penalty does not apply.
 
 <h2 style="color:#c8762b;">Social Standing</h2>
 <table>
@@ -1734,7 +1734,7 @@ In general, werebbub suffer from poor eyesight. While their keen hearing allows 
       CROSS JOIN meta
 )
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
-SELECT 'wcc_race_werebub'
+SELECT 'wcc_race_werebbubb'
      , meta.su_su_id
      , meta.qu_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(8, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
@@ -1747,19 +1747,19 @@ WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
                 , 'wcc_race' AS qu_id
                 , 'character' AS entity)
-, ins_r_werebub AS (
+, ins_r_werebbubb AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'race') AS id
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'race') AS id
        , meta.entity, 'race', v.lang, v.text
     FROM (VALUES
       ('ru', 'Баболак'),
-      ('en', 'Werebub')
+      ('en', 'Werebbubb')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
-, ins_r_werebub_f1 AS (
+, ins_r_werebbubb_f1 AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '1') AS id
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '1') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
       ('ru', '<b>Львиное Сердце</b>: врождённый бонус [+1 к Храбрости]'),
@@ -1767,9 +1767,9 @@ WITH
     ) AS v(lang, text)
     CROSS JOIN meta
 )
-, ins_r_werebub_f2 AS (
+, ins_r_werebbubb_f2 AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
       ('ru', '<b>Странная Физиология</b>: при получении критического ранения может один раз сразу пройти проверку Стойкости для его стабилизации'),
@@ -1777,9 +1777,9 @@ WITH
     ) AS v(lang, text)
     CROSS JOIN meta
 )
-, ins_r_werebub_f3 AS (
+, ins_r_werebbubb_f3 AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3') AS id
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
       ('ru', '<b>Зубы-бритвы</b>: может атаковать зубами через Ближний бой; атака наносит 2d6 урона и имеет Улучшенное пробивание брони'),
@@ -1787,9 +1787,9 @@ WITH
     ) AS v(lang, text)
     CROSS JOIN meta
 )
-, ins_r_werebub_f4 AS (
+, ins_r_werebbubb_f4 AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4') AS id
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
       ('ru', '<b>Плохое зрение</b>: врождённый штраф -4 к Вниманию из-за зрения; не применяется для проверок, основанных только на слухе'),
@@ -1800,75 +1800,75 @@ WITH
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
   'character',
-  'wcc_race_werebub',
+  'wcc_race_werebbubb',
   jsonb_build_object(
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.race'),
-      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'race')::text)
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'race')::text)
     )
   )
 FROM meta UNION ALL
 SELECT
   'character' AS scope,
-  'wcc_race_werebub' AS an_an_id,
+  'wcc_race_werebbubb' AS an_an_id,
   jsonb_build_object(
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.logicFields.race'),
-      'Werebub'
+      'Werebbubb'
     )
   ) AS body
 UNION ALL
 SELECT
   'character',
-  'wcc_race_werebub',
+  'wcc_race_werebbubb',
   jsonb_build_object(
     'add',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.perks'),
-      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '1')::text)
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '1')::text)
     )
   )
 FROM meta
 UNION ALL
 SELECT
   'character',
-  'wcc_race_werebub',
+  'wcc_race_werebbubb',
   jsonb_build_object(
     'add',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.perks'),
-      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2')::text)
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2')::text)
     )
   )
 FROM meta
 UNION ALL
 SELECT
   'character',
-  'wcc_race_werebub',
+  'wcc_race_werebbubb',
   jsonb_build_object(
     'add',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.perks'),
-      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3')::text)
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3')::text)
     )
   )
 FROM meta
 UNION ALL
 SELECT
   'character',
-  'wcc_race_werebub',
+  'wcc_race_werebbubb',
   jsonb_build_object(
     'add',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.perks'),
-      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebub' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4')::text)
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4')::text)
     )
   )
 FROM meta UNION ALL
 -- Эффекты черт расы: Баболак - Львиное Сердце (+1 к Храбрости)
-SELECT 'character', 'wcc_race_werebub',
+SELECT 'character', 'wcc_race_werebbubb',
   jsonb_build_object(
     'inc',
     jsonb_build_array(
@@ -2410,7 +2410,7 @@ SELECT 'character', 'wcc_race_vran',
 -- Доль Блатанна: Терпимость
 -- Махакам: Равенство
 INSERT INTO effects (scope, an_an_id, body)
-SELECT 'character', 'wcc_race_werebub',
+SELECT 'character', 'wcc_race_werebbubb',
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -2423,7 +2423,7 @@ SELECT 'character', 'wcc_race_werebub',
     )
   )
 UNION ALL
-SELECT 'character', 'wcc_race_werebub',
+SELECT 'character', 'wcc_race_werebbubb',
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -2436,7 +2436,7 @@ SELECT 'character', 'wcc_race_werebub',
     )
   )
 UNION ALL
-SELECT 'character', 'wcc_race_werebub',
+SELECT 'character', 'wcc_race_werebbubb',
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -2449,7 +2449,7 @@ SELECT 'character', 'wcc_race_werebub',
     )
   )
 UNION ALL
-SELECT 'character', 'wcc_race_werebub',
+SELECT 'character', 'wcc_race_werebbubb',
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -2462,7 +2462,7 @@ SELECT 'character', 'wcc_race_werebub',
     )
   )
 UNION ALL
-SELECT 'character', 'wcc_race_werebub',
+SELECT 'character', 'wcc_race_werebbubb',
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -2482,7 +2482,7 @@ INSERT INTO rules(name, body) VALUES ('is_dwarf', '{"==":[{"var":"characterRaw.l
 INSERT INTO rules(name, body) VALUES ('is_gnome', '{"==":[{"var":"characterRaw.logicFields.race"},"Gnome"]}'::jsonb);
 INSERT INTO rules(name, body) VALUES ('is_halfling', '{"==":[{"var":"characterRaw.logicFields.race"},"Halfling"]}'::jsonb);
 INSERT INTO rules(name, body) VALUES ('is_vran', '{"==":[{"var":"characterRaw.logicFields.race"},"Vran"]}'::jsonb);
-INSERT INTO rules(name, body) VALUES ('is_werebub', '{"==":[{"var":"characterRaw.logicFields.race"},"Werebub"]}'::jsonb);
+INSERT INTO rules(name, body) VALUES ('is_werebbubb', '{"==":[{"var":"characterRaw.logicFields.race"},"Werebbubb"]}'::jsonb);
 INSERT INTO rules(name, body) VALUES ('is_witcher', '{"==":[{"var":"characterRaw.logicFields.race"},"Witcher"]}'::jsonb);
 
 

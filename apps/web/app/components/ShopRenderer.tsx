@@ -125,7 +125,7 @@ const RACE_LABELS: Record<string, { ru: string; en: string }> = {
   Gnome: { ru: "Гном", en: "Gnome" },
   Halfling: { ru: "Низушек", en: "Halfling" },
   Vran: { ru: "Вран", en: "Vran" },
-  Werebubb: { ru: "Баболак", en: "Werebubb" },
+  Werebbubb: { ru: "Баболак", en: "Werebbubb" },
   Witcher: { ru: "Ведьмак", en: "Witcher" },
 };
 
