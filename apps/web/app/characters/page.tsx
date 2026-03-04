@@ -5,6 +5,7 @@ import { useAuth } from "../auth-context";
 import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
 import { apiFetch } from "../api-fetch";
+import { AvatarPopup } from "../components/AvatarPopup";
 
 const BUILDER_IMPORT_HANDOFF_STORAGE_KEY = "wcc_builder_import_handoff";
 const RUN_SEED_STORAGE_KEY = "wcc_builder_run_seed";
@@ -125,6 +126,7 @@ export default function CharactersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyActionId, setBusyActionId] = useState<string | null>(null);
+  const [avatarPopupCharId, setAvatarPopupCharId] = useState<string | null>(null);
 
   const content = {
     en: {
@@ -144,6 +146,7 @@ export default function CharactersPage() {
       actions: {
         history: "Download answer history",
         raw: "Download raw JSON",
+        avatar: "Avatar",
       },
       states: {
         loading: "Loading characters...",
@@ -169,6 +172,7 @@ export default function CharactersPage() {
       actions: {
         history: "Скачать историю ответов",
         raw: "Скачать raw JSON",
+        avatar: "Аватар",
       },
       states: {
         loading: "Загрузка персонажей...",
@@ -392,6 +396,15 @@ export default function CharactersPage() {
                         <button
                           type="button"
                           className="btn-icon"
+                          title={t.actions.avatar}
+                          onClick={() => setAvatarPopupCharId(character.id)}
+                          disabled={Boolean(busyActionId)}
+                        >
+                          🖼️
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-icon"
                           title={t.actions.history}
                           onClick={() => void downloadCharacterFile(character.id, "history")}
                           disabled={Boolean(busyActionId)}
@@ -401,7 +414,7 @@ export default function CharactersPage() {
                         <button
                           type="button"
                           className="btn-icon"
-                          title={pdfActionTitle}
+                          title={displayLang === "ru" ? "Скачать PDF" : "Download PDF"}
                           onClick={() => void downloadCharacterPdf(character.id)}
                           disabled={Boolean(busyActionId)}
                         >
@@ -428,6 +441,13 @@ export default function CharactersPage() {
           )}
         </div>
       </section>
+      {avatarPopupCharId && (
+        <AvatarPopup
+          characterId={avatarPopupCharId}
+          lang={displayLang}
+          onClose={() => setAvatarPopupCharId(null)}
+        />
+      )}
     </>
   );
 }

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS wcc_user_characters (
   profession_code   TEXT,
   raw_character_json JSONB NOT NULL,
   answers_export_json JSONB NOT NULL,
+  avatar_url        TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

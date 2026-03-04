@@ -31776,6 +31776,7 @@ CREATE TABLE IF NOT EXISTS wcc_user_characters (
   profession_code   TEXT,
   raw_character_json JSONB NOT NULL,
   answers_export_json JSONB NOT NULL,
+  avatar_url        TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -32046,6 +32047,14 @@ SELECT COUNT(*) AS migrated_rows
 FROM updated;
 
 -- <<< END sql/107_rebuild_prof_branch_ids_from_prof_skills.sql
+
+-- >>> BEGIN sql/108_avatar_column.sql
+
+\echo '108_avatar_column.sql'
+
+ALTER TABLE wcc_user_characters ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+
+-- <<< END sql/108_avatar_column.sql
 
 -- >>> BEGIN sql/items/001_wcc_items_dict.sql
 

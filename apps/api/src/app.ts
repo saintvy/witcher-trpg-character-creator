@@ -1168,23 +1168,23 @@ app.post('/i18n/resolve', async (c) => {
     const lang = typeof payload.lang === 'string' && payload.lang.trim() ? payload.lang.trim() : 'en';
     const ids = Array.isArray(payload.ids)
       ? Array.from(
-          new Set(
-            payload.ids
-              .filter((v): v is string => typeof v === 'string')
-              .map((v) => v.trim())
-              .filter((v) => UUID_RE.test(v)),
-          ),
-        )
+        new Set(
+          payload.ids
+            .filter((v): v is string => typeof v === 'string')
+            .map((v) => v.trim())
+            .filter((v) => UUID_RE.test(v)),
+        ),
+      )
       : [];
     const keys = Array.isArray(payload.keys)
       ? Array.from(
-          new Set(
-            payload.keys
-              .filter((v): v is string => typeof v === 'string')
-              .map((v) => v.trim())
-              .filter((v) => v.length > 0),
-          ),
-        )
+        new Set(
+          payload.keys
+            .filter((v): v is string => typeof v === 'string')
+            .map((v) => v.trim())
+            .filter((v) => v.length > 0),
+        ),
+      )
       : [];
 
     if (ids.length === 0 && keys.length === 0) {
@@ -1976,6 +1976,220 @@ app.delete('/characters/:id', async (c) => {
   } catch (error) {
     console.error('[characters] delete error', error);
     return c.json({ error: 'Failed to delete character' }, 500);
+  }
+});
+
+// ----------------------------------------------------------------
+// Avatar storage helpers
+// ----------------------------------------------------------------
+const AVATAR_VIEWPORT = { width: 360, height: 303, aspectRatio: 360 / 303 } as const;
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+const avatarS3Bucket = process.env.WCC_DATA_S3_BUCKET?.trim() || '';
+
+let _s3Client: import('@aws-sdk/client-s3').S3Client | undefined;
+async function getS3Client() {
+  if (_s3Client) return _s3Client;
+  const { S3Client } = await import('@aws-sdk/client-s3');
+  _s3Client = new S3Client({});
+  return _s3Client;
+}
+
+function avatarS3Key(characterId: string) {
+  return `avatars/${characterId}.jpg`;
+}
+
+async function saveAvatarToStorage(characterId: string, data: Uint8Array): Promise<string> {
+  if (avatarS3Bucket) {
+    const s3 = await getS3Client();
+    const { PutObjectCommand } = await import('@aws-sdk/client-s3');
+    const key = avatarS3Key(characterId);
+    await s3.send(new PutObjectCommand({
+      Bucket: avatarS3Bucket,
+      Key: key,
+      Body: data,
+      ContentType: 'image/jpeg',
+    }));
+    return `s3://${avatarS3Bucket}/${key}`;
+  }
+  // Local dev fallback
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const dir = path.join(process.cwd(), 'data', 'avatars');
+  fs.mkdirSync(dir, { recursive: true });
+  const filePath = path.join(dir, `${characterId}.jpg`);
+  fs.writeFileSync(filePath, data);
+  return `local://avatars/${characterId}.jpg`;
+}
+
+async function loadAvatarFromStorage(avatarUrl: string): Promise<{ data: Buffer; contentType: string } | null> {
+  if (avatarUrl.startsWith('s3://')) {
+    const s3 = await getS3Client();
+    const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+    const withoutScheme = avatarUrl.slice('s3://'.length);
+    const slashIndex = withoutScheme.indexOf('/');
+    const bucket = withoutScheme.slice(0, slashIndex);
+    const key = withoutScheme.slice(slashIndex + 1);
+    try {
+      const resp = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+      const bytes = await resp.Body?.transformToByteArray();
+      if (!bytes) return null;
+      return { data: Buffer.from(bytes), contentType: resp.ContentType || 'image/jpeg' };
+    } catch (e: any) {
+      if (e?.name === 'NoSuchKey' || e?.$metadata?.httpStatusCode === 404) return null;
+      throw e;
+    }
+  }
+  if (avatarUrl.startsWith('local://')) {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const relPath = avatarUrl.slice('local://'.length);
+    const filePath = path.join(process.cwd(), 'data', relPath);
+    try {
+      const buffer = fs.readFileSync(filePath);
+      return { data: buffer, contentType: 'image/jpeg' };
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+async function deleteAvatarFromStorage(avatarUrl: string): Promise<void> {
+  if (avatarUrl.startsWith('s3://')) {
+    const s3 = await getS3Client();
+    const { DeleteObjectCommand } = await import('@aws-sdk/client-s3');
+    const withoutScheme = avatarUrl.slice('s3://'.length);
+    const slashIndex = withoutScheme.indexOf('/');
+    const bucket = withoutScheme.slice(0, slashIndex);
+    const key = withoutScheme.slice(slashIndex + 1);
+    try {
+      await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+    } catch (e) {
+      console.warn('[avatar] s3 delete error', e);
+    }
+  } else if (avatarUrl.startsWith('local://')) {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const relPath = avatarUrl.slice('local://'.length);
+    const filePath = path.join(process.cwd(), 'data', relPath);
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (e) {
+      console.warn('[avatar] local delete error', e);
+    }
+  }
+}
+
+// ----------------------------------------------------------------
+// Avatar endpoints
+// ----------------------------------------------------------------
+
+app.get('/characters/avatar-viewport', (c) => {
+  return c.json(AVATAR_VIEWPORT);
+});
+
+app.put('/characters/:id/avatar', async (c) => {
+  const ownerEmail = getUserEmail(c.get('authUser'));
+  if (!ownerEmail) {
+    return c.json({ error: 'Authenticated user email is required' }, 401);
+  }
+  const id = c.req.param('id');
+
+  // Verify character ownership
+  let existingAvatarUrl: string | null = null;
+  try {
+    const { rows } = await db.query<{ id: string, avatar_url: string | null }>(
+      `SELECT id::text AS id, avatar_url FROM wcc_user_characters WHERE id = $1::uuid AND owner_email = $2`,
+      [id, ownerEmail],
+    );
+    if (!rows[0]) return c.json({ error: 'Character not found' }, 404);
+    existingAvatarUrl = rows[0].avatar_url;
+  } catch (error) {
+    console.error('[avatar] ownership check error', error);
+    return c.json({ error: 'Failed to verify character ownership' }, 500);
+  }
+
+  // Read the request body as binary
+  const contentType = c.req.header('Content-Type') || '';
+  let fileBytes: Uint8Array;
+
+  if (contentType.includes('multipart/form-data')) {
+    const formData = await c.req.formData();
+    const file = formData.get('file');
+    if (!file || !(file instanceof File)) {
+      return c.json({ error: 'No file provided' }, 400);
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      return c.json({ error: 'File too large (max 2 MB)' }, 413);
+    }
+    fileBytes = new Uint8Array(await file.arrayBuffer());
+  } else {
+    // Accept raw binary body
+    const arrayBuffer = await c.req.arrayBuffer();
+    if (arrayBuffer.byteLength === 0) {
+      return c.json({ error: 'Empty body' }, 400);
+    }
+    if (arrayBuffer.byteLength > AVATAR_MAX_BYTES) {
+      return c.json({ error: 'File too large (max 2 MB)' }, 413);
+    }
+    fileBytes = new Uint8Array(arrayBuffer);
+  }
+
+  try {
+    const url = await saveAvatarToStorage(id, fileBytes);
+
+    // Delete old avatar if the URL changed (e.g. extension changed from .webp to .jpg)
+    if (existingAvatarUrl && existingAvatarUrl !== url) {
+      await deleteAvatarFromStorage(existingAvatarUrl);
+    }
+
+    await db.query(
+      `UPDATE wcc_user_characters SET avatar_url = $1, updated_at = NOW() WHERE id = $2::uuid AND owner_email = $3`,
+      [url, id, ownerEmail],
+    );
+    return c.json({ ok: true, avatarUrl: url });
+  } catch (error) {
+    console.error('[avatar] upload error', error);
+    return c.json({ error: 'Failed to upload avatar' }, 500);
+  }
+});
+
+app.get('/characters/:id/avatar', async (c) => {
+  const ownerEmail = getUserEmail(c.get('authUser'));
+  if (!ownerEmail) {
+    return c.json({ error: 'Authenticated user email is required' }, 401);
+  }
+  const id = c.req.param('id');
+
+  try {
+    const { rows } = await db.query<{ avatar_url: string | null }>(
+      `SELECT avatar_url FROM wcc_user_characters WHERE id = $1::uuid AND owner_email = $2`,
+      [id, ownerEmail],
+    );
+    if (!rows[0]) return c.json({ error: 'Character not found' }, 404);
+    const avatarUrl = rows[0].avatar_url;
+    if (!avatarUrl) return c.json({ error: 'No avatar uploaded' }, 404);
+
+    const result = await loadAvatarFromStorage(avatarUrl);
+    if (!result) {
+      // Clear DB avatar_url if file doesn't exist anymore
+      try {
+        await db.query(`UPDATE wcc_user_characters SET avatar_url = NULL WHERE id = $1::uuid`, [id]);
+      } catch (e) {
+        console.warn('[avatar] failed to clear missing avatar URL', e);
+      }
+      return c.json({ error: 'Avatar file not found' }, 404);
+    }
+
+    return c.body(new Uint8Array(result.data), 200, {
+      'Content-Type': result.contentType,
+      'Cache-Control': 'private, max-age=300',
+    });
+  } catch (error) {
+    console.error('[avatar] download error', error);
+    return c.json({ error: 'Failed to load avatar' }, 500);
   }
 });
 

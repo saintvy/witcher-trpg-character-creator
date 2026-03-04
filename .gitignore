@@ -30,3 +30,6 @@ Thumbs.db
 
 # TypeScript
 apps/web/tsconfig.tsbuildinfo
+
+# Data
+apps/api/data

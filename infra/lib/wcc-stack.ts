@@ -155,6 +155,27 @@ export class WccStack extends cdk.Stack {
     );
 
     // ================================================================
+    // 2b. S3 (Data bucket — avatars, PDFs, etc.)
+    // ================================================================
+    const dataBucket = new s3.Bucket(this, 'WccDataBucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // S3 Gateway endpoint so Lambda in isolated subnets can access the
+    // data bucket without a NAT Gateway (free, no data-transfer cost).
+    const s3GatewayEndpoint = new ec2.GatewayVpcEndpoint(
+      this,
+      'WccS3GatewayEndpoint',
+      {
+        vpc,
+        service: ec2.GatewayVpcEndpointAwsService.S3,
+        subnets: [{ subnetType: ec2.SubnetType.PRIVATE_ISOLATED }],
+      },
+    );
+
+    // ================================================================
     // 2. DATABASE (RDS PostgreSQL)
     // ================================================================
     const database = new rds.DatabaseInstance(this, 'WccDb', {
@@ -240,6 +261,10 @@ export class WccStack extends cdk.Stack {
       apiFunction.addEnvironment('DB_SECRET_ARN', database.secret.secretArn);
       database.secret.grantRead(apiFunction);
     }
+
+    // Data bucket: grant Lambda read/write and pass bucket name
+    dataBucket.grantReadWrite(apiFunction);
+    apiFunction.addEnvironment('WCC_DATA_S3_BUCKET', dataBucket.bucketName);
 
     const dbSeedOnEventFunction = new lambdaNodejs.NodejsFunction(
       this,
@@ -332,12 +357,12 @@ export class WccStack extends cdk.Stack {
     const jwtAuthorizer =
       cognitoJwtIssuer && cognitoJwtAudience.length > 0
         ? new apigwAuthorizers.HttpJwtAuthorizer(
-            'WccCognitoJwtAuthorizer',
-            cognitoJwtIssuer,
-            {
-              jwtAudience: cognitoJwtAudience,
-            },
-          )
+          'WccCognitoJwtAuthorizer',
+          cognitoJwtIssuer,
+          {
+            jwtAudience: cognitoJwtAudience,
+          },
+        )
         : undefined;
 
     httpApi.addRoutes({
@@ -463,6 +488,10 @@ function handler(event) {
     new cdk.CfnOutput(this, 'SecretsManagerVpcEndpointId', {
       value: secretsManagerVpcEndpoint.vpcEndpointId,
       description: 'Interface VPC endpoint used by Lambda to reach Secrets Manager privately',
+    });
+    new cdk.CfnOutput(this, 'DataBucketName', {
+      value: dataBucket.bucketName,
+      description: 'S3 bucket for app data (avatars, PDFs, etc.)',
     });
   }
 }
