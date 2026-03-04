@@ -18,6 +18,7 @@ type CharacterListItem = {
   race: string | null;
   profession: string | null;
   createdAt: string;
+  avatarUrl?: string | null;
 };
 
 type CharactersListResponse = {
@@ -444,6 +445,7 @@ export default function CharactersPage() {
       {avatarPopupCharId && (
         <AvatarPopup
           characterId={avatarPopupCharId}
+          hasAvatar={Boolean(items.find(it => it.id === avatarPopupCharId)?.avatarUrl)}
           lang={displayLang}
           onClose={() => setAvatarPopupCharId(null)}
         />

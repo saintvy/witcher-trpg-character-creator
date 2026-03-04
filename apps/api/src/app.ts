@@ -1427,7 +1427,8 @@ app.get('/characters', async (c) => {
           name,
           race_code,
           profession_code,
-          created_at::text
+          created_at::text,
+          avatar_url
         FROM wcc_user_characters
         WHERE owner_email = $1
         ORDER BY created_at DESC, id DESC
@@ -1442,6 +1443,7 @@ app.get('/characters', async (c) => {
         race: row.race_code,
         profession: row.profession_code,
         createdAt: row.created_at,
+        avatarUrl: row.avatar_url,
       })),
     });
   } catch (error) {

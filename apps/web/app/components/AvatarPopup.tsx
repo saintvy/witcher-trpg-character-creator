@@ -7,6 +7,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
 type AvatarPopupProps = {
     characterId: string;
+    hasAvatar: boolean;
     lang: "en" | "ru";
     onClose: () => void;
 };
@@ -43,10 +44,10 @@ function minCoverScale(nw: number, nh: number): number {
     return Math.max(VIEWPORT_W / nw, VIEWPORT_H / nh);
 }
 
-export function AvatarPopup({ characterId, lang, onClose }: AvatarPopupProps) {
+export function AvatarPopup({ characterId, hasAvatar, lang, onClose }: AvatarPopupProps) {
     const t = lang === "ru"
-        ? { title: "Аватар", chooseFile: "Выбрать файл", upload: "Загрузить", ok: "Ок", loading: "Загрузка…", noImage: "Нет изображения" }
-        : { title: "Avatar", chooseFile: "Choose file", upload: "Upload", ok: "Ok", loading: "Loading…", noImage: "No image" };
+        ? { title: "Аватар", chooseFile: "Выбрать файл", upload: "Загрузить", ok: "Ок", loading: "Загрузка…", noImage: "Аватар еще не был загружен", loadingImage: "Аватар загружается..." }
+        : { title: "Avatar", chooseFile: "Choose file", upload: "Upload", ok: "Ok", loading: "Loading…", noImage: "Avatar has not been uploaded yet", loadingImage: "Avatar is loading..." };
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const viewportRef = useRef<HTMLDivElement>(null);
@@ -69,6 +70,11 @@ export function AvatarPopup({ characterId, lang, onClose }: AvatarPopupProps) {
     // Load existing avatar on mount
     useEffect(() => {
         let cancelled = false;
+        // Reset state when mounting/changing character
+        setImageSrc(null);
+        setNaturalW(0);
+        setNaturalH(0);
+
         (async () => {
             try {
                 const resp = await apiFetch(`${API_URL}/characters/${characterId}/avatar`);
@@ -293,6 +299,7 @@ export function AvatarPopup({ characterId, lang, onClose }: AvatarPopupProps) {
                                 src={imageSrc}
                                 alt="avatar"
                                 onLoad={onImageLoad}
+                                onError={() => setImageSrc(null)}
                                 draggable={false}
                                 style={{
                                     position: "absolute",
@@ -311,10 +318,12 @@ export function AvatarPopup({ characterId, lang, onClose }: AvatarPopupProps) {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                textAlign: "center",
+                                padding: "20px",
                                 color: "rgba(255,255,255,0.25)",
                                 fontSize: 13,
                             }}>
-                                {t.noImage}
+                                {hasAvatar ? t.loadingImage : t.noImage}
                             </div>
                         )}
                     </div>
