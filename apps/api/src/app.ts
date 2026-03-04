@@ -1978,6 +1978,16 @@ app.delete('/characters/:id', async (c) => {
   const id = c.req.param('id');
 
   try {
+    // Fetch avatar_url before delete so we can remove the file from storage
+    const { rows: selectRows } = await db.query<{ id: string; avatar_url: string | null }>(
+      `SELECT id::text AS id, avatar_url FROM wcc_user_characters WHERE id = $1::uuid AND owner_email = $2`,
+      [id, ownerEmail],
+    );
+    if (!selectRows[0]) {
+      return c.json({ error: 'Character not found' }, 404);
+    }
+    const avatarUrl = selectRows[0].avatar_url;
+
     const { rows } = await db.query<{ id: string }>(
       `
         DELETE FROM wcc_user_characters
@@ -1989,6 +1999,12 @@ app.delete('/characters/:id', async (c) => {
     if (!rows[0]) {
       return c.json({ error: 'Character not found' }, 404);
     }
+
+    // Delete avatar from S3 bucket or local disk
+    if (avatarUrl) {
+      await deleteAvatarFromStorage(avatarUrl);
+    }
+
     return c.json({ ok: true, id: rows[0].id });
   } catch (error) {
     console.error('[characters] delete error', error);
