@@ -1,5 +1,5 @@
 {
-  "name": "@wcc/cloud-web",
+  "name": "@wcc/web",
   "private": true,
   "version": "0.1.0",
   "scripts": {

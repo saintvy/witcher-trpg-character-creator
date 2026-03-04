@@ -800,12 +800,12 @@ function fontPaths(): { regular: string; bold: string } {
   const regular = [
     '/var/task/pdf-fonts/NotoSans-Regular.ttf',
     path.join(process.cwd(), 'src', 'pdf', 'fonts', 'NotoSans-Regular.ttf'),
-    path.join(process.cwd(), 'cloud', 'api', 'src', 'pdf', 'fonts', 'NotoSans-Regular.ttf'),
+    path.join(process.cwd(), 'apps', 'api', 'src', 'pdf', 'fonts', 'NotoSans-Regular.ttf'),
   ].find((p) => fs.existsSync(p));
   const bold = [
     '/var/task/pdf-fonts/NotoSans-Bold.ttf',
     path.join(process.cwd(), 'src', 'pdf', 'fonts', 'NotoSans-Bold.ttf'),
-    path.join(process.cwd(), 'cloud', 'api', 'src', 'pdf', 'fonts', 'NotoSans-Bold.ttf'),
+    path.join(process.cwd(), 'apps', 'api', 'src', 'pdf', 'fonts', 'NotoSans-Bold.ttf'),
   ].find((p) => fs.existsSync(p));
   if (!regular || !bold) throw new Error('NotoSans fonts not found for PDF rendering');
   return { regular, bold };
@@ -822,7 +822,6 @@ function formulaIngredientAssetPath(englishName: string, alchemyStyle: 'w1' | 'w
     candidates.push(
       path.join('/var/task', 'assets', 'formula_ingredients', alchemyStyle, filename),
       path.join(process.cwd(), 'src', 'pdf', 'assets', 'formula_ingredients', alchemyStyle, filename),
-      path.join(process.cwd(), 'cloud', 'api', 'src', 'pdf', 'assets', 'formula_ingredients', alchemyStyle, filename),
       path.join(process.cwd(), 'apps', 'api', 'src', 'pdf', 'assets', 'formula_ingredients', alchemyStyle, filename),
     );
   }
@@ -1558,7 +1557,7 @@ function buildVmWithCatalog(
     profBranches,
     weaponsTable: weapons.length ? { title: tx.sections.weapons, columns: [' ', tx.cols.qty, tx.sections.weapons, tx.cols.dmg, tx.cols.type, tx.cols.rel, tx.cols.hands, tx.cols.conceal, tx.cols.enh, tx.cols.wt, tx.cols.price], rows: weapons } : null,
     armorTable: armors.length ? { title: tx.sections.armor, columns: [' ', tx.cols.qty, tx.sections.armor, tx.cols.sp, tx.cols.enc, tx.cols.enh, tx.cols.wt, tx.cols.price], rows: armors } : null,
-    potionTable: potions.length ? { title: tx.sections.alchemy, columns: [tx.cols.qty, tx.cols.n, tx.cols.tox, tx.cols.time, tx.cols.effect, tx.cols.wt, tx.cols.price], rows: potions } : null,
+    potionTable: potions.length ? { title: tx.sections.alchemy, columns: [tx.cols.qty, tx.sections.alchemy, tx.cols.tox, tx.cols.time, tx.cols.effect, tx.cols.wt, tx.cols.price], rows: potions } : null,
     magicTable: magicRows.length
       ? {
           title: tx.sections.magic,
@@ -2304,7 +2303,7 @@ class Painter {
       this.doc.rect(bx, by, colW, PAGE.headerH).fill(fill);
       this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(bx, by, colW, PAGE.headerH).stroke();
       this.fontB(8.4);
-      this.doc.fillColor(COLORS.text).text(this.headerTitleText(b.title), bx + 4, by + 3, { width: colW - 8, lineBreak: false, ellipsis: true });
+      this.doc.fillColor(COLORS.text).text(this.headerTitleText(b.title), bx + 4, by + 3, { width: colW - 8, align: 'center', lineBreak: false, ellipsis: true });
       let ry = by + PAGE.headerH;
       for (let i = 0; i < 3; i += 1) {
         const rowH = rowHeights[i] ?? 13;
@@ -2347,7 +2346,7 @@ class Painter {
     this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, headerH).stroke();
     this.doc.moveTo(x + nameW, y).lineTo(x + nameW, y + h).strokeColor(COLORS.line).lineWidth(0.25).stroke();
     this.fontB(8.4);
-    this.doc.fillColor(COLORS.text).text(this.headerCellText(table.columns[0] ?? ''), x + 4, y + 3, { width: nameW - 8, lineBreak: false, ellipsis: true });
+    this.doc.fillColor(COLORS.text).text(this.headerCellText(table.columns[0] ?? ''), x + 4, y + 3, { width: nameW - 8, align: 'center', lineBreak: false, ellipsis: true });
     this.doc.fillColor(COLORS.text).text(this.headerCellText(table.columns[1] ?? ''), x + nameW + 2, y + 3, { width: w - nameW - 4, align: 'center', lineBreak: false, ellipsis: true });
     let cy = y + headerH;
     for (let i = 0; i < rows.length; i += 1) {
@@ -2441,7 +2440,7 @@ class Painter {
       const headerY = y + Math.max(1, Math.floor((headerH - headerTextH) / 2));
       this.doc.fillColor(COLORS.text).text(headerText, cx + 2, headerY, {
         width: cw - 4,
-        align: i >= 3 || i === 1 ? 'center' : (i === 2 ? 'left' : 'center'),
+        align: 'center',
         lineBreak: false,
         ellipsis: true,
       });
@@ -2487,7 +2486,6 @@ class Painter {
     const candidates = [
       '/var/task/assets/doll.png',
       path.join(process.cwd(), 'src', 'pdf', 'assets', 'doll.png'),
-      path.join(process.cwd(), 'cloud', 'api', 'src', 'pdf', 'assets', 'doll.png'),
       path.join(process.cwd(), 'apps', 'api', 'src', 'pdf', 'assets', 'doll.png'),
     ];
     const dollPath = candidates.find((p) => fs.existsSync(p));
@@ -2570,7 +2568,7 @@ class Painter {
       const headerY = y + Math.max(1, Math.floor((headerH - headerTextH) / 2));
       this.doc.fillColor(COLORS.text).text(headerText, cx + 2, headerY, {
         width: cw - 4,
-        align: i >= 3 || i === 1 ? 'center' : (i === 2 ? 'left' : 'center'),
+        align: 'center',
         lineBreak: false,
         ellipsis: true,
       });
@@ -2758,6 +2756,8 @@ class Painter {
     this.doc.lineWidth(0.7).strokeColor(COLORS.line).rect(x, y, w, headerH).stroke();
 
     const cols = [fitWidths[0]!, nameW, ...fitWidths.slice(1)];
+    const centeredHeaderCols = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    const centeredBodyCols = new Set([0, 2, 3, 4, 5, 6, 7, 8]);
     const headerFontSize = 6.5;
     let cx = x;
     for (let i = 0; i < cols.length; i += 1) {
@@ -2769,7 +2769,7 @@ class Painter {
       const headerY = y + Math.max(1, Math.floor((headerH - headerTextH) / 2));
       this.doc.fillColor(COLORS.text).text(headerText, cx + 2, headerY, {
         width: cw - 4,
-        align: i === 0 ? 'right' : 'left',
+        align: centeredHeaderCols.has(i) ? 'center' : 'left',
         lineBreak: false,
         ellipsis: true,
       });
@@ -2788,7 +2788,7 @@ class Painter {
         this.doc.fillColor(COLORS.text).text(vals[c] ?? '', rx + 2, cy + 1, {
           width: cw - 4,
           height: rowH - 2,
-          align: c === 0 ? 'right' : 'left',
+          align: centeredBodyCols.has(c) ? 'center' : 'left',
         });
         rx += cw;
       }
@@ -5935,7 +5935,7 @@ class Painter {
     {
       const potionTable = vm.potionTable ?? {
         title: tx.sections.alchemy,
-        columns: [tx.cols.qty, tx.cols.n, tx.cols.tox, tx.cols.time, tx.cols.effect, tx.cols.wt, tx.cols.price],
+        columns: [tx.cols.qty, tx.sections.alchemy, tx.cols.tox, tx.cols.time, tx.cols.effect, tx.cols.wt, tx.cols.price],
         rows: [],
       };
       const alchemyH = this.drawAlchemyCompact(rightX, this.y, rightW, potionTable);

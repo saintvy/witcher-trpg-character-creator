@@ -18,7 +18,7 @@ function resolveDefaultCharacterPath(): string {
     return path.join(dirname, '../data/defaultCharacter.json');
   } catch {
     // Bundled Lambda path should be provided via env; this fallback keeps local runs resilient.
-    return path.join(process.cwd(), 'cloud/api/src/core/data/defaultCharacter.json');
+    return path.join(process.cwd(), 'apps/api/src/core/data/defaultCharacter.json');
   }
 }
 

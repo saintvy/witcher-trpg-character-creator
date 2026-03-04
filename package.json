@@ -2,17 +2,18 @@
   "name": "witcher-cc-starter",
   "private": true,
   "workspaces": [
-    "cloud/*"
+    "apps/*",
+    "infra"
   ],
   "scripts": {
     "setup": "npm install",
     "dev": "npm-run-all -p dev:api dev:web",
-    "dev:api": "npm --workspace @wcc/cloud-api run dev",
-    "dev:web": "npm --workspace @wcc/cloud-web run dev",
+    "dev:api": "npm --workspace @wcc/api run dev",
+    "dev:web": "npm --workspace @wcc/web run dev",
     "build": "npm-run-all -s build:prepare-sql build:api build:web",
     "build:prepare-sql": "node scripts/prepare-deploy-sql.mjs",
-    "build:api": "npm --workspace @wcc/cloud-api run build",
-    "build:web": "npm --workspace @wcc/cloud-web run build",
+    "build:api": "npm --workspace @wcc/api run build",
+    "build:web": "npm --workspace @wcc/web run build",
     "deploy": "npm --workspace @wcc/infra run deploy",
     "lint": "echo \"(add ESLint later)\"",
     "format": "echo \"(add Prettier later)\""

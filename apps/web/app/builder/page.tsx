@@ -2,6 +2,7 @@
 
 import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import jsonLogic from "json-logic-js";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "../language-context";
 import { Topbar } from "../components/Topbar";
 import { apiFetch } from "../api-fetch";
@@ -81,6 +82,7 @@ type SaveCharacterResponse = {
 };
 
 export default function BuilderPage() {
+  const router = useRouter();
   const { lang, mounted } = useLanguage();
   const displayLang = lang;
   const [runSeed, setRunSeed] = useState(() => {
@@ -1572,12 +1574,13 @@ export default function BuilderPage() {
       } catch {
         // ignore browser event failures
       }
+      router.push("/characters");
     } catch (error) {
       setSaveCharacterError(error instanceof Error ? error.message : String(error));
     } finally {
       setSavingCharacter(false);
     }
-  }, [buildExportPayload, displayLang, state]);
+  }, [buildExportPayload, displayLang, router, state]);
 
   const openImportPicker = useCallback(() => {
     importInputRef.current?.click();

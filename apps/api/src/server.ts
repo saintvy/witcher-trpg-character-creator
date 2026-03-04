@@ -5,7 +5,7 @@ import { db } from './core/index.js';
 
 const port = Number(process.env.PORT || 4100);
 const server = serve({ fetch: app.fetch, port }, () => {
-  console.log(`[cloud-api] listening on http://localhost:${port}`);
+  console.log(`[api] listening on http://localhost:${port}`);
 });
 
 function timeout(ms: number): Promise<void> {
@@ -16,7 +16,7 @@ let shuttingDown = false;
 async function shutdown(signal: string): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
-  console.log(`[cloud-api] shutting down (${signal})...`);
+  console.log(`[api] shutting down (${signal})...`);
 
   try {
     if (typeof (server as any).closeAllConnections === 'function') (server as any).closeAllConnections();

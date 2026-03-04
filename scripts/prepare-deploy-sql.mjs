@@ -8,7 +8,7 @@ const dbDir = resolve(repoRoot, 'db');
 const deploySqlPath = resolve(repoRoot, 'db/sql/wcc_sql_deploy.sql');
 const generatedVersionPath = resolve(
   repoRoot,
-  'cloud/infra/generated/sql-bundle-version.json',
+  'infra/generated/sql-bundle-version.json',
 );
 
 const seedResult = spawnSync('bash', ['-lc', 'WCC_SEED_MERGE_ONLY=true ./seed.sh'], {
