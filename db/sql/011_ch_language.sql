@@ -1,4 +1,4 @@
-\echo '012_ch_language.sql'
+\echo '011_ch_language.sql'
 -- Узел: Выбор дополнительного языка (для Барда и Торговца)
 
 -- Вопрос
@@ -59,7 +59,9 @@ SELECT meta.qu_id
      , 'single'::question_type
      , jsonb_build_object(
          'path', jsonb_build_array(
-           ck_id('witcher_cc.hierarchy.identity')::text
+             ck_id('witcher_cc.hierarchy.identity')::text,
+             ck_id('witcher_cc.hierarchy.homeland')::text,
+             ck_id('witcher_cc.hierarchy.second_language')::text
          ),
          'body',
          jsonb_build_object(
@@ -237,5 +239,11 @@ SELECT 1;
 -- Переходы
 -- Из 011_ch_name по правилу (профессия Бард или Торговец)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_ch_name', 'wcc_ch_language', r.ru_id, 1
+  SELECT 'wcc_past_homeland_elders', 'wcc_ch_language', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'wcc_ch_language_bard_or_merchant') r UNION ALL
+  SELECT 'wcc_past_elf_q1', 'wcc_ch_language', r.ru_id, 0
+    FROM (SELECT ru_id FROM rules WHERE name = 'wcc_ch_language_bard_or_merchant') r UNION ALL
+  SELECT 'wcc_past_homeland_human', 'wcc_ch_language', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'wcc_ch_language_bard_or_merchant') r UNION ALL
+  SELECT 'wcc_past_dwarf_q1', 'wcc_ch_language', r.ru_id, 2
     FROM (SELECT ru_id FROM rules WHERE name = 'wcc_ch_language_bard_or_merchant') r;

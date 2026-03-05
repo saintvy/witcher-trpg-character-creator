@@ -124,7 +124,7 @@ vals AS (
 ('{
   "and": [
     ' || body::text || ',
-    {"in":[{"var":"characterRaw.logicFields.race"},["Witcher","Human"]]}
+    {"in":[{"var":"characterRaw.logicFields.race"},["Witcher","Human","Halfling"]]}
   ]
 }')::jsonb FROM rules WHERE name = 'is_nordman' UNION ALL
   SELECT 2, gen_random_uuid(),
@@ -136,13 +136,19 @@ vals AS (
         {"in":[{"var":"characterRaw.logicFields.race"},["Witcher","Human"]]}
       ]
     },
-    {"in":[{"var":"characterRaw.logicFields.race"},["Dwarf"]]}
+    {"in":[{"var":"characterRaw.logicFields.race"},["Dwarf","Werebbubb","Gnome"]]}
   ]
 }')::jsonb FROM rules WHERE name = 'is_nilfgaardian' UNION ALL
-  SELECT 3, ru_id, body FROM rules WHERE name = 'is_elf'
+  SELECT 3, gen_random_uuid(),
+('{
+  "or": [
+    ' || body::text || ',
+    {"in":[{"var":"characterRaw.logicFields.race"},["Vran"]]}
+  ]
+}')::jsonb FROM rules WHERE name = 'is_elf'
 )
 , ins_rules AS (
-  INSERT INTO rules(ru_id, body) SELECT r.id, r.body FROM rules_vals r WHERE group_id !=3
+  INSERT INTO rules(ru_id, body) SELECT r.id, r.body FROM rules_vals r
 )
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_past_siblings_amount_o' || to_char(vals.group_id, 'FM00') || to_char(vals.num, 'FM00') AS an_id,

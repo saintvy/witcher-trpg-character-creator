@@ -91,6 +91,27 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
        , jsonb_build_object(
            'dice', 'd0',
            'allowEmptySelection', true,
+           'defaultAnswerIds', jsonb_build_array(
+             'wcc_dlcs_exp_bot',
+             'wcc_dlcs_exp_lal',
+             'wcc_dlcs_exp_toc',
+             'wcc_dlcs_exp_wj',
+             'wcc_dlcs_dlc_rw_rudolf',
+             'wcc_dlcs_dlc_rw1',
+             'wcc_dlcs_dlc_rw2',
+             'wcc_dlcs_dlc_rw3',
+             'wcc_dlcs_dlc_rw4',
+             'wcc_dlcs_dlc_rw5',
+             'wcc_dlcs_dlc_wt',
+             'wcc_dlcs_dlc_sh_mothr',
+             'wcc_dlcs_dlc_sh_tai',
+             'wcc_dlcs_dlc_sh_tothr',
+             'wcc_dlcs_dlc_sh_wat',
+             'wcc_dlcs_dlc_wpaw',
+             'wcc_dlcs_dlc_sch_manticore',
+             'wcc_dlcs_dlc_sch_snail',
+             'wcc_dlcs_dlc_prof_peasant'
+           ),
            'path', jsonb_build_array(
              ck_id('witcher_cc.hierarchy.identity')::text,
              ck_id('witcher_cc.hierarchy.dlcs')::text
@@ -190,7 +211,6 @@ SELECT
     )
   ) AS body
 FROM raw_data rd;
-
 
 
 

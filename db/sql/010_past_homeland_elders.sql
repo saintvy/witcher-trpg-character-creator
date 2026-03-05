@@ -206,19 +206,8 @@ SELECT 'character', 'wcc_past_homeland_elders_o02',
 FROM meta_lang;
 
 -- Связи  
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
+  SELECT 'wcc_past_dwarf_q1', 'wcc_past_homeland_elders', 'wcc_past_dwarf_q1_o02', 2 UNION ALL
+  SELECT 'wcc_past_elf_q1', 'wcc_past_homeland_elders', 'wcc_past_elf_q1_o02', 2;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
-  SELECT 'wcc_past_dwarf_q1', 'wcc_past_homeland_elders', 'wcc_past_dwarf_q1_o02' UNION ALL
-  SELECT 'wcc_past_elf_q1', 'wcc_past_homeland_elders', 'wcc_past_elf_q1_o02';
-
-    -- Переходы из новой ноды с правилами по расе (без is_witcher, т.к. ведьмак не может быть воином)
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_homeland_human', r.ru_id, 1
-    FROM (SELECT ru_id FROM rules WHERE name = 'is_human') r;
-
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_dwarf_q1', r.ru_id, 1
-    FROM (SELECT ru_id FROM rules WHERE name = 'is_dwarf') r;
-
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_elf_q1', r.ru_id, 1
-    FROM (SELECT ru_id FROM rules WHERE name = 'is_elf') r;
+  SELECT 'wcc_past_ancient_races_q1', 'wcc_past_homeland_elders', 'wcc_past_ancient_races_q1_o01';

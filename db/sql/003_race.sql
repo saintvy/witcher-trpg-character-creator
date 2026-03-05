@@ -37,6 +37,15 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_dlcs', 'wcc_race';
 
+-- Правила видимости DLC-рас
+INSERT INTO rules (ru_id, name, body)
+VALUES
+  (ck_id('witcher_cc.rules.is_dlc_exp_bot_enabled'), 'is_dlc_exp_bot_enabled', '{"in":["exp_bot",{"var":["dlcs",[]]}]}'::jsonb),
+  (ck_id('witcher_cc.rules.is_dlc_exp_lal_enabled'), 'is_dlc_exp_lal_enabled', '{"in":["exp_lal",{"var":["dlcs",[]]}]}'::jsonb)
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
 -- Опции: Выбор расы
 -- Опция - человек
 WITH
@@ -1059,12 +1068,13 @@ Halflings can be mutated, with the Mages' Mutate Ability. However, due to their 
       ) AS v(lang, text)
       CROSS JOIN meta
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_race_halfling'
      , meta.su_su_id
      , meta.qu_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(5, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
      , 5 AS sort_order
+     , (SELECT ru_id FROM rules WHERE ru_id = ck_id('witcher_cc.rules.is_dlc_exp_lal_enabled') LIMIT 1) AS visible_ru_ru_id
      , '{}'::jsonb AS metadata
   FROM meta;
 
@@ -1098,8 +1108,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'halfling' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Сельский труженик</b>: врождённый бонус [+2 к выживанию в диких условиях]; применяется при выживании в дикой природе и при успокоении, приручении или подчинении животных'),
-      ('en', '<b>Farmhand</b>: inherent bonus [+2 to Wilderness Survival]; applies in the wild and when calming, taming, or controlling animals')
+      ('ru', '<b>Сельский труженик</b>: [+2 к выживанию в диких условиях] и при взаимодействии с животными'),
+      ('en', '<b>Farmhand</b>: [+2 to Wilderness Survival] and when interacting with animals')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1108,8 +1118,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'halfling' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Защита против магии</b>: врождённый бонус [+5 к Сопротивлению магии]; может проверкой Сопротивления магии отменять эффекты ментальных заклинаний (даже когда обычно нельзя); ведьмачьи эликсиры и магические зелья не дают пользы; не может быть магом или жрецом; не мутирует от синих мутагенов'),
-      ('en', '<b>Magic Resistant</b>: inherent bonus [+5 to Resist Magic]; can roll Resist Magic against mind-affecting spells even when normally not allowed; Witcher elixirs and magic potions give no positive effect; cannot become a Mage or Priest; cannot be mutated by Blue Mutagens')
+      ('ru', '<b>Защита против магии</b>: [+5 к Сопротивлению магии]; отмена ментальных заклинаний через бросок Сопротивления магии; магический Элексиры и Зелья бесполезны; не мутирует от синих мутагенов'),
+      ('en', '<b>Magic Resistant</b>: [+5 to Resist Magic]; can roll Resist Magic against mind-affecting spells; magic Elixirs and Potions give no positive effect; cannot be mutated by Blue Mutagens')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1279,12 +1289,13 @@ Gnomes are the smallest race on the Continent, measuring in around 1m tall on av
       ) AS v(lang, text)
       CROSS JOIN meta
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_race_gnome'
      , meta.su_su_id
      , meta.qu_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(6, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
      , 6 AS sort_order
+     , (SELECT ru_id FROM rules WHERE ru_id = ck_id('witcher_cc.rules.is_dlc_exp_bot_enabled') LIMIT 1) AS visible_ru_ru_id
      , '{}'::jsonb AS metadata
   FROM meta;
 
@@ -1318,8 +1329,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'gnome' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Внимание к деталям</b>: +2 к любым 3 навыкам Ремесла по выбору; бонус игнорирует правило сложных навыков'),
-      ('en', '<b>Eye for Detail</b>: inherent [+2 to any 3 Craft Skills]; ignores the modifier for learning Difficult Skill')
+      ('ru', '<b>Внимание к деталям</b>: врождённый бонус [+2 к любым 3 навыкам Ремесла по выбору]'),
+      ('en', '<b>Eye for Detail</b>: inherent bonus [+2 to any 3 Craft Skills]')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1338,8 +1349,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'gnome' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Низкий рост</b>: штраф -5 к Силе только для урона рукой/ногой, бонусного урона в ближнем бою и Веса (как ТЕЛ на 3 ниже); может пролезать в щели от 0.5 м и прятаться за объектом не меньше 1x1 м'),
-      ('en', '<b>Small Stature</b>: inherent -5 to Physique for hand-to-hand damage, bonus melee damage, and Encumbrance (as if BODY were 3 lower); can slip through 0.5m gaps and fully conceal behind 1m by 1m cover')
+      ('ru', '<b>Низкий рост</b>: [-5 к Силе]; [ТЕЛ-3 при рассчете удара рукой/ногой, бонусного урона в ближнем бою и переносимого веса]; пролезает в щели от 0.5 м и прятаться за объектом от 1x1 м'),
+      ('en', '<b>Small Stature</b>: [-5 to Physique]; [BODY-3 for hand-to-hand damage, bonus melee damage, and Encumbrance]; can slip through 0.5m gaps and fully conceal behind 1x1m cover')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1431,6 +1442,16 @@ SELECT 'character', 'wcc_race_gnome',
       jsonb_build_object('var','characterRaw.skills.common.awareness.race_bonus'),
       1
     )
+  )
+UNION ALL
+-- Эффекты черт расы: Гном - Низкий рост (-5 к Силе / Physique)
+SELECT 'character', 'wcc_race_gnome',
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.skills.common.physique.race_bonus'),
+      -5
+    )
   );
 
 -- Опция ответа: Враны / Vrans
@@ -1511,12 +1532,13 @@ The vran are the only accepted sapient race that is also reptilian and their phy
       ) AS v(lang, text)
       CROSS JOIN meta
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_race_vran'
      , meta.su_su_id
      , meta.qu_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(7, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
      , 7 AS sort_order
+     , (SELECT ru_id FROM rules WHERE ru_id = ck_id('witcher_cc.rules.is_dlc_exp_bot_enabled') LIMIT 1) AS visible_ru_ru_id
      , '{}'::jsonb AS metadata
   FROM meta;
 
@@ -1550,8 +1572,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'vran' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Когти и клыки</b>: два естественных оружия, которые нельзя отобрать; атаки руками/ногами наносят смертельный урон; атака клыками через Ближний бой наносит 3d6 урона с вероятностью отравления 50%'),
-      ('en', '<b>Claws & Fangs</b>: two natural weapons that cannot be disarmed; punches and kicks deal lethal damage; fangs can make a Melee attack for 3d6 damage with 50% poison chance')
+      ('ru', '<b>Когти и клыки</b>: атаки руками/ногами наносят смертельный урон; атака клыками через Ближний бой наносит 3d6 урона с вероятностью отравления 50%'),
+      ('en', '<b>Claws & Fangs</b>: punches and kicks deal lethal damage; fangs can make a Melee attack for 3d6 damage with 50% poison chance')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1560,8 +1582,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'vran' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Чешуя</b>: естественная броня 4; ПБ не снижается атаками оружием и разрушающим уроном'),
-      ('en', '<b>Scaled Hide</b>: natural SP 4; cannot be lowered by weapon attacks or ablation damage')
+      ('ru', '<b>Чешуя</b>: естественная неснижаемая броня 4 ПБ'),
+      ('en', '<b>Scaled Hide</b>: natural SP 4 which cannot be lowered')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1570,8 +1592,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'vran' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Физиология Рептилий</b>: не-враны получают штраф -2 к Первой помощи и -5 к стабилизации/лечению критических ранений Врана; после Замораживания Вран получает -2 на все действия на 1d6 раундов'),
-      ('en', '<b>Reptilian Physiology</b>: non-vran doctors take -2 on First Aid and -5 on stabilizing/treating Vran Critical Wounds unless they have treated a vran successfully before; Frozen condition causes -2 to all actions until 1d6 rounds after it ends')
+      ('ru', '<b>Физиология Рептилий</b>: -2 к Первой помощи и -5 к стабилизации/лечению критических ранений для медика не-врана или без опыта лечения вранов; -2 на все действия на 1d6 раундов после Замораживания'),
+      ('en', '<b>Reptilian Physiology</b>: non-vran medics or those without experience take -2 on First Aid and -5 on stabilizing/treating Critical Wounds on a vran; Frozen condition causes -2 to all actions for 1d6 rounds after it ends')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1733,12 +1755,13 @@ In general, werebbubb suffer from poor eyesight. While their keen hearing allows
       ) AS v(lang, text)
       CROSS JOIN meta
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_race_werebbubb'
      , meta.su_su_id
      , meta.qu_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(8, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
      , 8 AS sort_order
+     , (SELECT ru_id FROM rules WHERE ru_id = ck_id('witcher_cc.rules.is_dlc_exp_bot_enabled') LIMIT 1) AS visible_ru_ru_id
      , '{}'::jsonb AS metadata
   FROM meta;
 
@@ -1772,8 +1795,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Странная Физиология</b>: при получении критического ранения может один раз сразу пройти проверку Стойкости для его стабилизации'),
-      ('en', '<b>Strange Physiology</b>: when taking a Critical Wound, can make one immediate Endurance check against the Stabilization DC; on success, the wound is immediately Stabilized')
+      ('ru', '<b>Странная Физиология</b>: проверкой Стойкости сразу стабилизирует крит. рану (1 попытка на раненеие)'),
+      ('en', '<b>Strange Physiology</b>: can make one immediate Endurance check to stabilize a Critical Wound (1 attempt per wound)')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1782,8 +1805,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Зубы-бритвы</b>: может атаковать зубами через Ближний бой; атака наносит 2d6 урона и имеет Улучшенное пробивание брони'),
-      ('en', '<b>Razor Teeth</b>: can make a Melee fangs attack for 2d6 damage with Improved Armor Piercing')
+      ('ru', '<b>Зубы-бритвы</b>: атака зубами через Ближний бой с 2d6 смертельного урона и улучшенным пробиванием брони'),
+      ('en', '<b>Razor Teeth</b>: melee attack with fangs for 2d6 lethal damage with Improved Armor Piercing')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1792,8 +1815,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Плохое зрение</b>: врождённый штраф -4 к Вниманию из-за зрения; не применяется для проверок, основанных только на слухе'),
-      ('en', '<b>Poor Eyesight</b>: inherent -4 to Awareness checks due to vision; penalty does not apply to hearing-only perception checks')
+      ('ru', '<b>Плохое зрение</b>: -4 к Вниманию с участием зрения'),
+      ('en', '<b>Poor Eyesight</b>: -4 to Awareness checks involving vision')
     ) AS v(lang, text)
     CROSS JOIN meta
 )

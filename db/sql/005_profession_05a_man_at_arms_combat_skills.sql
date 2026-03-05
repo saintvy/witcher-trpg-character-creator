@@ -27,8 +27,8 @@ WITH
       SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| v.entity_field) AS id
            , meta.entity, v.entity_field, v.lang, v.text
         FROM (VALUES
-                ('ru', 'Выберите боевые навыки для Воина', 'body'),
-                ('en', 'Pick combat skills for the Man at Arms', 'body')
+                ('ru', 'Выберите 5 боевых навыков', 'body'),
+                ('en', 'Pick 5 combat skills', 'body')
              ) AS v(lang, text, entity_field)
         CROSS JOIN meta
       RETURNING id AS body_id
@@ -58,7 +58,9 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
                5
              )
            ),
-           'path', jsonb_build_array(ck_id('witcher_cc.hierarchy.profession')::text,ck_id('witcher_cc.hierarchy.battle_skills')::text)
+           'path', jsonb_build_array(ck_id('witcher_cc.hierarchy.identity')::text,
+                                     ck_id('witcher_cc.hierarchy.profession')::text,
+                                     ck_id('witcher_cc.hierarchy.battle_skills')::text)
          )
      FROM meta;
 

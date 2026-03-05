@@ -67,7 +67,8 @@ SELECT meta.qu_id
               18
             )
           ),
-          -- max_rand: 260 для ведьмака, 60 для человека, 150 для краснолюда, 300 для эльфа
+          -- max_rand: 260 для ведьмака, 60 для человека, 150 для краснолюда, 300 для эльфа,
+          -- 100 для низушка, 80 для врана, 140 для баболака, 200 для гнома
           'max_rand', jsonb_build_object(
             'if', jsonb_build_array(
               jsonb_build_object('==', jsonb_build_array(
@@ -96,7 +97,43 @@ SELECT meta.qu_id
                             'Elf'
                           )),
                           300,
-                          null
+                          jsonb_build_object(
+                            'if', jsonb_build_array(
+                              jsonb_build_object('==', jsonb_build_array(
+                                jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                                'Halfling'
+                              )),
+                              100,
+                              jsonb_build_object(
+                                'if', jsonb_build_array(
+                                  jsonb_build_object('==', jsonb_build_array(
+                                    jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                                    'Vran'
+                                  )),
+                                  80,
+                                  jsonb_build_object(
+                                    'if', jsonb_build_array(
+                                      jsonb_build_object('==', jsonb_build_array(
+                                        jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                                        'Werebbubb'
+                                      )),
+                                      140,
+                                      jsonb_build_object(
+                                        'if', jsonb_build_array(
+                                          jsonb_build_object('==', jsonb_build_array(
+                                            jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                                            'Gnome'
+                                          )),
+                                          200,
+                                          null
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
                         )
                       )
                     )
@@ -112,8 +149,6 @@ SELECT meta.qu_id
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_ch_name', 'wcc_ch_age';
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
-  SELECT 'wcc_ch_language', 'wcc_ch_age';
 
 -- Правила
 INSERT INTO rules(name, body)

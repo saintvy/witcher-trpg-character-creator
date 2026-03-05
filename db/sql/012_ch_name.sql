@@ -1,4 +1,4 @@
-\echo '011_ch_name.sql'
+\echo '012_ch_name.sql'
 -- Узел: Имя персонажа
 
 -- Вопрос
@@ -80,10 +80,11 @@ SELECT meta.qu_id
 -- Переходы теперь идут через wcc_ch_name (имя персонажа)
 -- Изменяем переходы так, чтобы они шли к имени, а не напрямую к возрасту
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
-  SELECT 'wcc_past_elf_q1', 'wcc_ch_name', 'wcc_past_elf_q1_o01' UNION ALL
-  SELECT 'wcc_past_dwarf_q1', 'wcc_ch_name', 'wcc_past_dwarf_q1_o01'UNION ALL
-  SELECT 'wcc_past_witcher_q1', 'wcc_ch_name', 'wcc_past_witcher_q1_o01';
+  SELECT 'wcc_past_dwarf_q1', 'wcc_ch_name', 'wcc_past_dwarf_q1_o01' UNION ALL
+  SELECT 'wcc_past_witcher_q1', 'wcc_ch_name', 'wcc_past_witcher_q1_o01' UNION ALL
+  SELECT 'wcc_past_elf_q1', 'wcc_ch_name', 'wcc_past_elf_q1_o01';
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_past_homeland_human', 'wcc_ch_name' UNION ALL
-  SELECT 'wcc_past_homeland_elders', 'wcc_ch_name';
+  SELECT 'wcc_past_homeland_elders', 'wcc_ch_name' UNION ALL
+  SELECT 'wcc_ch_language', 'wcc_ch_name';

@@ -20,6 +20,9 @@ WITH
   SELECT
     (SELECT r.body FROM rules r WHERE r.name = 'is_human' ORDER BY r.ru_id LIMIT 1) AS is_human_expr,
     (SELECT r.body FROM rules r WHERE r.name = 'is_elf' ORDER BY r.ru_id LIMIT 1) AS is_elf_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_gnome' ORDER BY r.ru_id LIMIT 1) AS is_gnome_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_vran' ORDER BY r.ru_id LIMIT 1) AS is_vran_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_werebbubb' ORDER BY r.ru_id LIMIT 1) AS is_werebbubb_expr,
     (SELECT er.exp_toc_expr FROM ensure_rules er LIMIT 1) AS exp_toc_expr
 )
 , vis_rules AS (
@@ -34,7 +37,10 @@ WITH
           'or',
           jsonb_build_array(
             rule_parts.is_human_expr,
-            rule_parts.is_elf_expr
+            rule_parts.is_elf_expr,
+            rule_parts.is_gnome_expr,
+            rule_parts.is_vran_expr,
+            rule_parts.is_werebbubb_expr
           )
         ),
         rule_parts.exp_toc_expr

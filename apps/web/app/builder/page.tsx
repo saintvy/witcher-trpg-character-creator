@@ -217,6 +217,24 @@ export default function BuilderPage() {
   }, []);
 
   const questionMetadata = useMemo(() => (question?.metadata ?? {}) as Record<string, unknown>, [question]);
+  const getDefaultMultipleAnswerIds = useCallback(
+    (questionMeta: Record<string, unknown>, answerOptions: AnswerOption[]): string[] => {
+      const raw = questionMeta.defaultAnswerIds;
+      if (!Array.isArray(raw) || answerOptions.length === 0) {
+        return [];
+      }
+      const allowedIds = new Set(answerOptions.map((option) => option.id));
+      const result: string[] = [];
+      for (const value of raw) {
+        if (typeof value !== "string") continue;
+        if (!allowedIds.has(value)) continue;
+        if (result.includes(value)) continue;
+        result.push(value);
+      }
+      return result;
+    },
+    [],
+  );
   const shopConfig = useMemo(() => {
     if (!question) return null;
     if (questionMetadata.renderer !== "shop") return null;
@@ -533,7 +551,11 @@ export default function BuilderPage() {
   }, [fetchNext, history, lang, mounted]);
 
   useEffect(() => {
-    setPendingMultiple([]);
+    if (question?.qtype === "multiple") {
+      setPendingMultiple(getDefaultMultipleAnswerIds(questionMetadata, options));
+    } else {
+      setPendingMultiple([]);
+    }
     setHoveredOptionId(null);
     setSelectedDropDownOptionId(null);
 
@@ -568,7 +590,7 @@ export default function BuilderPage() {
       setValueString("");
       setValueNumber("0");
     }
-  }, [question, questionMetadata, state]);
+  }, [question, questionMetadata, state, options, getDefaultMultipleAnswerIds]);
 
   // Применяем ограничения min/max к текущему значению при изменении min/max
   // НЕ применяем при изменении valueNumber, чтобы не блокировать ввод

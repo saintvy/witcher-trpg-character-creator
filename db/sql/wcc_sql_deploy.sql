@@ -228,12 +228,16 @@ SELECT ck_id('witcher_cc.hierarchy.' || v.path) AS id
           ('dlcs', 'en', 'DLCs / Sources'),
           ('race', 'ru', 'Раса'),
           ('race', 'en', 'Race'),
+          ('gnome_skills', 'ru', 'Навыки гномов'),
+          ('gnome_skills', 'en', 'Gnome skills'),
           ('character_age', 'ru', 'Возраст персонажа'),
           ('character_age', 'en', 'Character age'),
           ('character_name', 'ru', 'Имя персонажа'),
           ('character_name', 'en', 'Character name'),
           ('homeland', 'ru', 'Родина'),
           ('homeland', 'en', 'Homeland'),
+          ('second_language', 'ru', 'Второй язык'),
+          ('second_language', 'en', 'Second language'),
           ('homeland_nonhuman', 'ru', 'Родина нелюдя'),
           ('homeland_nonhuman', 'en', 'Non-human homeland'),
           ('family', 'ru', 'Семья'),
@@ -541,6 +545,27 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
        , jsonb_build_object(
            'dice', 'd0',
            'allowEmptySelection', true,
+           'defaultAnswerIds', jsonb_build_array(
+             'wcc_dlcs_exp_bot',
+             'wcc_dlcs_exp_lal',
+             'wcc_dlcs_exp_toc',
+             'wcc_dlcs_exp_wj',
+             'wcc_dlcs_dlc_rw_rudolf',
+             'wcc_dlcs_dlc_rw1',
+             'wcc_dlcs_dlc_rw2',
+             'wcc_dlcs_dlc_rw3',
+             'wcc_dlcs_dlc_rw4',
+             'wcc_dlcs_dlc_rw5',
+             'wcc_dlcs_dlc_wt',
+             'wcc_dlcs_dlc_sh_mothr',
+             'wcc_dlcs_dlc_sh_tai',
+             'wcc_dlcs_dlc_sh_tothr',
+             'wcc_dlcs_dlc_sh_wat',
+             'wcc_dlcs_dlc_wpaw',
+             'wcc_dlcs_dlc_sch_manticore',
+             'wcc_dlcs_dlc_sch_snail',
+             'wcc_dlcs_dlc_prof_peasant'
+           ),
            'path', jsonb_build_array(
              ck_id('witcher_cc.hierarchy.identity')::text,
              ck_id('witcher_cc.hierarchy.dlcs')::text
@@ -645,7 +670,6 @@ FROM raw_data rd;
 
 
 
-
 -- <<< END sql/002_wcc_dlcs.sql
 
 -- >>> BEGIN sql/003_race.sql
@@ -688,6 +712,15 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
 -- Нода расы должна идти после выбора DLC
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_dlcs', 'wcc_race';
+
+-- Правила видимости DLC-рас
+INSERT INTO rules (ru_id, name, body)
+VALUES
+  (ck_id('witcher_cc.rules.is_dlc_exp_bot_enabled'), 'is_dlc_exp_bot_enabled', '{"in":["exp_bot",{"var":["dlcs",[]]}]}'::jsonb),
+  (ck_id('witcher_cc.rules.is_dlc_exp_lal_enabled'), 'is_dlc_exp_lal_enabled', '{"in":["exp_lal",{"var":["dlcs",[]]}]}'::jsonb)
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
 
 -- Опции: Выбор расы
 -- Опция - человек
@@ -1711,12 +1744,13 @@ Halflings can be mutated, with the Mages' Mutate Ability. However, due to their 
       ) AS v(lang, text)
       CROSS JOIN meta
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_race_halfling'
      , meta.su_su_id
      , meta.qu_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(5, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
      , 5 AS sort_order
+     , (SELECT ru_id FROM rules WHERE ru_id = ck_id('witcher_cc.rules.is_dlc_exp_lal_enabled') LIMIT 1) AS visible_ru_ru_id
      , '{}'::jsonb AS metadata
   FROM meta;
 
@@ -1750,8 +1784,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'halfling' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Сельский труженик</b>: врождённый бонус [+2 к выживанию в диких условиях]; применяется при выживании в дикой природе и при успокоении, приручении или подчинении животных'),
-      ('en', '<b>Farmhand</b>: inherent bonus [+2 to Wilderness Survival]; applies in the wild and when calming, taming, or controlling animals')
+      ('ru', '<b>Сельский труженик</b>: [+2 к выживанию в диких условиях] и при взаимодействии с животными'),
+      ('en', '<b>Farmhand</b>: [+2 to Wilderness Survival] and when interacting with animals')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1760,8 +1794,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'halfling' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Защита против магии</b>: врождённый бонус [+5 к Сопротивлению магии]; может проверкой Сопротивления магии отменять эффекты ментальных заклинаний (даже когда обычно нельзя); ведьмачьи эликсиры и магические зелья не дают пользы; не может быть магом или жрецом; не мутирует от синих мутагенов'),
-      ('en', '<b>Magic Resistant</b>: inherent bonus [+5 to Resist Magic]; can roll Resist Magic against mind-affecting spells even when normally not allowed; Witcher elixirs and magic potions give no positive effect; cannot become a Mage or Priest; cannot be mutated by Blue Mutagens')
+      ('ru', '<b>Защита против магии</b>: [+5 к Сопротивлению магии]; отмена ментальных заклинаний через бросок Сопротивления магии; магический Элексиры и Зелья бесполезны; не мутирует от синих мутагенов'),
+      ('en', '<b>Magic Resistant</b>: [+5 to Resist Magic]; can roll Resist Magic against mind-affecting spells; magic Elixirs and Potions give no positive effect; cannot be mutated by Blue Mutagens')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1931,12 +1965,13 @@ Gnomes are the smallest race on the Continent, measuring in around 1m tall on av
       ) AS v(lang, text)
       CROSS JOIN meta
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_race_gnome'
      , meta.su_su_id
      , meta.qu_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(6, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
      , 6 AS sort_order
+     , (SELECT ru_id FROM rules WHERE ru_id = ck_id('witcher_cc.rules.is_dlc_exp_bot_enabled') LIMIT 1) AS visible_ru_ru_id
      , '{}'::jsonb AS metadata
   FROM meta;
 
@@ -1970,8 +2005,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'gnome' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Внимание к деталям</b>: +2 к любым 3 навыкам Ремесла по выбору; бонус игнорирует правило сложных навыков'),
-      ('en', '<b>Eye for Detail</b>: inherent [+2 to any 3 Craft Skills]; ignores the modifier for learning Difficult Skill')
+      ('ru', '<b>Внимание к деталям</b>: врождённый бонус [+2 к любым 3 навыкам Ремесла по выбору]'),
+      ('en', '<b>Eye for Detail</b>: inherent bonus [+2 to any 3 Craft Skills]')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -1990,8 +2025,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'gnome' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Низкий рост</b>: штраф -5 к Силе только для урона рукой/ногой, бонусного урона в ближнем бою и Веса (как ТЕЛ на 3 ниже); может пролезать в щели от 0.5 м и прятаться за объектом не меньше 1x1 м'),
-      ('en', '<b>Small Stature</b>: inherent -5 to Physique for hand-to-hand damage, bonus melee damage, and Encumbrance (as if BODY were 3 lower); can slip through 0.5m gaps and fully conceal behind 1m by 1m cover')
+      ('ru', '<b>Низкий рост</b>: [-5 к Силе]; [ТЕЛ-3 при рассчете удара рукой/ногой, бонусного урона в ближнем бою и переносимого веса]; пролезает в щели от 0.5 м и прятаться за объектом от 1x1 м'),
+      ('en', '<b>Small Stature</b>: [-5 to Physique]; [BODY-3 for hand-to-hand damage, bonus melee damage, and Encumbrance]; can slip through 0.5m gaps and fully conceal behind 1x1m cover')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -2083,6 +2118,16 @@ SELECT 'character', 'wcc_race_gnome',
       jsonb_build_object('var','characterRaw.skills.common.awareness.race_bonus'),
       1
     )
+  )
+UNION ALL
+-- Эффекты черт расы: Гном - Низкий рост (-5 к Силе / Physique)
+SELECT 'character', 'wcc_race_gnome',
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.skills.common.physique.race_bonus'),
+      -5
+    )
   );
 
 -- Опция ответа: Враны / Vrans
@@ -2163,12 +2208,13 @@ The vran are the only accepted sapient race that is also reptilian and their phy
       ) AS v(lang, text)
       CROSS JOIN meta
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_race_vran'
      , meta.su_su_id
      , meta.qu_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(7, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
      , 7 AS sort_order
+     , (SELECT ru_id FROM rules WHERE ru_id = ck_id('witcher_cc.rules.is_dlc_exp_bot_enabled') LIMIT 1) AS visible_ru_ru_id
      , '{}'::jsonb AS metadata
   FROM meta;
 
@@ -2202,8 +2248,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'vran' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Когти и клыки</b>: два естественных оружия, которые нельзя отобрать; атаки руками/ногами наносят смертельный урон; атака клыками через Ближний бой наносит 3d6 урона с вероятностью отравления 50%'),
-      ('en', '<b>Claws & Fangs</b>: two natural weapons that cannot be disarmed; punches and kicks deal lethal damage; fangs can make a Melee attack for 3d6 damage with 50% poison chance')
+      ('ru', '<b>Когти и клыки</b>: атаки руками/ногами наносят смертельный урон; атака клыками через Ближний бой наносит 3d6 урона с вероятностью отравления 50%'),
+      ('en', '<b>Claws & Fangs</b>: punches and kicks deal lethal damage; fangs can make a Melee attack for 3d6 damage with 50% poison chance')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -2212,8 +2258,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'vran' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Чешуя</b>: естественная броня 4; ПБ не снижается атаками оружием и разрушающим уроном'),
-      ('en', '<b>Scaled Hide</b>: natural SP 4; cannot be lowered by weapon attacks or ablation damage')
+      ('ru', '<b>Чешуя</b>: естественная неснижаемая броня 4 ПБ'),
+      ('en', '<b>Scaled Hide</b>: natural SP 4 which cannot be lowered')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -2222,8 +2268,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'vran' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Физиология Рептилий</b>: не-враны получают штраф -2 к Первой помощи и -5 к стабилизации/лечению критических ранений Врана; после Замораживания Вран получает -2 на все действия на 1d6 раундов'),
-      ('en', '<b>Reptilian Physiology</b>: non-vran doctors take -2 on First Aid and -5 on stabilizing/treating Vran Critical Wounds unless they have treated a vran successfully before; Frozen condition causes -2 to all actions until 1d6 rounds after it ends')
+      ('ru', '<b>Физиология Рептилий</b>: -2 к Первой помощи и -5 к стабилизации/лечению критических ранений для медика не-врана или без опыта лечения вранов; -2 на все действия на 1d6 раундов после Замораживания'),
+      ('en', '<b>Reptilian Physiology</b>: non-vran medics or those without experience take -2 on First Aid and -5 on stabilizing/treating Critical Wounds on a vran; Frozen condition causes -2 to all actions for 1d6 rounds after it ends')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -2385,12 +2431,13 @@ In general, werebbubb suffer from poor eyesight. While their keen hearing allows
       ) AS v(lang, text)
       CROSS JOIN meta
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_race_werebbubb'
      , meta.su_su_id
      , meta.qu_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(8, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
      , 8 AS sort_order
+     , (SELECT ru_id FROM rules WHERE ru_id = ck_id('witcher_cc.rules.is_dlc_exp_bot_enabled') LIMIT 1) AS visible_ru_ru_id
      , '{}'::jsonb AS metadata
   FROM meta;
 
@@ -2424,8 +2471,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '2') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Странная Физиология</b>: при получении критического ранения может один раз сразу пройти проверку Стойкости для его стабилизации'),
-      ('en', '<b>Strange Physiology</b>: when taking a Critical Wound, can make one immediate Endurance check against the Stabilization DC; on success, the wound is immediately Stabilized')
+      ('ru', '<b>Странная Физиология</b>: проверкой Стойкости сразу стабилизирует крит. рану (1 попытка на раненеие)'),
+      ('en', '<b>Strange Physiology</b>: can make one immediate Endurance check to stabilize a Critical Wound (1 attempt per wound)')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -2434,8 +2481,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '3') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Зубы-бритвы</b>: может атаковать зубами через Ближний бой; атака наносит 2d6 урона и имеет Улучшенное пробивание брони'),
-      ('en', '<b>Razor Teeth</b>: can make a Melee fangs attack for 2d6 damage with Improved Armor Piercing')
+      ('ru', '<b>Зубы-бритвы</b>: атака зубами через Ближний бой с 2d6 смертельного урона и улучшенным пробиванием брони'),
+      ('en', '<b>Razor Teeth</b>: melee attack with fangs for 2d6 lethal damage with Improved Armor Piercing')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -2444,8 +2491,8 @@ WITH
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'werebbubb' ||'.'|| meta.entity ||'.'|| 'perks' ||'.'|| '4') AS id
        , meta.entity, 'perks', v.lang, v.text
     FROM (VALUES
-      ('ru', '<b>Плохое зрение</b>: врождённый штраф -4 к Вниманию из-за зрения; не применяется для проверок, основанных только на слухе'),
-      ('en', '<b>Poor Eyesight</b>: inherent -4 to Awareness checks due to vision; penalty does not apply to hearing-only perception checks')
+      ('ru', '<b>Плохое зрение</b>: -4 к Вниманию с участием зрения'),
+      ('en', '<b>Poor Eyesight</b>: -4 to Awareness checks involving vision')
     ) AS v(lang, text)
     CROSS JOIN meta
 )
@@ -4008,6 +4055,145 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
 
 -- <<< END sql/004_witcher_school.sql
 
+-- >>> BEGIN sql/004a_gnome_craft_skills.sql
+
+\echo '004a_gnome_craft_skills.sql'
+-- Нода: Выбор ремесленных навыков для гнома (расовый бонус)
+
+-- i18n записи для сообщений валидации
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_gnome_craft_skills.warning.' || v.key) AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('min_selected', 'ru', 'Выбрано опций меньше требуемого. Минимум: '),
+          ('min_selected', 'en', 'Selected options are less than required. Minimum: '),
+          ('max_selected', 'ru', 'Выбрано опций больше допустимого. Максимум: '),
+          ('max_selected', 'en', 'Selected options are more than allowed. Maximum: ')
+       ) AS v(key, lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+-- Вопрос
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_gnome_craft_skills' AS qu_id
+                , 'questions' AS entity
+                , 'multiple'::question_type AS qtype)
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+      SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| v.entity_field) AS id
+           , meta.entity, v.entity_field, v.lang, v.text
+        FROM (VALUES
+                ('ru', 'Выберите 3 ремесленных навыка для расового бонуса гнома (+2 к каждому выбранному навыку)', 'body'),
+                ('en', 'Pick 3 craft skills for the gnome racial bonus (+2 to each selected skill)', 'body')
+             ) AS v(lang, text, entity_field)
+        CROSS JOIN meta
+      RETURNING id AS body_id
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+  SELECT meta.qu_id
+       , meta.su_su_id
+       , NULL
+       , (SELECT DISTINCT body_id FROM ins_body)
+       , meta.qtype
+       , jsonb_build_object(
+           'dice', 'd0',
+           'allowEmptySelection', false,
+           'minSelected', 3,
+           'maxSelected', 3,
+           'warningMinSelected', jsonb_build_object(
+             'jsonlogic_expression',
+             jsonb_build_array(
+               ck_id('witcher_cc.wcc_gnome_craft_skills.warning.min_selected')::text,
+               3
+             )
+           ),
+           'warningMaxSelected', jsonb_build_object(
+             'jsonlogic_expression',
+             jsonb_build_array(
+               ck_id('witcher_cc.wcc_gnome_craft_skills.warning.max_selected')::text,
+               3
+             )
+           ),
+           'path', jsonb_build_array(
+             ck_id('witcher_cc.hierarchy.identity')::text,
+             ck_id('witcher_cc.hierarchy.race')::text,
+             ck_id('witcher_cc.hierarchy.gnome_skills')::text
+           )
+         )
+     FROM meta;
+
+-- Опции: ремесленные навыки (Common skills / CRA)
+WITH raw_data (sort_order, skill_id, name_ru, name_en) AS ( VALUES
+    (1, 'alchemy',       '[Ремесло] Алхимия',          '[CRA] Alchemy'),
+    (2, 'pick_lock',     '[Ремесло] Взлом замков',     '[CRA] Pick Lock'),
+    (3, 'trap_crafting', '[Ремесло] Знание ловушек',   '[CRA] Trap Crafting'),
+    (4, 'crafting',      '[Ремесло] Изготовление',     '[CRA] Crafting'),
+    (5, 'disguise',      '[Ремесло] Маскировка',       '[CRA] Disguise'),
+    (6, 'first_aid',     '[Ремесло] Первая помощь',    '[CRA] First Aid'),
+    (7, 'forgery',       '[Ремесло] Подделывание',     '[CRA] Forgery')
+)
+, ins_names AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT * FROM (
+    SELECT ck_id('witcher_cc.wcc_gnome_craft_skills.skill.'||rd.skill_id),
+           'answer_options',
+           'title',
+           'ru',
+           rd.name_ru
+      FROM raw_data rd
+    UNION ALL
+    SELECT ck_id('witcher_cc.wcc_gnome_craft_skills.skill.'||rd.skill_id),
+           'answer_options',
+           'title',
+           'en',
+           rd.name_en
+      FROM raw_data rd
+  ) foo
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+  SELECT 'wcc_gnome_craft_skills_' || rd.skill_id AS an_id
+       , 'witcher_cc' AS su_su_id
+       , 'wcc_gnome_craft_skills' AS qu_qu_id
+       , ck_id('witcher_cc.wcc_gnome_craft_skills.skill.'||rd.skill_id)::text AS label
+       , rd.sort_order
+       , jsonb_build_object('skill_id', rd.skill_id)
+    FROM raw_data rd
+  ON CONFLICT (an_id) DO NOTHING;
+
+-- Эффекты: +2 к расовому бонусу выбранного навыка
+WITH skill_mapping (skill_id) AS ( VALUES
+    ('alchemy'),
+    ('pick_lock'),
+    ('trap_crafting'),
+    ('crafting'),
+    ('disguise'),
+    ('first_aid'),
+    ('forgery')
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_gnome_craft_skills_' || sm.skill_id AS an_an_id,
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.common.' || sm.skill_id || '.race_bonus'),
+      2
+    )
+  ) AS body
+FROM skill_mapping sm;
+
+-- Переход в ноду выбора ремесленных навыков (только для расы "Гном")
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
+  SELECT 'wcc_race', 'wcc_gnome_craft_skills', 'wcc_race_gnome', 1;
+
+
+-- <<< END sql/004a_gnome_craft_skills.sql
+
 -- >>> BEGIN sql/005_profession.sql
 
 \echo '005_profession.sql'
@@ -4026,6 +4212,7 @@ SELECT meta.qu_id
      , 'drop_down_detailed'
      , jsonb_build_object(
          'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.identity')::text,
            ck_id('witcher_cc.hierarchy.profession')::text
          )
        )
@@ -4036,6 +4223,9 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_race', 'wcc_profession';
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_witcher_school', 'wcc_profession';
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
+  SELECT 'wcc_gnome_craft_skills', 'wcc_profession', 0;
+
 -- <<< END sql/005_profession.sql
 
 -- >>> BEGIN sql/005_profession_01_bard.sql
@@ -6739,7 +6929,10 @@ WITH
 , rule_parts AS (
   SELECT
     (SELECT r.body FROM rules r WHERE r.name = 'is_human' ORDER BY r.ru_id LIMIT 1) AS is_human_expr,
-    (SELECT r.body FROM rules r WHERE r.name = 'is_elf' ORDER BY r.ru_id LIMIT 1) AS is_elf_expr
+    (SELECT r.body FROM rules r WHERE r.name = 'is_elf' ORDER BY r.ru_id LIMIT 1) AS is_elf_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_gnome' ORDER BY r.ru_id LIMIT 1) AS is_gnome_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_vran' ORDER BY r.ru_id LIMIT 1) AS is_vran_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_werebbubb' ORDER BY r.ru_id LIMIT 1) AS is_werebbubb_expr
 )
 , vis_rules AS (
   INSERT INTO rules (ru_id, name, body)
@@ -6750,7 +6943,10 @@ WITH
       'or',
       jsonb_build_array(
         rule_parts.is_human_expr,
-        rule_parts.is_elf_expr
+        rule_parts.is_elf_expr,
+        rule_parts.is_gnome_expr,
+        rule_parts.is_vran_expr,
+        rule_parts.is_werebbubb_expr
       )
     ) AS body
   FROM rule_parts
@@ -8149,8 +8345,8 @@ WITH
       SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| v.entity_field) AS id
            , meta.entity, v.entity_field, v.lang, v.text
         FROM (VALUES
-                ('ru', 'Выберите боевые навыки для Воина', 'body'),
-                ('en', 'Pick combat skills for the Man at Arms', 'body')
+                ('ru', 'Выберите 5 боевых навыков', 'body'),
+                ('en', 'Pick 5 combat skills', 'body')
              ) AS v(lang, text, entity_field)
         CROSS JOIN meta
       RETURNING id AS body_id
@@ -8180,7 +8376,9 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
                5
              )
            ),
-           'path', jsonb_build_array(ck_id('witcher_cc.hierarchy.profession')::text,ck_id('witcher_cc.hierarchy.battle_skills')::text)
+           'path', jsonb_build_array(ck_id('witcher_cc.hierarchy.identity')::text,
+                                     ck_id('witcher_cc.hierarchy.profession')::text,
+                                     ck_id('witcher_cc.hierarchy.battle_skills')::text)
          )
      FROM meta;
 
@@ -8288,6 +8486,9 @@ WITH
   SELECT
     (SELECT r.body FROM rules r WHERE r.name = 'is_human' ORDER BY r.ru_id LIMIT 1) AS is_human_expr,
     (SELECT r.body FROM rules r WHERE r.name = 'is_elf' ORDER BY r.ru_id LIMIT 1) AS is_elf_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_gnome' ORDER BY r.ru_id LIMIT 1) AS is_gnome_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_vran' ORDER BY r.ru_id LIMIT 1) AS is_vran_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_werebbubb' ORDER BY r.ru_id LIMIT 1) AS is_werebbubb_expr,
     (SELECT er.exp_toc_expr FROM ensure_rules er LIMIT 1) AS exp_toc_expr
 )
 , vis_rules AS (
@@ -8302,7 +8503,10 @@ WITH
           'or',
           jsonb_build_array(
             rule_parts.is_human_expr,
-            rule_parts.is_elf_expr
+            rule_parts.is_elf_expr,
+            rule_parts.is_gnome_expr,
+            rule_parts.is_vran_expr,
+            rule_parts.is_werebbubb_expr
           )
         ),
         jsonb_build_object('!', rule_parts.exp_toc_expr)
@@ -11082,6 +11286,9 @@ WITH
   SELECT
     (SELECT r.body FROM rules r WHERE r.name = 'is_human' ORDER BY r.ru_id LIMIT 1) AS is_human_expr,
     (SELECT r.body FROM rules r WHERE r.name = 'is_elf' ORDER BY r.ru_id LIMIT 1) AS is_elf_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_gnome' ORDER BY r.ru_id LIMIT 1) AS is_gnome_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_vran' ORDER BY r.ru_id LIMIT 1) AS is_vran_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_werebbubb' ORDER BY r.ru_id LIMIT 1) AS is_werebbubb_expr,
     (SELECT er.exp_toc_expr FROM ensure_rules er LIMIT 1) AS exp_toc_expr
 )
 , vis_rules AS (
@@ -11096,7 +11303,10 @@ WITH
           'or',
           jsonb_build_array(
             rule_parts.is_human_expr,
-            rule_parts.is_elf_expr
+            rule_parts.is_elf_expr,
+            rule_parts.is_gnome_expr,
+            rule_parts.is_vran_expr,
+            rule_parts.is_werebbubb_expr
           )
         ),
         rule_parts.exp_toc_expr
@@ -11806,6 +12016,9 @@ WITH
   SELECT
     (SELECT r.body FROM rules r WHERE r.name = 'is_human' ORDER BY r.ru_id LIMIT 1) AS is_human_expr,
     (SELECT r.body FROM rules r WHERE r.name = 'is_elf' ORDER BY r.ru_id LIMIT 1) AS is_elf_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_gnome' ORDER BY r.ru_id LIMIT 1) AS is_gnome_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_vran' ORDER BY r.ru_id LIMIT 1) AS is_vran_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_werebbubb' ORDER BY r.ru_id LIMIT 1) AS is_werebbubb_expr,
     (SELECT er.exp_toc_expr FROM ensure_rules er LIMIT 1) AS exp_toc_expr
 )
 , vis_rules AS (
@@ -11820,7 +12033,10 @@ WITH
           'or',
           jsonb_build_array(
             rule_parts.is_human_expr,
-            rule_parts.is_elf_expr
+            rule_parts.is_elf_expr,
+            rule_parts.is_gnome_expr,
+            rule_parts.is_vran_expr,
+            rule_parts.is_werebbubb_expr
           )
         ),
         rule_parts.exp_toc_expr
@@ -12736,6 +12952,9 @@ FROM meta;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_profession', 'wcc_past_dwarf_q1', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'is_dwarf') r;
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_dwarf_q1', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'is_dwarf') r;
 -- <<< END sql/007_past_dwarf_q1.sql
 
 -- >>> BEGIN sql/008_past_elf_q1.sql
@@ -12878,7 +13097,136 @@ FROM meta;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_profession', 'wcc_past_elf_q1', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'is_elf') r;
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_elf_q1', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'is_elf') r;
 -- <<< END sql/008_past_elf_q1.sql
+
+-- >>> BEGIN sql/008a_past_ancient_races_q1.sql
+
+\echo '008a_past_ancient_races_q1.sql'
+-- Узел: Выбор направления родины для древнейших рас (гном, вран, баболак)
+
+-- Вопрос
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_ancient_races_q1' AS qu_id
+                , 'questions' AS entity)
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+      SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| 'body') AS id
+           , meta.entity, 'body', v.lang, v.text
+        FROM (VALUES
+                ('ru', 'Вы выбрали одну из древнейших рас на континенте. Правила не уточняют явно где именно живут её представители, поэтому вы можете сами выбрать родину персонажа. Но имейте в виду, что представители вашего народа исторически подавлялись людьми, поэтому они тяготеют к землям старших народов, особенно Махакаму.'),
+                ('en', 'You have chosen one of the oldest races on the Continent. The rules do not clearly define where exactly its people live, so you may choose your character''s homeland yourself. Keep in mind that your folk were historically oppressed by humans, so they tend to gravitate toward elderfolk lands, especially Mahakam.')
+             ) AS v(lang, text)
+        CROSS JOIN meta
+)
+, c_vals(lang, num, text) AS (VALUES
+    ('ru', 1, 'Шанс'),
+    ('ru', 2, 'Вариант'),
+    ('en', 1, 'Chance'),
+    ('en', 2, 'Option')
+)
+, ins_c AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+      SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(c_vals.num, 'FM9900') ||'.'|| meta.entity ||'.'|| 'column_name') AS id
+           , meta.entity, 'column_name', c_vals.lang, c_vals.text
+        FROM c_vals
+        CROSS JOIN meta
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+  SELECT meta.qu_id
+       , meta.su_su_id
+       , NULL
+       , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| 'body')
+       , 'single_table'
+       , jsonb_build_object(
+           'dice', 'd_weighed',
+           'columns', (
+             SELECT jsonb_agg(ck_id('witcher_cc' ||'.'|| 'wcc_past_ancient_races_q1' ||'.'|| to_char(num, 'FM9900') ||'.'|| 'questions' ||'.'|| 'column_name')::text ORDER BY num)
+             FROM (SELECT DISTINCT num FROM c_vals) AS cols
+           ),
+           'path', jsonb_build_array(
+             ck_id('witcher_cc.hierarchy.identity')::text,
+             ck_id('witcher_cc.hierarchy.homeland_nonhuman')::text
+           )
+         )
+    FROM meta;
+
+-- Ответы
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_ancient_races_q1' AS qu_id
+                , 'answer_options' AS entity
+                , 'label' AS entity_field)
+, vals AS (
+    SELECT
+      ('<td>' || to_char(probability*100, 'FM990.00') || '%</td>' ||
+       '<td>' || option_text || '</td>') AS text,
+      num,
+      probability,
+      lang
+    FROM (VALUES
+      ('ru', 1, 'Я хочу выбрать что-то из земель старших народов.', 0.75::numeric),
+      ('ru', 2, 'Я хочу выбрать что-то из людских поселений.', 0.25::numeric),
+      ('en', 1, 'I want to choose something from the lands of the elder peoples.', 0.75::numeric),
+      ('en', 2, 'I want to choose something from human settlements.', 0.25::numeric)
+    ) AS v(lang, num, option_text, probability)
+)
+, ins_label AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+      SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS id
+           , meta.entity, meta.entity_field, vals.lang, vals.text
+        FROM vals
+        CROSS JOIN meta
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+  SELECT 'wcc_past_ancient_races_q1_o' || to_char(vals.num, 'FM9900') AS an_id
+       , meta.su_su_id
+       , meta.qu_id
+       , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label
+       , vals.num AS sort_order
+       , jsonb_build_object('probability', vals.probability) AS metadata
+    FROM vals
+    CROSS JOIN meta
+  ON CONFLICT (an_id) DO NOTHING;
+
+-- Правило для рас: is_gnome OR is_vran OR is_werebbubb OR is_halfling
+WITH
+  rule_parts AS (
+    SELECT
+      (SELECT r.body FROM rules r WHERE r.name = 'is_gnome' ORDER BY r.ru_id LIMIT 1) AS is_gnome_expr,
+      (SELECT r.body FROM rules r WHERE r.name = 'is_vran' ORDER BY r.ru_id LIMIT 1) AS is_vran_expr,
+      (SELECT r.body FROM rules r WHERE r.name = 'is_werebbubb' ORDER BY r.ru_id LIMIT 1) AS is_werebbubb_expr,
+      (SELECT r.body FROM rules r WHERE r.name = 'is_halfling' ORDER BY r.ru_id LIMIT 1) AS is_halfling
+  )
+INSERT INTO rules (ru_id, name, body)
+SELECT
+  ck_id('witcher_cc.rules.is_ancient_nonhuman') AS ru_id,
+  'is_ancient_nonhuman' AS name,
+  jsonb_build_object(
+    'or',
+    jsonb_build_array(
+      rule_parts.is_gnome_expr,
+      rule_parts.is_vran_expr,
+      rule_parts.is_werebbubb_expr,
+      rule_parts.is_halfling
+    )
+  ) AS body
+FROM rule_parts
+ON CONFLICT (ru_id) DO NOTHING;
+
+-- Связи
+-- Переход из профессии для древнейших рас
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+  SELECT 'wcc_profession', 'wcc_past_ancient_races_q1', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'is_ancient_nonhuman' ORDER BY ru_id LIMIT 1) r;
+
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_ancient_races_q1', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'is_ancient_nonhuman') r;
+-- <<< END sql/008a_past_ancient_races_q1.sql
 
 -- >>> BEGIN sql/009_past_homeland_human.sql
 
@@ -13757,11 +14105,16 @@ FROM meta_lang,
 -- Переход из профессии (через правило is_human) - добавлен в 090_profession.sql
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
   SELECT 'wcc_past_witcher_q1', 'wcc_past_homeland_human', 'wcc_past_witcher_q1_o02' UNION ALL
-  SELECT 'wcc_past_dwarf_q1', 'wcc_past_homeland_human', 'wcc_past_dwarf_q1_o03' UNION ALL
-  SELECT 'wcc_past_elf_q1', 'wcc_past_homeland_human', 'wcc_past_elf_q1_o03';
+  SELECT 'wcc_past_ancient_races_q1', 'wcc_past_homeland_human', 'wcc_past_ancient_races_q1_o02';
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
+  SELECT 'wcc_past_dwarf_q1', 'wcc_past_homeland_human', 'wcc_past_elf_q1_o03', 2 UNION ALL
+  SELECT 'wcc_past_elf_q1', 'wcc_past_homeland_human', 'wcc_past_elf_q1_o03', 2;
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_profession', 'wcc_past_homeland_human', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'is_human') r;
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_homeland_human', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'is_human') r;
 -- <<< END sql/009_past_homeland_human.sql
 
@@ -13975,120 +14328,16 @@ SELECT 'character', 'wcc_past_homeland_elders_o02',
 FROM meta_lang;
 
 -- Связи  
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
+  SELECT 'wcc_past_dwarf_q1', 'wcc_past_homeland_elders', 'wcc_past_dwarf_q1_o02', 2 UNION ALL
+  SELECT 'wcc_past_elf_q1', 'wcc_past_homeland_elders', 'wcc_past_elf_q1_o02', 2;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
-  SELECT 'wcc_past_dwarf_q1', 'wcc_past_homeland_elders', 'wcc_past_dwarf_q1_o02' UNION ALL
-  SELECT 'wcc_past_elf_q1', 'wcc_past_homeland_elders', 'wcc_past_elf_q1_o02';
-
-    -- Переходы из новой ноды с правилами по расе (без is_witcher, т.к. ведьмак не может быть воином)
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_homeland_human', r.ru_id, 1
-    FROM (SELECT ru_id FROM rules WHERE name = 'is_human') r;
-
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_dwarf_q1', r.ru_id, 1
-    FROM (SELECT ru_id FROM rules WHERE name = 'is_dwarf') r;
-
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_elf_q1', r.ru_id, 1
-    FROM (SELECT ru_id FROM rules WHERE name = 'is_elf') r;
+  SELECT 'wcc_past_ancient_races_q1', 'wcc_past_homeland_elders', 'wcc_past_ancient_races_q1_o01';
 -- <<< END sql/010_past_homeland_elders.sql
 
--- >>> BEGIN sql/011_ch_name.sql
+-- >>> BEGIN sql/011_ch_language.sql
 
-\echo '011_ch_name.sql'
--- Узел: Имя персонажа
-
--- Вопрос
-WITH
-  meta AS (SELECT 'witcher_cc' AS su_su_id
-                , 'wcc_ch_name' AS qu_id
-                , 'questions' AS entity)
-, ins_body AS (
-    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| 'body') AS id
-         , meta.entity, 'body', v.lang, v.text
-      FROM (VALUES
-        ('ru', 'Как вас зовут?'),
-        ('en', 'What is your name?')
-      ) AS v(lang, text)
-      CROSS JOIN meta
-  )
-INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
-SELECT meta.qu_id
-     , meta.su_su_id
-     , NULL
-     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| 'body')
-       , 'value_textbox'
-       , jsonb_build_object(
-          'defaultValue', 'Character Name',
-          'valueTarget' , 'characterRaw.name',
-          'path', jsonb_build_array(
-            ck_id('witcher_cc.hierarchy.identity')::text,
-            ck_id('witcher_cc.hierarchy.character_name')::text
-          ),
-          -- randomList: массив имен в зависимости от расы
-          'randomList', jsonb_build_object(
-            'if', jsonb_build_array(
-              jsonb_build_object('==', jsonb_build_array(
-                jsonb_build_object('var', 'characterRaw.logicFields.race'),
-                'Witcher'
-              )),
-              jsonb_build_array('Olsen', 'Dagread', 'Adalbert', 'John', 'Agnes', 'Aplegatt', 'Carduin'),
-              jsonb_build_object(
-                'if', jsonb_build_array(
-                  jsonb_build_object('==', jsonb_build_array(
-                    jsonb_build_object('var', 'characterRaw.logicFields.race'),
-                    'Human'
-                  )),
-                  jsonb_build_array('Olsen', 'Dagread', 'Adalbert', 'John', 'Agnes', 'Aplegatt', 'Carduin'),
-                  jsonb_build_object(
-                    'if', jsonb_build_array(
-                      jsonb_build_object('==', jsonb_build_array(
-                        jsonb_build_object('var', 'characterRaw.logicFields.race'),
-                        'Dwarf'
-                      )),
-                      jsonb_build_array('Rodolf', 'Zoltan', 'Yarpen', 'Barclay', 'Brouver', 'Golan', 'Rhundurin'),
-                      jsonb_build_object(
-                        'if', jsonb_build_array(
-                          jsonb_build_object('==', jsonb_build_array(
-                            jsonb_build_object('var', 'characterRaw.logicFields.race'),
-                            'Elf'
-                          )),
-                          jsonb_build_array('Yaevinn', 'Iorveth', 'Aelirenn', 'Filavandrel', 'Ge''els', 'Shiadhal', 'Nithral'),
-                          jsonb_build_array('Sigurd', 'Aksel', 'Laila', 'Ragnar', 'Brynhild', 'Olaf', 'Hakon')
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-         ) AS metadata
-  FROM meta;
-  
--- Связи
--- Нода должна идти после выбора расы, но перед возрастом
--- Добавим переход от расы к имени
-
--- От имени к возрасту (для всех рас)
-
-
--- Переходы теперь идут через wcc_ch_name (имя персонажа)
--- Изменяем переходы так, чтобы они шли к имени, а не напрямую к возрасту
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
-  SELECT 'wcc_past_elf_q1', 'wcc_ch_name', 'wcc_past_elf_q1_o01' UNION ALL
-  SELECT 'wcc_past_dwarf_q1', 'wcc_ch_name', 'wcc_past_dwarf_q1_o01'UNION ALL
-  SELECT 'wcc_past_witcher_q1', 'wcc_ch_name', 'wcc_past_witcher_q1_o01';
-
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
-  SELECT 'wcc_past_homeland_human', 'wcc_ch_name' UNION ALL
-  SELECT 'wcc_past_homeland_elders', 'wcc_ch_name';
--- <<< END sql/011_ch_name.sql
-
--- >>> BEGIN sql/012_ch_language.sql
-
-\echo '012_ch_language.sql'
+\echo '011_ch_language.sql'
 -- Узел: Выбор дополнительного языка (для Барда и Торговца)
 
 -- Вопрос
@@ -14149,7 +14398,9 @@ SELECT meta.qu_id
      , 'single'::question_type
      , jsonb_build_object(
          'path', jsonb_build_array(
-           ck_id('witcher_cc.hierarchy.identity')::text
+             ck_id('witcher_cc.hierarchy.identity')::text,
+             ck_id('witcher_cc.hierarchy.homeland')::text,
+             ck_id('witcher_cc.hierarchy.second_language')::text
          ),
          'body',
          jsonb_build_object(
@@ -14327,9 +14578,109 @@ SELECT 1;
 -- Переходы
 -- Из 011_ch_name по правилу (профессия Бард или Торговец)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_ch_name', 'wcc_ch_language', r.ru_id, 1
+  SELECT 'wcc_past_homeland_elders', 'wcc_ch_language', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'wcc_ch_language_bard_or_merchant') r UNION ALL
+  SELECT 'wcc_past_elf_q1', 'wcc_ch_language', r.ru_id, 0
+    FROM (SELECT ru_id FROM rules WHERE name = 'wcc_ch_language_bard_or_merchant') r UNION ALL
+  SELECT 'wcc_past_homeland_human', 'wcc_ch_language', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'wcc_ch_language_bard_or_merchant') r UNION ALL
+  SELECT 'wcc_past_dwarf_q1', 'wcc_ch_language', r.ru_id, 2
     FROM (SELECT ru_id FROM rules WHERE name = 'wcc_ch_language_bard_or_merchant') r;
--- <<< END sql/012_ch_language.sql
+-- <<< END sql/011_ch_language.sql
+
+-- >>> BEGIN sql/012_ch_name.sql
+
+\echo '012_ch_name.sql'
+-- Узел: Имя персонажа
+
+-- Вопрос
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_ch_name' AS qu_id
+                , 'questions' AS entity)
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| 'body') AS id
+         , meta.entity, 'body', v.lang, v.text
+      FROM (VALUES
+        ('ru', 'Как вас зовут?'),
+        ('en', 'What is your name?')
+      ) AS v(lang, text)
+      CROSS JOIN meta
+  )
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id
+     , meta.su_su_id
+     , NULL
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| 'body')
+       , 'value_textbox'
+       , jsonb_build_object(
+          'defaultValue', 'Character Name',
+          'valueTarget' , 'characterRaw.name',
+          'path', jsonb_build_array(
+            ck_id('witcher_cc.hierarchy.identity')::text,
+            ck_id('witcher_cc.hierarchy.character_name')::text
+          ),
+          -- randomList: массив имен в зависимости от расы
+          'randomList', jsonb_build_object(
+            'if', jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(
+                jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                'Witcher'
+              )),
+              jsonb_build_array('Olsen', 'Dagread', 'Adalbert', 'John', 'Agnes', 'Aplegatt', 'Carduin'),
+              jsonb_build_object(
+                'if', jsonb_build_array(
+                  jsonb_build_object('==', jsonb_build_array(
+                    jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                    'Human'
+                  )),
+                  jsonb_build_array('Olsen', 'Dagread', 'Adalbert', 'John', 'Agnes', 'Aplegatt', 'Carduin'),
+                  jsonb_build_object(
+                    'if', jsonb_build_array(
+                      jsonb_build_object('==', jsonb_build_array(
+                        jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                        'Dwarf'
+                      )),
+                      jsonb_build_array('Rodolf', 'Zoltan', 'Yarpen', 'Barclay', 'Brouver', 'Golan', 'Rhundurin'),
+                      jsonb_build_object(
+                        'if', jsonb_build_array(
+                          jsonb_build_object('==', jsonb_build_array(
+                            jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                            'Elf'
+                          )),
+                          jsonb_build_array('Yaevinn', 'Iorveth', 'Aelirenn', 'Filavandrel', 'Ge''els', 'Shiadhal', 'Nithral'),
+                          jsonb_build_array('Sigurd', 'Aksel', 'Laila', 'Ragnar', 'Brynhild', 'Olaf', 'Hakon')
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          )
+         ) AS metadata
+  FROM meta;
+  
+-- Связи
+-- Нода должна идти после выбора расы, но перед возрастом
+-- Добавим переход от расы к имени
+
+-- От имени к возрасту (для всех рас)
+
+
+-- Переходы теперь идут через wcc_ch_name (имя персонажа)
+-- Изменяем переходы так, чтобы они шли к имени, а не напрямую к возрасту
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
+  SELECT 'wcc_past_dwarf_q1', 'wcc_ch_name', 'wcc_past_dwarf_q1_o01' UNION ALL
+  SELECT 'wcc_past_witcher_q1', 'wcc_ch_name', 'wcc_past_witcher_q1_o01' UNION ALL
+  SELECT 'wcc_past_elf_q1', 'wcc_ch_name', 'wcc_past_elf_q1_o01';
+
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
+  SELECT 'wcc_past_homeland_human', 'wcc_ch_name' UNION ALL
+  SELECT 'wcc_past_homeland_elders', 'wcc_ch_name' UNION ALL
+  SELECT 'wcc_ch_language', 'wcc_ch_name';
+-- <<< END sql/012_ch_name.sql
 
 -- >>> BEGIN sql/013_ch_age.sql
 
@@ -14402,7 +14753,8 @@ SELECT meta.qu_id
               18
             )
           ),
-          -- max_rand: 260 для ведьмака, 60 для человека, 150 для краснолюда, 300 для эльфа
+          -- max_rand: 260 для ведьмака, 60 для человека, 150 для краснолюда, 300 для эльфа,
+          -- 100 для низушка, 80 для врана, 140 для баболака, 200 для гнома
           'max_rand', jsonb_build_object(
             'if', jsonb_build_array(
               jsonb_build_object('==', jsonb_build_array(
@@ -14431,7 +14783,43 @@ SELECT meta.qu_id
                             'Elf'
                           )),
                           300,
-                          null
+                          jsonb_build_object(
+                            'if', jsonb_build_array(
+                              jsonb_build_object('==', jsonb_build_array(
+                                jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                                'Halfling'
+                              )),
+                              100,
+                              jsonb_build_object(
+                                'if', jsonb_build_array(
+                                  jsonb_build_object('==', jsonb_build_array(
+                                    jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                                    'Vran'
+                                  )),
+                                  80,
+                                  jsonb_build_object(
+                                    'if', jsonb_build_array(
+                                      jsonb_build_object('==', jsonb_build_array(
+                                        jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                                        'Werebbubb'
+                                      )),
+                                      140,
+                                      jsonb_build_object(
+                                        'if', jsonb_build_array(
+                                          jsonb_build_object('==', jsonb_build_array(
+                                            jsonb_build_object('var', 'characterRaw.logicFields.race'),
+                                            'Gnome'
+                                          )),
+                                          200,
+                                          null
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
                         )
                       )
                     )
@@ -14447,8 +14835,6 @@ SELECT meta.qu_id
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_ch_name', 'wcc_ch_age';
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
-  SELECT 'wcc_ch_language', 'wcc_ch_age';
 
 -- Правила
 INSERT INTO rules(name, body)
@@ -14470,6 +14856,7 @@ VALUES ('lifeEventsCounter_is_valid',
       }
     ]
 }'::jsonb);
+
 -- <<< END sql/013_ch_age.sql
 
 -- >>> BEGIN sql/014_past_family.sql
@@ -16074,7 +16461,7 @@ vals AS (
 ('{
   "and": [
     ' || body::text || ',
-    {"in":[{"var":"characterRaw.logicFields.race"},["Witcher","Human"]]}
+    {"in":[{"var":"characterRaw.logicFields.race"},["Witcher","Human","Halfling"]]}
   ]
 }')::jsonb FROM rules WHERE name = 'is_nordman' UNION ALL
   SELECT 2, gen_random_uuid(),
@@ -16086,13 +16473,19 @@ vals AS (
         {"in":[{"var":"characterRaw.logicFields.race"},["Witcher","Human"]]}
       ]
     },
-    {"in":[{"var":"characterRaw.logicFields.race"},["Dwarf"]]}
+    {"in":[{"var":"characterRaw.logicFields.race"},["Dwarf","Werebbubb","Gnome"]]}
   ]
 }')::jsonb FROM rules WHERE name = 'is_nilfgaardian' UNION ALL
-  SELECT 3, ru_id, body FROM rules WHERE name = 'is_elf'
+  SELECT 3, gen_random_uuid(),
+('{
+  "or": [
+    ' || body::text || ',
+    {"in":[{"var":"characterRaw.logicFields.race"},["Vran"]]}
+  ]
+}')::jsonb FROM rules WHERE name = 'is_elf'
 )
 , ins_rules AS (
-  INSERT INTO rules(ru_id, body) SELECT r.id, r.body FROM rules_vals r WHERE group_id !=3
+  INSERT INTO rules(ru_id, body) SELECT r.id, r.body FROM rules_vals r
 )
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT 'wcc_past_siblings_amount_o' || to_char(vals.group_id, 'FM00') || to_char(vals.num, 'FM00') AS an_id,
@@ -16129,6 +16522,7 @@ INSERT INTO rules(name, body) VALUES ('is_there_more_siblings',
     }
   ]
 }'::jsonb);
+
 -- <<< END sql/021_past_siblings_amount.sql
 
 -- >>> BEGIN sql/022_past_siblings_gender.sql

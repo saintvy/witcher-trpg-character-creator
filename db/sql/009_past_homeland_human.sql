@@ -873,9 +873,14 @@ FROM meta_lang,
 -- Переход из профессии (через правило is_human) - добавлен в 090_profession.sql
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
   SELECT 'wcc_past_witcher_q1', 'wcc_past_homeland_human', 'wcc_past_witcher_q1_o02' UNION ALL
-  SELECT 'wcc_past_dwarf_q1', 'wcc_past_homeland_human', 'wcc_past_dwarf_q1_o03' UNION ALL
-  SELECT 'wcc_past_elf_q1', 'wcc_past_homeland_human', 'wcc_past_elf_q1_o03';
+  SELECT 'wcc_past_ancient_races_q1', 'wcc_past_homeland_human', 'wcc_past_ancient_races_q1_o02';
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
+  SELECT 'wcc_past_dwarf_q1', 'wcc_past_homeland_human', 'wcc_past_elf_q1_o03', 2 UNION ALL
+  SELECT 'wcc_past_elf_q1', 'wcc_past_homeland_human', 'wcc_past_elf_q1_o03', 2;
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_profession', 'wcc_past_homeland_human', r.ru_id, 1
+    FROM (SELECT ru_id FROM rules WHERE name = 'is_human') r;
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_homeland_human', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'is_human') r;

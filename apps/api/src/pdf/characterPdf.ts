@@ -780,13 +780,6 @@ function parseRichInlineTokens(input: string): RichToken[] {
   }
   return tokens;
 }
-function calcDerivedDiceFromBody(bodyCur: number, kind: 'punch' | 'kick'): string {
-  const mod = kind === 'punch'
-    ? 2 * Math.trunc((bodyCur - 1) / 2) - 4
-    : 2 * Math.trunc((bodyCur - 1) / 2);
-  if (mod === 0) return '1d6';
-  return mod > 0 ? `1d6+${mod}` : `1d6${mod}`;
-}
 function statValue(r: Record<string, unknown> | null): { cur: string; bonus: string; full: string } {
   const rec = r ?? {};
   const cur = num(rec.cur ?? rec.value ?? rec.total);
@@ -900,7 +893,6 @@ function buildVmWithCatalog(
           : tx.statsAbbr[k as keyof typeof tx.statsAbbr] ?? k.toUpperCase();
     return { cells: [abbr, statCells.cur || '0', statCells.bonus, statCells.raceBonus] };
   });
-  const bodyCurForDerived = num(asRecord(stats.BODY)?.cur) ?? 0;
   const extraStats = [
     [tx.labels.run, calc.run], [tx.labels.leap, calc.leap],
     [tx.labels.stun, calc.STUN], [tx.labels.rec, calc.REC],
@@ -912,8 +904,6 @@ function buildVmWithCatalog(
     let display = statValue(rec).full;
     if (curStr) {
       display = curStr;
-    } else if (k === tx.labels.punch || k === tx.labels.kick) {
-      display = calcDerivedDiceFromBody(bodyCurForDerived, k === tx.labels.punch ? 'punch' : 'kick');
     }
     return { cells: [String(k), display] };
   });
@@ -2339,7 +2329,7 @@ class Painter {
     const nameW = Math.min(Math.max(72, nameWMeasured), Math.floor(w * 0.26));
     const rowHeights = rows.map((r) => {
       this.fontR(6.2);
-      return Math.max(12, Math.ceil(this.doc.heightOfString(r.effect || '—', { width: Math.max(20, w - nameW - 8) })) + 1);
+      return Math.max(12, Math.ceil(this.doc.heightOfString(r.effect || '—', { width: Math.max(20, w - nameW - 8) })) + 4);
     });
     const bodyH = rowHeights.reduce((a, v) => a + v, 0);
     const h = headerH + bodyH;

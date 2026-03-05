@@ -3352,6 +3352,8 @@ async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
   const body = statTotal('BODY');
   const will = statTotal('WILL');
   const spd = statTotal('SPD');
+  const raceLogic = String(getAtPath(state, 'characterRaw.logicFields.race') ?? '');
+  const bodyForDamageAndEnc = raceLogic === 'Gnome' ? Math.max(1, body - 3) : body;
   const avg = Math.trunc((body + will) / 2);
 
   setAtPath(state, 'characterRaw.statistics.calculated.STUN.cur', Math.max(avg, 10));
@@ -3359,11 +3361,11 @@ async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
   setAtPath(state, 'characterRaw.statistics.calculated.leap.cur', Math.trunc(spd * 0.6));
   setAtPath(state, 'characterRaw.statistics.calculated.max_HP.cur', 5 * avg);
   setAtPath(state, 'characterRaw.statistics.calculated.STA.cur', 5 * avg);
-  setAtPath(state, 'characterRaw.statistics.calculated.ENC.cur', 10 * body);
+  setAtPath(state, 'characterRaw.statistics.calculated.ENC.cur', 10 * bodyForDamageAndEnc);
   setAtPath(state, 'characterRaw.statistics.calculated.REC.cur', avg);
 
-  const punchMod = 2 * Math.trunc((body - 1) / 2) - 4;
-  const kickMod = 2 * Math.trunc((body - 1) / 2);
+  const punchMod = 2 * Math.trunc((bodyForDamageAndEnc - 1) / 2) - 4;
+  const kickMod = 2 * Math.trunc((bodyForDamageAndEnc - 1) / 2);
   setAtPath(state, 'characterRaw.statistics.calculated.bonus_punch.cur', diceWithMod('1d6', punchMod));
   setAtPath(state, 'characterRaw.statistics.calculated.bonus_kick.cur', diceWithMod('1d6', kickMod));
 }

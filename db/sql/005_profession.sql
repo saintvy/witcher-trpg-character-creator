@@ -14,6 +14,7 @@ SELECT meta.qu_id
      , 'drop_down_detailed'
      , jsonb_build_object(
          'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.identity')::text,
            ck_id('witcher_cc.hierarchy.profession')::text
          )
        )
@@ -24,3 +25,5 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_race', 'wcc_profession';
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_witcher_school', 'wcc_profession';
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
+  SELECT 'wcc_gnome_craft_skills', 'wcc_profession', 0;
