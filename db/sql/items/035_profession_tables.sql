@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS wcc_skills (
   branch_number integer CHECK (branch_number IS NULL OR (branch_number >= 1 AND branch_number <= 3)),
   branch_name_id uuid,
   is_difficult boolean NOT NULL DEFAULT false,
-  prof_id varchar(64) NULL  -- for skill_type = 'professional': references wcc_professions.prof_id (bard, witcher, doctor, mage, man_at_arms, priest, criminal, craftsman, merchant)
+  prof_id varchar(64) NULL  -- for skill_type = 'professional': references wcc_professions.prof_id (bard, witcher, doctor, mage, man_at_arms, priest, criminal, craftsman, merchant, druid, nobble)
   -- Note: Foreign keys to i18n_text(id) are not possible because i18n_text has composite PK (id, lang)
   -- The UUIDs reference i18n_text entries but integrity is maintained at application level
 );
@@ -286,7 +286,8 @@ WITH
         (107, 'professional_paranoia', 'Профессиональная паранойя', 'int', 'main'),
         (108, 'quick_fix', 'Быстрый ремонт', 'cra', 'main'),
         (109, 'well_traveled', 'Бывалый путешественник', 'int', 'main'),
-        (110, 'rite_of_oak_and_mistletoe', 'Обряд дуба и омелы', 'int', 'main')
+        (110, 'rite_of_oak_and_mistletoe', 'Обряд дуба и омелы', 'int', 'main'),
+        (111, 'renown', 'Известность', 'emp', 'main')
       ) AS raw_data_ru(skill_aid, skill_id, name, param_id, skill_type)
     UNION ALL
     SELECT 'en' AS lang, skill_aid, skill_id, name, param_id, skill_type
@@ -300,7 +301,8 @@ WITH
         (107, 'professional_paranoia', 'Professional Paranoia', 'int', 'main'),
         (108, 'quick_fix', 'Quick Fix', 'cra', 'main'),
         (109, 'well_traveled', 'Well Traveled', 'int', 'main'),
-        (110, 'rite_of_oak_and_mistletoe', 'Rite of Oak and Mistletoe', 'int', 'main')
+        (110, 'rite_of_oak_and_mistletoe', 'Rite of Oak and Mistletoe', 'int', 'main'),
+        (111, 'renown', 'Notoriety', 'emp', 'main')
       ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type)
   ),
   ins_main_skill_names AS (
@@ -457,7 +459,19 @@ WITH
         -- Druid branch 3: Воинствующий
         (288, 'beast_healer', 'Целитель зверей', 'cra', 'professional', 1, 3, 'Воинствующий', false, 'druid'),
         (289, 'sacred_grove', 'Священная роща', 'will', 'professional', 2, 3, 'Воинствующий', false, 'druid'),
-        (290, 'grove_guardian', 'Страж рощи', 'will', 'professional', 3, 3, 'Воинствующий', false, 'druid')
+        (290, 'grove_guardian', 'Страж рощи', 'will', 'professional', 3, 3, 'Воинствующий', false, 'druid'),
+        -- Nobble branch 1: Дилетант
+        (294, 'dilettante', 'Любительство', NULL, 'professional', 1, 1, 'Дилетант', false, 'nobble'),
+        (295, 'connoisseur', 'С видом знатока', 'emp', 'professional', 2, 1, 'Дилетант', false, 'nobble'),
+        (296, 'gracious_host', 'Радушный хозяин', 'emp', 'professional', 3, 1, 'Дилетант', false, 'nobble'),
+        -- Nobble branch 2: Лидер
+        (297, 'command', 'Приказ', 'will', 'professional', 1, 2, 'Лидер', false, 'nobble'),
+        (298, 'servants', 'Слуги', NULL, 'professional', 2, 2, 'Лидер', false, 'nobble'),
+        (299, 'estate', 'Поместье', NULL, 'professional', 3, 2, 'Лидер', false, 'nobble'),
+        -- Nobble branch 3: Рыцарь
+        (300, 'steadfastness', 'Непоколебимость', NULL, 'professional', 1, 3, 'Рыцарь', false, 'nobble'),
+        (301, 'cavalier', 'Кавалерист', 'emp', 'professional', 2, 3, 'Рыцарь', false, 'nobble'),
+        (302, 'armor_softening', 'Смягчение броней', 'ref', 'professional', 3, 3, 'Рыцарь', false, 'nobble')
       ) AS raw_data_ru(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
     UNION ALL
     SELECT 'en' AS lang, raw_data_en.*
@@ -585,7 +599,19 @@ WITH
         -- Druid branch 3: The Militant
         (288, 'beast_healer', 'Beast Healer', 'cra', 'professional', 1, 3, 'The Militant', false, 'druid'),
         (289, 'sacred_grove', 'Sacred Grove', 'will', 'professional', 2, 3, 'The Militant', false, 'druid'),
-        (290, 'grove_guardian', 'Grove Guardian', 'will', 'professional', 3, 3, 'The Militant', false, 'druid')
+        (290, 'grove_guardian', 'Grove Guardian', 'will', 'professional', 3, 3, 'The Militant', false, 'druid'),
+        -- Nobble branch 1: The Dilettante
+        (294, 'dilettante', 'Dabble', NULL, 'professional', 1, 1, 'The Dilettante', false, 'nobble'),
+        (295, 'connoisseur', 'Expert Guise', 'emp', 'professional', 2, 1, 'The Dilettante', false, 'nobble'),
+        (296, 'gracious_host', 'Host', 'emp', 'professional', 3, 1, 'The Dilettante', false, 'nobble'),
+        -- Nobble branch 2: The Leader
+        (297, 'command', 'Command', 'will', 'professional', 1, 2, 'The Leader', false, 'nobble'),
+        (298, 'servants', 'Servants', NULL, 'professional', 2, 2, 'The Leader', false, 'nobble'),
+        (299, 'estate', 'Estate', NULL, 'professional', 3, 2, 'The Leader', false, 'nobble'),
+        -- Nobble branch 3: The Knight
+        (300, 'steadfastness', 'Resolute', NULL, 'professional', 1, 3, 'The Knight', false, 'nobble'),
+        (301, 'cavalier', 'Chevalier', 'emp', 'professional', 2, 3, 'The Knight', false, 'nobble'),
+        (302, 'armor_softening', 'Armored Buffer', 'ref', 'professional', 3, 3, 'The Knight', false, 'nobble')
       ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
   ),
   ins_prof_skill_names AS (
@@ -671,7 +697,8 @@ WITH
         ('professional_paranoia', 'Все преступники, будь то убийцы, воры, фальшивомонетчики или контрабандисты, обладают обострённым чутьём на опасность — фактически профессиональной паранойей, благодаря которой они избегают поимки. Когда преступник оказывается в пределах 10 метров от ловушки (включая экспериментальные ловушки, ловушки воина и засады), он может немедленно совершить проверку <strong>Профессиональной паранойи</strong> либо против СЛ обнаружения ловушки, либо против Скрытности засады, либо против заданной ведущим СЛ. Даже если преступник не заметит ловушки, чутьё всё равно ему подскажет, что тут что-то не так.'),
         ('quick_fix', 'Умелый ремесленник способен наскоро подлатать оружие или броню, чтобы их владелец мог продолжать сражаться. Ремесленник свяжет вместе обрывки лопнувшей тетивы, заострит край сломанного клинка или приколотит металлическую пластину поверх треснувшего щита. Ремесленник может потратить ход и совершить проверку <strong>Быстрого ремонта</strong> со сложностью, равной СЛ Изготовления данного предмета минус 3, чтобы восстановить 1/2 прочности брони или 1/2 надёжности сломанного оружия или щита. Пока оружие после <strong>Быстрого ремонта</strong> не починят в кузнице, оно наносит половину обычного урона.<br><br><strong>Слишком много поломок</strong><br>Ранее подлатанное оружие, щит или броню после повторной поломки можно подлатать ещё только один раз. Во второй раз <strong>Быстрый ремонт</strong> восстановит лишь 1/4 значения надёжности/прочности (с округлением вниз).'),
         ('well_traveled', 'Обычный торговец зарабатывает на жизнь тем, что продаёт товар приходящим к нему покупателям. Странствующий же торговец сам приходит к покупателю. Он ездит по миру и узнаёт обо всём, что там происходит. Торговец может в любой момент по своему желанию совершить проверку навыка <strong>Бывалый путешественник</strong>, чтобы узнать один факт об определённом предмете, культуре или области. СЛ проверки определяет ведущий. При успехе торговец получает ответ на вопрос, вспомнив те времена, когда он в прошлый раз был в этом месте.'),
-        ('rite_of_oak_and_mistletoe', 'Друид очень быстро учится собирать растения, обладающие магической силой, и превращать их в мощную основу своей магии, которая связывает их с землёй вокруг них. Друид может потратить день и совершить проверку <strong>Обряда дуба и омелы</strong> со СЛ, специфичной для области, в которой он оказался, чтобы собрать необходимые ингредиенты. В случае успеха друид создаёт посох, который может использовать только друид.<br><br>Этот посох действует точно так же, как посох (Основная книга, стр. 74), но его значение фокусировки увеличивается по мере того, как друид улучшает значение <strong>Обряда дуба и омелы</strong>. Значение фокусировки равно 1 на уровне 1 и увеличивается на 1 за каждые 2 очка сверх первого вплоть до максимума 4 на уровне 7. На уровне 9 посох получает эффект <strong>улучшенное фокусирующее</strong>.<br><br>Кроме того, пока друид держит свой посох, он получает следующие преимущества в зависимости от уровня <strong>Обряда дуба и омелы</strong>. На уровне 2 друид игнорирует все штрафы окружающей среды в заросшей или болотистой местности. На уровне 4 друид игнорирует штрафы за снежные и ледяные условия. На уровне 6 друид игнорирует штрафы за сильную жару. На уровне 8 друид игнорирует все штрафы от пребывания под водой. На уровне 10 друид может сделать бросок для создания нового посоха, тратя лишь действие полного хода, а не целый день. СЛ для создания посоха — 14 в лесу, 16 в болотистой местности, 18 в горных районах и 20 в море.')
+        ('rite_of_oak_and_mistletoe', 'Друид очень быстро учится собирать растения, обладающие магической силой, и превращать их в мощную основу своей магии, которая связывает их с землёй вокруг них. Друид может потратить день и совершить проверку <strong>Обряда дуба и омелы</strong> со СЛ, специфичной для области, в которой он оказался, чтобы собрать необходимые ингредиенты. В случае успеха друид создаёт посох, который может использовать только друид.<br><br>Этот посох действует точно так же, как посох (Основная книга, стр. 74), но его значение фокусировки увеличивается по мере того, как друид улучшает значение <strong>Обряда дуба и омелы</strong>. Значение фокусировки равно 1 на уровне 1 и увеличивается на 1 за каждые 2 очка сверх первого вплоть до максимума 4 на уровне 7. На уровне 9 посох получает эффект <strong>улучшенное фокусирующее</strong>.<br><br>Кроме того, пока друид держит свой посох, он получает следующие преимущества в зависимости от уровня <strong>Обряда дуба и омелы</strong>. На уровне 2 друид игнорирует все штрафы окружающей среды в заросшей или болотистой местности. На уровне 4 друид игнорирует штрафы за снежные и ледяные условия. На уровне 6 друид игнорирует штрафы за сильную жару. На уровне 8 друид игнорирует все штрафы от пребывания под водой. На уровне 10 друид может сделать бросок для создания нового посоха, тратя лишь действие полного хода, а не целый день. СЛ для создания посоха — 14 в лесу, 16 в болотистой местности, 18 в горных районах и 20 в море.'),
+        ('renown', 'Титул и социальный вес дают аристократу особое положение. Он добавляет <strong>Известность</strong> к репутации в родной стране и в союзных ей государствах. В нейтральных странах или во враждебных государствах бонус снижается вдвое.')
       ) AS raw_data_ru(skill_id, description)
     UNION ALL
     SELECT 'en' AS lang, skill_id, description
@@ -685,7 +712,8 @@ WITH
         ('professional_paranoia', 'Whether they''re an assassin, a thief, a counterfeitter, or a smuggler, criminals all share a practiced paranoia that keeps them out of trouble. Whenever a Criminal comes within 10m of a trap (this includes experimental traps, Man at Arms booby traps, and ambushes) they immediately can make a <strong>Practiced Paranoia</strong> roll at either the DC to spot the trap, the ambushing party''s Stealth roll, or a DC set by the GM. Even if they don''t succeed in spotting the trap, they are still aware that something is wrong.'),
         ('quick_fix', 'A skilled craftsman can patch a weapon or armor well enough to keep it working and keep its wearer/wielder in the fight, whether that be by tying a bowstring back together, sharpening the edge of a broken blade, or nailing a plate over a cracked shield. By taking a turn to roll <strong>Patch Job</strong> at a DC equal to the item''s Crafting DC-3 a Craftsman can restore a broken shield or armor to half its full SP or restore a broken weapon to half its durability. Until fixed at a forge, a patched weapon does half its normal damage.<br><br><strong>Too Many Patches</strong><br>A weapon, shield, or armor which has already been patched once can only be patched again 1 more time, and this patch only brings it to 1/4th SP/Durability (rounding down).'),
         ('well_traveled', 'Your average merchant makes a living from trade, and that trade brings in customers from all around. But a traveling merchant goes to their customers, wandering the roads of the world and learning from its people. A Merchant can make a <strong>Well Traveled</strong> roll any time they want to know a fact about a specific item, culture, or area. The DC is set by the GM, and if the roll is successful the Merchant remembers the answer to that question, calling on memories of the last time they traveled through the applicable area.'),
-        ('rite_of_oak_and_mistletoe', 'A Druid learns very quickly how to harvest magically potent plants and turn them into a powerful focus for their magic which connects them to the land around them. A Druid can take a day and make a Rite of Oak and Mistletoe roll against a DC specific to the area in which they find themselves to harvest the necessary ingredients. If successful, the Druid creates a Staff which works only for the Druid.<br><br>This staff functions exactly as a Staff (Witcher Core Rule Book, pg. 74) but its Focus value rises as they improve their Rite of Oak &amp; Mistletoe value. The Focus value begins at 1 at level 1 and rises by 1 every 2 levels to a maximum of 4 at level 7. At level 9, the Staff gains the Greater Focus Effect.<br><br>Additionally, while the Druid is carrying their staff, they gain the following benefits based on their Rite of Oak &amp; Mistletoe value. At level 2, the Druid ignores all environmental penalties in overgrown or swampy terrain. At level 4, the Druid ignores the penalties for snow and ice conditions. At level 6, the Druid ignores the penalties for extreme heat conditions. At level 8, the Druid ignores all penalties from being underwater. At level 10, the Druid can roll to create a new staff by taking a full round action rather than 1 day. The DCs to create a staff are 14 when in a forest, 16 when in swampy areas, 18 when in mountainous regions, and 20 when at sea.')
+        ('rite_of_oak_and_mistletoe', 'A Druid learns very quickly how to harvest magically potent plants and turn them into a powerful focus for their magic which connects them to the land around them. A Druid can take a day and make a Rite of Oak and Mistletoe roll against a DC specific to the area in which they find themselves to harvest the necessary ingredients. If successful, the Druid creates a Staff which works only for the Druid.<br><br>This staff functions exactly as a Staff (Witcher Core Rule Book, pg. 74) but its Focus value rises as they improve their Rite of Oak &amp; Mistletoe value. The Focus value begins at 1 at level 1 and rises by 1 every 2 levels to a maximum of 4 at level 7. At level 9, the Staff gains the Greater Focus Effect.<br><br>Additionally, while the Druid is carrying their staff, they gain the following benefits based on their Rite of Oak &amp; Mistletoe value. At level 2, the Druid ignores all environmental penalties in overgrown or swampy terrain. At level 4, the Druid ignores the penalties for snow and ice conditions. At level 6, the Druid ignores the penalties for extreme heat conditions. At level 8, the Druid ignores all penalties from being underwater. At level 10, the Druid can roll to create a new staff by taking a full round action rather than 1 day. The DCs to create a staff are 14 when in a forest, 16 when in swampy areas, 18 when in mountainous regions, and 20 when at sea.'),
+        ('renown', 'Nobility, whether earned by noble deeds or conferred by birth, grants a person a grandeur that must be acknowledged. Peasants may curse a noble''s name and mock them in the safety of their hovels but most dare not insult a noble to their face. A Noble adds their <strong>Notoriety</strong> value to their Reputation score when in their home country or a country allied with their homeland. If a Noble travels to a kingdom or territory that is actively at war with or neutral toward their homeland, they gain only half their <strong>Notoriety</strong> value.')
       ) AS raw_data_en(skill_id, description)
   ),
   ins_main_skill_descriptions AS (
@@ -813,7 +841,17 @@ WITH
         ('merchant_network', 'Один раз за игровую партию торговец может совершить проверку способности <strong>Карта сокровищ</strong> со СЛ, определяемой ведущим, чтобы вспомнить предполагаемое местонахождение реликвии или руин, в которых может оказаться что-то полезное. Место, где находится этот предмет или руины, расположено достаточно далеко или же кишит опасностями. Чтобы добраться до него, потребуется целая игровая партия.'),
         ('haggle', 'Входя в поселение впервые, торговец может потратить час на распространение вести о своём прибытии, а затем совершить проверку <strong>Хороших связей</strong> со СЛ в зависимости от размера поселения. При успехе репутация торговца в этом поселении на 1d6 недель увеличивается на значение проверки свыше указанной СЛ, делённое на 2 (минимум 1).'),
         ('merchant_sense', 'Торговец, которому необходимо избавиться от предмета с сомнительным происхождением или краденого, может совершить проверку способности <strong>Сбытчик</strong> со СЛ, определяемой ведущим. При успехе торговец продаст предмет по полной рыночной цене покупателю, который не станет задавать лишних вопросов и не сдаст торговца страже.'),
-        ('merchant_king', 'Торговец может совершить проверку способности <strong>Воинский долг</strong>, чтобы попросить о помощи воина, который у него в долгу. Результат броска необходимо распределить по 3 категориям, указанным в таблице на полях. Воин будет работать на торговца количество дней, равное значению <strong>Воинского долга</strong>, и без лишних вопросов исполнит любой приказ в пределах разумного.')
+        ('merchant_king', 'Торговец может совершить проверку способности <strong>Воинский долг</strong>, чтобы попросить о помощи воина, который у него в долгу. Результат броска необходимо распределить по 3 категориям, указанным в таблице на полях. Воин будет работать на торговца количество дней, равное значению <strong>Воинского долга</strong>, и без лишних вопросов исполнит любой приказ в пределах разумного.'),
+        -- Nobble skills
+        ('dilettante', 'Каждый раз, когда дворянин повышает уровень <strong>Любительства</strong>, он получает количество очков навыков, равное новому уровню плюс предыдущий уровень. Эти очки можно вложить в любые навыки один к одному, но не выше 4 уровня для каждого навыка. Для повышения сложного навыка на 1 уровень нужно потратить 2 очка.'),
+        ('connoisseur', 'Успешно пройдя проверку <strong>С видом знатока</strong>, аристократ убеждает цель, что разбирается в выбранной теме. Цель доверяет его мнению и она дает +3 к проверкам <strong>Обмана</strong> против этой цели по этой теме. <br><br><strong>Обмануть знатока:</strong> если у цели более 4 очков профильного навыка, она добавляет его к своему <strong>Сопротивлению убеждению</strong>.'),
+        ('gracious_host', 'Потратив день и сумму, равную <strong>Радушному хозяину</strong> x100 крон, аристократ устраивает прием. До конца приема он получает +3 к <strong>Харизме</strong>, <strong>Соблазнению</strong> и <strong>Убеждению</strong>. Приглашенные делают проверку <strong>Сопротивления убеждению</strong> против этого навыка, чтобы отказаться от визита. <br><br><strong>Большой праздник:</strong> при организации праздника можно снизить используемое значение навыка: тогда упадут и расходы, и СЛ отказа от приглашения.'),
+        ('command', 'В качестве действия аристократ отдает цели приказ на следующий ход или иное задание. Если проверка <strong>Приказа</strong> выше Воли цели x3, цель получает бонус к одной проверке для этого задания, равный половине значения <strong>Приказа</strong> (минимум 1).'),
+        ('servants', 'Аристократ получает слуг в количестве, равном половине значения <strong>Слуги</strong> (минимум 1). Слуги выполняют приказы и бытовую работу, но рискованные или непривычные поручения требуют убеждения или приказа. Если слуга не справляется с обязанностями, можно запросить замену из поместья.'),
+        ('estate', 'Аристократу принадлежит поместье: основное здание, конюшни и земли. Есть дворецкий (ученый), а число слуг-рабочих равно <strong>Поместье</strong> x2. Они работают в поместье и не идут воевать, кроме особых случаев. Доход и пользы получаются, когда аристократ находится в поместье. За каждое очко <strong>Поместья</strong> выбирается 1 дополнение; строительство каждого занимает 1 месяц, можно строить параллельно.'),
+        ('steadfastness', 'Аристократ добавляет значение <strong>Непоколебимости</strong> к своим проверкам <strong>Храбрости</strong> и <strong>Сопротивления убеждению</strong>. Если он успешно сопротивляется убеждению союзника, союзник до конца сцены получает бонус к своим проверкам Храбрости и Сопротивления убеждению в размере 1/2 от <strong>Непоколебимости</strong> аристократа (минимум 1).'),
+        ('cavalier', 'Потратив час, аристократ может совершить проверку <strong>Кавалериста</strong> против Воли лошади x3, чтобы навсегда с ней подружиться. Когда он верхом на этой лошади, модификатор управления ездовым животным увеличивается на 1/2 от <strong>Кавалериста</strong>, а результат броска при потере управления снижается на это же значение.'),
+        ('armor_softening', 'Если враг наносит аристократу критическое ранение, он может немедленно совершить проверку <strong>Смягчения броней</strong> со СЛ, равной атаке врага. При успехе крит отменяется, а броня на поврежденной зоне получает +1 ПБ к поглощению урона за каждый уровень крита. <br><br><strong>Урон при смягчении броней:</strong> бонусный урон от крита отменяется, но обычный урон атаки после расчета брони применяется.')
       ) AS raw_data_ru(skill_id, description)
     UNION ALL
     SELECT 'en' AS lang, skill_id, description
@@ -920,7 +958,16 @@ WITH
         ('merchant_network', 'Once per session a Merchant can roll <strong>Treasure Map</strong> at a DC set by the GM to remember the supposed location of a relic item, or a ruin that may hide something useful. This location will, of course, be out of the way or exceedingly dangerous, requiring a quest. Reaching this item or ruin should require a full session.'),
         ('haggle', 'On first entering a settlement, a Merchant can spend an hour spreading word of their arrival, then roll <strong>Well Connected</strong> at a DC based on the settlement. Success raises their reputation in that settlement by a number equal to the amount you rolled over the DC divided by 2 (minimum 1), for 1d6 Weeks.'),
         ('merchant_sense', 'A Merchant who has to get rid of a dubious or stolen item can make a <strong>Fence</strong> roll at a DC determined by the GM. If they succeed, they sell the item (at full market price) to a buyer who won''t ask any serious questions and won''t turn them in to the Guard.'),
-        ('merchant_king', 'A Merchant can roll <strong>Warrior''s Debt</strong> to call on a fighter who owes them. Split your roll between the 3 sections on the Warrior table in the sidebar. This warrior will work for you for a number of days equal to your <strong>Warrior''s Debt</strong> value and takes any reasonable order you give without asking questions.')
+        ('merchant_king', 'A Merchant can roll <strong>Warrior''s Debt</strong> to call on a fighter who owes them. Split your roll between the 3 sections on the Warrior table in the sidebar. This warrior will work for you for a number of days equal to your <strong>Warrior''s Debt</strong> value and takes any reasonable order you give without asking questions.'),
+        ('dilettante', 'Each time a Noble takes a rank in <strong>Dabble</strong>, they gain a pool of skill points equal to their new rank plus the previous rank. These points can be spent to gain or raise skill ranks at a one-to-one rate but cannot raise a skill rank above 4. When used to raise the rank of a Difficult Skill, 2 points must be spent to raise the skill by 1 rank.'),
+        ('connoisseur', 'By rolling <strong>Expert Guise</strong> against a target''s Resist Coercion, the Noble can permanently convince a person of the Noble''s expertise in a specific subject. The target then defers to the Noble and the Noble gains a +3 to Deceit checks against the target when that specific topic is involved.<br><br><strong>Deceiving Experts:</strong> If the person you are trying to convince of your expertise has more than four points in an appropriate skill, they can add their skill value to their Resist Coercion check.'),
+        ('gracious_host', 'By taking a day and spending an amount of money equal to their <strong>Host</strong> value times 100, a Noble can arrange a festive gathering. While at this gathering, the Noble gains a +3 to Charisma, Seduction, and Persuasion. Anyone the Noble invites must make a Resist Coercion check against the Noble''s <strong>Host</strong> check to not attend.<br><br><strong>Hosting a Festival:</strong> A festival is furnished with a full feast, games, and entertainment as appropriate for its function and location. If a Noble wishes, they can voluntarily lower their <strong>Host</strong> rank when putting on a festival. The event requires less money but the DC to refuse an invitation is based on the lowered <strong>Host</strong> rank.'),
+        ('command', 'As an action, a Noble can command a target to perform a specific task on their next turn. If the Noble''s <strong>Command</strong> check beats a DC equal to the target''s WILLx3, the target gains a bonus to one check involved in this task equal to one-half the Noble''s <strong>Command</strong> value (minimum 1).'),
+        ('servants', 'A Noble gains a number of servants equal to half their <strong>Servants</strong> value (minimum 1). These subjects follow the Noble''s orders to the best of their ability but must be commanded or persuaded to risk their lives. If a servant can no longer serve for any reason, the Noble can request a new one from their household be sent.<br><br><strong>Servants:</strong> Your servants are Everyman NPCs. When you generate your Servants, you can use any combination of the following Everyman NPCs: Artisans, Laborers, Entertainers, or Scholars. Your Servants do not gain I.P. and cannot improve their skills.'),
+        ('estate', 'A Noble personally owns an estate that consists of a main house, a stable, and a parcel of land. The Noble decides where this estate is located (within reason). The Noble serves as the land''s manager and gains benefit from it. Anyone living on the land is their subject. More details can be found on page 12.'),
+        ('steadfastness', 'A Noble can add their <strong>Resolute</strong> value to their Courage and Resist Coercion checks. If they succeed a Courage or Resist Coercion check, any ally who witnesses them do so gains a bonus on their own Courage or Resist Coercion check equal to one-half the Noble''s <strong>Resolute</strong> value (minimum 1) until the end of the scene.'),
+        ('cavalier', 'By taking an hour, a Noble can make a <strong>Chevalier</strong> check against a mount''s WILLx3 to permanently bond with it. When being ridden by the Noble, the mount''s Control Modifier is raised by half the Noble''s <strong>Chevalier</strong> value. The Noble can also lower the result of a control loss by half this value.'),
+        ('armor_softening', 'If an enemy scores a critical wound on a Noble, the Noble can immediately make an <strong>Armored Buffer</strong> check against a DC equal to the enemy''s original Attack Check. If the Noble succeeds, they can negate the critical wound by sacrificing the armor in the hit location. The armor suffers 1d10 ablation damage per level of the critical wound to the hit location.<br><br><strong>Armored Buffer Damage:</strong> If a Noble successfully negates a critical wound with <strong>Armored Buffer</strong>, they also negate the bonus damage from the critical wound. However, standard weapon damage applies to the Noble after their armor sustains damage.')
       ) AS raw_data_en(skill_id, description)
   ),
   ins_prof_skill_descriptions AS (
@@ -950,7 +997,8 @@ WHERE skill_type = 'professional'
     'case_joint', 'repeat_lockpick', 'lay_low', 'vulnerability', 'take_note', 'intimidating_presence',
     'smuggler', 'false_identity', 'black_market', 'large_catalog', 'apprentice', 'masterwork',
     'alchemical_concoction', 'enhanced_potion', 'experimental_formula', 'workshop', 'repair', 'upgrade',
-    'market', 'dirty_deal', 'promise', 'slums', 'contacts', 'merchant_network', 'haggle', 'merchant_sense', 'merchant_king'
+    'market', 'dirty_deal', 'promise', 'slums', 'contacts', 'merchant_network', 'haggle', 'merchant_sense', 'merchant_king',
+    'dilettante', 'connoisseur', 'gracious_host', 'command', 'servants', 'estate', 'steadfastness', 'cavalier', 'armor_softening'
   )
   AND EXISTS (
     SELECT 1 FROM i18n_text 
@@ -972,7 +1020,8 @@ WITH
         ('druid', 'Друид', 'exp_toc'),
         ('criminal', 'Преступник', 'core'),
         ('craftsman', 'Ремесленник', 'core'),
-        ('merchant', 'Торговец', 'core')
+        ('merchant', 'Торговец', 'core'),
+        ('nobble', 'Аристократ', 'core')
       ) AS raw_data_ru(prof_id, name, dlc)
     UNION ALL
     SELECT 'en' AS lang, prof_id, name, dlc
@@ -986,7 +1035,8 @@ WITH
         ('druid', 'Druid', 'exp_toc'),
         ('criminal', 'Criminal', 'core'),
         ('craftsman', 'Craftsman', 'core'),
-        ('merchant', 'Merchant', 'core')
+        ('merchant', 'Merchant', 'core'),
+        ('nobble', 'Nobble', 'core')
       ) AS raw_data_en(prof_id, name, dlc)
   ),
   ins_prof_names AS (
@@ -1025,6 +1075,7 @@ SET prof_desc_id = ck_id('witcher_cc.wcc_profession_o' ||
       WHEN 'criminal' THEN '07'
       WHEN 'craftsman' THEN '08'
       WHEN 'merchant' THEN '09'
+      WHEN 'nobble' THEN '12'
     END || '.answer_options.description')
 WHERE prof_desc_id IS NULL
   AND EXISTS (
@@ -1041,6 +1092,7 @@ WHERE prof_desc_id IS NULL
         WHEN 'criminal' THEN '07'
         WHEN 'craftsman' THEN '08'
         WHEN 'merchant' THEN '09'
+        WHEN 'nobble' THEN '12'
       END || '.answer_options.description')
   );
 
@@ -1087,7 +1139,8 @@ VALUES
   ('druid', 'rite_of_oak_and_mistletoe'),
   ('criminal', 'professional_paranoia'),
   ('craftsman', 'quick_fix'),
-  ('merchant', 'well_traveled')
+  ('merchant', 'well_traveled'),
+  ('nobble', 'renown')
 ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
 
 -- Вставка связей профессий и навыков (Doctor)
@@ -1169,6 +1222,16 @@ WHERE skill_id IN (
 )
 ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
 
+
+-- Вставка связей профессий и навыков (Nobble)
+INSERT INTO wcc_profession_skills (prof_id, skill_skill_id)
+SELECT 'nobble', skill_id
+FROM wcc_skills
+WHERE skill_id IN (
+  'riding', 'grooming_and_style', 'awareness', 'leadership',
+  'deceit', 'education', 'human_perception', 'persuasion', 'social_etiquette'
+)
+ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
 -- Вставка связей профессий с профессиональными навыками (Bard)
 INSERT INTO wcc_profession_skills (prof_id, skill_skill_id)
 SELECT 'bard', skill_id
@@ -1266,5 +1329,16 @@ WHERE skill_id IN (
   'market', 'dirty_deal', 'promise',
   'slums', 'contacts', 'merchant_network',
   'haggle', 'merchant_sense', 'merchant_king'
+)
+ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
+
+-- Вставка связей профессий с профессиональными навыками (Nobble)
+INSERT INTO wcc_profession_skills (prof_id, skill_skill_id)
+SELECT 'nobble', skill_id
+FROM wcc_skills
+WHERE skill_id IN (
+  'dilettante', 'connoisseur', 'gracious_host',
+  'command', 'servants', 'estate',
+  'steadfastness', 'cavalier', 'armor_softening'
 )
 ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;

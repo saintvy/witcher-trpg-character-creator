@@ -1,9 +1,9 @@
-\echo '005_profession_05a_man_at_arms_combat_skills.sql'
+\echo '005_profession_combat_skills.sql'
 -- Нода: Выбор боевых навыков для профессии "Воин"
 
 -- i18n записи для сообщений валидации
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-SELECT ck_id('witcher_cc.wcc_man_at_arms_combat_skills.warning.' || v.key) AS id
+SELECT ck_id('witcher_cc.wcc_combat_skills.warning.' || v.key) AS id
      , 'questions' AS entity
      , 'metadata' AS entity_field
      , v.lang
@@ -19,7 +19,7 @@ ON CONFLICT (id, lang) DO NOTHING;
 -- Вопрос
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
-                , 'wcc_man_at_arms_combat_skills' AS qu_id
+                , 'wcc_combat_skills' AS qu_id
                 , 'questions' AS entity
                 , 'multiple'::question_type AS qtype)
 , ins_body AS (
@@ -27,8 +27,8 @@ WITH
       SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| v.entity_field) AS id
            , meta.entity, v.entity_field, v.lang, v.text
         FROM (VALUES
-                ('ru', 'Выберите 5 боевых навыков', 'body'),
-                ('en', 'Pick 5 combat skills', 'body')
+                ('ru', 'Выберите боевые навыки', 'body'),
+                ('en', 'Pick combat skills', 'body')
              ) AS v(lang, text, entity_field)
         CROSS JOIN meta
       RETURNING id AS body_id
@@ -42,20 +42,60 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
        , jsonb_build_object(
            'dice', 'd0',
            'allowEmptySelection', false,
-           'minSelected', 5,
-           'maxSelected', 5,
+           'minSelected', jsonb_build_object(
+             'jsonlogic_expression',
+             jsonb_build_object(
+               'if',
+               jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.profession'), 'Nobble')),
+                 1,
+                 5
+               )
+             )
+           ),
+           'maxSelected', jsonb_build_object(
+             'jsonlogic_expression',
+             jsonb_build_object(
+               'if',
+               jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.profession'), 'Nobble')),
+                 1,
+                 5
+               )
+             )
+           ),
            'warningMinSelected', jsonb_build_object(
              'jsonlogic_expression',
-             jsonb_build_array(
-               ck_id('witcher_cc.wcc_man_at_arms_combat_skills.warning.min_selected')::text,
-               5
+             jsonb_build_object(
+               'if',
+               jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.profession'), 'Nobble')),
+                 jsonb_build_array(
+                   ck_id('witcher_cc.wcc_combat_skills.warning.min_selected')::text,
+                   1
+                 ),
+                 jsonb_build_array(
+                   ck_id('witcher_cc.wcc_combat_skills.warning.min_selected')::text,
+                   5
+                 )
+               )
              )
            ),
            'warningMaxSelected', jsonb_build_object(
              'jsonlogic_expression',
-             jsonb_build_array(
-               ck_id('witcher_cc.wcc_man_at_arms_combat_skills.warning.max_selected')::text,
-               5
+             jsonb_build_object(
+               'if',
+               jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.profession'), 'Nobble')),
+                 jsonb_build_array(
+                   ck_id('witcher_cc.wcc_combat_skills.warning.max_selected')::text,
+                   1
+                 ),
+                 jsonb_build_array(
+                   ck_id('witcher_cc.wcc_combat_skills.warning.max_selected')::text,
+                   5
+                 )
+               )
              )
            ),
            'path', jsonb_build_array(ck_id('witcher_cc.hierarchy.identity')::text,
@@ -80,7 +120,7 @@ WITH raw_data (sort_order, skill_id, name_ru, name_en) AS ( VALUES
 ins_names AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
   SELECT * FROM (
-    SELECT ck_id('witcher_cc.wcc_man_at_arms_combat_skills.skill.'||rd.skill_id),
+    SELECT ck_id('witcher_cc.wcc_combat_skills.skill.'||rd.skill_id),
            'answer_options',
            'title',
            'ru',
@@ -88,7 +128,7 @@ ins_names AS (
       FROM raw_data rd
      WHERE nullif(rd.name_ru,'') is not null
     UNION ALL
-    SELECT ck_id('witcher_cc.wcc_man_at_arms_combat_skills.skill.'||rd.skill_id),
+    SELECT ck_id('witcher_cc.wcc_combat_skills.skill.'||rd.skill_id),
            'answer_options',
            'title',
            'en',
@@ -99,18 +139,22 @@ ins_names AS (
   ON CONFLICT (id, lang) DO NOTHING
 )
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
-  SELECT 'wcc_man_at_arms_combat_skills_' || rd.skill_id AS an_id
+  SELECT 'wcc_combat_skills_' || rd.skill_id AS an_id
        , 'witcher_cc' AS su_su_id
-       , 'wcc_man_at_arms_combat_skills' AS qu_qu_id
-       , ck_id('witcher_cc.wcc_man_at_arms_combat_skills.skill.'||rd.skill_id)::text AS label
+       , 'wcc_combat_skills' AS qu_qu_id
+       , ck_id('witcher_cc.wcc_combat_skills.skill.'||rd.skill_id)::text AS label
        , rd.sort_order
        , jsonb_build_object('skill_id', rd.skill_id)
     FROM raw_data rd
   ON CONFLICT (an_id) DO NOTHING;
 
--- Переход из ноды профессии при выборе "Воин"
+-- Переход из ноды профессии при выборе "Воин" или "Аристократ"
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-  SELECT 'wcc_profession', 'wcc_man_at_arms_combat_skills', 'wcc_profession_o05', 2;
+  SELECT 'wcc_profession', 'wcc_combat_skills', v.an_id, 2
+  FROM (VALUES
+          ('wcc_profession_o05'),
+          ('wcc_profession_o12')
+       ) AS v(an_id);
 
 -- Эффекты: добавление выбранных навыков в characterRaw.skills.initial[]
 -- Маппинг skill_id -> название навыка в defaultCharacter.json
@@ -129,7 +173,7 @@ WITH skill_mapping (skill_id, skill_name) AS ( VALUES
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
   'character' AS scope,
-  'wcc_man_at_arms_combat_skills_' || sm.skill_id AS an_an_id,
+  'wcc_combat_skills_' || sm.skill_id AS an_an_id,
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -138,6 +182,4 @@ SELECT
     )
   ) AS body
 FROM skill_mapping sm;
-
-
 

@@ -882,5 +882,5 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_profession', 'wcc_past_homeland_human', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'is_human') r;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_homeland_human', r.ru_id, 1
+  SELECT 'wcc_combat_skills', 'wcc_past_homeland_human', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'is_human') r;

@@ -118,5 +118,5 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
     FROM (SELECT ru_id FROM rules WHERE name = 'is_ancient_nonhuman' ORDER BY ru_id LIMIT 1) r;
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-  SELECT 'wcc_man_at_arms_combat_skills', 'wcc_past_ancient_races_q1', r.ru_id, 1
+  SELECT 'wcc_combat_skills', 'wcc_past_ancient_races_q1', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'is_ancient_nonhuman') r;
