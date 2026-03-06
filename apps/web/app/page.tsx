@@ -17,6 +17,10 @@ export default function HomePage() {
       whatsNew: "What's New",
       news: [
         {
+          title: "March 6, 2026: Two professions from DLC",
+          text: "Added the professions Aristocrat (DLC \"Lords and Lands\") and Peasant (DLC \"Peasant\").",
+        },
+        {
           title: "March 5, 2026: DLC races",
           text: "Added the races Gnomes, Vrans, and Werebbubbs (DLC \"A Book of Tales\"), and Halflings (DLC \"Lords and Lands\").",
         },
@@ -42,6 +46,10 @@ export default function HomePage() {
         "Скидывай дорожную пыль с сапог, подсаживайся к огню и хватай кружку, пока бард не начал брать плату за каждый куплет.\nСегодня эль крепкий, слухи громче лютни, а кубы уже чешутся кому-нибудь эффектно испортить планы.\nЕсли твой ведьмак вернется с контракта героем, мы поднимем тост; если притащит домой проклятого козла, поднимем два.\nТак что улыбайся, бросай кости, держи серебро в рукаве и не меряйся силой с тем, у кого слишком желтые глаза.",
       whatsNew: "Что нового",
       news: [
+        {
+          title: "6 марта 2026: Две профессии из DLC",
+          text: "Добавлены профессии Аристократ (DLC \"Правители и земли\") и Крестьянин (DLC \"Крестьянин\").",
+        },
         {
           title: "5 марта 2026: Расы из DLC",
           text: "Добавлены расы Гномы, Враны, Баболаки (DLC \"Книга сказок\") и Низушки (DLC \"Правители и земли\").",

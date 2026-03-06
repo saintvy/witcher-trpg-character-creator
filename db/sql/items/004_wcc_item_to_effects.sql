@@ -289,6 +289,7 @@ VALUES
   ('W168', 'E047', NULL, NULL),
   ('W168', 'E069', NULL, '14'),
   ('W168', 'E071', NULL, NULL),
+  ('W171', 'E050', NULL, NULL),
   ('A053', 'E085', NULL, NULL),
   ('A054', 'E085', NULL, NULL),
   ('A056', 'E086', NULL, '2'),

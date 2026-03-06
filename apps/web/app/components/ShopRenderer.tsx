@@ -140,6 +140,8 @@ const PROF_LABELS: Record<string, { ru: string; en: string }> = {
   Craftsman: { ru: "Ремесленник", en: "Craftsman" },
   Merchant: { ru: "Купец", en: "Merchant" },
   Druid: { ru: "Друид", en: "Druid" },
+  Nobble: { ru: "Аристократ", en: "Nobble" },
+  Peasant: { ru: "Крестьянин", en: "Peasant" },
 };
 
 function localizeLogicField(value: unknown, kind: "race" | "profession", lang: string): string {
@@ -194,11 +196,11 @@ function sortRows<T extends Record<string, unknown>>(
 ): T[] {
   // Create a copy with original indices for stable sort
   const rowsWithIndex = rows.map((row, idx) => ({ row, originalIndex: idx }));
-  
+
   rowsWithIndex.sort((a, b) => {
     let aVal: unknown;
     let bVal: unknown;
-    
+
     if (column === 'checkbox') {
       // First column: checkbox (1 for checked, 0 for unchecked)
       const aKey = a.row[keyColumn];
@@ -222,11 +224,11 @@ function sortRows<T extends Record<string, unknown>>(
       aVal = a.row[column];
       bVal = b.row[column];
     }
-    
+
     // Handle null/undefined values: treat as "largest" (end for asc, start for desc)
     const aIsEmpty = aVal === null || aVal === undefined || aVal === '';
     const bIsEmpty = bVal === null || bVal === undefined || bVal === '';
-    
+
     if (aIsEmpty && bIsEmpty) {
       // Both empty: maintain original order (stable sort)
       return a.originalIndex - b.originalIndex;
@@ -237,14 +239,14 @@ function sortRows<T extends Record<string, unknown>>(
     if (bIsEmpty) {
       return direction === 'asc' ? -1 : 1;
     }
-    
+
     // Compare values based on type
     let compare: number;
-    
+
     // Try to compare as numbers first
     const aNum = typeof aVal === 'number' ? aVal : Number(aVal);
     const bNum = typeof bVal === 'number' ? bVal : Number(bVal);
-    
+
     if (Number.isFinite(aNum) && Number.isFinite(bNum)) {
       compare = aNum - bNum;
     } else {
@@ -253,18 +255,18 @@ function sortRows<T extends Record<string, unknown>>(
       const bStr = String(bVal);
       compare = aStr.localeCompare(bStr, undefined, { numeric: true, sensitivity: 'base' });
     }
-    
+
     // Apply direction
     const result = direction === 'asc' ? compare : -compare;
-    
+
     // If values are equal, maintain original order (stable sort)
     if (result === 0) {
       return a.originalIndex - b.originalIndex;
     }
-    
+
     return result;
   });
-  
+
   return rowsWithIndex.map((item) => item.row);
 }
 
@@ -447,7 +449,7 @@ export function ShopRenderer(props: {
   // Check if item is covered by budget
   const isItemCoveredByBudget = useCallback((budget: ShopBudgetConfig, sourceId: string, itemId: string): boolean => {
     if (!budget.coverage) return true; // No coverage = covers everything
-    
+
     if (budget.type === 'money') {
       const coverage = budget.coverage as ShopBudgetCoverageMoney;
       // Check sources
@@ -493,7 +495,7 @@ export function ShopRenderer(props: {
   // Calculate budget usage
   const budgetUsage = useMemo(() => {
     const usage: Record<string, { initial: number; spent: number; remaining: number }> = {};
-    
+
     // Initialize budgets - always include default budgets, even if initial is 0
     // For non-default budgets, only initialize if source exists in state
     for (const budget of budgets) {
@@ -505,7 +507,7 @@ export function ShopRenderer(props: {
           continue;
         }
       }
-      
+
       const initial = clampInt(toNumber(getAtPath(state, budget.source), 0));
       if (initial > 0 || budget.is_default) {
         usage[budget.id] = { initial, spent: 0, remaining: initial };
@@ -524,25 +526,25 @@ export function ShopRenderer(props: {
         const key = r[source.keyColumn];
         if (typeof key === "string") byId.set(key, r);
       }
-      
+
       const selected = qtyBySourceForCalculations[source.id] ?? {};
       for (const [itemId, qty] of Object.entries(selected)) {
         if (qty <= 0) continue;
         const row = byId.get(itemId);
         const price = getRowPrice(row);
-        
+
         // Find applicable budgets for this item, sorted by priority (higher first)
         const applicableBudgets = budgets
           .filter(b => isItemCoveredByBudget(b, source.id, itemId))
           .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-        
+
         if (applicableBudgets.length === 0) continue;
-        
+
         // For money budgets: distribute cost across budgets by priority
         // For tokens: spend tokens per unit
         let remainingCost = price * qty;
         let remainingQty = qty;
-        
+
         const moneyBudgets = applicableBudgets.filter((b) => b.type === 'money');
         const lastMoneyBudgetId = moneyBudgets.length > 0 ? moneyBudgets[moneyBudgets.length - 1]!.id : null;
 
@@ -552,10 +554,10 @@ export function ShopRenderer(props: {
             const initial = clampInt(toNumber(getAtPath(state, budget.source), 0));
             usage[budget.id] = { initial, spent: 0, remaining: initial };
           }
-          
+
           if (budget.type === 'money') {
             if (remainingCost <= 0) break;
-            
+
             const budgetRemaining = usage[budget.id].remaining;
             const isLastMoney = lastMoneyBudgetId === budget.id;
             // If this is not the last money budget, do not go negative here: spill to less priority budgets instead
@@ -563,12 +565,12 @@ export function ShopRenderer(props: {
             const toSpend = isLastMoney
               ? remainingCost // last budget may go negative
               : Math.min(remainingCost, available);
-            
+
             // Spend from this budget (allows going negative)
             usage[budget.id].spent += toSpend;
             usage[budget.id].remaining -= toSpend;
             remainingCost -= toSpend; // Reduce remaining cost
-            
+
             // If is_with_default and not default budget, also spend from default
             if (budget.is_with_default && !budget.is_default) {
               const defaultBudget = budgets.find(b => b.is_default);
@@ -579,20 +581,20 @@ export function ShopRenderer(props: {
                 }
                 // Also spend from default budget (same amount as from this budget)
                 const defaultRemaining = usage[defaultBudget.id].remaining;
-                const defaultSpend = defaultRemaining >= 0 
+                const defaultSpend = defaultRemaining >= 0
                   ? Math.min(toSpend, defaultRemaining)
                   : toSpend;
                 usage[defaultBudget.id].spent += defaultSpend;
                 usage[defaultBudget.id].remaining -= defaultSpend;
               }
             }
-        } else {
-          // tokens
-          if (remainingQty <= 0) break;
-            
+          } else {
+            // tokens
+            if (remainingQty <= 0) break;
+
             const coverage = budget.coverage as ShopBudgetCoverageTokens | undefined;
             let costPerUnit = 1;
-            
+
             // Find cost for this item (string id => 1 token per unit)
             if (coverage?.items) {
               for (const item of coverage.items) {
@@ -615,24 +617,24 @@ export function ShopRenderer(props: {
                 }
               }
             }
-            
-          const budgetRemaining = usage[budget.id].remaining;
-          const tokenApplicable = applicableBudgets.filter((b) => isTokenBudgetType(b.type));
-          const lastTokenBudgetId = tokenApplicable.length > 0 ? tokenApplicable[tokenApplicable.length - 1]!.id : null;
-          const isLastTokenBudget = lastTokenBudgetId === budget.id;
-          const unitsPayableByTokens = costPerUnit > 0
-            ? (isLastTokenBudget
-              ? Math.max(0, remainingQty)
-              : Math.max(0, Math.min(remainingQty, Math.floor(Math.max(0, budgetRemaining) / costPerUnit))))
-            : 0;
-          const tokensToSpend = unitsPayableByTokens * costPerUnit;
-          usage[budget.id].spent += tokensToSpend;
-          usage[budget.id].remaining -= tokensToSpend;
-          remainingQty -= unitsPayableByTokens;
+
+            const budgetRemaining = usage[budget.id].remaining;
+            const tokenApplicable = applicableBudgets.filter((b) => isTokenBudgetType(b.type));
+            const lastTokenBudgetId = tokenApplicable.length > 0 ? tokenApplicable[tokenApplicable.length - 1]!.id : null;
+            const isLastTokenBudget = lastTokenBudgetId === budget.id;
+            const unitsPayableByTokens = costPerUnit > 0
+              ? (isLastTokenBudget
+                ? Math.max(0, remainingQty)
+                : Math.max(0, Math.min(remainingQty, Math.floor(Math.max(0, budgetRemaining) / costPerUnit))))
+              : 0;
+            const tokensToSpend = unitsPayableByTokens * costPerUnit;
+            usage[budget.id].spent += tokensToSpend;
+            usage[budget.id].remaining -= tokensToSpend;
+            remainingQty -= unitsPayableByTokens;
             if (!budget.is_with_money) {
               remainingCost = price * remainingQty;
             }
-            
+
             // If is_with_money, also spend money (in addition to tokens)
             if (budget.is_with_money && remainingCost > 0) {
               const moneyBudgets = budgets
@@ -653,7 +655,7 @@ export function ShopRenderer(props: {
         }
       }
     }
-    
+
     // Professional bundles: 1 token per selected bundle (not per item/quantity)
     if (isProfessionalShop && selectedBundleIds.length > 0) {
       const tokenBudgets = budgets
@@ -767,10 +769,10 @@ export function ShopRenderer(props: {
   useEffect(() => {
     if (prefetchRef.current === prefetchKey) return;
     prefetchRef.current = prefetchKey;
-    
+
     setLoadingAllItems(true);
     setLoadErrorAllItems(null);
-    
+
     apiFetch(`${API_URL}/shop/allItems`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1087,7 +1089,7 @@ export function ShopRenderer(props: {
           return false;
         }
       }
-      
+
       const usage = budgetUsage[b.id];
       // Show if: has usage and (initial > 0 OR is_default OR has spent > 0)
       return usage && (usage.initial > 0 || b.is_default || usage.spent > 0);
@@ -1305,9 +1307,9 @@ export function ShopRenderer(props: {
 
       <div className="shop-summary" ref={budgetSummaryRef}>
         {Boolean(onlyCoveredByBudget) && showAllItems && (
-          <div className="shop-warning" style={{ 
-            marginBottom: '12px', 
-            padding: '8px 10px', 
+          <div className="shop-warning" style={{
+            marginBottom: '12px',
+            padding: '8px 10px',
             fontSize: '12px',
             color: '#ffdd63',
             background: 'rgba(242,199,68,0.12)',
@@ -1320,9 +1322,9 @@ export function ShopRenderer(props: {
           </div>
         )}
         {shouldShowMagicNoTokensWarning && (
-          <div className="shop-warning" style={{ 
-            marginBottom: '12px', 
-            padding: '8px 10px', 
+          <div className="shop-warning" style={{
+            marginBottom: '12px',
+            padding: '8px 10px',
             fontSize: '12px',
             color: '#ffdd63',
             background: 'rgba(242,199,68,0.12)',
@@ -1335,9 +1337,9 @@ export function ShopRenderer(props: {
           </div>
         )}
         {(shop.warningPriceZero && hasPriceZeroItems && budgets.some((b) => b.type === 'money')) && (
-          <div className="shop-warning" style={{ 
-            marginBottom: '12px', 
-            padding: '8px 10px', 
+          <div className="shop-warning" style={{
+            marginBottom: '12px',
+            padding: '8px 10px',
             fontSize: '12px',
             color: '#ffdd63',
             background: 'rgba(242,199,68,0.12)',
@@ -1361,7 +1363,7 @@ export function ShopRenderer(props: {
               : 'One or more required budgets are not fully spent'}
           </div>
         )}
-        
+
         {visibleBudgets.map((budget) => {
           const usage = budgetUsage[budget.id];
           if (!usage) return null;
@@ -1471,99 +1473,99 @@ export function ShopRenderer(props: {
                             {gOpen && (() => {
                               const gRows = sourceData?.rowsByGroup?.[g.value] ?? [];
                               const sortedGRows = getSortedRows(gRows, source.id, source.keyColumn);
-                                  return (
-                                    <div style={{ overflowX: "auto" }}>
-                                      <table className="survey-table shop-table">
-                                        <thead>
-                                          <tr>
+                              return (
+                                <div style={{ overflowX: "auto" }}>
+                                  <table className="survey-table shop-table">
+                                    <thead>
+                                      <tr>
+                                        <th
+                                          style={{ width: 48, cursor: 'pointer' }}
+                                          onClick={() => handleSort(source.id, 'checkbox')}
+                                          className="shop-sortable-header"
+                                        >
+                                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            ✓
+                                            {sortConfig?.column === 'checkbox' && (
+                                              <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                            )}
+                                          </span>
+                                        </th>
+                                        {showQtyColumn && (
+                                          <th
+                                            style={{ width: 110, cursor: 'pointer' }}
+                                            onClick={() => handleSort(source.id, 'qty')}
+                                            className="shop-sortable-header"
+                                          >
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                              Qty
+                                              {sortConfig?.column === 'qty' && (
+                                                <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                                              )}
+                                            </span>
+                                          </th>
+                                        )}
+                                        {visibleColumns.map((col) => {
+                                          const isSorted = sortConfig?.column === col.field;
+                                          return (
                                             <th
-                                              style={{ width: 48, cursor: 'pointer' }}
-                                              onClick={() => handleSort(source.id, 'checkbox')}
+                                              key={col.field}
+                                              style={{ cursor: 'pointer' }}
+                                              onClick={() => handleSort(source.id, col.field)}
                                               className="shop-sortable-header"
                                             >
                                               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                ✓
-                                                {sortConfig?.column === 'checkbox' && (
+                                                {col.label ?? col.field}
+                                                {isSorted && (
                                                   <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
                                                 )}
                                               </span>
                                             </th>
-                                            {showQtyColumn && (
-                                              <th
-                                              style={{ width: 110, cursor: 'pointer' }}
-                                              onClick={() => handleSort(source.id, 'qty')}
-                                              className="shop-sortable-header"
-                                            >
-                                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                Qty
-                                                {sortConfig?.column === 'qty' && (
-                                                  <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                                                )}
-                                              </span>
-                                              </th>
-                                            )}
-                                            {visibleColumns.map((col) => {
-                                              const isSorted = sortConfig?.column === col.field;
-                                              return (
-                                                <th
-                                                  key={col.field}
-                                                  style={{ cursor: 'pointer' }}
-                                                  onClick={() => handleSort(source.id, col.field)}
-                                                  className="shop-sortable-header"
-                                                >
-                                                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    {col.label ?? col.field}
-                                                    {isSorted && (
-                                                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                                                    )}
-                                                  </span>
-                                                </th>
-                                              );
-                                            })}
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {sortedGRows.map((row, idx) => {
-                                          const key = row[source.keyColumn];
-                                          const itemId = typeof key === "string" ? key : String(idx);
-                                          const qty = selected[itemId] ?? 0;
-                                          const checked = qty > 0;
-                                          const tooltip = source.tooltipField
-                                            ? String((row as any)[source.tooltipField] ?? "")
-                                            : "";
-                                          return (
-                                            <tr key={itemId} title={tooltip}>
-                                              <td>
-                                                <input
-                                                  type="checkbox"
-                                                  checked={checked}
-                                                  disabled={disabled}
-                                                  onChange={() => toggleChecked(source.id, itemId)}
-                                                />
-                                              </td>
-                                              {showQtyColumn && (
-                                                <td>
-                                                  <input
-                                                    type="number"
-                                                    min={0}
-                                                    step={1}
-                                                    value={qty}
-                                                    disabled={disabled || !checked}
-                                                    onChange={(e) => setQty(source.id, itemId, Number(e.target.value))}
-                                                    className="shop-qty-input"
-                                                  />
-                                                </td>
-                                              )}
-                                              {visibleColumns.map((col) => (
-                                                <td key={col.field}>{renderCell((row as any)[col.field])}</td>
-                                              ))}
-                                            </tr>
                                           );
                                         })}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                  );
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {sortedGRows.map((row, idx) => {
+                                        const key = row[source.keyColumn];
+                                        const itemId = typeof key === "string" ? key : String(idx);
+                                        const qty = selected[itemId] ?? 0;
+                                        const checked = qty > 0;
+                                        const tooltip = source.tooltipField
+                                          ? String((row as any)[source.tooltipField] ?? "")
+                                          : "";
+                                        return (
+                                          <tr key={itemId} title={tooltip}>
+                                            <td>
+                                              <input
+                                                type="checkbox"
+                                                checked={checked}
+                                                disabled={disabled}
+                                                onChange={() => toggleChecked(source.id, itemId)}
+                                              />
+                                            </td>
+                                            {showQtyColumn && (
+                                              <td>
+                                                <input
+                                                  type="number"
+                                                  min={0}
+                                                  step={1}
+                                                  value={qty}
+                                                  disabled={disabled || !checked}
+                                                  onChange={(e) => setQty(source.id, itemId, Number(e.target.value))}
+                                                  className="shop-qty-input"
+                                                />
+                                              </td>
+                                            )}
+                                            {visibleColumns.map((col) => (
+                                              <td key={col.field}>{renderCell((row as any)[col.field])}</td>
+                                            ))}
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              );
                             })()}
                           </div>
                         );

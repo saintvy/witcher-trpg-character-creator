@@ -12939,7 +12939,8 @@ WITH
        , meta.entity, 'title', raw_data.lang, raw_data.title
     FROM raw_data
     CROSS JOIN meta
-  ON CONFLICT (id, lang) DO NOTHING
+  ON CONFLICT (id, lang) DO UPDATE
+  SET text = EXCLUDED.text
 )
 , ins_description AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -13183,6 +13184,444 @@ SELECT
   ) AS body;
 
 -- <<< END sql/005_profession_12_nobble.sql
+
+-- >>> BEGIN sql/005_profession_13_peasant.sql
+
+\echo '005_profession_13_peasant.sql'
+-- Вариант ответа: Крестьянин
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_profession' AS qu_id
+                , 'answer_options' AS entity)
+, ensure_rules AS (
+  INSERT INTO rules (ru_id, name, body)
+  VALUES
+    (ck_id('witcher_cc.rules.is_dlc_prof_peasant_enabled'), 'is_dlc_prof_peasant_enabled', '{"in":["dlc_prof_peasant",{"var":["dlcs",[]]}]}'::jsonb)
+  ON CONFLICT (ru_id) DO UPDATE
+  SET name = EXCLUDED.name,
+      body = EXCLUDED.body
+  RETURNING body AS dlc_prof_peasant_expr
+)
+, rule_parts AS (
+  SELECT
+    (SELECT r.body FROM rules r WHERE r.name = 'is_witcher' ORDER BY r.ru_id LIMIT 1) AS is_witcher_expr,
+    (SELECT er.dlc_prof_peasant_expr FROM ensure_rules er LIMIT 1) AS dlc_prof_peasant_expr
+)
+, vis_rules AS (
+  INSERT INTO rules (ru_id, name, body)
+  SELECT
+    ck_id('witcher_cc.rules.wcc_profession.peasant') AS ru_id,
+    'wcc_profession_peasant' AS name,
+    jsonb_build_object(
+      'and',
+      jsonb_build_array(
+        jsonb_build_object('!', rule_parts.is_witcher_expr),
+        rule_parts.dlc_prof_peasant_expr
+      )
+    ) AS body
+  FROM rule_parts
+  ON CONFLICT (ru_id) DO UPDATE
+  SET name = EXCLUDED.name,
+      body = EXCLUDED.body
+  RETURNING ru_id
+)
+, raw_data AS (
+  SELECT 'ru' AS lang, raw_data_ru.*
+    FROM (VALUES
+      (13, 'Крестьянин', $ru$
+<div class="ddlist_option">
+<table class="profession_table"><tr>
+<td><strong>Энергия:</strong> 0<br><br><strong>Магические способности:</strong><br><strong class="section-title">Нет</strong></td>
+<td><strong>Навыки</strong><ul>
+<li>[Воля] - Храбрость</li>
+<li>[Ловкость] - Атлетика</li>
+<li>[Интеллект] - Выживание в дикой природе</li>
+<li>[Реакция] - Борьба</li>
+<li>[Реакция] - Владение легкими клинками</li>
+<li>[Ремесло] - Изготовление</li>
+<li>[Ремесло] - Первая помощь</li>
+<li>[Телосложение] - Стойкость</li>
+<li>[Телосложение] - Сила</li>
+<li>[Эмпатия] - Азартные игры</li>
+</ul></td>
+<td><strong>Снаряжение</strong><br><strong class="section-title">(выберите 5)</strong><ul>
+<li>Пиво</li><li>Ещё одно Пиво</li><li>Корзина</li><li>Теплая Одежда</li><li>Принадлежности для Готовки</li>
+<li>Огниво</li><li>Колода Гвинта</li><li>Священный символ</li><li>Трубка с Табаком</li><li>Мешок</li>
+</ul><br><strong>Стартовые Деньги</strong><ul><li>20 крон x 2d6</li></ul></td>
+</tr></table>
+
+<h3>Определяющий навык</h3>
+<table class="main_skill"><tr><td class="header">Нетерпимость (Воля)</td></tr><tr><td class="opt_content">
+Крестьяне боязливы и часто не зря. При первой встрече с разумным существом со статусом Ненависть или Опасение, крестьянин может сделать проверку <strong>Нетерпимость</strong> против СЛ, равной Эмп x3 цели. При успехе страх превращается в ярость: до конца схватки крестьянин получает бонус, равный значению <strong>Нетерпимости</strong>, к <strong>Сопротивлению убеждению</strong> и <strong>Храбрости</strong> против этой цели. Также крестьянин получает бонус к <strong>Лидерству</strong>, равный 1/2 значения <strong>Нетерпимости</strong>, когда сплачивает других крестьян.
+<br><br>В контексте этой способности любой NPC без профессии или выраженной социальной роли вне крестьянства (например, тайная полиция, профессор Оксенфурта) считается крестьянином.
+</td></tr></table>
+
+<h3>Профессиональные навыки</h3>
+<table class="skills_branch_1">
+<tr><td class="header">Фермер</td></tr>
+<tr><td class="opt_content"><strong>Время Жатвы</strong><br>Знание правильного времени и способа сбора урожая - это навык, на освоение которого уходят годы. При добыче алхимических компонентов растительного происхождения крестьянин получает дополнительное количество единиц, равное половине значения его <strong>Времени Жатвы</strong> (минимум 1).</td></tr>
+<tr><td class="opt_content"><strong>Шепот Животным (Эмп)</strong><br>Действием крестьянин делает проверку <strong>Шепот Животным</strong> против Воли животного x3, чтобы командовать прирученным животным.
+<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small">
+<tr><th>Прирученные Звери</th><th>СЛ</th></tr>
+<tr><td>Пчелы</td><td>21</td></tr><tr><td>Курицы</td><td>15</td></tr><tr><td>Коровы</td><td>12</td></tr>
+<tr><td>Козы</td><td>18</td></tr><tr><td>Свиньи</td><td>15</td></tr><tr><td>Кролики</td><td>12</td></tr><tr><td>Овцы</td><td>9</td></tr>
+</table></td></tr>
+<tr><td class="opt_content"><strong>Фермерская Мудрость (Рем)</strong><br>Хоть магией обладают не все, есть некоторые трюки, которым можно научиться, чтобы склонить чашу весов в свою пользу. Крестьянин может совершить одно действие и пройти проверку <strong>Фермерской Мудрости</strong>, чтобы выполнить один из народных ритуалов на соседней странице. У каждого ритуала есть своя СЛ и требования.
+<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small">
+<tr><th>Ритуал</th><th>СЛ</th><th>Ингредиенты</th><th>Описание</th><th>Эффект</th></tr>
+<tr><td>Кровоочиститель</td><td>8</td><td>Эфир x2, Купорос x1</td><td>Смешать ингредиенты в лосьон</td><td>Стирает кровь с площади до 5 м3.</td></tr>
+<tr><td>Предсказание Погоды</td><td>10</td><td>—</td><td>Осмотреть небо и понаблюдать за поведением животных</td><td>Погода на следующие 24 часа.</td></tr>
+<tr><td>Венок из Трав</td><td>12</td><td>Растительные алх. материалы x3</td><td>Сплести венок и надеть</td><td>Идеальная память на 24 часа.</td></tr>
+<tr><td>Круг от Вредителей</td><td>14</td><td>Любое алх. вещество x5</td><td>Рассыпать вещество по кругу (радиус 20 м)</td><td>Инсектоиды/Звери проходят Стойкость против СЛ броска до входа в круг 20м.</td></tr>
+<tr><td>Убийца Кошмаров</td><td>16</td><td>—</td><td>Вывернуть одежду наизнанку, надеть шляпу задом наперёд, произнести стишок</td><td>Иммунитет к кошмарам на ночь.</td></tr>
+<tr><td>Раскрытие Черной Магии</td><td>18</td><td>Кусок дерева x1</td><td>Вырезать символы на куске дерева</td><td>Одноразовый тотем чернеет рядом с проклятым/порченым.</td></tr>
+<tr><td>Талисман</td><td>20</td><td>Перья x1, различные алх. вещества x3</td><td>Создать амулет из ингредиентов</td><td>Одноразовый бонус к УДАЧЕ, равный Фермерской Мудрости; не восстанавливается, не суммируется.</td></tr>
+</table></td></tr>
+</table>
+
+<table class="skills_branch_2">
+<tr><td class="header">Повар</td></tr>
+<tr><td class="opt_content"><strong>Мясник (Рем)</strong><br>Когда крестьянин обирает физического монстра или животное, он может пройти проверку <strong>Мясника</strong> со СЛ зависящей от подкатегории зверя. При успехе, он может получить максимальное количество единиц одного типа органической добычи с этого животного. Этот бросок можно сделать несколько раз на одном трупе, но крестьянин не может сделать две попытки на одну и ту же часть зверя.
+<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small">
+<tr><th>Категория монстра</th><th>СЛ</th></tr>
+<tr><td>Обычные</td><td>12</td></tr><tr><td>Незаурядные</td><td>16</td></tr><tr><td>Трудные</td><td>20</td></tr>
+</table></td></tr>
+<tr><td class="opt_content"><strong>Панацея от всех бед (Рем)</strong><br>Используя по одной единице трех разных типов алхимических компонентов, за 10 минут Крестьянин может создать народную <strong>Панацею от всех бед</strong>. У этой смеси есть процентный шанс излечить человека, потребляющего ее, от <strong>отравления</strong>, <strong>опьянения</strong> и <strong>тошноты</strong>. Процент равен значению навыка <strong>Панацея от всех бед</strong> x 5. Это лекарство нужно использовать в течении суток, прежде чем оно испортится. При использовании оно тратится полностью.</td></tr>
+<tr><td class="opt_content"><strong>Мамино Рагу (Рем)</strong><br>Раз в день, если у крестьянина есть принадлежности для готовки и необходимые ингредиенты, он может потратить 1 час на приготовление рагу по старому семейному рецепту. Этого рагу достаточно, чтобы накормить 6 человек, и его эффекты зависят от того, какие ингредиенты были использованы. Эффекты длятся в течение 24 часов.
+<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small">
+<tr><th>Рецепт</th><th>Ингредиенты</th><th>Эффекты</th></tr>
+<tr><td>Урожайная Симфония</td><td>Сырое мясо x2, Пиво x3, Собачья петрушка x3, Плод берберки x4</td><td>Иммунитет к страху и ПБ = 1/3 <strong>Мамино Рагу</strong>.</td></tr>
+<tr><td><strong>Мамино Рагу</strong></td><td>Вороний глаз x5, Лепестки морозника x3, Переступень x2, Собачья петрушка x2</td><td>Состояние тошноты до проверки Стойкости против проверки <strong>Мамино Рагу</strong>.</td></tr>
+<tr><td>Особый Бульон</td><td>Звериные кости x4, Собачье сало x2, Омела x3, Волокна хана x3</td><td>Сокращает срок лечения критрана на 1/2 <strong>Мамино Рагу</strong> (мин. 1 день).</td></tr>
+<tr><td>Весеннее Рагу</td><td>Плод балиссы x3, Сырое мясо x2, Грибы-шибальцы x4, Жимолость x3</td><td>Бонус к соблазнению = 1/2 <strong>Мамино Рагу</strong>, к выносливости = x3 <strong>Мамино Рагу</strong>.</td></tr>
+<tr><td>Рагу из Тролля</td><td>Ячмень x3, Склеродерм x4, Сера x2, Сырое мясо x3</td><td>Бонус к снятию отравления = 1/2 <strong>Мамино Рагу</strong> и сопротивление урону от яда.</td></tr>
+<tr><td>Зимнее Рагу</td><td>Ячмень x5, Звериные кости x2, Склеродерм x3, Корень зарника x2</td><td>Иммунитет к заморозке и доп. часы выживания в холоде = <strong>Мамино Рагу</strong>.</td></tr>
+</table></td></tr>
+</table>
+
+<table class="skills_branch_3">
+<tr><td class="header">Рабочий</td></tr>
+<tr><td class="opt_content"><strong>Землекоп</strong><br>Годы ручного труда укрепили тело крестьянина и научили его технике, позволяющей сделать даже самый изнурительный труд выполнимым. Двойное значение навыка <strong>Землекоп</strong> добавляется к параметру Вес крестьянина. Также, проходя проверки на Телосложение или Выносливость при выполнении физического труда, Крестьянин может добавлять половину своего значения <strong>Землекоп</strong>.</td></tr>
+<tr><td class="opt_content"><strong>Грог (Рем)</strong><br>Крестьянин знает, как выжать максимум из любого пойла. Совершая действие смешивания одной единицы алхимического компонента с порцией алкоголя, Крестьянин может сделать проверку навыка <strong>Грог</strong> со СЛ 14. При успехе, любой, кто выпьет этот алкоголь, должен пройти проверку Выносливости с СЛ, равной уровню навыка <strong>Грог + 12</strong> или он опьянен. Как только значение навыка <strong>Грог</strong> становится 5 и выше, последствия опьянения удваиваются.</td></tr>
+<tr><td class="opt_content"><strong>Укус за Ухо (Тел)</strong><br>Когда крестьянина схватили или прижали к себе существо или человек, крестьянин может действием пройти проверку навыка <strong>Укуса Уха</strong> против Лвк x 3 цели. При успехе, он откусывает часть уха (или другую поверхностную часть тела) цели, немедленно освобождаясь от захвата, нанося 1d6 неизменяемого урона. Цель навсегда получает -1 к проверкам Харизмы и Соблазнения.</td></tr>
+</table>
+</div>
+$ru$)
+    ) AS raw_data_ru(num, title, description)
+    UNION ALL
+  SELECT 'en' AS lang, raw_data_en.*
+    FROM (VALUES
+      (13, 'Peasant', $en$
+<div class="ddlist_option">
+<table class="profession_table"><tr>
+<td><strong>Vigor:</strong> 0<br><br><strong>Magical Perks:</strong><br><strong class="section-title">None</strong></td>
+<td><strong>Skills</strong><ul>
+<li>[BODY] - Endurance</li>
+<li>[BODY] - Physique</li>
+<li>[CRA] - Crafting</li>
+<li>[CRA] - First Aid</li>
+<li>[DEX] - Athletics</li>
+<li>[EMP] - Gambling</li>
+<li>[INT] - Wilderness Survival</li>
+<li>[REF] - Brawling</li>
+<li>[REF] - Small Blades</li>
+<li>[WILL] - Courage</li>
+</ul></td>
+<td><strong>Gear</strong><br><strong class="section-title">(Pick 5)</strong><ul>
+<li>Beer</li><li>Another Beer</li><li>Cart</li><li>Cold Weather Clothing</li><li>Cooking Tools</li>
+<li>Flint &amp; Steel</li><li>Gwent Deck</li><li>Holy Symbol</li><li>Pipe / Tobacco</li><li>Sack</li>
+</ul><br><strong>Starting Coin</strong><ul><li>20 crowns x 2d6</li></ul></td>
+</tr></table>
+
+<h3>Defining Skill</h3>
+<table class="main_skill"><tr><td class="header">Intolerance (WILL)</td></tr><tr><td class="opt_content">
+Peasants are a fearful lot for good reason. When first encountering a sapient being with a Social Standing of Feared or Hated, they can roll <strong>Intolerance</strong> against DC = target EMPx3. On success, fear becomes rage and grants a bonus equal to their <strong>Intolerance</strong> value to <strong>Resist Coercion</strong> and <strong>Courage</strong> against that target for the rest of the encounter. The Peasant also gains a bonus to <strong>Leadership</strong> equal to half their <strong>Intolerance</strong> when rallying other peasants.
+<br><br><strong>Intolerance &amp; Peasants:</strong> for this ability, any NPC without a Profession or a distinct non-peasant role (for example secret police or an Oxenfurt professor) counts as a peasant.
+</td></tr></table>
+
+<h3>Professional Skills</h3>
+<table class="skills_branch_1">
+<tr><td class="header">The Farmer</td></tr>
+<tr><td class="opt_content"><strong>Harvest Time</strong><br>Knowing the proper time and way to harvest a crop is a skill that takes years to master. When foraging for plant-based alchemical components the peasant gains an extra number of units equal to half their <strong>Harvest Time</strong> value (Minimum 1).</td></tr>
+<tr><td class="opt_content"><strong>Animal Whisper (EMP)</strong><br>By taking an action, the Peasant can roll an <strong>Animal Whisperer</strong> check against a DC equal to the animal's WILLx3, to convey commands and requests to any domesticated animal. If the check succeeds, the animal carries out these commands to the best of its ability.
+<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small">
+<tr><th>Unlisted Animals</th><th>DC</th></tr>
+<tr><td>Bees</td><td>21</td></tr><tr><td>Chickens</td><td>15</td></tr><tr><td>Cows</td><td>12</td></tr>
+<tr><td>Goats</td><td>18</td></tr><tr><td>Pigs</td><td>15</td></tr><tr><td>Rabbits</td><td>12</td></tr><tr><td>Sheep</td><td>9</td></tr>
+</table></td></tr>
+<tr><td class="opt_content"><strong>Farm Wisdom (CRA)</strong><br>While magic may not be a talent for everyone, there are some tricks that the layperson can learn to tip the scale of life in their favor. A Peasant can take one action and roll <strong>Farm Wisdom</strong> to perform one of the folk rituals in the sidebar. Each ritual has its own DC and requirements.
+<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small">
+<tr><th>Ritual</th><th>DC</th><th>Ingredients</th><th>Description</th><th>Effect</th></tr>
+<tr><td>Blood Eraser</td><td>8</td><td>Aether x2, Vitriol x1</td><td>Mix ingredients into a wash</td><td>Erases blood stains from up to five cubic meters.</td></tr>
+<tr><td>Discern Weather</td><td>10</td><td>—</td><td>Check the sky and watch animal reactions</td><td>Predicts weather for the next 24 hours.</td></tr>
+<tr><td>Herbal Crown</td><td>12</td><td>Plant-based alch. materials x3</td><td>Weave a crown and wear it</td><td>Perfect memory for 24 hours.</td></tr>
+<tr><td>Vermin Circle</td><td>14</td><td>Any alch. substance x5</td><td>Spread substance in a circle (20m radius)</td><td>Insectoids &amp; Beasts must pass Endurance vs your Farm Wisdom roll to enter a 20m circle.</td></tr>
+<tr><td>Nightmare Killer</td><td>16</td><td>—</td><td>Turn clothes inside out, wear hat backwards, speak a rhyme</td><td>No nightmares (mundane or magical) that night.</td></tr>
+<tr><td>Black Magic Revealer</td><td>18</td><td>Wood x1</td><td>Carve symbols on a piece of wood</td><td>One-use totem blackens near cursed/hexed people.</td></tr>
+<tr><td>Good Luck Charm</td><td>20</td><td>Feathers x1, different alch. substances x3</td><td>Craft a charm from ingredients</td><td>One-use LUCK bonus equal to Farm Wisdom; does not regenerate and does not stack.</td></tr>
+</table></td></tr>
+</table>
+
+<table class="skills_branch_2">
+<tr><td class="header">The Cook</td></tr>
+<tr><td class="opt_content"><strong>Butchery (CRA)</strong><br>When a Peasant loots a monster or animal with a physical form, they can roll a <strong>Butchery</strong> roll at a DC based on the beasts complexity. If they succeed, they are able to gain the maximum number of units of one organic loot item from the animal. This roll can be made multiple times on a single corpse but the peasant cannot make two attempts on the same part of the beast.
+<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small">
+<tr><th>Beast Complexity</th><th>DC</th></tr>
+<tr><td>Simple</td><td>12</td></tr><tr><td>Complex</td><td>16</td></tr><tr><td>Difficult</td><td>20</td></tr>
+</table></td></tr>
+<tr><td class="opt_content"><strong>Cure All (CRA)</strong><br>By taking 10 minutes and using one unit of three different types of alchemical component, the Peasant can create a folk cure all. This concoction has a percentage chance of curing the person who consumes it of the <strong>poison</strong>, <strong>intoxication</strong>, and <strong>nausea</strong> conditions. The percentage is equal to the Peasant's <strong>Cure All</strong> value times 5%. This <strong>Cure All</strong> lasts for 24 hours before going bad. Once used, this cure all is consumed.</td></tr>
+<tr><td class="opt_content"><strong>Ma's Stew (CRA)</strong><br>Once per day, if a Peasant has access to cooking tools and the ingredients required, they can spend 1 hour to create a stew from an old family recipe. This stew is large enough to feed 6 people and its effects are based on what basic ingredients are added (See the table in the sidebar). Effects conferred by the stew last for a full 24 hours.
+<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small">
+<tr><th>Recipe</th><th>Ingredients</th><th>Effect</th></tr>
+<tr><td>Harvest Medley</td><td>Raw Meat x2, Beer x3, Fool's Parsely x3, Berbercane Fruit x4</td><td>Immunity to fear and natural SP = 1/3 Ma's Stew.</td></tr>
+<tr><td>Ma's Gut Cleanser</td><td>Crow'e Eye x5, Hellebore Petals x3, Bryonia x2, Fool's Parsley x2</td><td>Nausea until Endurance vs Ma's Stew check succeeds.</td></tr>
+<tr><td>Special Broth</td><td>Beast Bones x4, Dog Tallow x2, Mistletoe x3, Han Fiber x3</td><td>Critical wound healing days reduced by half Ma's Stew (min 1 day).</td></tr>
+<tr><td>Springtime Stew</td><td>Balisse Fruit x3, Raw Meat x2, Sewant Mushrooms x4, Honey Suckle x3</td><td>Seduction bonus = 1/2 Ma's Stew, Stamina bonus = 3x Ma's Stew.</td></tr>
+<tr><td>Troll Brew</td><td>Barley x3, Scleroderm x4, Sulfur x2, Raw Meat x3</td><td>Poison removal bonus = 1/2 Ma's Stew and poison damage resistance.</td></tr>
+<tr><td>Winter Stew</td><td>Barley x5, Beast Bones x2, Scleroderm x3, Allspice Rooth x2</td><td>Immunity to Freeze and extra icy-survival hours = Ma's Stew.</td></tr>
+</table></td></tr>
+</table>
+
+<table class="skills_branch_3">
+<tr><td class="header">The Laborer</td></tr>
+<tr><td class="opt_content"><strong>Ditch Digger</strong><br>Years of manual labor have strengthened the Peasant's body and taught them technique to make even the most grueling labor manageable. The Peasant adds double their <strong>Ditch Digger</strong> value to their ENC. Also, when making Physique or Endurance rolls to perform manual labor, the Peasant can add half their <strong>Ditch Digger</strong> value.</td></tr>
+<tr><td class="opt_content"><strong>Grog (CRA)</strong><br>A peasant knows how to get the most out of any brew. By taking an action to mix one unit of an alchemical component with a serving of alcohol, a Peasant can make a <strong>Grog</strong> roll at a DC of 14. If the Peasant succeeds anyone who drinks the alcohol must make an Endurance check at a DC equal to the peasant's <strong>Grog</strong> value plus 12 or become intoxicated. Once the peasant has a <strong>Grog</strong> value of 5, the effects of the intoxication condition are doubled.</td></tr>
+<tr><td class="opt_content"><strong>Bite The Ear (BODY)</strong><br>When grappled or pinned by a creature or person, the Peasant can take an action to make a <strong>Bite the Ear</strong> roll against the target's DEXx3. If the peasant succeeds they bite off part of the ear (or other superficial body part) of the target, breaking the grapple/pin immediately, dealing 1d6 unmodified damage, and giving the target a permanent -1 to Charisma &amp; Seduction checks.</td></tr>
+</table>
+</div>
+$en$)
+    ) AS raw_data_en(num, title, description)
+)
+, ins_title AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title') AS id
+       , meta.entity, 'title', raw_data.lang, raw_data.title
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO UPDATE
+  SET text = EXCLUDED.text
+)
+, ins_description AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.description') AS id
+       , meta.entity, 'description', raw_data.lang, raw_data.description
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
+SELECT 'wcc_profession_o' || to_char(raw_data.num, 'FM00') AS an_id,
+       meta.su_su_id,
+       meta.qu_id,
+       ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title') AS label,
+       raw_data.num AS sort_order,
+       ck_id('witcher_cc.rules.wcc_profession.peasant') AS visible_ru_ru_id,
+       jsonb_build_object(
+           'title', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.title')::text),
+           'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM9900') ||'.'|| meta.entity ||'.description')::text)
+       ) AS metadata
+FROM raw_data
+CROSS JOIN meta
+ON CONFLICT (an_id) DO NOTHING;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.peasant_another_beer') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Ещё одно Пиво'),
+          ('en', 'Another Beer')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_profession_shop.bundle.peasant_pipe_tobacco') AS id
+     , 'questions' AS entity
+     , 'metadata' AS entity_field
+     , v.lang
+     , v.text
+  FROM (VALUES
+          ('ru', 'Трубка с Табаком'),
+          ('en', 'Pipe / Tobacco')
+       ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o13' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.professional_gear_options'),
+      jsonb_build_object(
+        'tokens', 5,
+        'items', jsonb_build_array('T026', 'T011', 'T006', 'T106', 'T082', 'T066', 'T080', 'T015'),
+        'bundles', jsonb_build_array(
+          jsonb_build_object(
+            'bundleId', 'peasant_another_beer',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.peasant_another_beer')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object('sourceId', 'general_gear', 'itemId', 'T026', 'quantity', 1)
+            )
+          ),
+          jsonb_build_object(
+            'bundleId', 'peasant_pipe_tobacco',
+            'displayName', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession_shop.bundle.peasant_pipe_tobacco')::text),
+            'items', jsonb_build_array(
+              jsonb_build_object('sourceId', 'general_gear', 'itemId', 'T088', 'quantity', 1),
+              jsonb_build_object('sourceId', 'general_gear', 'itemId', 'T089', 'quantity', 1)
+            )
+          )
+        )
+      )
+    )
+  ) AS body;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o13' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.money.crowns'),
+      jsonb_build_object(
+        '*',
+        jsonb_build_array(
+          20,
+          jsonb_build_object(
+            '+',
+            jsonb_build_array(
+              jsonb_build_object('d6', jsonb_build_array()),
+              jsonb_build_object('d6', jsonb_build_array())
+            )
+          )
+        )
+      )
+    )
+  ) AS body;
+
+WITH skill_mapping (skill_name) AS ( VALUES
+    ('athletics'),
+    ('brawling'),
+    ('courage'),
+    ('crafting'),
+    ('endurance'),
+    ('first_aid'),
+    ('gambling'),
+    ('physique'),
+    ('small_blades'),
+    ('wilderness_survival')
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o13' AS an_an_id,
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.initial'),
+      sm.skill_name
+    )
+  ) AS body
+FROM skill_mapping sm;
+
+WITH prof_skill_mapping (skill_id, branch_number, professional_number) AS ( VALUES
+  ('harvest_time', 1, 1),
+  ('animal_whisperer', 1, 2),
+  ('farm_wisdom', 1, 3),
+  ('butchery', 2, 1),
+  ('cure_all', 2, 2),
+  ('mas_stew', 2, 3),
+  ('ditch_digger', 3, 1),
+  ('grog', 3, 2),
+  ('bite_the_ear', 3, 3)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o13' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.professional.skill_' || sm.branch_number || '_' || sm.professional_number),
+      jsonb_build_object('id', sm.skill_id, 'name', ck_id('witcher_cc.wcc_skills.' || sm.skill_id || '.name')::text)
+    )
+  ) AS body
+FROM prof_skill_mapping sm;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o13' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.professional.branches'),
+      jsonb_build_array(
+        ck_id('witcher_cc.wcc_skills.branch.peasant.1.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.peasant.2.name')::text,
+        ck_id('witcher_cc.wcc_skills.branch.peasant.3.name')::text
+      )
+    )
+  ) AS body;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o13' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.defining'),
+      jsonb_build_object('id', 'intolerance', 'name', ck_id('witcher_cc.wcc_skills.intolerance.name')::text)
+    )
+  ) AS body;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_profession' AS qu_id
+                , 'character' AS entity)
+, ins_profession AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'o13' ||'.'|| meta.entity ||'.'|| 'profession') AS id
+       , meta.entity, 'profession', v.lang, v.text
+    FROM (VALUES
+            ('ru', 'Крестьянин'),
+            ('en', 'Peasant')
+         ) AS v(lang, text)
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  'wcc_profession_o13' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.profession'),
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'o13' ||'.'|| meta.entity ||'.'|| 'profession')::text)
+    )
+  ) AS body
+FROM meta
+UNION ALL
+SELECT
+  'character' AS scope,
+  'wcc_profession_o13' AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.logicFields.profession'),
+      'Peasant'
+    )
+  ) AS body;
+
+-- <<< END sql/005_profession_13_peasant.sql
 
 -- >>> BEGIN sql/005_profession_combat_skills.sql
 
@@ -35282,6 +35721,7 @@ VALUES
   ('W168', 'E047', NULL, NULL),
   ('W168', 'E069', NULL, '14'),
   ('W168', 'E071', NULL, NULL),
+  ('W171', 'E050', NULL, NULL),
   ('A053', 'E085', NULL, NULL),
   ('A054', 'E085', NULL, NULL),
   ('A056', 'E086', NULL, '2'),
@@ -35408,6 +35848,7 @@ VALUES
   ('A064', 'E077', NULL, NULL),  -- Resistance (P)
   ('A064', 'E078', NULL, NULL),  -- Resistance (S)
   ('A064', 'E079', NULL, NULL);  -- Resistance (E)
+
 -- <<< END sql/items/004_wcc_item_to_effects.sql
 
 -- >>> BEGIN sql/items/005_wcc_item_weapons.sql
@@ -35652,7 +36093,8 @@ WITH raw_data (w_id, source_id, class_id, name_ru, name_en, is_piercing, is_slas
     ('W167', 'core', 'wt_axe', 'Топор берсерка', 'Berserker’s Axe', NULL, 'TRUE', NULL, NULL, 0, 'humans', 'P', '6d6', 6, NULL, 15, 2, NULL, 'XL', 1, '3', '960', 'На островах Скеллиге много волколаков и сирен, а ведьмаков мало. Добавь к этому показную храбрость обычного скеллигца, и получится вот эта штука. Двухметровый топор с огромным бородовидным лезвием, украшенным скеллигскими рунам.'),
     ('W168', 'core', 'wt_axe', 'Обезглавливатель', 'Decapitator', NULL, 'TRUE', NULL, NULL, 0, 'humans', 'U', '10d6', 10, NULL, 20, 2, NULL, 'XL', 3, '4', NULL, ''),
     ('W169', 'dlc_sch_snail', 'wt_sword', 'Стальной меч школы Улитки', 'Gastropod Steel Sword', 'TRUE', 'TRUE', NULL, NULL, -6, 'witchers', 'R', '8d6', 8, NULL, 20, 2, NULL, 'XL', 1, '5', NULL, ''),
-    ('W170', 'dlc_sch_snail', 'wt_sword', 'Серебряный меч школы Улитки', 'Gastropod Silver Sword', 'TRUE', 'TRUE', NULL, NULL, -6, 'witchers', 'R', '5d6', 5, NULL, 15, 2, NULL, 'XL', 1, '3', NULL, '')
+    ('W170', 'dlc_sch_snail', 'wt_sword', 'Серебряный меч школы Улитки', 'Gastropod Silver Sword', 'TRUE', 'TRUE', NULL, NULL, -6, 'witchers', 'R', '5d6', 5, NULL, 15, 2, NULL, 'XL', 1, '3', NULL, ''),
+    ('W171', 'dlc_prof_peasant', 'wt_tool', 'Лопата совковая', 'Scoop-Shovel', NULL, NULL, 'TRUE', NULL, -3, 'humans', 'E', '2d6', 2, NULL, 15, 2, NULL, 'XL', 0, '1,5', '105', '')
 ),
 ins_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -36458,21 +36900,21 @@ WITH raw_data (
   ('T007','general_gear.group.clothing','Одежда','Clothing','Модная одежда','Fashionable Clothing','Модная одежда для светских мероприятий. Может морально устареть уже через 2 месяца.','Fashionable clothing for social events. It may go out of style in as little as 2 months.','core','',2,70,''),
   ('T008','general_gear.group.clothing','Одежда','Clothing','Плащ с карманами [6x5][М][СЛ16]','Pocketed Cloak','Шесть потайных карманов вместимостью 5кг (маленькие предметы). Обнаружение: проверка Внимания СЛ16.','Six secret pockets with capacity 5 kg each (Tiny items). Detection: Awareness check DC 16.','exp_lal','',2.5,60,''),
   ('T009','general_gear.group.clothing','Одежда','Clothing','Тёмная одежда','Rogue''s Clothing','Ночью +1 к Скрытности. Есть капюшон.','At night, +1 to Stealth. Has a hood.','core','',1.5,50,''),
-  ('T010','general_gear.group.containers','','','Бандольера [25][Н]','Bandolier','Вмещает 25 кг маленьких предметов внутри или небольших снаружи','Holds 25 kg of Tiny items inside or Small items attached outside.','core','concealment.S',1,19,''),
-  ('T011','general_gear.group.containers','','','Корзина [15][Н]','Basket','Вмещает 15 кг небольших предметов.','Holds 15 kg of Small items.','core','concealment.T',0.5,10,''),
-  ('T012','general_gear.group.containers','','','Поясная сумка [5][М]','Belt Pouch','Вмещает 5 кг маленьких предметов.','Holds 5 kg of Tiny items.','core','concealment.S',0.1,7,''),
+  ('T010','general_gear.group.containers','','','Бандольера','Bandolier','Вмещает 25 кг маленьких предметов внутри или небольших снаружи','Holds 25 kg of Tiny items inside or Small items attached outside.','core','concealment.S',1,19,''),
+  ('T011','general_gear.group.containers','','','Корзина','Basket','Вмещает 15 кг небольших предметов.','Holds 15 kg of Small items.','core','concealment.T',0.5,10,''),
+  ('T012','general_gear.group.containers','','','Поясная сумка','Belt Pouch','Вмещает 5 кг маленьких предметов.','Holds 5 kg of Tiny items.','core','concealment.S',0.1,7,''),
   ('T013','general_gear.group.containers','','','Пустая склянка','Bottle','','','dlc_rw1','',0.1,3,''),
-  ('T014','general_gear.group.containers','','','Скрытый сундук [30][Н][СЛ18]','Concealed Chest','Вмещает до 30 кг небольших предметов. Деревянный. Можно скрыть в тайнике. Обнаружение: проверка Восприятия СЛ18.','Holds up to 30 kg of Small items. Wooden. Can be hidden in a stash. Detection: Awareness check DC 18.','dlc_rw2','concealment.L',1.5,40,'availability.C'),
-  ('T015','general_gear.group.containers','','','Мешок [20][М]','Sack','Вмещает 20 кг маленьких предметов.','Holds 20 kg of Tiny items.','core','concealment.S',0.1,3,''),
-  ('T016','general_gear.group.containers','','','Наплечная сумка [30][Н]','Satchel','Вмещает 30 кг небольших предметов.','Holds 30 kg of Small items.','core','concealment.T',1,14,''),
-  ('T017','general_gear.group.containers','','','Сумка с двумя потайными карманами [30][Н], [2x5][М][СЛ16]','Satchel with 2 Secret Pockets [30][S], [2x5][T][DC:16]','Вмещает 30 кг небольших предметов. Два потайных кармана вместимостью 5кг (маленькие предметы). Обнаружение: проверка Внимания СЛ16.','Holds 30 kg of Small items. Two secret pockets with capacity 5 kg each (Tiny items). Detection: Awareness check DC 16.','dlc_sh_tothr','',1.0,NULL,''),
-  ('T018','general_gear.group.containers','','','Потайной карман [5][М][СЛ16]','Secret Pocket','Вмещает 5 кг маленьких предметов. Обнаружение: проверка Внимания СЛ16.','Holds 5 kg of Tiny items. Detection: Awareness check DC 16.','core','concealment.S',0.1,11,''),
+  ('T014','general_gear.group.containers','','','Скрытый сундук','Concealed Chest','Вмещает до 30 кг небольших предметов. Деревянный. Можно скрыть в тайнике. Обнаружение: проверка Восприятия СЛ18.','Holds up to 30 kg of Small items. Wooden. Can be hidden in a stash. Detection: Awareness check DC 18.','dlc_rw2','concealment.L',1.5,40,'availability.C'),
+  ('T015','general_gear.group.containers','','','Мешок','Sack','Вмещает 20 кг маленьких предметов.','Holds 20 kg of Tiny items.','core','concealment.S',0.1,3,''),
+  ('T016','general_gear.group.containers','','','Наплечная сумка','Satchel','Вмещает 30 кг небольших предметов.','Holds 30 kg of Small items.','core','concealment.T',1,14,''),
+  ('T017','general_gear.group.containers','','','Сумка с двумя потайными карманами','Satchel with 2 Secret Pockets','Вмещает 30 кг небольших предметов. Два потайных кармана вместимостью 5кг (маленькие предметы). Обнаружение: проверка Внимания СЛ16.','Holds 30 kg of Small items. Two secret pockets with capacity 5 kg each (Tiny items). Detection: Awareness check DC 16.','dlc_sh_tothr','',1.0,NULL,''),
+  ('T018','general_gear.group.containers','','','Потайной карман','Secret Pocket','Вмещает 5 кг маленьких предметов. Обнаружение: проверка Внимания СЛ16.','Holds 5 kg of Tiny items. Detection: Awareness check DC 16.','core','concealment.S',0.1,11,''),
   ('T019','general_gear.group.containers','','','Чехол для лука','Sheath, Bow','Вместилище для лука и колчана со стрелами.','Container for a bow and a quiver of arrows.','core','',1.5,24,''),
-  ('T020','general_gear.group.containers','','','Набедренные ножны [СЛ18]','Sheath, Garter','Скрытые ножны для легких клинков на бедре. Обнаружение: проверка Внимания СЛ18.','Hidden sheath for small blades on the thigh. Detection: Awareness check DC 18.','core','',0.1,11,''),
-  ('T021','general_gear.group.containers','','','Наручные ножны [СЛ15]','Sheath, Sleeve','Скрытые ножны для лёгких клинков на внутренней стороне руки. Обнаружение: проверка Внимания СЛ15.','Hidden sheath for small blades on the inside of the forearm. Detection: Awareness check DC 15.','core','',0.1,13,''),
+  ('T020','general_gear.group.containers','','','Набедренные ножны','Sheath, Garter','Скрытые ножны для легких клинков на бедре. Обнаружение: проверка Внимания СЛ18.','Hidden sheath for small blades on the thigh. Detection: Awareness check DC 18.','core','',0.1,11,''),
+  ('T021','general_gear.group.containers','','','Наручные ножны','Sheath, Sleeve','Скрытые ножны для лёгких клинков на внутренней стороне руки. Обнаружение: проверка Внимания СЛ15.','Hidden sheath for small blades on the inside of the forearm. Detection: Awareness check DC 15.','core','',0.1,13,''),
   ('T022','general_gear.group.containers','','','Бурдюк','Waterskin','Емкость для хранения питьевой воды.','Container for storing drinking water.','core','',1,8,''),
-  ('T023','general_gear.group.containers','','','Деревянный сундук [30][Н]','Wooden Chest','Вмещает 30 кг небольших предметов.','Holds 30 kg of Small items.','core','concealment.T',1,18,''),
-  ('T024','general_gear.group.containers','','','Большой деревянный сундук [50][К]','Wooden Chest, Large','Вмещает 50 кг крупных предметов.','Holds 50 kg of Large items.','core','concealment.L',10,30,''),
+  ('T023','general_gear.group.containers','','','Деревянный сундук','Wooden Chest','Вмещает 30 кг небольших предметов.','Holds 30 kg of Small items.','core','concealment.T',1,18,''),
+  ('T024','general_gear.group.containers','','','Большой деревянный сундук','Wooden Chest, Large','Вмещает 50 кг крупных предметов.','Holds 50 kg of Large items.','core','concealment.L',10,30,''),
   ('T025','general_gear.group.food','Напитки','Drinks','Алкагест','Alcohest','Чистый спирт для алхимии. При питье: опьянение на (12 - Тел) часов. При провале Стойкости (СЛ16) еще и отравление. Снимается "Слёзами жён".','Pure alcohol for alchemy. When drunk: intoxication for (12 - BODY) hours. On a failed Endurance check (DC 16) you also get poisoned. Removed with "Women''s Tears".','core','',1,8,''),
   ('T026','general_gear.group.food','Напитки','Drinks','Пиво','Beer','','','core','',1,5,''),
   ('T027','general_gear.group.food','Напитки','Drinks','Крепкий алкоголь','Spirits','','','core','',1,10,''),
@@ -42223,7 +42665,8 @@ WITH
          , meta.entity, 'short_name', raw_params.lang, raw_params.short_name_text
       FROM raw_params
       CROSS JOIN meta
-    ON CONFLICT (id, lang) DO NOTHING
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
   )
 INSERT INTO wcc_params (param_id, param_name_id, param_short_name_id, is_calculated)
 SELECT DISTINCT
@@ -42402,7 +42845,8 @@ WITH
         (108, 'quick_fix', 'Быстрый ремонт', 'cra', 'main'),
         (109, 'well_traveled', 'Бывалый путешественник', 'int', 'main'),
         (110, 'rite_of_oak_and_mistletoe', 'Обряд дуба и омелы', 'int', 'main'),
-        (111, 'renown', 'Известность', 'emp', 'main')
+        (111, 'renown', 'Известность', 'emp', 'main'),
+        (112, 'intolerance', 'Нетерпимость', 'will', 'main')
       ) AS raw_data_ru(skill_aid, skill_id, name, param_id, skill_type)
     UNION ALL
     SELECT 'en' AS lang, skill_aid, skill_id, name, param_id, skill_type
@@ -42417,7 +42861,8 @@ WITH
         (108, 'quick_fix', 'Quick Fix', 'cra', 'main'),
         (109, 'well_traveled', 'Well Traveled', 'int', 'main'),
         (110, 'rite_of_oak_and_mistletoe', 'Rite of Oak and Mistletoe', 'int', 'main'),
-        (111, 'renown', 'Notoriety', 'emp', 'main')
+        (111, 'renown', 'Notoriety', 'emp', 'main'),
+        (112, 'intolerance', 'Intolerance', 'will', 'main')
       ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type)
   ),
   ins_main_skill_names AS (
@@ -42586,7 +43031,19 @@ WITH
         -- Nobble branch 3: Рыцарь
         (300, 'steadfastness', 'Непоколебимость', NULL, 'professional', 1, 3, 'Рыцарь', false, 'nobble'),
         (301, 'cavalier', 'Кавалерист', 'emp', 'professional', 2, 3, 'Рыцарь', false, 'nobble'),
-        (302, 'armor_softening', 'Смягчение броней', 'ref', 'professional', 3, 3, 'Рыцарь', false, 'nobble')
+        (302, 'armor_softening', 'Смягчение броней', 'ref', 'professional', 3, 3, 'Рыцарь', false, 'nobble'),
+        -- Peasant branch 1: Фермер
+        (303, 'harvest_time', 'Время Жатвы', NULL, 'professional', 1, 1, 'Фермер', false, 'peasant'),
+        (304, 'animal_whisperer', 'Шепот Животным', 'emp', 'professional', 2, 1, 'Фермер', false, 'peasant'),
+        (305, 'farm_wisdom', 'Фермерская Мудрость', 'cra', 'professional', 3, 1, 'Фермер', false, 'peasant'),
+        -- Peasant branch 2: Повар
+        (306, 'butchery', 'Мясник', 'cra', 'professional', 1, 2, 'Повар', false, 'peasant'),
+        (307, 'cure_all', 'Панацея от всех бед', 'cra', 'professional', 2, 2, 'Повар', false, 'peasant'),
+        (308, 'mas_stew', 'Мамино Рагу', 'cra', 'professional', 3, 2, 'Повар', false, 'peasant'),
+        -- Peasant branch 3: Рабочий
+        (309, 'ditch_digger', 'Землекоп', NULL, 'professional', 1, 3, 'Рабочий', false, 'peasant'),
+        (310, 'grog', 'Грог', 'cra', 'professional', 2, 3, 'Рабочий', false, 'peasant'),
+        (311, 'bite_the_ear', 'Укус за Ухо', 'body', 'professional', 3, 3, 'Рабочий', false, 'peasant')
       ) AS raw_data_ru(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
     UNION ALL
     SELECT 'en' AS lang, raw_data_en.*
@@ -42726,7 +43183,19 @@ WITH
         -- Nobble branch 3: The Knight
         (300, 'steadfastness', 'Resolute', NULL, 'professional', 1, 3, 'The Knight', false, 'nobble'),
         (301, 'cavalier', 'Chevalier', 'emp', 'professional', 2, 3, 'The Knight', false, 'nobble'),
-        (302, 'armor_softening', 'Armored Buffer', 'ref', 'professional', 3, 3, 'The Knight', false, 'nobble')
+        (302, 'armor_softening', 'Armored Buffer', 'ref', 'professional', 3, 3, 'The Knight', false, 'nobble'),
+        -- Peasant branch 1: The Farmer
+        (303, 'harvest_time', 'Harvest Time', NULL, 'professional', 1, 1, 'The Farmer', false, 'peasant'),
+        (304, 'animal_whisperer', 'Animal Whisperer', 'emp', 'professional', 2, 1, 'The Farmer', false, 'peasant'),
+        (305, 'farm_wisdom', 'Farm Wisdom', 'cra', 'professional', 3, 1, 'The Farmer', false, 'peasant'),
+        -- Peasant branch 2: The Cook
+        (306, 'butchery', 'Butchery', 'cra', 'professional', 1, 2, 'The Cook', false, 'peasant'),
+        (307, 'cure_all', 'Cure All', 'cra', 'professional', 2, 2, 'The Cook', false, 'peasant'),
+        (308, 'mas_stew', 'Ma''s Stew', 'cra', 'professional', 3, 2, 'The Cook', false, 'peasant'),
+        -- Peasant branch 3: The Laborer
+        (309, 'ditch_digger', 'Ditch Digger', NULL, 'professional', 1, 3, 'The Laborer', false, 'peasant'),
+        (310, 'grog', 'Grog', 'cra', 'professional', 2, 3, 'The Laborer', false, 'peasant'),
+        (311, 'bite_the_ear', 'Bite The Ear', 'body', 'professional', 3, 3, 'The Laborer', false, 'peasant')
       ) AS raw_data_en(skill_aid, skill_id, name, param_id, skill_type, prof_num, branch_num, branch_name, is_difficult, prof_id)
   ),
   ins_prof_skill_names AS (
@@ -42813,7 +43282,8 @@ WITH
         ('quick_fix', 'Умелый ремесленник способен наскоро подлатать оружие или броню, чтобы их владелец мог продолжать сражаться. Ремесленник свяжет вместе обрывки лопнувшей тетивы, заострит край сломанного клинка или приколотит металлическую пластину поверх треснувшего щита. Ремесленник может потратить ход и совершить проверку <strong>Быстрого ремонта</strong> со сложностью, равной СЛ Изготовления данного предмета минус 3, чтобы восстановить 1/2 прочности брони или 1/2 надёжности сломанного оружия или щита. Пока оружие после <strong>Быстрого ремонта</strong> не починят в кузнице, оно наносит половину обычного урона.<br><br><strong>Слишком много поломок</strong><br>Ранее подлатанное оружие, щит или броню после повторной поломки можно подлатать ещё только один раз. Во второй раз <strong>Быстрый ремонт</strong> восстановит лишь 1/4 значения надёжности/прочности (с округлением вниз).'),
         ('well_traveled', 'Обычный торговец зарабатывает на жизнь тем, что продаёт товар приходящим к нему покупателям. Странствующий же торговец сам приходит к покупателю. Он ездит по миру и узнаёт обо всём, что там происходит. Торговец может в любой момент по своему желанию совершить проверку навыка <strong>Бывалый путешественник</strong>, чтобы узнать один факт об определённом предмете, культуре или области. СЛ проверки определяет ведущий. При успехе торговец получает ответ на вопрос, вспомнив те времена, когда он в прошлый раз был в этом месте.'),
         ('rite_of_oak_and_mistletoe', 'Друид очень быстро учится собирать растения, обладающие магической силой, и превращать их в мощную основу своей магии, которая связывает их с землёй вокруг них. Друид может потратить день и совершить проверку <strong>Обряда дуба и омелы</strong> со СЛ, специфичной для области, в которой он оказался, чтобы собрать необходимые ингредиенты. В случае успеха друид создаёт посох, который может использовать только друид.<br><br>Этот посох действует точно так же, как посох (Основная книга, стр. 74), но его значение фокусировки увеличивается по мере того, как друид улучшает значение <strong>Обряда дуба и омелы</strong>. Значение фокусировки равно 1 на уровне 1 и увеличивается на 1 за каждые 2 очка сверх первого вплоть до максимума 4 на уровне 7. На уровне 9 посох получает эффект <strong>улучшенное фокусирующее</strong>.<br><br>Кроме того, пока друид держит свой посох, он получает следующие преимущества в зависимости от уровня <strong>Обряда дуба и омелы</strong>. На уровне 2 друид игнорирует все штрафы окружающей среды в заросшей или болотистой местности. На уровне 4 друид игнорирует штрафы за снежные и ледяные условия. На уровне 6 друид игнорирует штрафы за сильную жару. На уровне 8 друид игнорирует все штрафы от пребывания под водой. На уровне 10 друид может сделать бросок для создания нового посоха, тратя лишь действие полного хода, а не целый день. СЛ для создания посоха — 14 в лесу, 16 в болотистой местности, 18 в горных районах и 20 в море.'),
-        ('renown', 'Титул и социальный вес дают аристократу особое положение. Он добавляет <strong>Известность</strong> к репутации в родной стране и в союзных ей государствах. В нейтральных странах или во враждебных государствах бонус снижается вдвое.')
+        ('renown', 'Титул и социальный вес дают аристократу особое положение. Он добавляет <strong>Известность</strong> к репутации в родной стране и в союзных ей государствах. В нейтральных странах или во враждебных государствах бонус снижается вдвое.'),
+        ('intolerance', 'Крестьяне боязливы и часто не зря. В мире есть много такого, что может их легко убить. Однако страх может быть топливом для силы. При первой встрече с разумным существом с социальным статусом Ненависть и опасение они могут сделать бросок на <strong>Нетерпимость</strong> против СЛ, равной Эмп x 3 цели. Если крестьянин преуспевает, его страх превращается в ярость и дает ему бонус к сопротивлению принуждению и храбрости, равный их значению <strong>Нетерпимости</strong> по сравнению с этим значением до конца схватки. Крестьянин также получает бонус, равный половине своего значения <strong>Нетерпимости</strong> к Лидерству, когда сплачивает других крестьян.<br><br><strong>Нетерпимость и крестьяне:</strong> в контексте способности «Нетерпимость» любой NPC, не имеющий профессии или определенного броска за пределами крестьянства (например, член тайной полиции или профессор в Оксенфурте), считается крестьянином.')
       ) AS raw_data_ru(skill_id, description)
     UNION ALL
     SELECT 'en' AS lang, skill_id, description
@@ -42828,7 +43298,8 @@ WITH
         ('quick_fix', 'A skilled craftsman can patch a weapon or armor well enough to keep it working and keep its wearer/wielder in the fight, whether that be by tying a bowstring back together, sharpening the edge of a broken blade, or nailing a plate over a cracked shield. By taking a turn to roll <strong>Patch Job</strong> at a DC equal to the item''s Crafting DC-3 a Craftsman can restore a broken shield or armor to half its full SP or restore a broken weapon to half its durability. Until fixed at a forge, a patched weapon does half its normal damage.<br><br><strong>Too Many Patches</strong><br>A weapon, shield, or armor which has already been patched once can only be patched again 1 more time, and this patch only brings it to 1/4th SP/Durability (rounding down).'),
         ('well_traveled', 'Your average merchant makes a living from trade, and that trade brings in customers from all around. But a traveling merchant goes to their customers, wandering the roads of the world and learning from its people. A Merchant can make a <strong>Well Traveled</strong> roll any time they want to know a fact about a specific item, culture, or area. The DC is set by the GM, and if the roll is successful the Merchant remembers the answer to that question, calling on memories of the last time they traveled through the applicable area.'),
         ('rite_of_oak_and_mistletoe', 'A Druid learns very quickly how to harvest magically potent plants and turn them into a powerful focus for their magic which connects them to the land around them. A Druid can take a day and make a Rite of Oak and Mistletoe roll against a DC specific to the area in which they find themselves to harvest the necessary ingredients. If successful, the Druid creates a Staff which works only for the Druid.<br><br>This staff functions exactly as a Staff (Witcher Core Rule Book, pg. 74) but its Focus value rises as they improve their Rite of Oak &amp; Mistletoe value. The Focus value begins at 1 at level 1 and rises by 1 every 2 levels to a maximum of 4 at level 7. At level 9, the Staff gains the Greater Focus Effect.<br><br>Additionally, while the Druid is carrying their staff, they gain the following benefits based on their Rite of Oak &amp; Mistletoe value. At level 2, the Druid ignores all environmental penalties in overgrown or swampy terrain. At level 4, the Druid ignores the penalties for snow and ice conditions. At level 6, the Druid ignores the penalties for extreme heat conditions. At level 8, the Druid ignores all penalties from being underwater. At level 10, the Druid can roll to create a new staff by taking a full round action rather than 1 day. The DCs to create a staff are 14 when in a forest, 16 when in swampy areas, 18 when in mountainous regions, and 20 when at sea.'),
-        ('renown', 'Nobility, whether earned by noble deeds or conferred by birth, grants a person a grandeur that must be acknowledged. Peasants may curse a noble''s name and mock them in the safety of their hovels but most dare not insult a noble to their face. A Noble adds their <strong>Notoriety</strong> value to their Reputation score when in their home country or a country allied with their homeland. If a Noble travels to a kingdom or territory that is actively at war with or neutral toward their homeland, they gain only half their <strong>Notoriety</strong> value.')
+        ('renown', 'Nobility, whether earned by noble deeds or conferred by birth, grants a person a grandeur that must be acknowledged. Peasants may curse a noble''s name and mock them in the safety of their hovels but most dare not insult a noble to their face. A Noble adds their <strong>Notoriety</strong> value to their Reputation score when in their home country or a country allied with their homeland. If a Noble travels to a kingdom or territory that is actively at war with or neutral toward their homeland, they gain only half their <strong>Notoriety</strong> value.'),
+        ('intolerance', 'Peasants are a fearful lot and often for good reason. There''s a lot out in the world that could easily kill them. Fear can be fuel for strength, however. When first encountering a sapient being with a Social Standing of Feared or Hated, they can make an <strong>Intolerance</strong> roll against a DC equal to the target''s EMPx3. If the peasant succeeds, their fear turns to rage and grants them a bonus to Resist Coercion &amp; Courage equal to their <strong>Intolerance</strong> value vs. that being for the remainder of the encounter. The Peasant also gain a bonus equal to half their <strong>Intolerance</strong> value to Leadership when rallying other peasants.<br><br><strong>Intolerance &amp; Peasants:</strong> For the purposes of this ability, any NPC who does not have a Profession or a specific role outside of the peasantry (for example a member of the secret police, or a professor at Oxenfurt) is considered a peasant.')
       ) AS raw_data_en(skill_id, description)
   ),
   ins_main_skill_descriptions AS (
@@ -42966,7 +43437,17 @@ WITH
         ('estate', 'Аристократу принадлежит поместье: основное здание, конюшни и земли. Есть дворецкий (ученый), а число слуг-рабочих равно <strong>Поместье</strong> x2. Они работают в поместье и не идут воевать, кроме особых случаев. Доход и пользы получаются, когда аристократ находится в поместье. За каждое очко <strong>Поместья</strong> выбирается 1 дополнение; строительство каждого занимает 1 месяц, можно строить параллельно.'),
         ('steadfastness', 'Аристократ добавляет значение <strong>Непоколебимости</strong> к своим проверкам <strong>Храбрости</strong> и <strong>Сопротивления убеждению</strong>. Если он успешно сопротивляется убеждению союзника, союзник до конца сцены получает бонус к своим проверкам Храбрости и Сопротивления убеждению в размере 1/2 от <strong>Непоколебимости</strong> аристократа (минимум 1).'),
         ('cavalier', 'Потратив час, аристократ может совершить проверку <strong>Кавалериста</strong> против Воли лошади x3, чтобы навсегда с ней подружиться. Когда он верхом на этой лошади, модификатор управления ездовым животным увеличивается на 1/2 от <strong>Кавалериста</strong>, а результат броска при потере управления снижается на это же значение.'),
-        ('armor_softening', 'Если враг наносит аристократу критическое ранение, он может немедленно совершить проверку <strong>Смягчения броней</strong> со СЛ, равной атаке врага. При успехе крит отменяется, а броня на поврежденной зоне получает +1 ПБ к поглощению урона за каждый уровень крита. <br><br><strong>Урон при смягчении броней:</strong> бонусный урон от крита отменяется, но обычный урон атаки после расчета брони применяется.')
+        ('armor_softening', 'Если враг наносит аристократу критическое ранение, он может немедленно совершить проверку <strong>Смягчения броней</strong> со СЛ, равной атаке врага. При успехе крит отменяется, а броня на поврежденной зоне получает +1 ПБ к поглощению урона за каждый уровень крита. <br><br><strong>Урон при смягчении броней:</strong> бонусный урон от крита отменяется, но обычный урон атаки после расчета брони применяется.'),
+        -- Peasant skills
+        ('harvest_time', 'Знание правильного времени и способа сбора урожая - это навык, на освоение которого уходят годы. При добыче алхимических компонентов растительного происхождения крестьянин получает дополнительное количество единиц, равное половине значения его <strong>Времени Жатвы</strong> (минимум 1).'),
+        ('animal_whisperer', 'Предпринимая действие, Крестьянин может пройти проверку <strong>Шепот Животным</strong> против СЛ, равной Воля x 3 животного, чтобы командовать любым прирученным животным. При успехе, животное выполняет команды, в меру своих возможностей.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Шепот Животным СЛ</th><th></th></tr><tr><th>Прирученные Звери</th><th>СЛ</th></tr><tr><td>Пчелы</td><td>21</td></tr><tr><td>Курицы</td><td>15</td></tr><tr><td>Коровы</td><td>12</td></tr><tr><td>Козы</td><td>18</td></tr><tr><td>Свиньи</td><td>15</td></tr><tr><td>Кролики</td><td>12</td></tr><tr><td>Овцы</td><td>9</td></tr></table>'),
+        ('farm_wisdom', 'Хоть магией обладают не все, есть некоторые трюки, которым можно научиться, чтобы склонить чашу весов в свою пользу. Крестьянин может совершить одно действие и пройти проверку <strong>Фермерской Мудрости</strong>, чтобы выполнить один из народных ритуалов на соседней странице. У каждого ритуала есть своя СЛ и требования.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Ритуал</th><th>СЛ</th><th>Эффект</th></tr><tr><td>Кровоочиститель</td><td>8</td><td>Удаляет кровь с площади до 5 м3.</td></tr><tr><td>Предсказание Погоды</td><td>10</td><td>Прогноз на 24 часа.</td></tr><tr><td>Венок из Трав</td><td>12</td><td>Ничего не забудете в следующие 24 часа.</td></tr><tr><td>Круг от Вредителей</td><td>14</td><td>Инсектоиды и Звери делают Стойкость против броска Фермерской Мудрости до входа в круг 20м.</td></tr><tr><td>Убийца Кошмаров</td><td>16</td><td>Защита от кошмаров на ночь.</td></tr><tr><td>Раскрытие Черной Магии</td><td>18</td><td>Одноразовый тотем чернеет рядом с проклятым или порченым.</td></tr><tr><td>Талисман</td><td>20</td><td>Одноразовый бонус к УДАЧЕ, равный Фермерской Мудрости; не восстанавливается и не суммируется.</td></tr></table>'),
+        ('butchery', 'Когда крестьянин обирает физического монстра или животное, он может пройти проверку <strong>Мясника</strong> со СЛ, зависящей от подкатегории зверя. При успехе, он может получить максимальное количество единиц одного типа органической добычи с этого животного. Этот бросок можно сделать несколько раз на одном трупе, но крестьянин не может сделать две попытки на одну и ту же часть зверя.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Мясник СЛ</th><th></th></tr><tr><th>Подкатегория</th><th>СЛ</th></tr><tr><td>Обычные</td><td>12</td></tr><tr><td>Незаурядные</td><td>16</td></tr><tr><td>Трудные</td><td>20</td></tr></table>'),
+        ('cure_all', 'Используя по одной единице трех разных типов алхимических компонентов, за 10 минут Крестьянин может создать народную <strong>Панацею от всех бед</strong>. У этой смеси есть процентный шанс исцелить человека, потребляющего ее, от <strong>отравления</strong>, <strong>опьянения</strong> и <strong>тошноты</strong>. Процент равен значению навыка <strong>Панацея от всех бед</strong> x 5. Это лекарство нужно использовать в течении суток, прежде чем оно испортится. При использовании оно тратится полностью.'),
+        ('mas_stew', 'Раз в день, если у крестьянина есть принадлежности для готовки и необходимые ингредиенты, он может потратить 1 час на приготовление рагу по старому семейному рецепту. Этого рагу достаточно, чтобы накормить 6 человек, и его эффекты зависят от того, какие ингредиенты были использованы (см. Таблицу на следующей странице). Эффекты длятся в течение 24 часов.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Рецепт</th><th>Ингредиенты</th><th>Эффекты</th></tr><tr><td>Урожайная Симфония</td><td>Сырое Мясо (x2), Пиво (x3), Собачья петрушка (x3), Плод берберки (x4)</td><td>Невосприимчивость к страху и ПБ = 1/3 Мамино Рагу.</td></tr><tr><td>Мамино Рагу</td><td>Вороний глаз (x5), Лепестки морозника (x3), Переступень (x2), Собачья петрушка (x2)</td><td>Тошнота до проверки Стойкости против проверки Мамино Рагу или конца эффекта.</td></tr><tr><td>Особый Бульон</td><td>Звериные кости (x4), Собачье сало (x2), Омела (x3), Волокна хана (x3)</td><td>Срок лечения критрана уменьшается на 1/2 Мамино Рагу (минимум 1 день).</td></tr><tr><td>Весеннее Рагу</td><td>Плод балиссы (x3), Сырое мясо (x2), Грибы-шибальцы (x4), Жимолость (x3)</td><td>Соблазнение +1/2 Мамино Рагу, Выносливость +3x Мамино Рагу.</td></tr><tr><td>Рагу из Тролля</td><td>Ячмень (x3), Склеродерм (x4), Сера (x2), Сырое мясо (x3)</td><td>Бонус к снятию отравления = 1/2 Мамино Рагу и сопротивление урону от яда.</td></tr><tr><td>Зимнее Рагу</td><td>Ячмень (x5), Звериные кости (x2), Склеродерм (x3), Корень зарника (x2)</td><td>Невосприимчивость к замораживанию и доп. часы выживания в холоде = Мамино Рагу.</td></tr></table>'),
+        ('ditch_digger', 'Годы ручного труда укрепили тело крестьянина и научили технике, позволяющей сделать даже самый изнурительный труд выполнимым. Двойное значение навыка <strong>Землекоп</strong> добавляется к Нагрузке крестьянина. Также, проходя проверки на Телосложение или Выносливость при выполнении физического труда, Крестьянин может добавлять половину своего значения <strong>Землекоп</strong>.'),
+        ('grog', 'Крестьянин знает, как выжать максимум из любого пойла. Совершая действие смешивания одной единицы алхимического компонента с порцией алкоголя, Крестьянин может сделать проверку навыка <strong>Грог</strong> со СЛ 14. При успехе, любой, кто выпьет этот алкоголь, должен пройти проверку Выносливости с СЛ, равной уровню навыка <strong>Грог</strong> + 12 или он опьянеет. Как только значение навыка <strong>Грог</strong> становится 5 и выше, последствия опьянения удваиваются.'),
+        ('bite_the_ear', 'Когда крестьянина схватили или прижали к себе существо или человек, крестьянин может действием пройти проверку навыка <strong>Укуса Уха</strong> против Лвк x3 цели. При успехе, он откусывает часть уха (или другую поверхностную часть тела) цели, немедленно освобождаясь от захвата, и наносит 1d6 неизменяемого урона. Цель навсегда получает -1 к проверкам Харизмы и Соблазнения.')
       ) AS raw_data_ru(skill_id, description)
     UNION ALL
     SELECT 'en' AS lang, skill_id, description
@@ -43082,7 +43563,17 @@ WITH
         ('estate', 'A Noble personally owns an estate that consists of a main house, a stable, and a parcel of land. The Noble decides where this estate is located (within reason). The Noble serves as the land''s manager and gains benefit from it. Anyone living on the land is their subject. More details can be found on page 12.'),
         ('steadfastness', 'A Noble can add their <strong>Resolute</strong> value to their Courage and Resist Coercion checks. If they succeed a Courage or Resist Coercion check, any ally who witnesses them do so gains a bonus on their own Courage or Resist Coercion check equal to one-half the Noble''s <strong>Resolute</strong> value (minimum 1) until the end of the scene.'),
         ('cavalier', 'By taking an hour, a Noble can make a <strong>Chevalier</strong> check against a mount''s WILLx3 to permanently bond with it. When being ridden by the Noble, the mount''s Control Modifier is raised by half the Noble''s <strong>Chevalier</strong> value. The Noble can also lower the result of a control loss by half this value.'),
-        ('armor_softening', 'If an enemy scores a critical wound on a Noble, the Noble can immediately make an <strong>Armored Buffer</strong> check against a DC equal to the enemy''s original Attack Check. If the Noble succeeds, they can negate the critical wound by sacrificing the armor in the hit location. The armor suffers 1d10 ablation damage per level of the critical wound to the hit location.<br><br><strong>Armored Buffer Damage:</strong> If a Noble successfully negates a critical wound with <strong>Armored Buffer</strong>, they also negate the bonus damage from the critical wound. However, standard weapon damage applies to the Noble after their armor sustains damage.')
+        ('armor_softening', 'If an enemy scores a critical wound on a Noble, the Noble can immediately make an <strong>Armored Buffer</strong> check against a DC equal to the enemy''s original Attack Check. If the Noble succeeds, they can negate the critical wound by sacrificing the armor in the hit location. The armor suffers 1d10 ablation damage per level of the critical wound to the hit location.<br><br><strong>Armored Buffer Damage:</strong> If a Noble successfully negates a critical wound with <strong>Armored Buffer</strong>, they also negate the bonus damage from the critical wound. However, standard weapon damage applies to the Noble after their armor sustains damage.'),
+        -- Peasant skills
+        ('harvest_time', 'Knowing the proper time and way to harvest a crop is a skill that takes years to master. When foraging for plant-based alchemical components, the peasant gains an extra number of units equal to half their <strong>Harvest Time</strong> value (minimum 1).'),
+        ('animal_whisperer', 'By taking an action, the Peasant can roll an <strong>Animal Whisperer</strong> check against a DC equal to the animal''s WILLx3, to convey commands and requests to any domesticated animal. If the check succeeds, the animal carries out these commands to the best of its ability.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Animal Whisperer DC</th><th></th></tr><tr><th>Unlisted Animals</th><th>DC</th></tr><tr><td>Bees</td><td>21</td></tr><tr><td>Chickens</td><td>15</td></tr><tr><td>Cows</td><td>12</td></tr><tr><td>Goats</td><td>18</td></tr><tr><td>Pigs</td><td>15</td></tr><tr><td>Rabbits</td><td>12</td></tr><tr><td>Sheep</td><td>9</td></tr></table>'),
+        ('farm_wisdom', 'While magic may not be a talent for everyone, there are some tricks that the layperson can learn to tip the scale of life in their favor. A Peasant can take one action and roll <strong>Farm Wisdom</strong> to perform one of the folk rituals in the sidebar. Each ritual has its own DC and requirements.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Ritual</th><th>DC</th><th>Effect</th></tr><tr><td>Blood Eraser</td><td>8</td><td>Erases blood stains from up to five cubic meters.</td></tr><tr><td>Discern Weather</td><td>10</td><td>Predicts weather for the next 24 hours.</td></tr><tr><td>Herbal Crown</td><td>12</td><td>Perfect memory for 24 hours.</td></tr><tr><td>Vermin Circle</td><td>14</td><td>Insectoids &amp; Beasts must pass Endurance vs your Farm Wisdom roll to enter a 20m circle.</td></tr><tr><td>Nightmare Killer</td><td>16</td><td>No nightmares for that night.</td></tr><tr><td>Black Magic Revealer</td><td>18</td><td>One-use totem blackens near cursed or hexed people.</td></tr><tr><td>Good Luck Charm</td><td>20</td><td>One-use LUCK bonus equal to Farm Wisdom; does not regenerate and does not stack.</td></tr></table>'),
+        ('butchery', 'When a Peasant loots a monster or animal with a physical form, they can roll a <strong>Butchery</strong> roll at a DC based on the beast''s complexity. If they succeed, they are able to gain the maximum number of units of one organic loot item from the animal. This roll can be made multiple times on a single corpse but the peasant cannot make two attempts on the same part of the beast.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Butchery DC</th><th></th></tr><tr><th>Complexity</th><th>DC</th></tr><tr><td>Simple</td><td>12</td></tr><tr><td>Complex</td><td>16</td></tr><tr><td>Difficult</td><td>20</td></tr></table>'),
+        ('cure_all', 'By taking 10 minutes and using one unit of three different types of alchemical component, the Peasant can create a folk cure all. This concoction has a percentage chance of curing the person who consumes it of the <strong>poison</strong>, <strong>intoxication</strong>, and <strong>nausea</strong> conditions. The percentage is equal to the Peasant''s <strong>Cure All</strong> value times 5%. This <strong>Cure All</strong> lasts for 24 hours before going bad. Once used, this cure all is consumed.'),
+        ('mas_stew', 'Once per day, if a Peasant has access to cooking tools and the ingredients required, they can spend 1 hour to create a stew from an old family recipe. This stew is large enough to feed 6 people and its effects are based on what basic ingredients are added (See the table in the sidebar). Effects conferred by the stew last for a full 24 hours.<br><br><table border="1" cellpadding="4" cellspacing="0" class="table-small"><tr><th>Recipe</th><th>Ingredients</th><th>Effect</th></tr><tr><td>Harvest Medley</td><td>Raw Meat (x2), Beer (x3), Fool''s Parsely (x3), Berbercane Fruit (x4)</td><td>Immunity to fear and natural SP equal to one third your Ma''s Stew value.</td></tr><tr><td>Ma''s Gut Cleanser</td><td>Crow''e Eye (x5), Hellebore Petals (x3), Bryonia (x2), Fool''s Parsley (x2)</td><td>Nausea until an Endurance check beats the Ma''s Stew check.</td></tr><tr><td>Special Broth</td><td>Beast Bones (x4), Dog Tallow (x2), Mistletoe (x3), Han Fiber (x3)</td><td>Critical wound healing days are lowered by half your Ma''s Stew value (minimum 1 day).</td></tr><tr><td>Springtime Stew</td><td>Balisse Fruit (x3), Raw Meat (x2), Sewant Mushrooms (x4), Honey Suckle (x3)</td><td>Seduction bonus = half Ma''s Stew value; Stamina bonus = 3x Ma''s Stew value.</td></tr><tr><td>Troll Brew</td><td>Barley (x3), Scleroderm (x4), Sulfur (x2), Raw Meat (x3)</td><td>Bonus to remove poison = half Ma''s Stew value and resistance to poison damage.</td></tr><tr><td>Winter Stew</td><td>Barley (x5), Beast Bones (x2), Scleroderm (x3), Allspice Rooth (x2)</td><td>Immunity to Freeze and extra icy-survival hours equal to Ma''s Stew value.</td></tr></table>'),
+        ('ditch_digger', 'Years of manual labor have strengthened the Peasant''s body and taught them technique to make even the most grueling labor manageable. The Peasant adds double their <strong>Ditch Digger</strong> value to their ENC. Also, when making Physique or Endurance rolls to perform manual labor, the Peasant can add half their <strong>Ditch Digger</strong> value.'),
+        ('grog', 'A peasant knows how to get the most out of any brew. By taking an action to mix one unit of an alchemical component with a serving of alcohol, a Peasant can make a <strong>Grog</strong> roll at a DC of 14. If the Peasant succeeds anyone who drinks the alcohol must make an Endurance check at a DC equal to the peasant''s <strong>Grog</strong> value plus 12 or become intoxicated. Once the peasant has a <strong>Grog</strong> value of 5, the effects of the intoxication condition are doubled.'),
+        ('bite_the_ear', 'When grappled or pinned by a creature or person, the Peasant can take an action to make a <strong>Bite The Ear</strong> roll against the target''s DEXx3. If the peasant succeeds they bite off part of the ear (or other superficial body part) of the target, breaking the grapple/pin immediately, dealing 1d6 unmodified damage, and giving the target a permanent -1 to Charisma &amp; Seduction checks.')
       ) AS raw_data_en(skill_id, description)
   ),
   ins_prof_skill_descriptions AS (
@@ -43113,7 +43604,8 @@ WHERE skill_type = 'professional'
     'smuggler', 'false_identity', 'black_market', 'large_catalog', 'apprentice', 'masterwork',
     'alchemical_concoction', 'enhanced_potion', 'experimental_formula', 'workshop', 'repair', 'upgrade',
     'market', 'dirty_deal', 'promise', 'slums', 'contacts', 'merchant_network', 'haggle', 'merchant_sense', 'merchant_king',
-    'dilettante', 'connoisseur', 'gracious_host', 'command', 'servants', 'estate', 'steadfastness', 'cavalier', 'armor_softening'
+    'dilettante', 'connoisseur', 'gracious_host', 'command', 'servants', 'estate', 'steadfastness', 'cavalier', 'armor_softening',
+    'harvest_time', 'animal_whisperer', 'farm_wisdom', 'butchery', 'cure_all', 'mas_stew', 'ditch_digger', 'grog', 'bite_the_ear'
   )
   AND EXISTS (
     SELECT 1 FROM i18n_text 
@@ -43136,7 +43628,8 @@ WITH
         ('criminal', 'Преступник', 'core'),
         ('craftsman', 'Ремесленник', 'core'),
         ('merchant', 'Торговец', 'core'),
-        ('nobble', 'Аристократ', 'core')
+        ('nobble', 'Аристократ', 'core'),
+        ('peasant', 'Крестьянин', 'dlc_prof_peasant')
       ) AS raw_data_ru(prof_id, name, dlc)
     UNION ALL
     SELECT 'en' AS lang, prof_id, name, dlc
@@ -43151,7 +43644,8 @@ WITH
         ('criminal', 'Criminal', 'core'),
         ('craftsman', 'Craftsman', 'core'),
         ('merchant', 'Merchant', 'core'),
-        ('nobble', 'Nobble', 'core')
+        ('nobble', 'Nobble', 'core'),
+        ('peasant', 'Peasant', 'dlc_prof_peasant')
       ) AS raw_data_en(prof_id, name, dlc)
   ),
   ins_prof_names AS (
@@ -43191,6 +43685,7 @@ SET prof_desc_id = ck_id('witcher_cc.wcc_profession_o' ||
       WHEN 'craftsman' THEN '08'
       WHEN 'merchant' THEN '09'
       WHEN 'nobble' THEN '12'
+      WHEN 'peasant' THEN '13'
     END || '.answer_options.description')
 WHERE prof_desc_id IS NULL
   AND EXISTS (
@@ -43208,6 +43703,7 @@ WHERE prof_desc_id IS NULL
         WHEN 'craftsman' THEN '08'
         WHEN 'merchant' THEN '09'
         WHEN 'nobble' THEN '12'
+        WHEN 'peasant' THEN '13'
       END || '.answer_options.description')
   );
 
@@ -43255,7 +43751,8 @@ VALUES
   ('criminal', 'professional_paranoia'),
   ('craftsman', 'quick_fix'),
   ('merchant', 'well_traveled'),
-  ('nobble', 'renown')
+  ('nobble', 'renown'),
+  ('peasant', 'intolerance')
 ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
 
 -- Вставка связей профессий и навыков (Doctor)
@@ -43347,6 +43844,17 @@ WHERE skill_id IN (
   'deceit', 'education', 'human_perception', 'persuasion', 'social_etiquette'
 )
 ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
+
+-- Вставка связей профессий и навыков (Peasant)
+INSERT INTO wcc_profession_skills (prof_id, skill_skill_id)
+SELECT 'peasant', skill_id
+FROM wcc_skills
+WHERE skill_id IN (
+  'athletics', 'brawling', 'courage', 'crafting', 'endurance',
+  'first_aid', 'gambling', 'physique', 'small_blades', 'wilderness_survival'
+)
+ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
+
 -- Вставка связей профессий с профессиональными навыками (Bard)
 INSERT INTO wcc_profession_skills (prof_id, skill_skill_id)
 SELECT 'bard', skill_id
@@ -43455,6 +43963,17 @@ WHERE skill_id IN (
   'dilettante', 'connoisseur', 'gracious_host',
   'command', 'servants', 'estate',
   'steadfastness', 'cavalier', 'armor_softening'
+)
+ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
+
+-- Вставка связей профессий с профессиональными навыками (Peasant)
+INSERT INTO wcc_profession_skills (prof_id, skill_skill_id)
+SELECT 'peasant', skill_id
+FROM wcc_skills
+WHERE skill_id IN (
+  'harvest_time', 'animal_whisperer', 'farm_wisdom',
+  'butchery', 'cure_all', 'mas_stew',
+  'ditch_digger', 'grog', 'bite_the_ear'
 )
 ON CONFLICT (prof_id, skill_skill_id) DO NOTHING;
 

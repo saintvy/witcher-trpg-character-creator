@@ -238,7 +238,8 @@ WITH raw_data (w_id, source_id, class_id, name_ru, name_en, is_piercing, is_slas
     ('W167', 'core', 'wt_axe', 'Топор берсерка', 'Berserker’s Axe', NULL, 'TRUE', NULL, NULL, 0, 'humans', 'P', '6d6', 6, NULL, 15, 2, NULL, 'XL', 1, '3', '960', 'На островах Скеллиге много волколаков и сирен, а ведьмаков мало. Добавь к этому показную храбрость обычного скеллигца, и получится вот эта штука. Двухметровый топор с огромным бородовидным лезвием, украшенным скеллигскими рунам.'),
     ('W168', 'core', 'wt_axe', 'Обезглавливатель', 'Decapitator', NULL, 'TRUE', NULL, NULL, 0, 'humans', 'U', '10d6', 10, NULL, 20, 2, NULL, 'XL', 3, '4', NULL, ''),
     ('W169', 'dlc_sch_snail', 'wt_sword', 'Стальной меч школы Улитки', 'Gastropod Steel Sword', 'TRUE', 'TRUE', NULL, NULL, -6, 'witchers', 'R', '8d6', 8, NULL, 20, 2, NULL, 'XL', 1, '5', NULL, ''),
-    ('W170', 'dlc_sch_snail', 'wt_sword', 'Серебряный меч школы Улитки', 'Gastropod Silver Sword', 'TRUE', 'TRUE', NULL, NULL, -6, 'witchers', 'R', '5d6', 5, NULL, 15, 2, NULL, 'XL', 1, '3', NULL, '')
+    ('W170', 'dlc_sch_snail', 'wt_sword', 'Серебряный меч школы Улитки', 'Gastropod Silver Sword', 'TRUE', 'TRUE', NULL, NULL, -6, 'witchers', 'R', '5d6', 5, NULL, 15, 2, NULL, 'XL', 1, '3', NULL, ''),
+    ('W171', 'dlc_prof_peasant', 'wt_tool', 'Лопата совковая', 'Scoop-Shovel', NULL, NULL, 'TRUE', NULL, -3, 'humans', 'E', '2d6', 2, NULL, 15, 2, NULL, 'XL', 0, '1,5', '105', '')
 ),
 ins_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)

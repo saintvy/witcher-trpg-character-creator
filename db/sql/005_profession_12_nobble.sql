@@ -373,7 +373,8 @@ WITH
        , meta.entity, 'title', raw_data.lang, raw_data.title
     FROM raw_data
     CROSS JOIN meta
-  ON CONFLICT (id, lang) DO NOTHING
+  ON CONFLICT (id, lang) DO UPDATE
+  SET text = EXCLUDED.text
 )
 , ins_description AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
