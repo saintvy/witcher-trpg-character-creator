@@ -54,6 +54,8 @@ SELECT ck_id('witcher_cc.hierarchy.' || v.path) AS id
           ('character_name', 'en', 'Character name'),
           ('homeland', 'ru', 'Родина'),
           ('homeland', 'en', 'Homeland'),
+          ('homeland_mage', 'ru', 'Родина мага'),
+          ('homeland_mage', 'en', 'Mage homeland'),
           ('second_language', 'ru', 'Второй язык'),
           ('second_language', 'en', 'Second language'),
           ('homeland_nonhuman', 'ru', 'Родина нелюдя'),

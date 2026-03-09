@@ -88,3 +88,22 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_past_homeland_human', 'wcc_ch_name' UNION ALL
   SELECT 'wcc_past_homeland_elders', 'wcc_ch_name' UNION ALL
   SELECT 'wcc_ch_language', 'wcc_ch_name';
+
+-- Переход из профессии в имя для Мага с DLC "Том Хаоса"
+-- Правило: profession == "Mage" AND exp_toc in dlcs
+WITH
+  ensure_rule AS (
+    INSERT INTO rules (ru_id, name, body)
+    VALUES (
+      ck_id('witcher_cc.rules.is_mage_and_exp_toc'),
+      'is_mage_and_exp_toc',
+      '{"and":[{"==":[{"var":"characterRaw.logicFields.profession"},"Mage"]},{"in":["exp_toc",{"var":["dlcs",[]]}]}]}'::jsonb
+    )
+    ON CONFLICT (ru_id) DO UPDATE
+    SET name = EXCLUDED.name,
+        body = EXCLUDED.body
+    RETURNING ru_id
+  )
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+  SELECT 'wcc_profession', 'wcc_ch_name', er.ru_id, 2
+    FROM ensure_rule er;

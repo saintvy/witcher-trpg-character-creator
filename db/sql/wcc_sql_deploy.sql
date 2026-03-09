@@ -236,6 +236,8 @@ SELECT ck_id('witcher_cc.hierarchy.' || v.path) AS id
           ('character_name', 'en', 'Character name'),
           ('homeland', 'ru', 'Родина'),
           ('homeland', 'en', 'Homeland'),
+          ('homeland_mage', 'ru', 'Родина мага'),
+          ('homeland_mage', 'en', 'Mage homeland'),
           ('second_language', 'ru', 'Второй язык'),
           ('second_language', 'en', 'Second language'),
           ('homeland_nonhuman', 'ru', 'Родина нелюдя'),
@@ -741,7 +743,7 @@ WITH
   || 'они говнюки — бывают и хорошие. По характеру люди-то разные. Обычно они весьма стойкие ребята. Разве что частенько '
   || 'начинают то за «правое дело» воевать, то тыкать пальцами и бояться. Сейчас люди на Континенте — преобладающий вид, и они '
   || 'об этом прекрасно знают... чёрт, даже не надо стараться, чтобы о них гадости говорить. Люди почти уничтожили Старшие '
-  || 'Народы, выkosили врагов, оставили в живых всего пару сотен боболаков, построили свои города на руинах Старших Народов и '
+  || 'Народы, выkosили врагов, оставили в живых всего пару сотен баболаков, построили свои города на руинах Старших Народов и '
   || 'каждый день кого-то из Старших убивают. Но нет, они не все говнюки. Да, большинство магов — люди, и именно они погрузили '
   || 'мир в хаос, но они также сделали мир лучше с помощью науки и магии. Люди умные и, на самом деле, верные — если ты с '
   || 'человеком дружен, он тебя в беде не бросит.
@@ -15783,6 +15785,25 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_past_homeland_human', 'wcc_ch_name' UNION ALL
   SELECT 'wcc_past_homeland_elders', 'wcc_ch_name' UNION ALL
   SELECT 'wcc_ch_language', 'wcc_ch_name';
+
+-- Переход из профессии в имя для Мага с DLC "Том Хаоса"
+-- Правило: profession == "Mage" AND exp_toc in dlcs
+WITH
+  ensure_rule AS (
+    INSERT INTO rules (ru_id, name, body)
+    VALUES (
+      ck_id('witcher_cc.rules.is_mage_and_exp_toc'),
+      'is_mage_and_exp_toc',
+      '{"and":[{"==":[{"var":"characterRaw.logicFields.profession"},"Mage"]},{"in":["exp_toc",{"var":["dlcs",[]]}]}]}'::jsonb
+    )
+    ON CONFLICT (ru_id) DO UPDATE
+    SET name = EXCLUDED.name,
+        body = EXCLUDED.body
+    RETURNING ru_id
+  )
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+  SELECT 'wcc_profession', 'wcc_ch_name', er.ru_id, 2
+    FROM ensure_rule er;
 -- <<< END sql/012_ch_name.sql
 
 -- >>> BEGIN sql/013_ch_age.sql
@@ -15961,6 +15982,1125 @@ VALUES ('lifeEventsCounter_is_valid',
 }'::jsonb);
 
 -- <<< END sql/013_ch_age.sql
+
+-- >>> BEGIN sql/013a_past_homeland_mage.sql
+
+\echo '013a_past_homeland_mage.sql'
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_past_homeland_mage' AS qu_id
+         , 'questions' AS entity
+         , 'single_table'::question_type AS qtype
+  )
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.'|| v.entity_field) AS id
+         , meta.entity
+         , v.entity_field
+         , v.lang
+         , v.text
+      FROM (VALUES
+              ('ru', 'Где вы родились?', 'body'),
+              ('en', 'Where were you born?', 'body'),
+              ('ru', 'Родина мага', 'title'),
+              ('en', 'Mage homeland', 'title'),
+              ('ru', 'Шанс', 'col_1'),
+              ('en', 'Chance', 'col_1'),
+              ('ru', 'Место рождения', 'col_2'),
+              ('en', 'Birth Location', 'col_2')
+           ) AS v(lang, text, entity_field)
+      CROSS JOIN meta
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id
+     , meta.su_su_id
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.title')
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body')
+     , meta.qtype
+     , jsonb_build_object(
+         'dice', 'd_weighed',
+         'allowEmptySelection', false,
+         'columns', jsonb_build_array(
+           ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.col_1')::text,
+           ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.col_2')::text
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.identity')::text,
+           ck_id('witcher_cc.hierarchy.homeland_mage')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO NOTHING;
+
+-- Правила видимости
+WITH rule_parts AS (
+  SELECT
+    (SELECT r.body FROM rules r WHERE r.name = 'is_elf' ORDER BY r.ru_id LIMIT 1) AS is_elf_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_gnome' ORDER BY r.ru_id LIMIT 1) AS is_gnome_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_vran' ORDER BY r.ru_id LIMIT 1) AS is_vran_expr,
+    (SELECT r.body FROM rules r WHERE r.name = 'is_werebbubb' ORDER BY r.ru_id LIMIT 1) AS is_werebbubb_expr
+)
+, rules_setup AS (
+  INSERT INTO rules (ru_id, name, body)
+  SELECT
+    ck_id('witcher_cc.rules.is_mage_homeland_elder'),
+    'is_mage_homeland_elder',
+    jsonb_build_object(
+      'or',
+      jsonb_build_array(
+        rule_parts.is_elf_expr,
+        rule_parts.is_gnome_expr,
+        rule_parts.is_vran_expr,
+        rule_parts.is_werebbubb_expr
+      )
+    )
+  FROM rule_parts
+  ON CONFLICT (ru_id) DO UPDATE SET body = EXCLUDED.body
+  RETURNING ru_id
+)
+, rules_setup_not AS (
+  INSERT INTO rules (ru_id, name, body)
+  SELECT
+    ck_id('witcher_cc.rules.is_mage_homeland_not_elder'),
+    'is_mage_homeland_not_elder',
+    jsonb_build_object(
+      '!',
+      jsonb_build_object(
+        'or',
+        jsonb_build_array(
+          (SELECT r.body FROM rules r WHERE r.name = 'is_elf' ORDER BY r.ru_id LIMIT 1),
+          (SELECT r.body FROM rules r WHERE r.name = 'is_gnome' ORDER BY r.ru_id LIMIT 1),
+          (SELECT r.body FROM rules r WHERE r.name = 'is_vran' ORDER BY r.ru_id LIMIT 1),
+          (SELECT r.body FROM rules r WHERE r.name = 'is_werebbubb' ORDER BY r.ru_id LIMIT 1)
+        )
+      )
+    )
+  ON CONFLICT (ru_id) DO UPDATE SET body = EXCLUDED.body
+  RETURNING ru_id
+)
+SELECT 1;
+
+-- Опции ответов
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_past_homeland_mage' AS qu_id
+         , 'answer_options' AS entity
+  )
+, raw_data AS (
+  SELECT 'ru' AS lang, raw_data_ru.*
+    FROM (VALUES
+            ( 1, 'Северные королевства - Ковир и Повис', 'is_mage_homeland_not_elder', 1.5),
+            ( 2, 'Северные королевства - Хенгфорская лига', 'is_mage_homeland_not_elder', 1.5),
+            ( 3, 'Северные королевства - Редания', 'is_mage_homeland_not_elder', 1.5),
+            ( 4, 'Северные королевства - Каэдвен', 'is_mage_homeland_not_elder', 1.5),
+            ( 5, 'Северные королевства - Аэдирн', 'is_mage_homeland_not_elder', 1.0),
+            ( 6, 'Северные королевства - Лирия и Ривия', 'is_mage_homeland_not_elder', 1.0),
+            ( 7, 'Северные королевства - Темерия', 'is_mage_homeland_not_elder', 1.0),
+            ( 8, 'Северные королевства - Цидарис', 'is_mage_homeland_not_elder', 1.0),
+            ( 9, 'Северные королевства - Керак', 'is_mage_homeland_not_elder', 1.0),
+            (10, 'Северные королевства - Верден', 'is_mage_homeland_not_elder', 1.0),
+            (11, 'Скеллиге', 'is_mage_homeland_not_elder', 3.0),
+            (12, 'Нильфгаард - Цинтра', 'is_mage_homeland_not_elder', 1.0),
+            (13, 'Нильфгаард - Ангрен', 'is_mage_homeland_not_elder', 1.0),
+            (14, 'Нильфгаард - Назаир', 'is_mage_homeland_not_elder', 1.0),
+            (15, 'Нильфгаард - Меттина', 'is_mage_homeland_not_elder', 1.0),
+            (16, 'Нильфгаард - Туссент', 'is_mage_homeland_not_elder', 1.0),
+            (17, 'Нильфгаард - Маг Турга', 'is_mage_homeland_not_elder', 1.0),
+            (18, 'Нильфгаард - Гесо', 'is_mage_homeland_not_elder', 1.0),
+            (19, 'Нильфгаард - Эббинг', 'is_mage_homeland_not_elder', 1.0),
+            (20, 'Нильфгаард - Мехт', 'is_mage_homeland_not_elder', 1.0),
+            (21, 'Нильфгаард - Этолия', 'is_mage_homeland_not_elder', 1.0),
+            (22, 'Нильфгаард - Геммера', 'is_mage_homeland_not_elder', 1.0),
+            (23, 'Нильфгаард - Виковаро', 'is_mage_homeland_not_elder', 1.0),
+            (24, 'Нильфгаард - Сердце Нильфгаарда', 'is_mage_homeland_not_elder', 3.0),
+            (25, 'Доль Блатанна', 'is_mage_homeland_elder', 1.0),
+            (26, 'Горный конклав', 'is_mage_homeland_elder', 1.0)
+         ) AS raw_data_ru(num, text, rule_name, probability)
+  UNION ALL
+  SELECT 'en' AS lang, raw_data_en.*
+    FROM (VALUES
+            ( 1, 'The Northern Realms - Kovir & Poviss', 'is_mage_homeland_not_elder', 1.5),
+            ( 2, 'The Northern Realms - The Hengfors League', 'is_mage_homeland_not_elder', 1.5),
+            ( 3, 'The Northern Realms - Redania', 'is_mage_homeland_not_elder', 1.5),
+            ( 4, 'The Northern Realms - Kaedwen', 'is_mage_homeland_not_elder', 1.5),
+            ( 5, 'The Northern Realms - Aedirn', 'is_mage_homeland_not_elder', 1.0),
+            ( 6, 'The Northern Realms - Lyria & Rivia', 'is_mage_homeland_not_elder', 1.0),
+            ( 7, 'The Northern Realms - Temeria', 'is_mage_homeland_not_elder', 1.0),
+            ( 8, 'The Northern Realms - Cidaris', 'is_mage_homeland_not_elder', 1.0),
+            ( 9, 'The Northern Realms - Kerack', 'is_mage_homeland_not_elder', 1.0),
+            (10, 'The Northern Realms - Verden', 'is_mage_homeland_not_elder', 1.0),
+            (11, 'Skellige', 'is_mage_homeland_not_elder', 3.0),
+            (12, 'Nilfgaard - Cintra', 'is_mage_homeland_not_elder', 1.0),
+            (13, 'Nilfgaard - Angren', 'is_mage_homeland_not_elder', 1.0),
+            (14, 'Nilfgaard - Nazair', 'is_mage_homeland_not_elder', 1.0),
+            (15, 'Nilfgaard - Mettina', 'is_mage_homeland_not_elder', 1.0),
+            (16, 'Nilfgaard - Toussaint', 'is_mage_homeland_not_elder', 1.0),
+            (17, 'Nilfgaard - Mag Turga', 'is_mage_homeland_not_elder', 1.0),
+            (18, 'Nilfgaard - Gheso', 'is_mage_homeland_not_elder', 1.0),
+            (19, 'Nilfgaard - Ebbing', 'is_mage_homeland_not_elder', 1.0),
+            (20, 'Nilfgaard - Maecht', 'is_mage_homeland_not_elder', 1.0),
+            (21, 'Nilfgaard - Etolia', 'is_mage_homeland_not_elder', 1.0),
+            (22, 'Nilfgaard - Gemmera', 'is_mage_homeland_not_elder', 1.0),
+            (23, 'Nilfgaard - Vicovaro', 'is_mage_homeland_not_elder', 1.0),
+            (24, 'Nilfgaard - The Heart of Nilfgaard', 'is_mage_homeland_not_elder', 3.0),
+            (25, 'Dol Blathanna', 'is_mage_homeland_elder', 1.0),
+            (26, 'Mountain conclave', 'is_mage_homeland_elder', 1.0)
+         ) AS raw_data_en(num, text, rule_name, probability)
+)
+, ins_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS id
+       , meta.entity
+       , 'label'
+       , raw_data.lang
+       , '<td>' || to_char(raw_data.probability*100, 'FM990.00') || '%</td><td>' || raw_data.text || '</td>'
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+, ins_lore_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.lore.homeland') AS id
+       , 'character'
+       , 'homeland'
+       , raw_data.lang
+       , raw_data.text
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
+SELECT meta.qu_id || '_o' || to_char(raw_data.num, 'FM00') AS an_id
+     , meta.su_su_id
+     , meta.qu_id
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS label
+     , raw_data.num AS sort_order
+     , (SELECT ru_id FROM rules WHERE name = raw_data.rule_name LIMIT 1) AS visible_ru_ru_id
+     , jsonb_build_object(
+         'probability', raw_data.probability
+       ) AS metadata
+  FROM raw_data
+  CROSS JOIN meta
+ WHERE raw_data.lang = 'ru'
+ON CONFLICT (an_id) DO NOTHING;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_past_homeland_mage' AS qu_id
+  )
+, nums AS (
+    SELECT generate_series(1, 26) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character' AS scope
+     , meta.qu_id || '_o' || to_char(nums.num, 'FM00') AS an_an_id
+     , jsonb_build_object(
+         'set',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.homeland'),
+           jsonb_build_object(
+             'i18n_uuid',
+             ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(nums.num, 'FM00') ||'.lore.homeland')::text
+           )
+         )
+       ) AS body
+  FROM nums
+ CROSS JOIN meta;
+
+-- Переход в Родину Мага из возраста персонажа
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+SELECT 'wcc_ch_age', 'wcc_past_homeland_mage', ru_id, 1
+  FROM rules
+ WHERE ru_id = ck_id('witcher_cc.rules.is_mage_and_exp_toc');
+
+-- Переход из Родины Мага в Семью
+-- INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
+--   SELECT 'wcc_past_homeland_mage', 'wcc_family';
+
+-- <<< END sql/013a_past_homeland_mage.sql
+
+-- >>> BEGIN sql/013b_past_family_size_mage.sql
+
+\echo '013b_past_family_size_mage.sql'
+
+-- Hierarchy keys for new mage-family branch
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.hierarchy.family_size'), 'hierarchy', 'path', 'ru', 'Размер семьи'),
+  (ck_id('witcher_cc.hierarchy.family_size'), 'hierarchy', 'path', 'en', 'Family size'),
+  (ck_id('witcher_cc.hierarchy.family_personality'), 'hierarchy', 'path', 'ru', 'Характер семьи'),
+  (ck_id('witcher_cc.hierarchy.family_personality'), 'hierarchy', 'path', 'en', 'Family personality'),
+  (ck_id('witcher_cc.hierarchy.magic_discovery'), 'hierarchy', 'path', 'ru', 'Обнаружение способностей'),
+  (ck_id('witcher_cc.hierarchy.magic_discovery'), 'hierarchy', 'path', 'en', 'Magic discovery'),
+  (ck_id('witcher_cc.hierarchy.magic_discovery_how'), 'hierarchy', 'path', 'ru', 'Как обнаружились'),
+  (ck_id('witcher_cc.hierarchy.magic_discovery_how'), 'hierarchy', 'path', 'en', 'How discovered'),
+  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'ru', 'Реакция людей'),
+  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'en', 'People reaction')
+ON CONFLICT (id, lang) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_family_size_mage' AS qu_id
+                , 'questions' AS entity)
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body') AS id
+         , meta.entity, 'body', v.lang, v.text
+      FROM (VALUES
+              ('ru', 'Определите размер семьи.'),
+              ('en', 'Determine your family size.')
+           ) AS v(lang, text)
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+, c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Размер семьи'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Family size')
+)
+, ins_c AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(c_vals.num, 'FM9900') ||'.'|| meta.entity ||'.column_name') AS id
+         , meta.entity, 'column_name', c_vals.lang, c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id
+     , meta.su_su_id
+     , NULL
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body')
+     , 'single_table'
+     , jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
+           FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.family')::text,
+           ck_id('witcher_cc.hierarchy.family_size')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_family_size_mage' AS qu_id
+                , 'answer_options' AS entity)
+, raw_data AS (
+  SELECT 'ru' AS lang, raw_ru.*
+    FROM (VALUES
+            (1, 'Крохотная', 10),
+            (2, 'Маленькая', 20),
+            (3, 'Средняя', 40),
+            (4, 'Большая', 20),
+            (5, 'Огромная', 10)
+         ) AS raw_ru(num, label_txt, probability)
+  UNION ALL
+  SELECT 'en' AS lang, raw_en.*
+    FROM (VALUES
+            (1, 'Tiny', 10),
+            (2, 'Small', 20),
+            (3, 'Medium', 40),
+            (4, 'Large', 20),
+            (5, 'Huge', 10)
+         ) AS raw_en(num, label_txt, probability)
+)
+, ins_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS id
+       , meta.entity, 'label', raw_data.lang
+       , '<td>' || to_char(raw_data.probability, 'FM990.00') || '%</td><td>' || raw_data.label_txt || '</td>'
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+, ins_lore_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.lore.family.size') AS id
+       , 'character', 'family_size', raw_data.lang, raw_data.label_txt
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+SELECT meta.qu_id || '_o' || to_char(raw_data.num, 'FM00') AS an_id
+     , meta.su_su_id
+     , meta.qu_id
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS label
+     , raw_data.num
+     , jsonb_build_object('probability', raw_data.probability)
+  FROM raw_data
+  CROSS JOIN meta
+ WHERE raw_data.lang = 'ru'
+ON CONFLICT (an_id) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_family_size_mage' AS qu_id)
+, nums AS (
+    SELECT generate_series(1, 5) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , meta.qu_id || '_o' || to_char(nums.num, 'FM00')
+     , jsonb_build_object(
+         'set',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.family.size'),
+           jsonb_build_object(
+             'i18n_uuid',
+             ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(nums.num, 'FM00') ||'.lore.family.size')::text
+           )
+         )
+       )
+  FROM nums
+  CROSS JOIN meta;
+
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
+SELECT 'wcc_past_homeland_mage', 'wcc_past_family_size_mage', 1;
+
+-- <<< END sql/013b_past_family_size_mage.sql
+
+-- >>> BEGIN sql/013c_past_family_personality_mage.sql
+
+\echo '013c_past_family_personality_mage.sql'
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_family_personality_mage' AS qu_id
+                , 'questions' AS entity)
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body') AS id
+         , meta.entity, 'body', v.lang, v.text
+      FROM (VALUES
+              ('ru', 'Определите характер семьи.'),
+              ('en', 'Determine your family personality.')
+           ) AS v(lang, text)
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+, c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Характер семьи'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Family personality')
+)
+, ins_c AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(c_vals.num, 'FM9900') ||'.'|| meta.entity ||'.column_name') AS id
+         , meta.entity, 'column_name', c_vals.lang, c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id
+     , meta.su_su_id
+     , NULL
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body')
+     , 'single_table'
+     , jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
+           FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.family')::text,
+           ck_id('witcher_cc.hierarchy.family_personality')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_family_personality_mage' AS qu_id
+                , 'answer_options' AS entity)
+, raw_data AS (
+  SELECT 'ru' AS lang, raw_ru.*
+    FROM (VALUES
+            (1, 'Консервативная', 1.0),
+            (2, 'Агрессивная', 1.0),
+            (3, 'Странная', 1.0),
+            (4, 'Добрая', 1.0),
+            (5, 'Депрессивная', 1.0),
+            (6, 'Строгая', 1.0),
+            (7, 'Незрелая', 1.0),
+            (8, 'Поддерживающая', 1.0),
+            (9, 'Дружная семья', 1.0),
+            (10, 'Спокойная', 1.0)
+         ) AS raw_ru(num, label_txt, probability)
+  UNION ALL
+  SELECT 'en' AS lang, raw_en.*
+    FROM (VALUES
+            (1, 'Conservative', 1.0),
+            (2, 'Aggressive', 1.0),
+            (3, 'Strange', 1.0),
+            (4, 'Kind', 1.0),
+            (5, 'Depressive', 1.0),
+            (6, 'Stern', 1.0),
+            (7, 'Immature', 1.0),
+            (8, 'Supportive', 1.0),
+            (9, 'Tight Knit', 1.0),
+            (10, 'Calm', 1.0)
+         ) AS raw_en(num, label_txt, probability)
+)
+, ins_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS id
+       , meta.entity, 'label', raw_data.lang
+       , '<td>' || to_char(raw_data.probability * 100, 'FM990.00') || '%</td><td>' || raw_data.label_txt || '</td>'
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+, ins_lore_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.lore.family.personality') AS id
+       , 'character', 'family_personality', raw_data.lang, raw_data.label_txt
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+SELECT meta.qu_id || '_o' || to_char(raw_data.num, 'FM00') AS an_id
+     , meta.su_su_id
+     , meta.qu_id
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS label
+     , raw_data.num
+     , jsonb_build_object('probability', raw_data.probability)
+  FROM raw_data
+  CROSS JOIN meta
+ WHERE raw_data.lang = 'ru'
+ON CONFLICT (an_id) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_family_personality_mage' AS qu_id)
+, nums AS (
+    SELECT generate_series(1, 10) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , meta.qu_id || '_o' || to_char(nums.num, 'FM00')
+     , jsonb_build_object(
+         'set',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.family.personality'),
+           jsonb_build_object(
+             'i18n_uuid',
+             ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(nums.num, 'FM00') ||'.lore.family.personality')::text
+           )
+         )
+       )
+  FROM nums
+  CROSS JOIN meta;
+
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
+SELECT 'wcc_past_family_size_mage', 'wcc_past_family_personality_mage', 1;
+
+-- <<< END sql/013c_past_family_personality_mage.sql
+
+-- >>> BEGIN sql/013d_past_family_status_mage.sql
+
+\echo '013d_past_family_status_mage.sql'
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_family_status_mage' AS qu_id
+                , 'questions' AS entity)
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body') AS id
+         , meta.entity, 'body', v.lang, v.text
+      FROM (VALUES
+              ('ru', 'Определите положение семьи.'),
+              ('en', 'Determine your family status.')
+           ) AS v(lang, text)
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+, c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Положение семьи'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Family status')
+)
+, ins_c AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(c_vals.num, 'FM9900') ||'.'|| meta.entity ||'.column_name') AS id
+         , meta.entity, 'column_name', c_vals.lang, c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id
+     , meta.su_su_id
+     , NULL
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body')
+     , 'single_table'
+     , jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
+           FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.family')::text,
+           ck_id('witcher_cc.hierarchy.family_status')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_family_status_mage' AS qu_id
+                , 'answer_options' AS entity)
+, raw_data AS (
+  SELECT 'ru' AS lang, raw_ru.*
+    FROM (VALUES
+            (1, 'Аристократы', 1.0),
+            (2, 'Ремесленники', 1.0),
+            (3, 'Рыцари', 1.0),
+            (4, 'Торговцы', 1.0),
+            (5, 'Крестьяне', 1.0),
+            (6, 'Рабы или преступники', 1.0),
+            (7, 'Священники', 1.0),
+            (8, 'Маги', 1.0),
+            (9, 'Артисты', 1.0),
+            (10, 'Ученые', 1.0)
+         ) AS raw_ru(num, label_txt, probability)
+  UNION ALL
+  SELECT 'en' AS lang, raw_en.*
+    FROM (VALUES
+            (1, 'Aristocracy', 1.0),
+            (2, 'Artisans', 1.0),
+            (3, 'Knights', 1.0),
+            (4, 'Merchants', 1.0),
+            (5, 'Peasants', 1.0),
+            (6, 'Slaves or Prisoners', 1.0),
+            (7, 'Priests', 1.0),
+            (8, 'Mages', 1.0),
+            (9, 'Entertainers', 1.0),
+            (10, 'Academics', 1.0)
+         ) AS raw_en(num, label_txt, probability)
+)
+, ins_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS id
+       , meta.entity, 'label', raw_data.lang
+       , '<td>' || to_char(raw_data.probability * 100, 'FM990.00') || '%</td><td>' || raw_data.label_txt || '</td>'
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+, ins_lore_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.lore.family.status') AS id
+       , 'character', 'family_status', raw_data.lang, raw_data.label_txt
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+SELECT meta.qu_id || '_o' || to_char(raw_data.num, 'FM00') AS an_id
+     , meta.su_su_id
+     , meta.qu_id
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS label
+     , raw_data.num
+     , jsonb_build_object('probability', raw_data.probability)
+  FROM raw_data
+  CROSS JOIN meta
+ WHERE raw_data.lang = 'ru'
+ON CONFLICT (an_id) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_family_status_mage' AS qu_id)
+, nums AS (
+    SELECT generate_series(1, 10) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , meta.qu_id || '_o' || to_char(nums.num, 'FM00')
+     , jsonb_build_object(
+         'set',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.family.status'),
+           jsonb_build_object(
+             'i18n_uuid',
+             ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(nums.num, 'FM00') ||'.lore.family.status')::text
+           )
+         )
+       )
+  FROM nums
+  CROSS JOIN meta;
+
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
+SELECT 'wcc_past_family_personality_mage', 'wcc_past_family_status_mage', 1;
+
+-- <<< END sql/013d_past_family_status_mage.sql
+
+-- >>> BEGIN sql/013e_past_magic_discovery_how.sql
+
+\echo '013e_past_magic_discovery_how.sql'
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_magic_discovery_how' AS qu_id
+                , 'questions' AS entity)
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body') AS id
+         , meta.entity, 'body', v.lang, v.text
+      FROM (VALUES
+              ('ru', 'Как обнаружились ваши способности?'),
+              ('en', 'How were your powers discovered?')
+           ) AS v(lang, text)
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+, c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Эффект'),
+      ('ru', 3, 'Событие'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Effect'),
+      ('en', 3, 'Event')
+)
+, ins_c AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(c_vals.num, 'FM9900') ||'.'|| meta.entity ||'.column_name') AS id
+         , meta.entity, 'column_name', c_vals.lang, c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id
+     , meta.su_su_id
+     , NULL
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body')
+     , 'single_table'
+     , jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
+           FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.magic_discovery')::text,
+           ck_id('witcher_cc.hierarchy.magic_discovery_how')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_magic_discovery_how' AS qu_id
+                , 'answer_options' AS entity)
+, raw_data AS (
+  SELECT 'ru' AS lang, raw_ru.*
+    FROM (VALUES
+            (1,  '-3 к Реакции Людей', '<b>Катастрофа</b><br>Открытие вашей магии было связано с ужасной катастрофой, когда вы были молоды. Однажды, не подозревая о своей связи с Хаосом, вы позволили своим эмоциям взять над вами верх. Возможно, вы сожгли своих родителей заживо, вызвали обвал или заморозили другого ребенка.', 1.0),
+            (2,  '-2 к Реакции Людей', '<b>Случайное проклятие</b><br>Открытие твоей магии было связано с мощной ненавистью. Даже не планируя этого, вы набросились на кого-то в раннем детстве и прокляли его. Ведьмак мог снять проклятие, а может быть, оно до сих пор преследует их.', 1.0),
+            (3,  NULL, '<b>Обнаружен магом</b><br>Когда вы были молоды, к вам домой пришел маг и поговорил наедине с вашими родителями. Он объяснил твоим родителям, что у тебя магический дар и без должной подготовки ты станешь опасен для всех.', 1.0),
+            (4,  NULL, '<b>Вдохновлен магом</b><br>Однажды вы попали на демонстрацию странствующего мага, который показал вам чудеса магии. После демонстрации мага вы попытались скопировать их и обнаружили, что у вас есть дар. Твое вдохновение изучать магию полностью соответствовало планам мага.', 1.0),
+            (5,  NULL, '<b>Ужасающее магическое развитие</b><br>Ваша магия развивалась в виде небольшой магической черты и расширялась оттуда. Однажды вы применили небольшой магический эффект во время игры, и это событие вас чертовски напугало. Вы понятия не имели, как это произошло или что может случиться, если вы попытаетесь сделать это снова.', 1.0),
+            (6,  NULL, '<b>Радостное магическое развитие</b><br>Ваша магия развивалась в виде небольшой магической черты и расширялась оттуда. Однажды вы поняли как выполнить небольшой магический эффект, и быстро продемонстрировали его своей семье и друзьям.', 1.0),
+            (7,  NULL, '<b>Насильно завербован магом</b><br>Странствующий маг увидел в вас потенциал и решил взять вас на обучение. Они могли запугать вашу семью, чтобы она выдала вас, или они могли украсть вас напрямую. Но в итоге тебя взяли на тренировку против твоей воли.', 1.0),
+            (8,  NULL, '<b>Выкуплен магом</b><br>Странствующий маг увидел ваш потенциал, проезжая через родной город, и сделал предложение вашим родителям. Ты можешь даже не знать, сколько ты стоишь для своих родителей, но когда цена была согласована, и маг забрал тебя.', 1.0),
+            (9,  '-2 к Реакции Людей', '<b>Проклятие, порожденное ненавистью</b><br>Ваш дар проявился, когда вы прокляли кого-то в своем родном городе. Злоба, которую вы держали против этого человека, росла и гнилась прямо под поверхностью, пока в конце концов не стала достаточно мощной, чтобы привлечь магию извне и не сформировала ужасное проклятие.', 1.0),
+            (10, '-3 к Реакции Людей', '<b>Катастрофа</b><br>Вы узнали, что обладаете магическими способностями в юном возрасте, но скрывали это и пытались учиться самостоятельно. Неизбежно это имело неприятные последствия. Возможно, вы подожгли свой семейный дом, вызвали наводнение или вызвали опасную бурю. Так или иначе, все рухнуло.', 1.0)
+         ) AS raw_ru(num, effect_txt, event_html, probability)
+  UNION ALL
+  SELECT 'en' AS lang, raw_en.*
+    FROM (VALUES
+            (1,  '-3 to People Reaction', '<b>Catastrophe</b><br>The discovery of your magic was tied to an unfortunate catastrophe when you were young. One day, unaware of your connection to Chaos, you let your emotions get the better of you. You may have burned your parents alive, triggered a cave-in, or frozen another child solid.', 1.0),
+            (2,  '-2 to People Reaction', '<b>Accidental Curse</b><br>The discovery of your magic was tied to a powerful hatred. Without really planning on it, you lashed out at someone in your early childhood and cursed them. A witcher may have lifted the curse-or maybe it still plagues them to this day.', 1.0),
+            (3,  NULL, '<b>Discovered by a Mage</b><br>When you were young, a mage came to your home and spoke with your parents privately. They explained to your parents that you had a magical gift and without proper training you would become a danger to everyone.', 1.0),
+            (4,  NULL, '<b>Inspired by a Mage</b><br>One day you were treated to a demonstration by a traveling mage who showed you the wonders of magic. After the mage''s demonstration, you tried to copy them and found that you had a gift. Your inspiration to study magic was all according to the plans of the mage.', 1.0),
+            (5,  NULL, '<b>Terrifying Magical Development</b><br>Your magic developed in the form of a small magical trait and expanded from there. One day you performed a small magical effect while playing and the event scared the hell out of you. You had no idea how it happened or what might happen if you tried to do it again.', 1.0),
+            (6,  NULL, '<b>Joyous Magical Development</b><br>Your magic developed in the form of a small magical trait and expanded from there. One day you figured out how to perform a small magical effect and you quickly showed it off to your family and friends.', 1.0),
+            (7,  NULL, '<b>Press-ganged by a Mage</b><br>A traveling mage saw potential in you and decided it was their duty to take you away to train. They may have intimidated your family into giving you over, or they may have directly stolen you. But in the end, you were taken to train against your will.', 1.0),
+            (8,  NULL, '<b>Bought by a Mage</b><br>A traveling mage saw your potential while passing through your hometown and made an offer to your parents. You may not even know how much you were worth to your parents, but a price was agreed upon and you were taken away by the mage.', 1.0),
+            (9,  '-2 to People Reaction', '<b>Grudge-born Curse</b><br>Your gift became apparent when you cursed someone in your hometown. A grudge you held against this person grew and festered just below the surface until it eventually became powerful enough to draw magic from the beyond and formed a terrible curse.', 1.0),
+            (10, '-3 to People Reaction', '<b>Catastrophe</b><br>You learned you had magical capability at a young age but kept it hidden and tried to study on your own. Inevitably this backfired. You may have set fire to your family home, caused a flood, or summoned a dangerous storm. Either way, everything came crashing down.', 1.0)
+         ) AS raw_en(num, effect_txt, event_html, probability)
+)
+, lore_data AS (
+  SELECT 'ru' AS lang, raw_ru.*
+    FROM (VALUES
+            (1,  'Катастрофа', 'Открытие вашей магии было связано с ужасной катастрофой, когда вы были молоды.'),
+            (2,  'Случайное проклятие', 'Открытие твоей магии было связано с мощной ненавистью.'),
+            (3,  'Обнаружен магом', 'К вам домой пришел маг и объяснил вашим родителям, что у вас магический дар.'),
+            (4,  'Вдохновлен магом', 'После демонстрации странствующего мага вы обнаружили у себя дар.'),
+            (5,  'Ужасающее магическое развитие', 'Первый магический эффект во время игры вас сильно напугал.'),
+            (6,  'Радостное магическое развитие', 'Вы поняли, как выполнить небольшой магический эффект, и показали его семье и друзьям.'),
+            (7,  'Насильно завербован магом', 'Маг увидел в вас потенциал и забрал вас на обучение против воли.'),
+            (8,  'Выкуплен магом', 'Маг договорился с вашими родителями и забрал вас на обучение.'),
+            (9,  'Проклятие, порожденное ненавистью', 'Ваш дар проявился как сильное проклятие из личной вражды.'),
+            (10, 'Катастрофа', 'Вы пытались тайно изучать магию, и это привело к катастрофическим последствиям.')
+         ) AS raw_ru(num, short_title, short_description)
+  UNION ALL
+  SELECT 'en' AS lang, raw_en.*
+    FROM (VALUES
+            (1,  'Catastrophe', 'The discovery of your magic was tied to an unfortunate catastrophe when you were young.'),
+            (2,  'Accidental Curse', 'The discovery of your magic was tied to a powerful hatred.'),
+            (3,  'Discovered by a Mage', 'A mage came to your home and explained your magical gift to your parents.'),
+            (4,  'Inspired by a Mage', 'You discovered your gift after a traveling mage''s demonstration.'),
+            (5,  'Terrifying Magical Development', 'Your first magical effect happened in play and frightened you badly.'),
+            (6,  'Joyous Magical Development', 'You figured out a small magical effect and quickly showed your family and friends.'),
+            (7,  'Press-ganged by a Mage', 'A mage saw your potential and took you away for training against your will.'),
+            (8,  'Bought by a Mage', 'A mage made a deal with your parents and took you away to train.'),
+            (9,  'Grudge-born Curse', 'Your gift appeared as a powerful curse born from hatred.'),
+            (10, 'Catastrophe', 'You studied magic in secret and it ended in disaster.')
+         ) AS raw_en(num, short_title, short_description)
+)
+, ins_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS id
+       , meta.entity, 'label', raw_data.lang
+       , '<td>' || to_char(raw_data.probability * 100, 'FM990.00') || '%</td><td>' || coalesce(raw_data.effect_txt, '') || '</td><td>' || raw_data.event_html || '</td>'
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+, ins_lore_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(lore_data.num, 'FM00') ||'.lore.discovery_how') AS id
+       , 'effects', 'discovery_how', lore_data.lang, '<b>' || lore_data.short_title || '</b><br>' || lore_data.short_description
+    FROM lore_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+SELECT meta.qu_id || '_o' || to_char(raw_data.num, 'FM00') AS an_id
+     , meta.su_su_id
+     , meta.qu_id
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS label
+     , raw_data.num
+     , jsonb_build_object('probability', raw_data.probability)
+  FROM raw_data
+  CROSS JOIN meta
+ WHERE raw_data.lang = 'ru'
+ON CONFLICT (an_id) DO NOTHING;
+
+WITH meta AS (
+  SELECT 'witcher_cc' AS su_su_id
+       , 'wcc_past_magic_discovery_how' AS qu_id
+)
+, nums AS (
+  SELECT generate_series(1, 10) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  meta.qu_id || '_o' || to_char(nums.num, 'FM00') AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.discovery_how'),
+      jsonb_build_object(
+        'i18n_uuid',
+        ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(nums.num, 'FM00') ||'.lore.discovery_how')::text
+      )
+    )
+  ) AS body
+FROM nums
+CROSS JOIN meta;
+
+-- Эффект: модификатор броска для "Реакция людей" (-3/-2/0), нормализованный под 6 равных исходов
+WITH
+  meta AS (
+    SELECT 'wcc_past_magic_discovery_how' AS qu_id
+  )
+, mods AS (
+    SELECT *
+      FROM (VALUES
+              (1,  -0.5::numeric),          -- -3 к броску d6
+              (2,  -0.3333333333::numeric), -- -2 к броску d6
+              (3,   0.0::numeric),
+              (4,   0.0::numeric),
+              (5,   0.0::numeric),
+              (6,   0.0::numeric),
+              (7,   0.0::numeric),
+              (8,   0.0::numeric),
+              (9,  -0.3333333333::numeric), -- -2 к броску d6
+              (10, -0.5::numeric)           -- -3 к броску d6
+           ) v(num, dice_modifier)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character' AS scope,
+  meta.qu_id || '_o' || to_char(mods.num, 'FM00') AS an_an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'values.byQuestion.wcc_past_magic_discovery_how'),
+      mods.dice_modifier
+    )
+  ) AS body
+FROM mods
+CROSS JOIN meta;
+
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
+SELECT 'wcc_past_family_status_mage', 'wcc_past_magic_discovery_how', 1;
+
+-- <<< END sql/013e_past_magic_discovery_how.sql
+
+-- >>> BEGIN sql/013f_past_magic_reaction.sql
+
+\echo '013f_past_magic_reaction.sql'
+
+-- Visibility rules by homeland branch
+WITH north_ids AS (
+  SELECT unnest(ARRAY[
+    'wcc_past_homeland_mage_o01','wcc_past_homeland_mage_o02','wcc_past_homeland_mage_o03','wcc_past_homeland_mage_o04',
+    'wcc_past_homeland_mage_o05','wcc_past_homeland_mage_o06','wcc_past_homeland_mage_o07','wcc_past_homeland_mage_o08',
+    'wcc_past_homeland_mage_o09','wcc_past_homeland_mage_o10','wcc_past_homeland_mage_o11'
+  ]) AS an_id
+), nilf_ids AS (
+  SELECT unnest(ARRAY[
+    'wcc_past_homeland_mage_o12','wcc_past_homeland_mage_o13','wcc_past_homeland_mage_o14','wcc_past_homeland_mage_o15',
+    'wcc_past_homeland_mage_o16','wcc_past_homeland_mage_o17','wcc_past_homeland_mage_o18','wcc_past_homeland_mage_o19',
+    'wcc_past_homeland_mage_o20','wcc_past_homeland_mage_o21','wcc_past_homeland_mage_o22','wcc_past_homeland_mage_o23',
+    'wcc_past_homeland_mage_o24'
+  ]) AS an_id
+), elder_ids AS (
+  SELECT unnest(ARRAY['wcc_past_homeland_mage_o25','wcc_past_homeland_mage_o26']) AS an_id
+)
+INSERT INTO rules (ru_id, name, body)
+SELECT ck_id('witcher_cc.rules.is_mage_reaction_north'), 'is_mage_reaction_north',
+       jsonb_build_object(
+         'or',
+         (SELECT jsonb_agg(
+            jsonb_build_object(
+              'in',
+              jsonb_build_array(
+                n.an_id,
+                jsonb_build_object('var', jsonb_build_array('answers.byQuestion.wcc_past_homeland_mage', jsonb_build_array()))
+              )
+            )
+          ) FROM north_ids n)
+       )
+UNION ALL
+SELECT ck_id('witcher_cc.rules.is_mage_reaction_nilfgaard'), 'is_mage_reaction_nilfgaard',
+       jsonb_build_object(
+         'or',
+         (SELECT jsonb_agg(
+            jsonb_build_object(
+              'in',
+              jsonb_build_array(
+                n.an_id,
+                jsonb_build_object('var', jsonb_build_array('answers.byQuestion.wcc_past_homeland_mage', jsonb_build_array()))
+              )
+            )
+          ) FROM nilf_ids n)
+       )
+UNION ALL
+SELECT ck_id('witcher_cc.rules.is_mage_reaction_elderlands'), 'is_mage_reaction_elderlands',
+       jsonb_build_object(
+         'or',
+         (SELECT jsonb_agg(
+            jsonb_build_object(
+              'in',
+              jsonb_build_array(
+                n.an_id,
+                jsonb_build_object('var', jsonb_build_array('answers.byQuestion.wcc_past_homeland_mage', jsonb_build_array()))
+              )
+            )
+          ) FROM elder_ids n)
+       )
+ON CONFLICT (ru_id) DO UPDATE SET body = EXCLUDED.body;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_magic_reaction' AS qu_id
+                , 'questions' AS entity)
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body') AS id
+         , meta.entity, 'body', v.lang, v.text
+      FROM (VALUES
+              ('ru', 'Как люди реагировали на вашу магию?'),
+              ('en', 'How did people react to your magic?')
+           ) AS v(lang, text)
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+, c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Реакция'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Reaction')
+)
+, ins_c AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(c_vals.num, 'FM9900') ||'.'|| meta.entity ||'.column_name') AS id
+         , meta.entity, 'column_name', c_vals.lang, c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id
+     , meta.su_su_id
+     , NULL
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body')
+     , 'single_table'
+     , jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
+           FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'diceModifier', jsonb_build_object(
+           'jsonlogic_expression', jsonb_build_object(
+             'var', 'values.byQuestion.wcc_past_magic_discovery_how'
+           )
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.magic_discovery')::text,
+           ck_id('witcher_cc.hierarchy.magic_reaction')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_magic_reaction' AS qu_id
+                , 'answer_options' AS entity)
+, raw_data AS (
+  SELECT 'ru' AS lang, raw_ru.*
+    FROM (VALUES
+            (1,1,'Твоя семья бросила тебя',1.0),
+            (1,2,'Твоя семья ужасно боялась тебя',1.0),
+            (1,3,'Ваша семья пыталась продать вас семье с высоким положением',1.0),
+            (1,4,'Твоя семья немедленно отправила тебя в Аретузу или Бан Ард',1.0),
+            (1,5,'Твоя семья пыталась игнорировать твой дар',1.0),
+            (1,6,'Ваша семья и друзья обрадовались твоему таланту',1.0),
+            (2,1,'Твоя семья ужасно боялась тебя',1.0),
+            (2,2,'Твоя семья пыталась игнорировать твой дар',1.0),
+            (2,3,'Твоя семья немедленно отправила тебя учиться',1.0),
+            (2,4,'Твои братья, сестры и друзья стали ужасно ревнивыми',1.0),
+            (2,5,'Твоя семья подтолкнула тебя стать великим магом',1.0),
+            (2,6,'Ваша семья и друзья обрадовались твоему таланту',1.0),
+            (3,1,'Твоя семья отправила тебя в церковь',1.0),
+            (3,2,'Твоя семья немедленно отправила тебя в Гвейсон Хайл',1.0),
+            (3,3,'Твоя семья подтолкнула тебя к изучению магии и участию в политике',1.0),
+            (3,4,'Твоя семья пыталась использовать твою силу для себя',1.0),
+            (3,5,'Твоя семья ужасно боялась тебя',1.0),
+            (3,6,'Ваша семья и друзья обрадовались твоему таланту',1.0)
+         ) AS raw_ru(group_id, num, reaction_txt, probability)
+  UNION ALL
+  SELECT 'en' AS lang, raw_en.*
+    FROM (VALUES
+            (1,1,'Your family cast you out',1.0),
+            (1,2,'Your family became terribly scared of you',1.0),
+            (1,3,'Your family tried to sell you to a family of high standing',1.0),
+            (1,4,'Your family immediately sent you to Aretuza or Ban Ard',1.0),
+            (1,5,'Your family tried to ignore your gift',1.0),
+            (1,6,'Your family and friends celebrated your talent',1.0),
+            (2,1,'Your family became terribly scared of you',1.0),
+            (2,2,'Your family tried to ignore your gift',1.0),
+            (2,3,'Your family sent you to train immediately',1.0),
+            (2,4,'Your siblings and friends became horribly jealous',1.0),
+            (2,5,'Your family pushed you to become a great mage',1.0),
+            (2,6,'Your family and friends celebrated your talent',1.0),
+            (3,1,'Your family sent you to the church',1.0),
+            (3,2,'Your family immediately sent you to Gweison Haul',1.0),
+            (3,3,'Your family pushed you to study magic and get into politics',1.0),
+            (3,4,'Your family tried to use your power for themselves',1.0),
+            (3,5,'Your family became terribly scared of you',1.0),
+            (3,6,'Your family and friends celebrated your talent',1.0)
+         ) AS raw_en(group_id, num, reaction_txt, probability)
+)
+, ins_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * raw_data.group_id + raw_data.num, 'FM0000') ||'.'|| meta.entity ||'.label') AS id
+       , meta.entity, 'label', raw_data.lang
+       , '<td>' || to_char(raw_data.probability * 100, 'FM990.00') || '%</td><td>' || raw_data.reaction_txt || '</td>'
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+, ins_lore_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * raw_data.group_id + raw_data.num, 'FM0000') ||'.lore.people_reaction') AS id
+       , 'character', 'people_reaction', raw_data.lang, raw_data.reaction_txt
+    FROM raw_data
+    CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
+SELECT meta.qu_id || '_o' || to_char(raw_data.group_id, 'FM00') || to_char(raw_data.num, 'FM00') AS an_id
+     , meta.su_su_id
+     , meta.qu_id
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * raw_data.group_id + raw_data.num, 'FM0000') ||'.'|| meta.entity ||'.label') AS label
+     , raw_data.num
+     , CASE raw_data.group_id
+         WHEN 1 THEN ck_id('witcher_cc.rules.is_mage_reaction_north')
+         WHEN 2 THEN ck_id('witcher_cc.rules.is_mage_reaction_nilfgaard')
+         WHEN 3 THEN ck_id('witcher_cc.rules.is_mage_reaction_elderlands')
+       END
+     , jsonb_build_object('probability', raw_data.probability)
+  FROM raw_data
+  CROSS JOIN meta
+ WHERE raw_data.lang = 'ru'
+ON CONFLICT (an_id) DO NOTHING;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_past_magic_reaction' AS qu_id)
+, nums AS (
+  SELECT group_id, num
+    FROM (VALUES
+            (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),
+            (2,1),(2,2),(2,3),(2,4),(2,5),(2,6),
+            (3,1),(3,2),(3,3),(3,4),(3,5),(3,6)
+         ) v(group_id, num)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character' AS scope
+     , meta.qu_id || '_o' || to_char(nums.group_id, 'FM00') || to_char(nums.num, 'FM00') AS an_an_id
+     , jsonb_build_object(
+         'set',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.people_reaction'),
+           jsonb_build_object(
+             'i18n_uuid',
+             ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * nums.group_id + nums.num, 'FM0000') ||'.lore.people_reaction')::text
+           )
+         )
+       ) AS body
+  FROM nums
+ CROSS JOIN meta;
+
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
+SELECT 'wcc_past_magic_discovery_how', 'wcc_past_magic_reaction', 1;
+
+-- <<< END sql/013f_past_magic_reaction.sql
 
 -- >>> BEGIN sql/014_past_family.sql
 
