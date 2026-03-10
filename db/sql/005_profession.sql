@@ -22,8 +22,4 @@ SELECT meta.qu_id
 
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
-  SELECT 'wcc_race', 'wcc_profession';
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
-  SELECT 'wcc_witcher_school', 'wcc_profession';
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
-  SELECT 'wcc_gnome_craft_skills', 'wcc_profession', 0;
+  SELECT 'wcc_sex', 'wcc_profession';

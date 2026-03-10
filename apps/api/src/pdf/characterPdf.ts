@@ -878,7 +878,7 @@ function buildVmWithCatalog(
   const baseRows = [
     { label: tx.labels.name, value: text(resolved.name) },
     { label: tx.labels.race, value: text(resolved.race) },
-    { label: tx.labels.gender, value: text(resolved.gender) },
+    { label: tx.labels.gender, value: text(resolved.sex ?? raw.sex) },
     { label: tx.labels.age, value: text(resolved.age) },
     { label: tx.labels.profession, value: text(resolved.profession ?? logic.profession ?? logic.profession_code) },
   ];

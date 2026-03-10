@@ -45,7 +45,8 @@ SELECT meta.qu_id
            FROM (SELECT DISTINCT num FROM c_vals) AS cols
          ),
          'path', jsonb_build_array(
-           ck_id('witcher_cc.hierarchy.witcher')::text,
+           ck_id('witcher_cc.hierarchy.identity')::text,
+           ck_id('witcher_cc.hierarchy.race')::text,
            ck_id('witcher_cc.hierarchy.witcher_school')::text
          )
        )

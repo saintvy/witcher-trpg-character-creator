@@ -592,6 +592,14 @@ export default function BuilderPage() {
     }
   }, [question, questionMetadata, state, options, getDefaultMultipleAnswerIds]);
 
+  useEffect(() => {
+    if (!question || question.qtype !== "drop_down_detailed") return;
+    if (options.length !== 1) return;
+    const onlyOptionId = options[0]?.id ?? null;
+    if (!onlyOptionId) return;
+    setSelectedDropDownOptionId(onlyOptionId);
+  }, [question, options]);
+
   // Применяем ограничения min/max к текущему значению при изменении min/max
   // НЕ применяем при изменении valueNumber, чтобы не блокировать ввод
   useEffect(() => {
