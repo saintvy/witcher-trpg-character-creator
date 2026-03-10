@@ -1016,6 +1016,12 @@ body {
     font-size: 12px;
 }
 
+.survey-table-single-table th:first-child,
+.survey-table-single-table td:first-child {
+    width: 1%;
+    white-space: nowrap;
+}
+
 .survey-actions {
     display: flex;
     gap: 0.5rem;

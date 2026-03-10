@@ -2071,7 +2071,7 @@ export default function BuilderPage() {
 
                 {!shopConfig && question.qtype === "single_table" && (
                   <div style={{ overflowX: "auto" }}>
-                    <table className="survey-table">
+                    <table className="survey-table survey-table-single-table">
                       {tableColumns.length > 0 && (
                         <thead>
                           <tr>
