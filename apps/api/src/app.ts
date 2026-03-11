@@ -545,10 +545,7 @@ function extractCharacterSummary(rawCharacter: unknown): {
   professionCode: string | null;
 } {
   const raw = asRecord(rawCharacter);
-  const logicFields =
-    asRecord(raw?.logicFields) ??
-    asRecord(raw?.logic_fields) ??
-    null;
+  const logicFields = asRecord(raw?.logicFields) ?? null;
 
   const name =
     readStringAt(raw, 'name') ??

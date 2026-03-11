@@ -289,9 +289,7 @@ export function ShopRenderer(props: {
     if (!isProfessionalShop || !professionalHeader) return [];
     const logicFields = isRecord((state as any)?.characterRaw?.logicFields)
       ? ((state as any).characterRaw.logicFields as Record<string, unknown>)
-      : isRecord((state as any)?.characterRaw?.logic_fields)
-        ? ((state as any).characterRaw.logic_fields as Record<string, unknown>)
-        : null;
+      : null;
     return [
       {
         label: professionalHeader.nameLabel,

@@ -86,8 +86,6 @@ SELECT ck_id('witcher_cc.hierarchy.' || v.path) AS id
           ('attitude', 'en', 'Attitude'),
           ('personality', 'ru', 'Основная черта характера'),
           ('personality', 'en', 'Personality'),
-          ('life_path', 'ru', 'Жизненный путь'),
-          ('life_path', 'en', 'Life path'),
           ('friend', 'ru', 'Друг'),
           ('friend', 'en', 'Friend'),
           ('life_events', 'ru', 'Ключевые события в жизни'),

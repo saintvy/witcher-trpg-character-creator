@@ -29,33 +29,24 @@ SELECT
   ck_id('witcher_cc.rules.is_mentor_school_aretuza'),
   'is_mentor_school_aretuza',
   jsonb_build_object(
-    'or',
-    jsonb_build_array(
-      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logic_fields.school'), 'aretuza')),
-      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.school'), 'aretuza'))
-    )
+    '==',
+    jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.school'), 'aretuza')
   )
 UNION ALL
 SELECT
   ck_id('witcher_cc.rules.is_mentor_school_ban_ard'),
   'is_mentor_school_ban_ard',
   jsonb_build_object(
-    'or',
-    jsonb_build_array(
-      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logic_fields.school'), 'ban_ard')),
-      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.school'), 'ban_ard'))
-    )
+    '==',
+    jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.school'), 'ban_ard')
   )
 UNION ALL
 SELECT
   ck_id('witcher_cc.rules.is_mentor_school_minor'),
   'is_mentor_school_minor',
   jsonb_build_object(
-    'or',
-    jsonb_build_array(
-      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logic_fields.school'), 'minor_academia')),
-      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.school'), 'minor_academia'))
-    )
+    '==',
+    jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.school'), 'minor_academia')
   )
 UNION ALL
 SELECT
@@ -64,9 +55,7 @@ SELECT
   jsonb_build_object(
     'or',
     jsonb_build_array(
-      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logic_fields.school'), 'gweison_haul')),
       jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.school'), 'gweison_haul')),
-      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logic_fields.school'), 'imperial_magic_academy')),
       jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.school'), 'imperial_magic_academy'))
     )
   )
@@ -205,4 +194,3 @@ SELECT 'character'
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
 SELECT 'wcc_past_magic_reaction', 'wcc_past_mentor_presence', 1;
-

@@ -69,18 +69,12 @@ homeland_exprs AS (
 sex_exprs AS (
   SELECT
     jsonb_build_object(
-      'or',
-      jsonb_build_array(
-        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.sex'), 'Female')),
-        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logic_fields.sex'), 'Female'))
-      )
+      '==',
+      jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.sex'), 'Female')
     ) AS female_expr,
     jsonb_build_object(
-      'or',
-      jsonb_build_array(
-        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.sex'), 'Male')),
-        jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logic_fields.sex'), 'Male'))
-      )
+      '==',
+      jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.sex'), 'Male')
     ) AS male_expr
 )
 INSERT INTO rules (ru_id, name, body)
@@ -370,8 +364,8 @@ SELECT
   meta.qu_id || '_o' || to_char(option_map.num, 'FM00') AS an_an_id,
   jsonb_build_object(
     'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'characterRaw.logic_fields.school'),
+      jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.logicFields.school'),
       option_map.school_code
     )
   ) AS body

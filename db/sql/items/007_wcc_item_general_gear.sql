@@ -74,6 +74,8 @@ WITH raw_data (
   ('T034','general_gear.group.food','Пища','Food','Сухой паёк (на 1 день)','Trail Rations (1 day)','','','core','',1,5,''),
   ('T035','general_gear.group.jewerly','','','Амулет с самоцветом','Amulet, Gemstone','Фокусирующее (3)','Focus (3).','core','concealment.S',0.1,500,'availability.R'),
   ('T036','general_gear.group.jewerly','','','Простой амулет','Amulet, Simple','Фокусирующее (1)','Focus (1).','core','concealment.S',0.1,250,'availability.R'),
+  ('T147','general_gear.group.jewerly','','','Фокусирующий амулет','Amulet, Focusing','Фокусирующее (2)','Focus (2).','core','concealment.S',0.1,350,'availability.R'),
+  ('T148','general_gear.group.standard','Ритуалы','Rituals','Магическая формула','Spell Formulae','При использовании формулы добавляется бонус +2 при попытке выучить указанное в формуле заклинание, инвокацию, знак или ритуал. Проверка Образования или Магического Познания со СЛ14 для понимания природы этого предмета.','Using a formula grants a +2 bonus when attempting to learn the spell, invocation, sign, or ritual specified in the formula. An Education or Magical Training check at DC 14 is required to understand the nature of this item.','core','concealment.S',0.1,0,''),
   ('T037','general_gear.group.jewerly','','','Позолота','Gilding','Для оружия и брони. +1 к репутации (не стакается).','For weapons and armor. +1 to reputation (doesn''t stack).','exp_lal','',0.5,100,''),
   ('T038','general_gear.group.jewerly','','','Украшения','Jewelry','','','core','',0.5,50,''),
   ('T039','general_gear.group.jewerly','','','Совершенный самоцвет','Perfect Gemstone','','','core','',0.1,1000,'availability.R'),

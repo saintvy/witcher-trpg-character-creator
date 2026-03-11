@@ -863,7 +863,7 @@ function buildVmWithCatalog(
   const stats = asRecord(resolved.statistics) ?? {};
   const rawStats = asRecord(raw.statistics) ?? {};
   const calc = asRecord(stats.calculated) ?? {};
-  const logic = asRecord(raw.logicFields) ?? asRecord(raw.logic_fields) ?? {};
+  const logic = asRecord(raw.logicFields) ?? {};
   const defining = asRecord(asRecord(resolved.skills)?.defining);
   const skillsCommon = asRecord(asRecord(resolved.skills)?.common) ?? {};
   const rawSkillsCommon = asRecord(asRecord(raw.skills)?.common) ?? skillsCommon;
