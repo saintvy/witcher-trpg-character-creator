@@ -43,6 +43,28 @@ SELECT meta.qu_id
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
          'path', jsonb_build_array(
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
            ck_id('witcher_cc.hierarchy.mentor')::text,
            ck_id('witcher_cc.hierarchy.mentor_relationship_end')::text
          )
@@ -107,6 +129,22 @@ SELECT meta.qu_id || '_o' || to_char(raw_data.num, 'FM00') AS an_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS label
      , raw_data.num
      , jsonb_build_object('probability', raw_data.probability)
+       || jsonb_build_object(
+            'counterIncrement',
+            jsonb_build_object(
+              'jsonlogic_expression',
+              jsonb_build_object(
+                'if',
+                jsonb_build_array(
+                  jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+                  jsonb_build_array(
+                    jsonb_build_object('id', 'lifeEventsCounter', 'step', 10)
+                  ),
+                  jsonb_build_array()
+                )
+              )
+            )
+          )
   FROM raw_data
  CROSS JOIN meta
  WHERE raw_data.lang = 'ru'
@@ -136,4 +174,3 @@ SELECT 'character'
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
 SELECT 'wcc_past_mentor_key_event', 'wcc_past_mentor_relationship_end', 1;
-

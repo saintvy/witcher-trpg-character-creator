@@ -17897,6 +17897,28 @@ SELECT meta.qu_id
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
          'path', jsonb_build_array(
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
            ck_id('witcher_cc.hierarchy.mentor')::text,
            ck_id('witcher_cc.hierarchy.mentor_personality')::text
          )
@@ -17997,7 +18019,6 @@ SELECT 'wcc_past_mentor_presence', 'wcc_past_mentor_personality', v.an_id, 1
           ('wcc_past_mentor_presence_o07')
        ) AS v(an_id);
 
-
 -- <<< END sql/025_past_mentor_personality.sql
 
 -- >>> BEGIN sql/026_past_mentor_value.sql
@@ -18047,6 +18068,28 @@ SELECT meta.qu_id
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
          'path', jsonb_build_array(
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
            ck_id('witcher_cc.hierarchy.mentor')::text,
            ck_id('witcher_cc.hierarchy.mentor_value')::text
          )
@@ -18141,7 +18184,6 @@ SELECT 'character'
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
 SELECT 'wcc_past_mentor_personality', 'wcc_past_mentor_value', 1;
 
-
 -- <<< END sql/026_past_mentor_value.sql
 
 -- >>> BEGIN sql/027_past_mentor_lifestyle.sql
@@ -18191,6 +18233,28 @@ SELECT meta.qu_id
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
          'path', jsonb_build_array(
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
            ck_id('witcher_cc.hierarchy.mentor')::text,
            ck_id('witcher_cc.hierarchy.mentor_lifestyle')::text
          )
@@ -18285,7 +18349,6 @@ SELECT 'character'
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
 SELECT 'wcc_past_mentor_value', 'wcc_past_mentor_lifestyle', 1;
 
-
 -- <<< END sql/027_past_mentor_lifestyle.sql
 
 -- >>> BEGIN sql/028_past_mentor_hatred.sql
@@ -18335,6 +18398,28 @@ SELECT meta.qu_id
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
          'path', jsonb_build_array(
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
            ck_id('witcher_cc.hierarchy.mentor')::text,
            ck_id('witcher_cc.hierarchy.mentor_hatred')::text
          )
@@ -18429,7 +18514,6 @@ SELECT 'character'
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
 SELECT 'wcc_past_mentor_lifestyle', 'wcc_past_mentor_hatred', 1;
 
-
 -- <<< END sql/028_past_mentor_hatred.sql
 
 -- >>> BEGIN sql/029_past_mentor_teaching_style.sql
@@ -18479,6 +18563,28 @@ SELECT meta.qu_id
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
          'path', jsonb_build_array(
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
            ck_id('witcher_cc.hierarchy.mentor')::text,
            ck_id('witcher_cc.hierarchy.mentor_teaching_style')::text
          )
@@ -18565,7 +18671,6 @@ SELECT 'character'
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
 SELECT 'wcc_past_mentor_hatred', 'wcc_past_mentor_teaching_style', 1;
 
-
 -- <<< END sql/029_past_mentor_teaching_style.sql
 
 -- >>> BEGIN sql/030_past_mentor_key_event.sql
@@ -18615,6 +18720,28 @@ SELECT meta.qu_id
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
          'path', jsonb_build_array(
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
            ck_id('witcher_cc.hierarchy.mentor')::text,
            ck_id('witcher_cc.hierarchy.mentor_key_event')::text
          )
@@ -18709,7 +18836,6 @@ SELECT 'character'
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
 SELECT 'wcc_past_mentor_teaching_style', 'wcc_past_mentor_key_event', 1;
 
-
 -- <<< END sql/030_past_mentor_key_event.sql
 
 -- >>> BEGIN sql/031_past_mentor_relationship_end.sql
@@ -18759,6 +18885,28 @@ SELECT meta.qu_id
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
          'path', jsonb_build_array(
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
            ck_id('witcher_cc.hierarchy.mentor')::text,
            ck_id('witcher_cc.hierarchy.mentor_relationship_end')::text
          )
@@ -18823,6 +18971,22 @@ SELECT meta.qu_id || '_o' || to_char(raw_data.num, 'FM00') AS an_id
      , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS label
      , raw_data.num
      , jsonb_build_object('probability', raw_data.probability)
+       || jsonb_build_object(
+            'counterIncrement',
+            jsonb_build_object(
+              'jsonlogic_expression',
+              jsonb_build_object(
+                'if',
+                jsonb_build_array(
+                  jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+                  jsonb_build_array(
+                    jsonb_build_object('id', 'lifeEventsCounter', 'step', 10)
+                  ),
+                  jsonb_build_array()
+                )
+              )
+            )
+          )
   FROM raw_data
  CROSS JOIN meta
  WHERE raw_data.lang = 'ru'
@@ -18852,7 +19016,6 @@ SELECT 'character'
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
 SELECT 'wcc_past_mentor_key_event', 'wcc_past_mentor_relationship_end', 1;
-
 
 -- <<< END sql/031_past_mentor_relationship_end.sql
 
@@ -19052,7 +19215,6 @@ SELECT meta.qu_id
            SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
-         'counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10),
          'path', jsonb_build_array(
            ck_id('witcher_cc.hierarchy.life_events')::text,
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
@@ -19206,6 +19368,15 @@ SELECT meta.qu_id || '_o' || to_char(raw_data.group_id, 'FM00') || to_char(raw_d
      , raw_data.num
      , (SELECT ru_id FROM rules WHERE name = raw_data.rule_name ORDER BY ru_id LIMIT 1) AS visible_ru_ru_id
      , jsonb_build_object('probability', raw_data.probability)
+       || CASE
+            WHEN
+              (raw_data.group_id = 1 AND raw_data.num IN (1, 4, 5, 6, 7, 8))
+              OR (raw_data.group_id = 2 AND raw_data.num IN (1, 3, 5, 9, 10))
+              OR (raw_data.group_id = 3 AND raw_data.num IN (1, 3, 4, 5, 9, 10))
+              OR (raw_data.group_id = 4 AND raw_data.num IN (1, 2, 4, 5, 8, 9, 10))
+            THEN jsonb_build_object('counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10))
+            ELSE '{}'::jsonb
+          END
   FROM raw_data
  CROSS JOIN meta
  WHERE raw_data.lang = 'ru'
@@ -19267,7 +19438,12 @@ SELECT
     )
   )
 FROM options
-CROSS JOIN meta;
+CROSS JOIN meta
+WHERE NOT (
+  (options.group_id = 1 AND options.num = 10) OR
+  (options.group_id = 2 AND options.num = 8) OR
+  (options.group_id = 4 AND options.num IN (6, 7))
+);
 
 -- Effects: option 1 in each group => -1 to Vigor bonus
 INSERT INTO effects (scope, an_an_id, body)
@@ -19425,15 +19601,755 @@ SELECT
     )
   );
 
--- Transitions
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
-SELECT 'wcc_past_magic_graduation_age', 'wcc_past_academy_life', 0;
-
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-SELECT 'wcc_past_academy_life', 'wcc_past_academy_life', r.ru_id, 1
-  FROM (SELECT ru_id FROM rules WHERE name = 'magic_academy_life_counter_le_19') r;
-
 -- <<< END sql/033_past_academy_life.sql
+
+-- >>> BEGIN sql/034_past_academy_life_details.sql
+
+\echo '034_past_academy_life_details.sql'
+
+-- Hierarchy key
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.hierarchy.academy_life_details'), 'hierarchy', 'path', 'ru', 'Уточнение'),
+  (ck_id('witcher_cc.hierarchy.academy_life_details'), 'hierarchy', 'path', 'en', 'Detail')
+ON CONFLICT (id, lang) DO NOTHING;
+
+-- Visibility rules by selected option in academy life node
+INSERT INTO rules (ru_id, name, body)
+VALUES
+  (
+    ck_id('witcher_cc.rules.is_academy_life_details_from_curse'),
+    'is_academy_life_details_from_curse',
+    '{
+      "and": [
+        { "==": [ { "var": "answers.lastAnswer.questionId" }, "wcc_past_academy_life" ] },
+        {
+          "or": [
+            { "in": [ "wcc_past_academy_life_o0110", { "var": "answers.lastAnswer.answerIds" } ] },
+            { "in": [ "wcc_past_academy_life_o0208", { "var": "answers.lastAnswer.answerIds" } ] },
+            { "in": [ "wcc_past_academy_life_o0407", { "var": "answers.lastAnswer.answerIds" } ] }
+          ]
+        }
+      ]
+    }'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_academy_life_details_from_o0207'),
+    'is_academy_life_details_from_o0207',
+    '{
+      "and": [
+        { "==": [ { "var": "answers.lastAnswer.questionId" }, "wcc_past_academy_life" ] },
+        { "in": [ "wcc_past_academy_life_o0207", { "var": "answers.lastAnswer.answerIds" } ] }
+      ]
+    }'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_academy_life_details_from_o0307'),
+    'is_academy_life_details_from_o0307',
+    '{
+      "and": [
+        { "==": [ { "var": "answers.lastAnswer.questionId" }, "wcc_past_academy_life" ] },
+        { "in": [ "wcc_past_academy_life_o0307", { "var": "answers.lastAnswer.answerIds" } ] }
+      ]
+    }'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_academy_life_details_from_o0406'),
+    'is_academy_life_details_from_o0406',
+    '{
+      "and": [
+        { "==": [ { "var": "answers.lastAnswer.questionId" }, "wcc_past_academy_life" ] },
+        { "in": [ "wcc_past_academy_life_o0406", { "var": "answers.lastAnswer.answerIds" } ] }
+      ]
+    }'::jsonb
+  )
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
+-- Visibility rules for o0307 details by combat skill state
+WITH skills AS (
+  SELECT *
+    FROM (VALUES
+      ('tactics', 'tactics'),
+      ('archery', 'archery'),
+      ('athletics', 'athletics'),
+      ('crossbow', 'crossbow'),
+      ('small_blades', 'small_blades'),
+      ('staff', 'staff'),
+      ('swordsmanship', 'swordsmanship'),
+      ('melee', 'melee'),
+      ('brawling', 'brawling'),
+      ('riding', 'riding')
+    ) AS v(skill_key, skill_path)
+)
+INSERT INTO rules (ru_id, name, body)
+SELECT
+  ck_id('witcher_cc.rules.is_academy_life_details_from_o0307_' || skills.skill_key || '_new'),
+  'is_academy_life_details_from_o0307_' || skills.skill_key || '_new',
+  jsonb_build_object(
+    'and',
+    jsonb_build_array(
+      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'answers.lastAnswer.questionId'), 'wcc_past_academy_life')),
+      jsonb_build_object('in', jsonb_build_array('wcc_past_academy_life_o0307', jsonb_build_object('var', 'answers.lastAnswer.answerIds'))),
+      jsonb_build_object(
+        '==',
+        jsonb_build_array(
+          jsonb_build_object('var', jsonb_build_array('characterRaw.skills.common.' || skills.skill_path || '.cur', 0)),
+          0
+        )
+      )
+    )
+  )
+FROM skills
+UNION ALL
+SELECT
+  ck_id('witcher_cc.rules.is_academy_life_details_from_o0307_' || skills.skill_key || '_existing'),
+  'is_academy_life_details_from_o0307_' || skills.skill_key || '_existing',
+  jsonb_build_object(
+    'and',
+    jsonb_build_array(
+      jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'answers.lastAnswer.questionId'), 'wcc_past_academy_life')),
+      jsonb_build_object('in', jsonb_build_array('wcc_past_academy_life_o0307', jsonb_build_object('var', 'answers.lastAnswer.answerIds'))),
+      jsonb_build_object(
+        '>',
+        jsonb_build_array(
+          jsonb_build_object('var', jsonb_build_array('characterRaw.skills.common.' || skills.skill_path || '.cur', 0)),
+          0
+        )
+      )
+    )
+  )
+FROM skills
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
+-- Question
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_past_academy_life_details' AS qu_id
+         , 'questions' AS entity
+  )
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body') AS id
+         , meta.entity, 'body', v.lang, v.text
+      FROM (VALUES
+        ('ru', 'Уточните последствия выбранного события из жизни в академии.'),
+        ('en', 'Specify the details of the selected academy-life outcome.')
+      ) AS v(lang, text)
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+, c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Уточнение'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Detail')
+)
+, ins_cols AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(c_vals.num, 'FM9900') ||'.'|| meta.entity ||'.column_name') AS id
+         , meta.entity, 'column_name', c_vals.lang, c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id
+     , meta.su_su_id
+     , NULL
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body')
+     , 'single_table'
+     , jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
+           FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.life_events')::text,
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
+             jsonb_build_object('var', 'counters.lifeEventsCounter'),
+             '-',
+             jsonb_build_object('+', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               10
+             ))
+           ))),
+           ck_id('witcher_cc.hierarchy.academy_life')::text,
+           ck_id('witcher_cc.hierarchy.academy_life_details')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO NOTHING;
+
+-- Answer options
+WITH
+  raw_data AS (
+    SELECT 'ru' AS lang, v.*
+      FROM (VALUES
+        -- Group 1: details for o0110/o0208/o0407
+        ('wcc_past_academy_life_o010701', 1, 0.2::numeric, '<b>Проклятие чудовищности</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010702', 2, 0.2::numeric, '<b>Проклятие призраков</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010703', 3, 0.2::numeric, '<b>Проклятие заразы</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010704', 4, 0.2::numeric, '<b>Проклятие странника</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010705', 5, 0.2::numeric, '<b>Проклятие ликантропии</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010706', 6, 0.0::numeric, '<b>Другое проклятие</b> (кастомное)', 'is_academy_life_details_from_curse'),
+
+        -- Group 2: details for o0207
+        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 100 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 200 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 300 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 400 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 500 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 600 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
+
+        -- Group 3: details for o0307
+        ('wcc_past_academy_life_o030701', 1, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Тактика', 'is_academy_life_details_from_o0307_tactics_new'),
+        ('wcc_past_academy_life_o030702', 2, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Тактика', 'is_academy_life_details_from_o0307_tactics_existing'),
+        ('wcc_past_academy_life_o030703', 3, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Стрельба из лука', 'is_academy_life_details_from_o0307_archery_new'),
+        ('wcc_past_academy_life_o030704', 4, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Стрельба из лука', 'is_academy_life_details_from_o0307_archery_existing'),
+        ('wcc_past_academy_life_o030705', 5, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Атлетика', 'is_academy_life_details_from_o0307_athletics_new'),
+        ('wcc_past_academy_life_o030706', 6, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Атлетика', 'is_academy_life_details_from_o0307_athletics_existing'),
+        ('wcc_past_academy_life_o030707', 7, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Стрельба из арбалета', 'is_academy_life_details_from_o0307_crossbow_new'),
+        ('wcc_past_academy_life_o030708', 8, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Стрельба из арбалета', 'is_academy_life_details_from_o0307_crossbow_existing'),
+        ('wcc_past_academy_life_o030709', 9, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Владение легкими клинками', 'is_academy_life_details_from_o0307_small_blades_new'),
+        ('wcc_past_academy_life_o030710', 10, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Владение легкими клинками', 'is_academy_life_details_from_o0307_small_blades_existing'),
+        ('wcc_past_academy_life_o030711', 11, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Владение древковым оружием', 'is_academy_life_details_from_o0307_staff_new'),
+        ('wcc_past_academy_life_o030712', 12, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Владение древковым оружием', 'is_academy_life_details_from_o0307_staff_existing'),
+        ('wcc_past_academy_life_o030713', 13, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Владение мечом', 'is_academy_life_details_from_o0307_swordsmanship_new'),
+        ('wcc_past_academy_life_o030714', 14, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Владение мечом', 'is_academy_life_details_from_o0307_swordsmanship_existing'),
+        ('wcc_past_academy_life_o030715', 15, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Ближний бой', 'is_academy_life_details_from_o0307_melee_new'),
+        ('wcc_past_academy_life_o030716', 16, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Ближний бой', 'is_academy_life_details_from_o0307_melee_existing'),
+        ('wcc_past_academy_life_o030717', 17, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Борьба', 'is_academy_life_details_from_o0307_brawling_new'),
+        ('wcc_past_academy_life_o030718', 18, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Борьба', 'is_academy_life_details_from_o0307_brawling_existing'),
+        ('wcc_past_academy_life_o030719', 19, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Верховая езда', 'is_academy_life_details_from_o0307_riding_new'),
+        ('wcc_past_academy_life_o030720', 20, 1.0::numeric, 'Помощь охотникам на магов: +1 к имеющемуся навыку Верховая езда', 'is_academy_life_details_from_o0307_riding_existing'),
+
+        -- Group 4: details for o0406
+        ('wcc_past_academy_life_o040601', 1,  0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Редании.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040602', 2,  0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Каэдвена.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040603', 3,  0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Темерии.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040604', 4,  0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Аэдирна.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040605', 5,  0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Лирии и Ривии.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040606', 6,  0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Ковира и Повисса.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040607', 7,  0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Скеллиге.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040608', 8,  0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Цидариса.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040609', 9,  0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Вердэна.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040610', 10, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Северные королевства) Цинтры.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040611', 11, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Сердца Нильфгаарда.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040612', 12, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Виковаро.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040613', 13, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Аигрена.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040614', 14, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Назаира.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040615', 15, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Метиины.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040616', 16, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Маг Турги.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040617', 17, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Гесо.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040618', 18, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Эббинга.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040619', 19, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Мехта.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040620', 20, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Геммеры.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040621', 21, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Нильфгаард) Этолии.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040622', 22, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Земли старших народов) Доль Блатанны.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040623', 23, 0.043::numeric, 'Социальный статус "Равенство" в регионе, благодаря помощи жителям (Земли старших народов) Махакама.', 'is_academy_life_details_from_o0406')
+      ) AS v(an_id, sort_order, probability, txt, rule_name)
+
+    UNION ALL
+
+    SELECT 'en' AS lang, v.*
+      FROM (VALUES
+        -- Group 1: details for o0110/o0208/o0407
+        ('wcc_past_academy_life_o010701', 1, 0.2::numeric, '<b>Curse of Monstrosity</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010702', 2, 0.2::numeric, '<b>Curse of Phantoms</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010703', 3, 0.2::numeric, '<b>Curse of Pestilence</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010704', 4, 0.2::numeric, '<b>Curse of the Wanderer</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010705', 5, 0.2::numeric, '<b>Curse of Lycanthropy</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o010706', 6, 0.0::numeric, '<b>Other Curse</b> (custom)', 'is_academy_life_details_from_curse'),
+
+        -- Group 2: details for o0207
+        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 100 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 200 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 300 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 400 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 500 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 600 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
+
+        -- Group 3: details for o0307
+        ('wcc_past_academy_life_o030701', 1, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Tactics', 'is_academy_life_details_from_o0307_tactics_new'),
+        ('wcc_past_academy_life_o030702', 2, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Tactics', 'is_academy_life_details_from_o0307_tactics_existing'),
+        ('wcc_past_academy_life_o030703', 3, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Archery', 'is_academy_life_details_from_o0307_archery_new'),
+        ('wcc_past_academy_life_o030704', 4, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Archery', 'is_academy_life_details_from_o0307_archery_existing'),
+        ('wcc_past_academy_life_o030705', 5, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Athletics', 'is_academy_life_details_from_o0307_athletics_new'),
+        ('wcc_past_academy_life_o030706', 6, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Athletics', 'is_academy_life_details_from_o0307_athletics_existing'),
+        ('wcc_past_academy_life_o030707', 7, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Crossbow', 'is_academy_life_details_from_o0307_crossbow_new'),
+        ('wcc_past_academy_life_o030708', 8, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Crossbow', 'is_academy_life_details_from_o0307_crossbow_existing'),
+        ('wcc_past_academy_life_o030709', 9, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Small Blades', 'is_academy_life_details_from_o0307_small_blades_new'),
+        ('wcc_past_academy_life_o030710', 10, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Small Blades', 'is_academy_life_details_from_o0307_small_blades_existing'),
+        ('wcc_past_academy_life_o030711', 11, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Staff/Spear', 'is_academy_life_details_from_o0307_staff_new'),
+        ('wcc_past_academy_life_o030712', 12, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Staff/Spear', 'is_academy_life_details_from_o0307_staff_existing'),
+        ('wcc_past_academy_life_o030713', 13, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Swordsmanship', 'is_academy_life_details_from_o0307_swordsmanship_new'),
+        ('wcc_past_academy_life_o030714', 14, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Swordsmanship', 'is_academy_life_details_from_o0307_swordsmanship_existing'),
+        ('wcc_past_academy_life_o030715', 15, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Melee', 'is_academy_life_details_from_o0307_melee_new'),
+        ('wcc_past_academy_life_o030716', 16, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Melee', 'is_academy_life_details_from_o0307_melee_existing'),
+        ('wcc_past_academy_life_o030717', 17, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Brawling', 'is_academy_life_details_from_o0307_brawling_new'),
+        ('wcc_past_academy_life_o030718', 18, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Brawling', 'is_academy_life_details_from_o0307_brawling_existing'),
+        ('wcc_past_academy_life_o030719', 19, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Riding', 'is_academy_life_details_from_o0307_riding_new'),
+        ('wcc_past_academy_life_o030720', 20, 1.0::numeric, 'Mage Hunters Support: +1 to existing skill Riding', 'is_academy_life_details_from_o0307_riding_existing'),
+
+        -- Group 4: details for o0406
+        ('wcc_past_academy_life_o040601', 1, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Redania.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040602', 2, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Kaedwen.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040603', 3, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Temeria.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040604', 4, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Aedirn.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040605', 5, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Lyria & Rivia.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040606', 6, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Kovir & Poviss.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040607', 7, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Skellige.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040608', 8, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Cidaris.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040609', 9, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Verden.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040610', 10, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Northern Kingdoms) Cintra.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040611', 11, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) The Heart of Nilfgaard.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040612', 12, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Vicovaro.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040613', 13, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Angren.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040614', 14, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Nazair.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040615', 15, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Mettina.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040616', 16, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Mag Turga.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040617', 17, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Gheso.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040618', 18, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Ebbing.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040619', 19, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Maecht.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040620', 20, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Gemmeria.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040621', 21, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Nilfgaard) Etolia.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040622', 22, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Elderlands) Dol Blathanna.', 'is_academy_life_details_from_o0406'),
+        ('wcc_past_academy_life_o040623', 23, 0.0434782609::numeric, 'Social Standing "Equal" in this region, thanks to helping the people of (Elderlands) Mahakam.', 'is_academy_life_details_from_o0406')
+      ) AS v(an_id, sort_order, probability, txt, rule_name)
+  )
+, vals AS (
+    SELECT lang
+         , an_id
+         , sort_order
+         , rule_name
+         , probability
+         , '<td>' || to_char(probability * 100, 'FM990.00') || '%</td><td>' || txt || '</td>' AS text
+      FROM raw_data
+)
+, ins_i18n AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id('witcher_cc.' || vals.an_id || '.answer_options.label') AS id
+         , 'answer_options', 'label', vals.lang, vals.text
+      FROM vals
+    ON CONFLICT (id, lang) DO NOTHING
+)
+, ins_event_desc AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id('witcher_cc.' || raw_data.an_id || '.event_desc') AS id
+         , 'character', 'event_desc', raw_data.lang,
+           CASE
+             WHEN raw_data.an_id LIKE 'wcc_past_academy_life_o0406%'
+               THEN regexp_replace(split_part(raw_data.txt, '.', 1), '\s+$', '')
+             ELSE raw_data.txt
+           END
+      FROM raw_data
+     WHERE raw_data.an_id LIKE 'wcc_past_academy_life_o0307%'
+        OR raw_data.an_id LIKE 'wcc_past_academy_life_o0406%'
+    ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
+SELECT vals.an_id
+     , 'witcher_cc'
+     , 'wcc_past_academy_life_details'
+     , ck_id('witcher_cc.' || vals.an_id || '.answer_options.label')::text
+     , vals.sort_order
+     , (SELECT ru_id FROM rules WHERE name = vals.rule_name ORDER BY ru_id LIMIT 1)
+     , jsonb_build_object('probability', vals.probability)
+       || CASE
+            WHEN vals.an_id IN ('wcc_past_academy_life_o010701', 'wcc_past_academy_life_o010706')
+              THEN '{}'::jsonb
+            ELSE jsonb_build_object('counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10))
+          END
+  FROM vals
+ WHERE vals.lang = 'ru'
+ON CONFLICT (an_id) DO NOTHING;
+
+-- Region names for social status effects (group o0406)
+WITH region_vals AS (
+  SELECT *
+    FROM (VALUES
+      (1,  'Редания (Северные королевства)', 'Redania (Northern Kingdoms)'),
+      (2,  'Каэдвен (Северные королевства)', 'Kaedwen (Northern Kingdoms)'),
+      (3,  'Темерия (Северные королевства)', 'Temeria (Northern Kingdoms)'),
+      (4,  'Аэдирн (Северные королевства)', 'Aedirn (Northern Kingdoms)'),
+      (5,  'Лирия и Ривия (Северные королевства)', 'Lyria & Rivia (Northern Kingdoms)'),
+      (6,  'Ковир и Повисс (Северные королевства)', 'Kovir & Poviss (Northern Kingdoms)'),
+      (7,  'Скеллиге (Северные королевства)', 'Skellige (Northern Kingdoms)'),
+      (8,  'Цидарис (Северные королевства)', 'Cidaris (Northern Kingdoms)'),
+      (9,  'Вердэн (Северные королевства)', 'Verden (Northern Kingdoms)'),
+      (10, 'Цинтра (Северные королевства)', 'Cintra (Northern Kingdoms)'),
+      (11, 'Сердце Нильфгаарда (Нильфгаард)', 'The Heart of Nilfgaard (Nilfgaard)'),
+      (12, 'Виковаро (Нильфгаард)', 'Vicovaro (Nilfgaard)'),
+      (13, 'Аигрен (Нильфгаард)', 'Angren (Nilfgaard)'),
+      (14, 'Назаир (Нильфгаард)', 'Nazair (Nilfgaard)'),
+      (15, 'Метиина (Нильфгаард)', 'Mettina (Nilfgaard)'),
+      (16, 'Маг Турга (Нильфгаард)', 'Mag Turga (Nilfgaard)'),
+      (17, 'Гесо (Нильфгаард)', 'Gheso (Nilfgaard)'),
+      (18, 'Эббинг (Нильфгаард)', 'Ebbing (Nilfgaard)'),
+      (19, 'Мехт (Нильфгаард)', 'Maecht (Nilfgaard)'),
+      (20, 'Геммера (Нильфгаард)', 'Gemmeria (Nilfgaard)'),
+      (21, 'Этолия (Нильфгаард)', 'Etolia (Nilfgaard)'),
+      (22, 'Доль Блатанна (Земли старших народов)', 'Dol Blathanna (Elderlands)'),
+      (23, 'Махакам (Земли старших народов)', 'Mahakam (Elderlands)')
+    ) AS v(num, ru_name, en_name)
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(v.num, 'FM00') || '.region_name') AS id
+     , 'character' AS entity
+     , 'social_status_group' AS entity_field
+     , x.lang
+     , x.text
+  FROM region_vals v
+ CROSS JOIN LATERAL (
+    VALUES
+      ('ru', v.ru_name),
+      ('en', v.en_name)
+ ) AS x(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+-- Effects: set academy life pass flag on every academy_life option
+WITH academy_answers AS (
+  SELECT 'wcc_past_academy_life_o' || to_char(g.group_id, 'FM00') || to_char(n.num, 'FM00') AS an_id
+    FROM generate_series(1, 4) AS g(group_id)
+    CROSS JOIN generate_series(1, 10) AS n(num)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  academy_answers.an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.logic_fields.flags.academy_life'),
+      jsonb_build_object(
+        'jsonlogic_expression',
+        jsonb_build_object(
+          'if',
+          jsonb_build_array(
+            jsonb_build_object(
+              '<=',
+              jsonb_build_array(
+                jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                9
+              )
+            ),
+            1,
+            2
+          )
+        )
+      )
+    )
+  )
+FROM academy_answers;
+
+-- Effects: curse details for options 2-5 (group from o0110/o0208/o0407)
+WITH curse_mapping AS (
+  SELECT *
+    FROM (VALUES
+      (2, 2),
+      (3, 3),
+      (4, 4),
+      (5, 5)
+    ) AS v(num, source_num)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0107' || to_char(curse_mapping.num, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+      jsonb_build_object(
+        'type', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_fortune_or_not_details.disease_type_curse')::text),
+        'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_fortune_or_not_details_o' || to_char(2000 + curse_mapping.source_num, 'FM0000') || '.curse_name')::text),
+        'intensity', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_fortune_or_not_details_o' || to_char(2000 + curse_mapping.source_num, 'FM0000') || '.curse_intensity')::text),
+        'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_fortune_or_not_details_o' || to_char(2000 + curse_mapping.source_num, 'FM0000') || '.curse_desc')::text)
+      )
+    )
+  )
+FROM curse_mapping;
+
+-- Effects: crowns for o0207 details
+WITH crowns_vals AS (
+  SELECT num, num * 100 AS crowns
+    FROM generate_series(1, 6) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0207' || to_char(crowns_vals.num, 'FM00'),
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.money.crowns'),
+      crowns_vals.crowns
+    )
+  )
+FROM crowns_vals;
+
+-- Effects: combat skill increase for o0307 details
+WITH skill_mapping AS (
+  SELECT *
+    FROM (VALUES
+      (1, 2,  'tactics'),
+      (3, 4,  'archery'),
+      (5, 6,  'athletics'),
+      (7, 8,  'crossbow'),
+      (9, 10, 'small_blades'),
+      (11, 12, 'staff'),
+      (13, 14, 'swordsmanship'),
+      (15, 16, 'melee'),
+      (17, 18, 'brawling'),
+      (19, 20, 'riding')
+    ) AS v(new_num, existing_num, skill_path)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0307' || to_char(skill_mapping.new_num, 'FM00'),
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.common.' || skill_mapping.skill_path || '.cur'),
+      2
+    )
+  )
+FROM skill_mapping
+UNION ALL
+SELECT
+  'character',
+  'wcc_past_academy_life_o0307' || to_char(skill_mapping.existing_num, 'FM00'),
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.common.' || skill_mapping.skill_path || '.cur'),
+      1
+    )
+  )
+FROM skill_mapping;
+
+-- Effects: save o0307 detail choice to life events (new/existing skill)
+WITH options AS (
+  SELECT num
+    FROM generate_series(1, 20) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0307' || to_char(options.num, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0307' || to_char(options.num, 'FM00') || '.event_desc')::text)
+      )
+    )
+  )
+FROM options;
+
+-- Effects: save o0406 detail choice to life events (helped locals in region)
+WITH options AS (
+  SELECT num
+    FROM generate_series(1, 23) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0406' || to_char(options.num, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(options.num, 'FM00') || '.event_desc')::text)
+      )
+    )
+  )
+FROM options;
+
+-- Effects: social status "Equal" in selected region for o0406 details
+WITH regions AS (
+  SELECT num
+    FROM generate_series(1, 23) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+  SELECT
+    'character',
+    'wcc_past_academy_life_o0406' || to_char(regions.num, 'FM00'),
+    jsonb_build_object(
+      'when',
+      jsonb_build_object(
+        '!',
+        jsonb_build_object(
+          'in',
+          jsonb_build_array(
+            ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(regions.num, 'FM00') || '.region_name')::text,
+            jsonb_build_object('cat_array', 'characterRaw.social_status[].group_name.i18n_uuid')
+          )
+        )
+      ),
+      'add',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.social_status'),
+        jsonb_build_object(
+          'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(regions.num, 'FM00') || '.region_name')::text),
+        'group_status', 3,
+        'group_is_feared', false
+      )
+    )
+  )
+FROM regions;
+
+-- <<< END sql/034_past_academy_life_details.sql
+
+-- >>> BEGIN sql/035_mage_events_risk.sql
+
+\echo '035_mage_events_risk.sql'
+
+-- Hierarchy key
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.hierarchy.mage_events_risk'), 'hierarchy', 'path', 'ru', 'Риск'),
+  (ck_id('witcher_cc.hierarchy.mage_events_risk'), 'hierarchy', 'path', 'en', 'Risk')
+ON CONFLICT (id, lang) DO NOTHING;
+
+-- Placeholder question
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_risk' AS qu_id
+         , 'questions' AS entity
+  )
+, ins_body AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body') AS id
+         , meta.entity, 'body', v.lang, v.text
+      FROM (VALUES
+        ('ru', 'Заглушка: ветка рискованных событий мага.'),
+        ('en', 'Placeholder: mage risk-events branch.')
+      ) AS v(lang, text)
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+, c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Результат'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Outcome')
+)
+, ins_cols AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(c_vals.num, 'FM9900') ||'.'|| meta.entity ||'.column_name') AS id
+         , meta.entity, 'column_name', c_vals.lang, c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id
+     , meta.su_su_id
+     , NULL
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body')
+     , 'single_table'
+     , jsonb_build_object(
+         'dice', 'd0',
+         'columns', (
+           SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
+           FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.life_events')::text,
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
+             jsonb_build_object('var', 'counters.lifeEventsCounter'),
+             '-',
+             jsonb_build_object('+', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               10
+             ))
+           ))),
+           ck_id('witcher_cc.hierarchy.mage_events_risk')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO NOTHING;
+
+-- Placeholder option
+WITH vals AS (
+  SELECT *
+    FROM (VALUES
+      ('ru', '<td>100.00%</td><td>Ветка еще в разработке</td>'),
+      ('en', '<td>100.00%</td><td>Branch is under construction</td>')
+    ) AS v(lang, text)
+)
+, ins_i18n AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+  SELECT ck_id('witcher_cc.wcc_mage_events_risk_o01.answer_options.label') AS id
+       , 'answer_options' AS entity
+       , 'label' AS entity_field
+       , vals.lang
+       , vals.text
+    FROM vals
+  ON CONFLICT (id, lang) DO NOTHING
+)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+VALUES (
+  'wcc_mage_events_risk_o01',
+  'witcher_cc',
+  'wcc_mage_events_risk',
+  ck_id('witcher_cc.wcc_mage_events_risk_o01.answer_options.label')::text,
+  1,
+  jsonb_build_object('probability', 1.0)
+)
+ON CONFLICT (an_id) DO NOTHING;
+
+
+-- <<< END sql/035_mage_events_risk.sql
 
 -- >>> BEGIN sql/049_past_family.sql
 
@@ -31527,20 +32443,33 @@ WITH
       ( 8, 4, 0.2, '<b>Находка в руинах</b>: гномий ручной арбалет'),
       ( 8, 5, 0.2, '<b>Находка в руинах</b>: краснолюдский плащ'),
 
-      -- 10. Нашёл учителя - навыки интеллекта
-      (10, 1, 0.0909, 'Внимание'),
-      (10, 2, 0.0909, 'Выживание в дикой природе'),
-      (10, 3, 0.0909, 'Дедукция'),
-      (10, 4, 0.0909, 'Монстрология'),
-      (10, 5, 0.0909, 'Образование'),
-      (10, 6, 0.0909, 'Ориентирование в городе'),
-      (10, 7, 0.0909, 'Передача знаний'),
-      (10, 8, 0.0909, 'Тактика'),
-      (10, 9, 0.0909, 'Торговля'),
-      (10,10, 0.0909, 'Этикет'),
-      (10,11, 0.0303, 'Язык - северный'),
-      (10,12, 0.0303, 'Язык - дварфийский'),
-      (10,13, 0.0303, 'Язык - старшая речь')
+      -- 10. Нашёл учителя - навыки интеллекта (новый/имеющийся)
+      (10, 1, 0.0909, 'Внимание: +2 к новому навыку'),
+      (10, 2, 0.0909, 'Внимание: +1 к имеющемуся навыку'),
+      (10, 3, 0.0909, 'Выживание в дикой природе: +2 к новому навыку'),
+      (10, 4, 0.0909, 'Выживание в дикой природе: +1 к имеющемуся навыку'),
+      (10, 5, 0.0909, 'Дедукция: +2 к новому навыку'),
+      (10, 6, 0.0909, 'Дедукция: +1 к имеющемуся навыку'),
+      (10, 7, 0.0909, 'Монстрология: +2 к новому навыку'),
+      (10, 8, 0.0909, 'Монстрология: +1 к имеющемуся навыку'),
+      (10, 9, 0.0909, 'Образование: +2 к новому навыку'),
+      (10,10, 0.0909, 'Образование: +1 к имеющемуся навыку'),
+      (10,11, 0.0909, 'Ориентирование в городе: +2 к новому навыку'),
+      (10,12, 0.0909, 'Ориентирование в городе: +1 к имеющемуся навыку'),
+      (10,13, 0.0909, 'Передача знаний: +2 к новому навыку'),
+      (10,14, 0.0909, 'Передача знаний: +1 к имеющемуся навыку'),
+      (10,15, 0.0909, 'Тактика: +2 к новому навыку'),
+      (10,16, 0.0909, 'Тактика: +1 к имеющемуся навыку'),
+      (10,17, 0.0909, 'Торговля: +2 к новому навыку'),
+      (10,18, 0.0909, 'Торговля: +1 к имеющемуся навыку'),
+      (10,19, 0.0909, 'Этикет: +2 к новому навыку'),
+      (10,20, 0.0909, 'Этикет: +1 к имеющемуся навыку'),
+      (10,21, 0.0303, 'Язык - северный: +2 к новому навыку'),
+      (10,22, 0.0303, 'Язык - северный: +1 к имеющемуся навыку'),
+      (10,23, 0.0303, 'Язык - дварфийский: +2 к новому навыку'),
+      (10,24, 0.0303, 'Язык - дварфийский: +1 к имеющемуся навыку'),
+      (10,25, 0.0303, 'Язык - старшая речь: +2 к новому навыку'),
+      (10,26, 0.0303, 'Язык - старшая речь: +1 к имеющемуся навыку')
     ) AS raw_data_ru(group_id, num, probability, txt)
 
   UNION ALL
@@ -31614,20 +32543,33 @@ WITH
     ( 8, 4, 0.20, '<b>Ruin Find</b>: gnomish hand crossbow'),
     ( 8, 5, 0.20, '<b>Ruin Find</b>: dwarven cloak'),
 
-    -- 10. Found a Teacher - INT skills
-    (10, 1, 0.0909, 'Awareness'),
-    (10, 2, 0.0909, 'Wilderness Survival'),
-    (10, 3, 0.0909, 'Deduction'),
-    (10, 4, 0.0909, 'Monster Lore'),
-    (10, 5, 0.0909, 'Education'),
-    (10, 6, 0.0909, 'Streetwise'),
-    (10, 7, 0.0909, 'Teaching'),
-    (10, 8, 0.0909, 'Tactics'),
-    (10, 9, 0.0909, 'Business'),
-    (10,10, 0.0909, 'Social Etiquette'),
-    (10,11, 0.0303, 'Language - Common Speech'),
-    (10,12, 0.0303, 'Language - Dwarvish'),
-    (10,13, 0.0303, 'Language - Elder Speech')
+    -- 10. Found a Teacher - INT skills (new/existing)
+    (10, 1, 0.0909, 'Awareness: +2 to new skill'),
+    (10, 2, 0.0909, 'Awareness: +1 to existing skill'),
+    (10, 3, 0.0909, 'Wilderness Survival: +2 to new skill'),
+    (10, 4, 0.0909, 'Wilderness Survival: +1 to existing skill'),
+    (10, 5, 0.0909, 'Deduction: +2 to new skill'),
+    (10, 6, 0.0909, 'Deduction: +1 to existing skill'),
+    (10, 7, 0.0909, 'Monster Lore: +2 to new skill'),
+    (10, 8, 0.0909, 'Monster Lore: +1 to existing skill'),
+    (10, 9, 0.0909, 'Education: +2 to new skill'),
+    (10,10, 0.0909, 'Education: +1 to existing skill'),
+    (10,11, 0.0909, 'Streetwise: +2 to new skill'),
+    (10,12, 0.0909, 'Streetwise: +1 to existing skill'),
+    (10,13, 0.0909, 'Teaching: +2 to new skill'),
+    (10,14, 0.0909, 'Teaching: +1 to existing skill'),
+    (10,15, 0.0909, 'Tactics: +2 to new skill'),
+    (10,16, 0.0909, 'Tactics: +1 to existing skill'),
+    (10,17, 0.0909, 'Business: +2 to new skill'),
+    (10,18, 0.0909, 'Business: +1 to existing skill'),
+    (10,19, 0.0909, 'Social Etiquette: +2 to new skill'),
+    (10,20, 0.0909, 'Social Etiquette: +1 to existing skill'),
+    (10,21, 0.0303, 'Language - Common Speech: +2 to new skill'),
+    (10,22, 0.0303, 'Language - Common Speech: +1 to existing skill'),
+    (10,23, 0.0303, 'Language - Dwarvish: +2 to new skill'),
+    (10,24, 0.0303, 'Language - Dwarvish: +1 to existing skill'),
+    (10,25, 0.0303, 'Language - Elder Speech: +2 to new skill'),
+    (10,26, 0.0303, 'Language - Elder Speech: +1 to existing skill')
   ) AS raw_data_en(group_id, num, probability, txt)
 ),
 
@@ -31654,20 +32596,20 @@ vals AS (
     CROSS JOIN meta
 )
 
-, skill_mapping_group10(num, skill_path) AS (
-  SELECT 1, 'awareness'::text
-  UNION ALL SELECT 2, 'wilderness_survival'
-  UNION ALL SELECT 3, 'deduction'
-  UNION ALL SELECT 4, 'monster_lore'
-  UNION ALL SELECT 5, 'education'
-  UNION ALL SELECT 6, 'streetwise'
-  UNION ALL SELECT 7, 'teaching'
-  UNION ALL SELECT 8, 'tactics'
-  UNION ALL SELECT 9, 'business'
-  UNION ALL SELECT 10, 'social_etiquette'
-  UNION ALL SELECT 11, 'language_common_speech'
-  UNION ALL SELECT 12, 'language_dwarvish'
-  UNION ALL SELECT 13, 'language_elder_speech'
+, skill_mapping_group10(new_num, existing_num, skill_path) AS (
+  SELECT 1, 2, 'awareness'::text
+  UNION ALL SELECT 3, 4, 'wilderness_survival'
+  UNION ALL SELECT 5, 6, 'deduction'
+  UNION ALL SELECT 7, 8, 'monster_lore'
+  UNION ALL SELECT 9, 10, 'education'
+  UNION ALL SELECT 11, 12, 'streetwise'
+  UNION ALL SELECT 13, 14, 'teaching'
+  UNION ALL SELECT 15, 16, 'tactics'
+  UNION ALL SELECT 17, 18, 'business'
+  UNION ALL SELECT 19, 20, 'social_etiquette'
+  UNION ALL SELECT 21, 22, 'language_common_speech'
+  UNION ALL SELECT 23, 24, 'language_dwarvish'
+  UNION ALL SELECT 25, 26, 'language_elder_speech'
 )
 , rules_vals(group_id, id, body) AS (
     SELECT v.group_id
@@ -31685,18 +32627,24 @@ vals AS (
                 ]
             }')::jsonb FROM (SELECT DISTINCT group_id FROM raw_data) v(group_id)
 )
-, rules_visibility_10(num, id, body) AS (
-  SELECT sm.num
+, rules_visibility_10_new(num, id, body) AS (
+  SELECT sm.new_num
        , gen_random_uuid()
        , jsonb_build_object(
-           '<', jsonb_build_array(
-             jsonb_build_object(
-               '+', jsonb_build_array(
-                 jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.cur'), 0)),
-                 jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.bonus'), 0))
-               )
-             ),
-             6
+           '==', jsonb_build_array(
+             jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.cur'), 0)),
+             0
+           )
+         )
+    FROM skill_mapping_group10 sm
+)
+, rules_visibility_10_existing(num, id, body) AS (
+  SELECT sm.existing_num
+       , gen_random_uuid()
+       , jsonb_build_object(
+           '>', jsonb_build_array(
+             jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.cur'), 0)),
+             0
            )
          )
     FROM skill_mapping_group10 sm
@@ -31704,8 +32652,11 @@ vals AS (
 , ins_rules AS (
   INSERT INTO rules(ru_id, body) SELECT r.id, r.body FROM rules_vals r
 )
-, ins_rules_visibility_10 AS (
-  INSERT INTO rules(ru_id, body) SELECT r10.id, r10.body FROM rules_visibility_10 r10
+, ins_rules_visibility_10_new AS (
+  INSERT INTO rules(ru_id, body) SELECT r10.id, r10.body FROM rules_visibility_10_new r10
+)
+, ins_rules_visibility_10_existing AS (
+  INSERT INTO rules(ru_id, body) SELECT r10.id, r10.body FROM rules_visibility_10_existing r10
 )
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, visible_ru_ru_id, sort_order,metadata)
 SELECT
@@ -31713,7 +32664,7 @@ SELECT
   meta.su_su_id,
   meta.qu_id,
   ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*vals.group_id+vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label,
-  COALESCE(r10.id, r.id),
+  COALESCE(r10n.id, r10e.id, r.id),
   vals.num,
   jsonb_build_object(
            'probability', vals.probability
@@ -31721,7 +32672,8 @@ SELECT
 FROM vals
 CROSS JOIN meta
 JOIN rules_vals r ON vals.group_id = r.group_id
-LEFT JOIN rules_visibility_10 r10 ON vals.group_id = 10 AND vals.num = r10.num
+LEFT JOIN rules_visibility_10_new r10n ON vals.group_id = 10 AND vals.num = r10n.num
+LEFT JOIN rules_visibility_10_existing r10e ON vals.group_id = 10 AND vals.num = r10e.num
 ON CONFLICT (an_id) DO NOTHING;
 
 -- Эффекты
@@ -31738,7 +32690,8 @@ WITH
       (6,21), (6,22), (6,23), (6,24),
       (8,1), (8,2), (8,3), (8,4), (8,5),
       (10,1), (10,2), (10,3), (10,4), (10,5), (10,6), (10,7), (10,8), (10,9), (10,10),
-      (10,11), (10,12), (10,13)
+      (10,11), (10,12), (10,13), (10,14), (10,15), (10,16), (10,17), (10,18), (10,19), (10,20),
+      (10,21), (10,22), (10,23), (10,24), (10,25), (10,26)
     ) AS v(group_id, num)
   )
 , meta AS (SELECT 'witcher_cc' AS su_su_id
@@ -31935,32 +32888,58 @@ WITH
     SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*10+vals.num, 'FM0000') ||'.'|| 'event_desc') AS id
          , meta.entity, 'event_desc', vals.lang, vals.text
       FROM (VALUES
-        ('ru', 1, 'Нашёл учителя: [+1 к Вниманию или новый навык +2].'),
-        ('ru', 2, 'Нашёл учителя: [+1 к Выживанию в дикой природе или новый +2].'),
-        ('ru', 3, 'Нашёл учителя: [+1 к Дедукции или новый навык +2].'),
-        ('ru', 4, 'Нашёл учителя: [+1 к Монстрологии или новый навык +2].'),
-        ('ru', 5, 'Нашёл учителя: [+1 к Образованию или новый навык +2].'),
-        ('ru', 6, 'Нашёл учителя: [+1 к Ориентированию в городе или новый +2].'),
-        ('ru', 7, 'Нашёл учителя: [+1 к Передаче знаний или новый навык +2].'),
-        ('ru', 8, 'Нашёл учителя: [+1 к Тактике или новый навык +2].'),
-        ('ru', 9, 'Нашёл учителя: [+1 к Торговле или новый навык +2].'),
-        ('ru',10, 'Нашёл учителя: [+1 к Этикету или новый навык +2].'),
-        ('ru',11, 'Нашёл учителя: [+1 к Языку - северный или новый +2].'),
-        ('ru',12, 'Нашёл учителя: [+1 к Языку - дварфийский или новый +2].'),
-        ('ru',13, 'Нашёл учителя: [+1 к Языку - старшая речь или новый +2].'),
-        ('en', 1, 'Found a Teacher: [+1 Awareness or new skill +2].'),
-        ('en', 2, 'Found a Teacher: [+1 Wilderness Survival or new +2].'),
-        ('en', 3, 'Found a Teacher: [+1 Deduction or new skill +2].'),
-        ('en', 4, 'Found a Teacher: [+1 Monster Lore or new skill +2].'),
-        ('en', 5, 'Found a Teacher: [+1 Education or new skill +2].'),
-        ('en', 6, 'Found a Teacher: [+1 Streetwise or new skill +2].'),
-        ('en', 7, 'Found a Teacher: [+1 Teaching or new skill +2].'),
-        ('en', 8, 'Found a Teacher: [+1 Tactics or new skill +2].'),
-        ('en', 9, 'Found a Teacher: [+1 Business or new skill +2].'),
-        ('en',10, 'Found a Teacher: [+1 Social Etiquette or new +2].'),
-        ('en',11, 'Found a Teacher: [+1 Language - Common or new +2].'),
-        ('en',12, 'Found a Teacher: [+1 Language - Dwarvish or new +2].'),
-        ('en',13, 'Found a Teacher: [+1 Language - Elder Speech or new +2].')
+        ('ru', 1,  'Нашёл учителя: +2 к новому навыку Внимание.'),
+        ('ru', 2,  'Нашёл учителя: +1 к имеющемуся навыку Внимание.'),
+        ('ru', 3,  'Нашёл учителя: +2 к новому навыку Выживание в дикой природе.'),
+        ('ru', 4,  'Нашёл учителя: +1 к имеющемуся навыку Выживание в дикой природе.'),
+        ('ru', 5,  'Нашёл учителя: +2 к новому навыку Дедукция.'),
+        ('ru', 6,  'Нашёл учителя: +1 к имеющемуся навыку Дедукция.'),
+        ('ru', 7,  'Нашёл учителя: +2 к новому навыку Монстрология.'),
+        ('ru', 8,  'Нашёл учителя: +1 к имеющемуся навыку Монстрология.'),
+        ('ru', 9,  'Нашёл учителя: +2 к новому навыку Образование.'),
+        ('ru', 10, 'Нашёл учителя: +1 к имеющемуся навыку Образование.'),
+        ('ru', 11, 'Нашёл учителя: +2 к новому навыку Ориентирование в городе.'),
+        ('ru', 12, 'Нашёл учителя: +1 к имеющемуся навыку Ориентирование в городе.'),
+        ('ru', 13, 'Нашёл учителя: +2 к новому навыку Передача знаний.'),
+        ('ru', 14, 'Нашёл учителя: +1 к имеющемуся навыку Передача знаний.'),
+        ('ru', 15, 'Нашёл учителя: +2 к новому навыку Тактика.'),
+        ('ru', 16, 'Нашёл учителя: +1 к имеющемуся навыку Тактика.'),
+        ('ru', 17, 'Нашёл учителя: +2 к новому навыку Торговля.'),
+        ('ru', 18, 'Нашёл учителя: +1 к имеющемуся навыку Торговля.'),
+        ('ru', 19, 'Нашёл учителя: +2 к новому навыку Этикет.'),
+        ('ru', 20, 'Нашёл учителя: +1 к имеющемуся навыку Этикет.'),
+        ('ru', 21, 'Нашёл учителя: +2 к новому навыку Язык - северный.'),
+        ('ru', 22, 'Нашёл учителя: +1 к имеющемуся навыку Язык - северный.'),
+        ('ru', 23, 'Нашёл учителя: +2 к новому навыку Язык - дварфийский.'),
+        ('ru', 24, 'Нашёл учителя: +1 к имеющемуся навыку Язык - дварфийский.'),
+        ('ru', 25, 'Нашёл учителя: +2 к новому навыку Язык - старшая речь.'),
+        ('ru', 26, 'Нашёл учителя: +1 к имеющемуся навыку Язык - старшая речь.'),
+        ('en', 1,  'Found a Teacher: +2 to new skill Awareness.'),
+        ('en', 2,  'Found a Teacher: +1 to existing skill Awareness.'),
+        ('en', 3,  'Found a Teacher: +2 to new skill Wilderness Survival.'),
+        ('en', 4,  'Found a Teacher: +1 to existing skill Wilderness Survival.'),
+        ('en', 5,  'Found a Teacher: +2 to new skill Deduction.'),
+        ('en', 6,  'Found a Teacher: +1 to existing skill Deduction.'),
+        ('en', 7,  'Found a Teacher: +2 to new skill Monster Lore.'),
+        ('en', 8,  'Found a Teacher: +1 to existing skill Monster Lore.'),
+        ('en', 9,  'Found a Teacher: +2 to new skill Education.'),
+        ('en', 10, 'Found a Teacher: +1 to existing skill Education.'),
+        ('en', 11, 'Found a Teacher: +2 to new skill Streetwise.'),
+        ('en', 12, 'Found a Teacher: +1 to existing skill Streetwise.'),
+        ('en', 13, 'Found a Teacher: +2 to new skill Teaching.'),
+        ('en', 14, 'Found a Teacher: +1 to existing skill Teaching.'),
+        ('en', 15, 'Found a Teacher: +2 to new skill Tactics.'),
+        ('en', 16, 'Found a Teacher: +1 to existing skill Tactics.'),
+        ('en', 17, 'Found a Teacher: +2 to new skill Business.'),
+        ('en', 18, 'Found a Teacher: +1 to existing skill Business.'),
+        ('en', 19, 'Found a Teacher: +2 to new skill Social Etiquette.'),
+        ('en', 20, 'Found a Teacher: +1 to existing skill Social Etiquette.'),
+        ('en', 21, 'Found a Teacher: +2 to new skill Language - Common Speech.'),
+        ('en', 22, 'Found a Teacher: +1 to existing skill Language - Common Speech.'),
+        ('en', 23, 'Found a Teacher: +2 to new skill Language - Dwarvish.'),
+        ('en', 24, 'Found a Teacher: +1 to existing skill Language - Dwarvish.'),
+        ('en', 25, 'Found a Teacher: +2 to new skill Language - Elder Speech.'),
+        ('en', 26, 'Found a Teacher: +1 to existing skill Language - Elder Speech.')
       ) AS vals(lang, num, text)
       CROSS JOIN meta
 )
@@ -32025,21 +33004,21 @@ WITH
       ) AS vals(lang, num, text)
       CROSS JOIN meta
 )
--- Маппинг навыков для группы 10
+-- Маппинг навыков для группы 10 (новый/имеющийся)
 , skill_mapping_group10 AS (
-  SELECT 1 AS num, 'awareness' AS skill_path
-  UNION ALL SELECT 2, 'wilderness_survival'
-  UNION ALL SELECT 3, 'deduction'
-  UNION ALL SELECT 4, 'monster_lore'
-  UNION ALL SELECT 5, 'education'
-  UNION ALL SELECT 6, 'streetwise'
-  UNION ALL SELECT 7, 'teaching'
-  UNION ALL SELECT 8, 'tactics'
-  UNION ALL SELECT 9, 'business'
-  UNION ALL SELECT 10, 'social_etiquette'
-  UNION ALL SELECT 11, 'language_common_speech'
-  UNION ALL SELECT 12, 'language_dwarvish'
-  UNION ALL SELECT 13, 'language_elder_speech'
+  SELECT 1 AS new_num, 2 AS existing_num, 'awareness' AS skill_path
+  UNION ALL SELECT 3, 4, 'wilderness_survival'
+  UNION ALL SELECT 5, 6, 'deduction'
+  UNION ALL SELECT 7, 8, 'monster_lore'
+  UNION ALL SELECT 9, 10, 'education'
+  UNION ALL SELECT 11, 12, 'streetwise'
+  UNION ALL SELECT 13, 14, 'teaching'
+  UNION ALL SELECT 15, 16, 'tactics'
+  UNION ALL SELECT 17, 18, 'business'
+  UNION ALL SELECT 19, 20, 'social_etiquette'
+  UNION ALL SELECT 21, 22, 'language_common_speech'
+  UNION ALL SELECT 23, 24, 'language_dwarvish'
+  UNION ALL SELECT 25, 26, 'language_elder_speech'
 )
 INSERT INTO effects (scope, an_an_id, body)
 -- Группа 1 (кроме варианта 7): lifeEvents + gear
@@ -32484,25 +33463,23 @@ FROM raw_data
 CROSS JOIN meta
 WHERE raw_data.group_id = 10
 UNION ALL
-SELECT 'character', 'wcc_witcher_events_benefit_details_o' || to_char(10, 'FM00') || to_char(skill_mapping_group10.num, 'FM00'),
+SELECT 'character', 'wcc_witcher_events_benefit_details_o' || to_char(10, 'FM00') || to_char(skill_mapping_group10.new_num, 'FM00'),
   jsonb_build_object(
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.cur'),
-      jsonb_build_object(
-        'jsonlogic_expression',
-        jsonb_build_object(
-          'max', jsonb_build_array(
-            2,
-            jsonb_build_object(
-              '+', jsonb_build_array(
-                jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.cur'), 0)),
-                1
-              )
-            )
-          )
-        )
-      )
+      2
+    )
+  )
+FROM skill_mapping_group10
+CROSS JOIN meta
+UNION ALL
+SELECT 'character', 'wcc_witcher_events_benefit_details_o' || to_char(10, 'FM00') || to_char(skill_mapping_group10.existing_num, 'FM00'),
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.cur'),
+      1
     )
   )
 FROM skill_mapping_group10
@@ -32523,6 +33500,7 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_witcher_events_benefit_details', 'wcc_witcher_events_risk', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
+
 -- <<< END sql/107_witcher_events_benefit_details.sql
 
 -- >>> BEGIN sql/108_witcher_events_benefit_details_2.sql
@@ -38372,6 +39350,103 @@ FROM updated;
 ALTER TABLE wcc_user_characters ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 -- <<< END sql/142_avatar_column.sql
+
+-- >>> BEGIN sql/143_mage_academy_life_transitions.sql
+
+\echo '143_mage_academy_life_transitions.sql'
+
+-- Rules for academy-life pass routing
+INSERT INTO rules (ru_id, name, body)
+VALUES
+  (
+    ck_id('witcher_cc.rules.is_mage_academy_life_flag_eq_1'),
+    'is_mage_academy_life_flag_eq_1',
+    '{"==":[{"var":"characterRaw.logic_fields.flags.academy_life"},1]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_academy_life_flag_eq_2'),
+    'is_mage_academy_life_flag_eq_2',
+    '{"==":[{"var":"characterRaw.logic_fields.flags.academy_life"},2]}'::jsonb
+  )
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
+-- Transitions
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, ru_ru_id, priority)
+VALUES
+  -- from: wcc_past_magic_graduation_age
+  ('wcc_past_magic_graduation_age', 'wcc_past_academy_life', NULL, NULL, 0),
+  -- from: wcc_past_academy_life
+  ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0110', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0207', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0208', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_mentor_personality', 'wcc_past_academy_life_o0202', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0307', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_mentor_personality', 'wcc_past_academy_life_o0302', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0406', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0407', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_life_events_event', 'wcc_past_academy_life_o0109', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'magic_academy_life_counter_le_19'), 1),
+  ('wcc_past_academy_life', 'wcc_mage_events_risk', NULL, NULL, 0),
+
+  -- from: wcc_past_academy_life_details
+  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse', 'wcc_past_academy_life_o010706', NULL, 2),
+  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_past_academy_life_o010701', NULL, 2),
+  ('wcc_past_academy_life_details', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_past_academy_life_details', 'wcc_past_academy_life', NULL, NULL, 0),
+
+  -- from: wcc_past_mentor_relationship_end
+  ('wcc_past_mentor_relationship_end', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_past_mentor_relationship_end', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 1),
+
+  -- from: wcc_mage_events_risk
+
+  -- from: wcc_life_events_ally_where
+  ('wcc_life_events_ally_where', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_ally_where', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_enemy_the_power
+  ('wcc_life_events_enemy_the_power', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_enemy_the_power', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_fortune (priority 2)
+  ('wcc_life_events_fortune', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_fortune', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_fortune_or_not_details (priority 2)
+  ('wcc_life_events_fortune_or_not_details', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_fortune_or_not_details', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_fortune_or_not_details_addiction
+  ('wcc_life_events_fortune_or_not_details_addiction', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_fortune_or_not_details_addiction', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_fortune_or_not_details_curse
+  ('wcc_life_events_fortune_or_not_details_curse', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_fortune_or_not_details_curse', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_fortune_or_not_details_curse_monstrosity
+  ('wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_fortune_or_not_details_dice
+  ('wcc_life_events_fortune_or_not_details_dice', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_fortune_or_not_details_dice', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_misfortune (priority 2)
+  ('wcc_life_events_misfortune', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_misfortune', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_relationshipsstory
+  ('wcc_life_events_relationshipsstory', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_relationshipsstory', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_relationshipsstory_details
+  ('wcc_life_events_relationshipsstory_details', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_life_events_relationshipsstory_details', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2);
+
+-- <<< END sql/143_mage_academy_life_transitions.sql
 
 -- >>> BEGIN sql/items/001_wcc_items_dict.sql
 

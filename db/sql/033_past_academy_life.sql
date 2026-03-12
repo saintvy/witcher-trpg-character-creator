@@ -105,7 +105,6 @@ SELECT meta.qu_id
            SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
            FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
-         'counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10),
          'path', jsonb_build_array(
            ck_id('witcher_cc.hierarchy.life_events')::text,
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
@@ -259,6 +258,15 @@ SELECT meta.qu_id || '_o' || to_char(raw_data.group_id, 'FM00') || to_char(raw_d
      , raw_data.num
      , (SELECT ru_id FROM rules WHERE name = raw_data.rule_name ORDER BY ru_id LIMIT 1) AS visible_ru_ru_id
      , jsonb_build_object('probability', raw_data.probability)
+       || CASE
+            WHEN
+              (raw_data.group_id = 1 AND raw_data.num IN (1, 4, 5, 6, 7, 8))
+              OR (raw_data.group_id = 2 AND raw_data.num IN (1, 3, 5, 9, 10))
+              OR (raw_data.group_id = 3 AND raw_data.num IN (1, 3, 4, 5, 9, 10))
+              OR (raw_data.group_id = 4 AND raw_data.num IN (1, 2, 4, 5, 8, 9, 10))
+            THEN jsonb_build_object('counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10))
+            ELSE '{}'::jsonb
+          END
   FROM raw_data
  CROSS JOIN meta
  WHERE raw_data.lang = 'ru'
@@ -320,7 +328,12 @@ SELECT
     )
   )
 FROM options
-CROSS JOIN meta;
+CROSS JOIN meta
+WHERE NOT (
+  (options.group_id = 1 AND options.num = 10) OR
+  (options.group_id = 2 AND options.num = 8) OR
+  (options.group_id = 4 AND options.num IN (6, 7))
+);
 
 -- Effects: option 1 in each group => -1 to Vigor bonus
 INSERT INTO effects (scope, an_an_id, body)
@@ -477,11 +490,3 @@ SELECT
       )
     )
   );
-
--- Transitions
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
-SELECT 'wcc_past_magic_graduation_age', 'wcc_past_academy_life', 0;
-
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
-SELECT 'wcc_past_academy_life', 'wcc_past_academy_life', r.ru_id, 1
-  FROM (SELECT ru_id FROM rules WHERE name = 'magic_academy_life_counter_le_19') r;

@@ -134,20 +134,33 @@ WITH
       ( 8, 4, 0.2, '<b>Находка в руинах</b>: гномий ручной арбалет'),
       ( 8, 5, 0.2, '<b>Находка в руинах</b>: краснолюдский плащ'),
 
-      -- 10. Нашёл учителя - навыки интеллекта
-      (10, 1, 0.0909, 'Внимание'),
-      (10, 2, 0.0909, 'Выживание в дикой природе'),
-      (10, 3, 0.0909, 'Дедукция'),
-      (10, 4, 0.0909, 'Монстрология'),
-      (10, 5, 0.0909, 'Образование'),
-      (10, 6, 0.0909, 'Ориентирование в городе'),
-      (10, 7, 0.0909, 'Передача знаний'),
-      (10, 8, 0.0909, 'Тактика'),
-      (10, 9, 0.0909, 'Торговля'),
-      (10,10, 0.0909, 'Этикет'),
-      (10,11, 0.0303, 'Язык - северный'),
-      (10,12, 0.0303, 'Язык - дварфийский'),
-      (10,13, 0.0303, 'Язык - старшая речь')
+      -- 10. Нашёл учителя - навыки интеллекта (новый/имеющийся)
+      (10, 1, 0.0909, 'Внимание: +2 к новому навыку'),
+      (10, 2, 0.0909, 'Внимание: +1 к имеющемуся навыку'),
+      (10, 3, 0.0909, 'Выживание в дикой природе: +2 к новому навыку'),
+      (10, 4, 0.0909, 'Выживание в дикой природе: +1 к имеющемуся навыку'),
+      (10, 5, 0.0909, 'Дедукция: +2 к новому навыку'),
+      (10, 6, 0.0909, 'Дедукция: +1 к имеющемуся навыку'),
+      (10, 7, 0.0909, 'Монстрология: +2 к новому навыку'),
+      (10, 8, 0.0909, 'Монстрология: +1 к имеющемуся навыку'),
+      (10, 9, 0.0909, 'Образование: +2 к новому навыку'),
+      (10,10, 0.0909, 'Образование: +1 к имеющемуся навыку'),
+      (10,11, 0.0909, 'Ориентирование в городе: +2 к новому навыку'),
+      (10,12, 0.0909, 'Ориентирование в городе: +1 к имеющемуся навыку'),
+      (10,13, 0.0909, 'Передача знаний: +2 к новому навыку'),
+      (10,14, 0.0909, 'Передача знаний: +1 к имеющемуся навыку'),
+      (10,15, 0.0909, 'Тактика: +2 к новому навыку'),
+      (10,16, 0.0909, 'Тактика: +1 к имеющемуся навыку'),
+      (10,17, 0.0909, 'Торговля: +2 к новому навыку'),
+      (10,18, 0.0909, 'Торговля: +1 к имеющемуся навыку'),
+      (10,19, 0.0909, 'Этикет: +2 к новому навыку'),
+      (10,20, 0.0909, 'Этикет: +1 к имеющемуся навыку'),
+      (10,21, 0.0303, 'Язык - северный: +2 к новому навыку'),
+      (10,22, 0.0303, 'Язык - северный: +1 к имеющемуся навыку'),
+      (10,23, 0.0303, 'Язык - дварфийский: +2 к новому навыку'),
+      (10,24, 0.0303, 'Язык - дварфийский: +1 к имеющемуся навыку'),
+      (10,25, 0.0303, 'Язык - старшая речь: +2 к новому навыку'),
+      (10,26, 0.0303, 'Язык - старшая речь: +1 к имеющемуся навыку')
     ) AS raw_data_ru(group_id, num, probability, txt)
 
   UNION ALL
@@ -221,20 +234,33 @@ WITH
     ( 8, 4, 0.20, '<b>Ruin Find</b>: gnomish hand crossbow'),
     ( 8, 5, 0.20, '<b>Ruin Find</b>: dwarven cloak'),
 
-    -- 10. Found a Teacher - INT skills
-    (10, 1, 0.0909, 'Awareness'),
-    (10, 2, 0.0909, 'Wilderness Survival'),
-    (10, 3, 0.0909, 'Deduction'),
-    (10, 4, 0.0909, 'Monster Lore'),
-    (10, 5, 0.0909, 'Education'),
-    (10, 6, 0.0909, 'Streetwise'),
-    (10, 7, 0.0909, 'Teaching'),
-    (10, 8, 0.0909, 'Tactics'),
-    (10, 9, 0.0909, 'Business'),
-    (10,10, 0.0909, 'Social Etiquette'),
-    (10,11, 0.0303, 'Language - Common Speech'),
-    (10,12, 0.0303, 'Language - Dwarvish'),
-    (10,13, 0.0303, 'Language - Elder Speech')
+    -- 10. Found a Teacher - INT skills (new/existing)
+    (10, 1, 0.0909, 'Awareness: +2 to new skill'),
+    (10, 2, 0.0909, 'Awareness: +1 to existing skill'),
+    (10, 3, 0.0909, 'Wilderness Survival: +2 to new skill'),
+    (10, 4, 0.0909, 'Wilderness Survival: +1 to existing skill'),
+    (10, 5, 0.0909, 'Deduction: +2 to new skill'),
+    (10, 6, 0.0909, 'Deduction: +1 to existing skill'),
+    (10, 7, 0.0909, 'Monster Lore: +2 to new skill'),
+    (10, 8, 0.0909, 'Monster Lore: +1 to existing skill'),
+    (10, 9, 0.0909, 'Education: +2 to new skill'),
+    (10,10, 0.0909, 'Education: +1 to existing skill'),
+    (10,11, 0.0909, 'Streetwise: +2 to new skill'),
+    (10,12, 0.0909, 'Streetwise: +1 to existing skill'),
+    (10,13, 0.0909, 'Teaching: +2 to new skill'),
+    (10,14, 0.0909, 'Teaching: +1 to existing skill'),
+    (10,15, 0.0909, 'Tactics: +2 to new skill'),
+    (10,16, 0.0909, 'Tactics: +1 to existing skill'),
+    (10,17, 0.0909, 'Business: +2 to new skill'),
+    (10,18, 0.0909, 'Business: +1 to existing skill'),
+    (10,19, 0.0909, 'Social Etiquette: +2 to new skill'),
+    (10,20, 0.0909, 'Social Etiquette: +1 to existing skill'),
+    (10,21, 0.0303, 'Language - Common Speech: +2 to new skill'),
+    (10,22, 0.0303, 'Language - Common Speech: +1 to existing skill'),
+    (10,23, 0.0303, 'Language - Dwarvish: +2 to new skill'),
+    (10,24, 0.0303, 'Language - Dwarvish: +1 to existing skill'),
+    (10,25, 0.0303, 'Language - Elder Speech: +2 to new skill'),
+    (10,26, 0.0303, 'Language - Elder Speech: +1 to existing skill')
   ) AS raw_data_en(group_id, num, probability, txt)
 ),
 
@@ -261,20 +287,20 @@ vals AS (
     CROSS JOIN meta
 )
 
-, skill_mapping_group10(num, skill_path) AS (
-  SELECT 1, 'awareness'::text
-  UNION ALL SELECT 2, 'wilderness_survival'
-  UNION ALL SELECT 3, 'deduction'
-  UNION ALL SELECT 4, 'monster_lore'
-  UNION ALL SELECT 5, 'education'
-  UNION ALL SELECT 6, 'streetwise'
-  UNION ALL SELECT 7, 'teaching'
-  UNION ALL SELECT 8, 'tactics'
-  UNION ALL SELECT 9, 'business'
-  UNION ALL SELECT 10, 'social_etiquette'
-  UNION ALL SELECT 11, 'language_common_speech'
-  UNION ALL SELECT 12, 'language_dwarvish'
-  UNION ALL SELECT 13, 'language_elder_speech'
+, skill_mapping_group10(new_num, existing_num, skill_path) AS (
+  SELECT 1, 2, 'awareness'::text
+  UNION ALL SELECT 3, 4, 'wilderness_survival'
+  UNION ALL SELECT 5, 6, 'deduction'
+  UNION ALL SELECT 7, 8, 'monster_lore'
+  UNION ALL SELECT 9, 10, 'education'
+  UNION ALL SELECT 11, 12, 'streetwise'
+  UNION ALL SELECT 13, 14, 'teaching'
+  UNION ALL SELECT 15, 16, 'tactics'
+  UNION ALL SELECT 17, 18, 'business'
+  UNION ALL SELECT 19, 20, 'social_etiquette'
+  UNION ALL SELECT 21, 22, 'language_common_speech'
+  UNION ALL SELECT 23, 24, 'language_dwarvish'
+  UNION ALL SELECT 25, 26, 'language_elder_speech'
 )
 , rules_vals(group_id, id, body) AS (
     SELECT v.group_id
@@ -292,18 +318,24 @@ vals AS (
                 ]
             }')::jsonb FROM (SELECT DISTINCT group_id FROM raw_data) v(group_id)
 )
-, rules_visibility_10(num, id, body) AS (
-  SELECT sm.num
+, rules_visibility_10_new(num, id, body) AS (
+  SELECT sm.new_num
        , gen_random_uuid()
        , jsonb_build_object(
-           '<', jsonb_build_array(
-             jsonb_build_object(
-               '+', jsonb_build_array(
-                 jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.cur'), 0)),
-                 jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.bonus'), 0))
-               )
-             ),
-             6
+           '==', jsonb_build_array(
+             jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.cur'), 0)),
+             0
+           )
+         )
+    FROM skill_mapping_group10 sm
+)
+, rules_visibility_10_existing(num, id, body) AS (
+  SELECT sm.existing_num
+       , gen_random_uuid()
+       , jsonb_build_object(
+           '>', jsonb_build_array(
+             jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || sm.skill_path || '.cur'), 0)),
+             0
            )
          )
     FROM skill_mapping_group10 sm
@@ -311,8 +343,11 @@ vals AS (
 , ins_rules AS (
   INSERT INTO rules(ru_id, body) SELECT r.id, r.body FROM rules_vals r
 )
-, ins_rules_visibility_10 AS (
-  INSERT INTO rules(ru_id, body) SELECT r10.id, r10.body FROM rules_visibility_10 r10
+, ins_rules_visibility_10_new AS (
+  INSERT INTO rules(ru_id, body) SELECT r10.id, r10.body FROM rules_visibility_10_new r10
+)
+, ins_rules_visibility_10_existing AS (
+  INSERT INTO rules(ru_id, body) SELECT r10.id, r10.body FROM rules_visibility_10_existing r10
 )
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, visible_ru_ru_id, sort_order,metadata)
 SELECT
@@ -320,7 +355,7 @@ SELECT
   meta.su_su_id,
   meta.qu_id,
   ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*vals.group_id+vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label,
-  COALESCE(r10.id, r.id),
+  COALESCE(r10n.id, r10e.id, r.id),
   vals.num,
   jsonb_build_object(
            'probability', vals.probability
@@ -328,7 +363,8 @@ SELECT
 FROM vals
 CROSS JOIN meta
 JOIN rules_vals r ON vals.group_id = r.group_id
-LEFT JOIN rules_visibility_10 r10 ON vals.group_id = 10 AND vals.num = r10.num
+LEFT JOIN rules_visibility_10_new r10n ON vals.group_id = 10 AND vals.num = r10n.num
+LEFT JOIN rules_visibility_10_existing r10e ON vals.group_id = 10 AND vals.num = r10e.num
 ON CONFLICT (an_id) DO NOTHING;
 
 -- Эффекты
@@ -345,7 +381,8 @@ WITH
       (6,21), (6,22), (6,23), (6,24),
       (8,1), (8,2), (8,3), (8,4), (8,5),
       (10,1), (10,2), (10,3), (10,4), (10,5), (10,6), (10,7), (10,8), (10,9), (10,10),
-      (10,11), (10,12), (10,13)
+      (10,11), (10,12), (10,13), (10,14), (10,15), (10,16), (10,17), (10,18), (10,19), (10,20),
+      (10,21), (10,22), (10,23), (10,24), (10,25), (10,26)
     ) AS v(group_id, num)
   )
 , meta AS (SELECT 'witcher_cc' AS su_su_id
@@ -542,32 +579,58 @@ WITH
     SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100*10+vals.num, 'FM0000') ||'.'|| 'event_desc') AS id
          , meta.entity, 'event_desc', vals.lang, vals.text
       FROM (VALUES
-        ('ru', 1, 'Нашёл учителя: [+1 к Вниманию или новый навык +2].'),
-        ('ru', 2, 'Нашёл учителя: [+1 к Выживанию в дикой природе или новый +2].'),
-        ('ru', 3, 'Нашёл учителя: [+1 к Дедукции или новый навык +2].'),
-        ('ru', 4, 'Нашёл учителя: [+1 к Монстрологии или новый навык +2].'),
-        ('ru', 5, 'Нашёл учителя: [+1 к Образованию или новый навык +2].'),
-        ('ru', 6, 'Нашёл учителя: [+1 к Ориентированию в городе или новый +2].'),
-        ('ru', 7, 'Нашёл учителя: [+1 к Передаче знаний или новый навык +2].'),
-        ('ru', 8, 'Нашёл учителя: [+1 к Тактике или новый навык +2].'),
-        ('ru', 9, 'Нашёл учителя: [+1 к Торговле или новый навык +2].'),
-        ('ru',10, 'Нашёл учителя: [+1 к Этикету или новый навык +2].'),
-        ('ru',11, 'Нашёл учителя: [+1 к Языку - северный или новый +2].'),
-        ('ru',12, 'Нашёл учителя: [+1 к Языку - дварфийский или новый +2].'),
-        ('ru',13, 'Нашёл учителя: [+1 к Языку - старшая речь или новый +2].'),
-        ('en', 1, 'Found a Teacher: [+1 Awareness or new skill +2].'),
-        ('en', 2, 'Found a Teacher: [+1 Wilderness Survival or new +2].'),
-        ('en', 3, 'Found a Teacher: [+1 Deduction or new skill +2].'),
-        ('en', 4, 'Found a Teacher: [+1 Monster Lore or new skill +2].'),
-        ('en', 5, 'Found a Teacher: [+1 Education or new skill +2].'),
-        ('en', 6, 'Found a Teacher: [+1 Streetwise or new skill +2].'),
-        ('en', 7, 'Found a Teacher: [+1 Teaching or new skill +2].'),
-        ('en', 8, 'Found a Teacher: [+1 Tactics or new skill +2].'),
-        ('en', 9, 'Found a Teacher: [+1 Business or new skill +2].'),
-        ('en',10, 'Found a Teacher: [+1 Social Etiquette or new +2].'),
-        ('en',11, 'Found a Teacher: [+1 Language - Common or new +2].'),
-        ('en',12, 'Found a Teacher: [+1 Language - Dwarvish or new +2].'),
-        ('en',13, 'Found a Teacher: [+1 Language - Elder Speech or new +2].')
+        ('ru', 1,  'Нашёл учителя: +2 к новому навыку Внимание.'),
+        ('ru', 2,  'Нашёл учителя: +1 к имеющемуся навыку Внимание.'),
+        ('ru', 3,  'Нашёл учителя: +2 к новому навыку Выживание в дикой природе.'),
+        ('ru', 4,  'Нашёл учителя: +1 к имеющемуся навыку Выживание в дикой природе.'),
+        ('ru', 5,  'Нашёл учителя: +2 к новому навыку Дедукция.'),
+        ('ru', 6,  'Нашёл учителя: +1 к имеющемуся навыку Дедукция.'),
+        ('ru', 7,  'Нашёл учителя: +2 к новому навыку Монстрология.'),
+        ('ru', 8,  'Нашёл учителя: +1 к имеющемуся навыку Монстрология.'),
+        ('ru', 9,  'Нашёл учителя: +2 к новому навыку Образование.'),
+        ('ru', 10, 'Нашёл учителя: +1 к имеющемуся навыку Образование.'),
+        ('ru', 11, 'Нашёл учителя: +2 к новому навыку Ориентирование в городе.'),
+        ('ru', 12, 'Нашёл учителя: +1 к имеющемуся навыку Ориентирование в городе.'),
+        ('ru', 13, 'Нашёл учителя: +2 к новому навыку Передача знаний.'),
+        ('ru', 14, 'Нашёл учителя: +1 к имеющемуся навыку Передача знаний.'),
+        ('ru', 15, 'Нашёл учителя: +2 к новому навыку Тактика.'),
+        ('ru', 16, 'Нашёл учителя: +1 к имеющемуся навыку Тактика.'),
+        ('ru', 17, 'Нашёл учителя: +2 к новому навыку Торговля.'),
+        ('ru', 18, 'Нашёл учителя: +1 к имеющемуся навыку Торговля.'),
+        ('ru', 19, 'Нашёл учителя: +2 к новому навыку Этикет.'),
+        ('ru', 20, 'Нашёл учителя: +1 к имеющемуся навыку Этикет.'),
+        ('ru', 21, 'Нашёл учителя: +2 к новому навыку Язык - северный.'),
+        ('ru', 22, 'Нашёл учителя: +1 к имеющемуся навыку Язык - северный.'),
+        ('ru', 23, 'Нашёл учителя: +2 к новому навыку Язык - дварфийский.'),
+        ('ru', 24, 'Нашёл учителя: +1 к имеющемуся навыку Язык - дварфийский.'),
+        ('ru', 25, 'Нашёл учителя: +2 к новому навыку Язык - старшая речь.'),
+        ('ru', 26, 'Нашёл учителя: +1 к имеющемуся навыку Язык - старшая речь.'),
+        ('en', 1,  'Found a Teacher: +2 to new skill Awareness.'),
+        ('en', 2,  'Found a Teacher: +1 to existing skill Awareness.'),
+        ('en', 3,  'Found a Teacher: +2 to new skill Wilderness Survival.'),
+        ('en', 4,  'Found a Teacher: +1 to existing skill Wilderness Survival.'),
+        ('en', 5,  'Found a Teacher: +2 to new skill Deduction.'),
+        ('en', 6,  'Found a Teacher: +1 to existing skill Deduction.'),
+        ('en', 7,  'Found a Teacher: +2 to new skill Monster Lore.'),
+        ('en', 8,  'Found a Teacher: +1 to existing skill Monster Lore.'),
+        ('en', 9,  'Found a Teacher: +2 to new skill Education.'),
+        ('en', 10, 'Found a Teacher: +1 to existing skill Education.'),
+        ('en', 11, 'Found a Teacher: +2 to new skill Streetwise.'),
+        ('en', 12, 'Found a Teacher: +1 to existing skill Streetwise.'),
+        ('en', 13, 'Found a Teacher: +2 to new skill Teaching.'),
+        ('en', 14, 'Found a Teacher: +1 to existing skill Teaching.'),
+        ('en', 15, 'Found a Teacher: +2 to new skill Tactics.'),
+        ('en', 16, 'Found a Teacher: +1 to existing skill Tactics.'),
+        ('en', 17, 'Found a Teacher: +2 to new skill Business.'),
+        ('en', 18, 'Found a Teacher: +1 to existing skill Business.'),
+        ('en', 19, 'Found a Teacher: +2 to new skill Social Etiquette.'),
+        ('en', 20, 'Found a Teacher: +1 to existing skill Social Etiquette.'),
+        ('en', 21, 'Found a Teacher: +2 to new skill Language - Common Speech.'),
+        ('en', 22, 'Found a Teacher: +1 to existing skill Language - Common Speech.'),
+        ('en', 23, 'Found a Teacher: +2 to new skill Language - Dwarvish.'),
+        ('en', 24, 'Found a Teacher: +1 to existing skill Language - Dwarvish.'),
+        ('en', 25, 'Found a Teacher: +2 to new skill Language - Elder Speech.'),
+        ('en', 26, 'Found a Teacher: +1 to existing skill Language - Elder Speech.')
       ) AS vals(lang, num, text)
       CROSS JOIN meta
 )
@@ -632,21 +695,21 @@ WITH
       ) AS vals(lang, num, text)
       CROSS JOIN meta
 )
--- Маппинг навыков для группы 10
+-- Маппинг навыков для группы 10 (новый/имеющийся)
 , skill_mapping_group10 AS (
-  SELECT 1 AS num, 'awareness' AS skill_path
-  UNION ALL SELECT 2, 'wilderness_survival'
-  UNION ALL SELECT 3, 'deduction'
-  UNION ALL SELECT 4, 'monster_lore'
-  UNION ALL SELECT 5, 'education'
-  UNION ALL SELECT 6, 'streetwise'
-  UNION ALL SELECT 7, 'teaching'
-  UNION ALL SELECT 8, 'tactics'
-  UNION ALL SELECT 9, 'business'
-  UNION ALL SELECT 10, 'social_etiquette'
-  UNION ALL SELECT 11, 'language_common_speech'
-  UNION ALL SELECT 12, 'language_dwarvish'
-  UNION ALL SELECT 13, 'language_elder_speech'
+  SELECT 1 AS new_num, 2 AS existing_num, 'awareness' AS skill_path
+  UNION ALL SELECT 3, 4, 'wilderness_survival'
+  UNION ALL SELECT 5, 6, 'deduction'
+  UNION ALL SELECT 7, 8, 'monster_lore'
+  UNION ALL SELECT 9, 10, 'education'
+  UNION ALL SELECT 11, 12, 'streetwise'
+  UNION ALL SELECT 13, 14, 'teaching'
+  UNION ALL SELECT 15, 16, 'tactics'
+  UNION ALL SELECT 17, 18, 'business'
+  UNION ALL SELECT 19, 20, 'social_etiquette'
+  UNION ALL SELECT 21, 22, 'language_common_speech'
+  UNION ALL SELECT 23, 24, 'language_dwarvish'
+  UNION ALL SELECT 25, 26, 'language_elder_speech'
 )
 INSERT INTO effects (scope, an_an_id, body)
 -- Группа 1 (кроме варианта 7): lifeEvents + gear
@@ -1091,25 +1154,23 @@ FROM raw_data
 CROSS JOIN meta
 WHERE raw_data.group_id = 10
 UNION ALL
-SELECT 'character', 'wcc_witcher_events_benefit_details_o' || to_char(10, 'FM00') || to_char(skill_mapping_group10.num, 'FM00'),
+SELECT 'character', 'wcc_witcher_events_benefit_details_o' || to_char(10, 'FM00') || to_char(skill_mapping_group10.new_num, 'FM00'),
   jsonb_build_object(
     'set',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.cur'),
-      jsonb_build_object(
-        'jsonlogic_expression',
-        jsonb_build_object(
-          'max', jsonb_build_array(
-            2,
-            jsonb_build_object(
-              '+', jsonb_build_array(
-                jsonb_build_object('var', jsonb_build_array(('characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.cur'), 0)),
-                1
-              )
-            )
-          )
-        )
-      )
+      2
+    )
+  )
+FROM skill_mapping_group10
+CROSS JOIN meta
+UNION ALL
+SELECT 'character', 'wcc_witcher_events_benefit_details_o' || to_char(10, 'FM00') || to_char(skill_mapping_group10.existing_num, 'FM00'),
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.skills.common.' || skill_mapping_group10.skill_path || '.cur'),
+      1
     )
   )
 FROM skill_mapping_group10
