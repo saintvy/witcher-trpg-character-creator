@@ -18,22 +18,24 @@ WITH
   )
 , c_vals(lang, num, text) AS (
     VALUES
-      ('ru', 1, 'Поведение'),
-      ('ru', 2, 'Ничего'),
-      ('ru', 3, 'Выгода'),
-      ('ru', 4, 'Союзник'),
-      ('ru', 5, 'Охота'),
-      ('ru', 6, 'Риск - Опасные события'),
-      ('ru', 7, 'Риск - Раны'),
-      ('ru', 8, 'Риск - Враг'),
-      ('en', 1, 'Saftey'),
-      ('en', 2, 'Nothing'),
-      ('en', 3, 'Benefit'),
-      ('en', 4, 'Ally'),
-      ('en', 5, 'A hunt'),
-      ('en', 6, 'Risk - Danger events'),
-      ('en', 7, 'Risk - Wounds'),
-      ('en', 8, 'Risk - Enemies')
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Поведение'),
+      ('ru', 3, 'Ничего'),
+      ('ru', 4, 'Выгода'),
+      ('ru', 5, 'Союзник'),
+      ('ru', 6, 'Охота'),
+      ('ru', 7, 'Риск - Опасные события'),
+      ('ru', 8, 'Риск - Раны'),
+      ('ru', 9, 'Риск - Враг'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Behavior'),
+      ('en', 3, 'Nothing'),
+      ('en', 4, 'Benefit'),
+      ('en', 5, 'Ally'),
+      ('en', 6, 'A hunt'),
+      ('en', 7, 'Risk - Danger events'),
+      ('en', 8, 'Risk - Wounds'),
+      ('en', 9, 'Risk - Enemies')
   )
 , ins_cols AS (
     INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -79,24 +81,25 @@ WITH
 , raw_data AS (
   SELECT 'ru' AS lang, raw_data_ru.*
   FROM (VALUES
-    (1, 'Осторожное' , '70%', '10%', '10%', '10%', '3%', '3%', '4%'),
-    (2, 'Нормальное' , '50%', '10%', '10%', '30%', '7.5%', '7.5%', '10%'),
-    (3, 'Среднее'    , '20%', '20%', '50%', '10%', '15%', '15%', '20%'),
-    (4, 'Рискованное', '10%', '50%', '20%', '20%', '22.5%', '22.5%', '30%')
-  ) AS raw_data_ru(num, Saftey, Nothing, Benefit, Ally, a_hunt, Danger_events, Wounds, Enemies)
+    (1, '25%', 'Осторожное' , '70%', '10%', '10%', '10%', '3%', '3%', '4%'),
+    (2, '25%', 'Нормальное' , '50%', '10%', '10%', '30%', '7.5%', '7.5%', '10%'),
+    (3, '25%', 'Среднее'    , '20%', '20%', '50%', '10%', '15%', '15%', '20%'),
+    (4, '25%', 'Рискованное', '10%', '50%', '20%', '20%', '22.5%', '22.5%', '30%')
+  ) AS raw_data_ru(num, chance, Safety, Nothing, Benefit, Ally, a_hunt, Danger_events, Wounds, Enemies)
 
   UNION ALL
 
   SELECT 'en' AS lang, raw_data_en.*
   FROM (VALUES
-    (1, 'Cautious'   , '63%', '9%', '9%', '9%', '3%', '3%', '4%'),
-    (2, 'Normal'     , '37.5%', '7.5%', '7.5%', '22.5%', '7.5%', '7.5%', '10%'),
-    (3, 'Non-Neutral', '10%', '10%', '25%', '5%', '15%', '15%', '20%'),
-    (4, 'Risky'      , '2.5%', '12.5%', '5%', '5%', '22.5%', '22.5%', '30%')
-  ) AS raw_data_en(num, Saftey, Nothing, Benefit, Ally, a_hunt, Danger_events, Wounds, Enemies)
+    (1, '25%', 'Cautious'   , '63%', '9%', '9%', '9%', '3%', '3%', '4%'),
+    (2, '25%', 'Normal'     , '37.5%', '7.5%', '7.5%', '22.5%', '7.5%', '7.5%', '10%'),
+    (3, '25%', 'Non-Neutral', '10%', '10%', '25%', '5%', '15%', '15%', '20%'),
+    (4, '25%', 'Risky'      , '2.5%', '12.5%', '5%', '5%', '22.5%', '22.5%', '30%')
+  ) AS raw_data_en(num, chance, Safety, Nothing, Benefit, Ally, a_hunt, Danger_events, Wounds, Enemies)
 )
 , vals AS (
-  SELECT '<td>' || Saftey || '</td>'
+  SELECT '<td>' || chance || '</td>'
+         || '<td>' || Safety || '</td>'
          || '<td>' || Nothing || '</td>'
          || '<td>' || Benefit || '</td>'
          || '<td>' || Ally || '</td>'
