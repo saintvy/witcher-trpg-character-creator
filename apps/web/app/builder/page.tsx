@@ -417,6 +417,69 @@ export default function BuilderPage() {
       : [];
   }, [question]);
 
+  const tableColumnLayout = useMemo(() => {
+    if (!question || question.qtype !== "single_table") return [] as Array<{ align?: "left" | "center" | "right"; fit?: boolean }>;
+    const rawLayout = (question.metadata as { columnLayout?: unknown })?.columnLayout;
+    if (!Array.isArray(rawLayout)) return [] as Array<{ align?: "left" | "center" | "right"; fit?: boolean }>;
+    return rawLayout.map((entry) => {
+      const rec = (entry && typeof entry === "object" && !Array.isArray(entry))
+        ? (entry as Record<string, unknown>)
+        : {};
+      const alignRaw = typeof rec.align === "string" ? rec.align.toLowerCase() : undefined;
+      const align = (alignRaw === "left" || alignRaw === "center" || alignRaw === "right")
+        ? (alignRaw as "left" | "center" | "right")
+        : undefined;
+      return {
+        align,
+        fit: rec.fit === true,
+      };
+    });
+  }, [question]);
+
+  const getSingleTableCellStyle = useCallback((columnIndex: number) => {
+    const layout = tableColumnLayout[columnIndex];
+    if (!layout) return undefined;
+    const style: Record<string, string> = {};
+    if (layout.fit) {
+      style.width = "1%";
+      style.whiteSpace = "nowrap";
+    }
+    if (layout.align) {
+      style.textAlign = layout.align;
+    }
+    return Object.keys(style).length > 0 ? style : undefined;
+  }, [tableColumnLayout]);
+
+  const applySingleTableColumnLayoutToRowHtml = useCallback((rowHtml: string): string => {
+    if (!rowHtml || tableColumnLayout.length === 0) return rowHtml;
+
+    let columnIndex = -1;
+    return rowHtml.replace(/<td([^>]*)>/gi, (fullMatch, attrsRaw: string) => {
+      columnIndex += 1;
+      const layout = tableColumnLayout[columnIndex];
+      if (!layout) return fullMatch;
+
+      const declarations: string[] = [];
+      if (layout.fit) {
+        declarations.push("width: 1%;", "white-space: nowrap;");
+      }
+      if (layout.align) {
+        declarations.push(`text-align: ${layout.align};`);
+      }
+      if (declarations.length === 0) return fullMatch;
+
+      const attrs = attrsRaw ?? "";
+      const styleMatch = attrs.match(/\sstyle\s*=\s*"([^"]*)"/i);
+      if (styleMatch) {
+        const currentStyle = styleMatch[1] ?? "";
+        const mergedStyle = `${currentStyle.trim()} ${declarations.join(" ")}`.trim();
+        const newAttrs = attrs.replace(/\sstyle\s*=\s*"([^"]*)"/i, ` style="${mergedStyle}"`);
+        return `<td${newAttrs}>`;
+      }
+      return `<td${attrs} style="${declarations.join(" ")}">`;
+    });
+  }, [tableColumnLayout]);
+
   const fetchNext = useCallback(
     async (answers: AnswerInput[], seedOverride?: string): Promise<NextQuestionResponse | null> => {
       setLoading(true);
@@ -790,8 +853,12 @@ export default function BuilderPage() {
       const percent = (w / sum) * 100;
       const percentText = formatPercent(percent);
 
-      // Replace the first <td>...</td> that contains a % (Chance column).
-      const replaced = html.replace(/<td>\s*[^<]*?%<\/td>/i, `<td>${percentText}</td>`);
+      // Replace the first <td ...>...</td> that contains a % (Chance column),
+      // preserving any existing <td> attributes (e.g. style).
+      const replaced = html.replace(
+        /<td([^>]*)>\s*[^<]*?%<\/td>/i,
+        (_m, attrs: string) => `<td${attrs}>${percentText}</td>`
+      );
       map.set(opt.id, replaced);
     });
 
@@ -2075,8 +2142,10 @@ export default function BuilderPage() {
                       {tableColumns.length > 0 && (
                         <thead>
                           <tr>
-                            {tableColumns.map((column) => (
-                              <th key={column}>{column}</th>
+                            {tableColumns.map((column, index) => (
+                              <th key={column} style={getSingleTableCellStyle(index)}>
+                                {column}
+                              </th>
                             ))}
                           </tr>
                         </thead>
@@ -2084,7 +2153,8 @@ export default function BuilderPage() {
                       <tbody>
                         {options.map((option) => {
                           const isHovered = hoveredOptionId === option.id;
-                          const rowHtml = normalisedSingleTableRowHtml.get(option.id) ?? (option.label ?? "");
+                          const rowHtmlRaw = normalisedSingleTableRowHtml.get(option.id) ?? (option.label ?? "");
+                          const rowHtml = applySingleTableColumnLayoutToRowHtml(rowHtmlRaw);
                           return (
                             <tr
                               key={option.id}

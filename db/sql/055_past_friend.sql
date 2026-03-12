@@ -126,7 +126,7 @@ raw_data AS (
          ) AS raw_data_en(group_id, num, probability, friend_txt, gear)
 ),
 vals AS (
-         SELECT ('<td>' || to_char(probability*100, 'FM990.00') || '%</td>' ||
+         SELECT ('<td style="color: grey;">' || to_char(probability*100, 'FM990.00') || '%</td>' ||
                  '<td>' || friend_txt || '</td>' ||
                  '<td>' || gear || '</td>') AS text,
                 num,

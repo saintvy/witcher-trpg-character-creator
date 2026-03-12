@@ -101,7 +101,7 @@ raw_data AS (
          ) AS raw_data_en(group_id, num, probability, amount)
 ),
 vals AS (
-         SELECT ('<td>' || to_char(probability*100, 'FM990.00') || '%</td>' ||
+         SELECT ('<td style="color: grey;">' || to_char(probability*100, 'FM990.00') || '%</td>' ||
                  '<td>' || amount || '</td>') AS text,
                 num,
                 probability,

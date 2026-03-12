@@ -101,7 +101,7 @@ WITH
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
   SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(raw_data.num, 'FM00') ||'.'|| meta.entity ||'.label') AS id
        , meta.entity, 'label', raw_data.lang
-       , '<td>' || to_char(raw_data.probability * 100, 'FM990.00') || '%</td><td>' || raw_data.label_txt || '</td>'
+       , '<td style="color: grey;">' || to_char(raw_data.probability * 100, 'FM990.00') || '%</td><td>' || raw_data.label_txt || '</td>'
     FROM raw_data
     CROSS JOIN meta
   ON CONFLICT (id, lang) DO NOTHING

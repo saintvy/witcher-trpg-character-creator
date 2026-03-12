@@ -15,27 +15,33 @@ WITH
         ('en', 'Choose how dangerous a life your witcher led in that decade.')
       ) AS v(lang, text)
       CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
   )
-, c_vals(lang, num, text) AS (
+, c_vals(lang, num, text, align, fit) AS (
     VALUES
-      ('ru', 1, 'Шанс'),
-      ('ru', 2, 'Поведение'),
-      ('ru', 3, 'Ничего'),
-      ('ru', 4, 'Выгода'),
-      ('ru', 5, 'Союзник'),
-      ('ru', 6, 'Охота'),
-      ('ru', 7, 'Риск - Опасные события'),
-      ('ru', 8, 'Риск - Раны'),
-      ('ru', 9, 'Риск - Враг'),
-      ('en', 1, 'Chance'),
-      ('en', 2, 'Behavior'),
-      ('en', 3, 'Nothing'),
-      ('en', 4, 'Benefit'),
-      ('en', 5, 'Ally'),
-      ('en', 6, 'A hunt'),
-      ('en', 7, 'Risk - Danger events'),
-      ('en', 8, 'Risk - Wounds'),
-      ('en', 9, 'Risk - Enemies')
+      ('ru', 1, 'Шанс', 'center', true),
+      ('ru', 2, 'Поведение', 'left', true),
+      ('ru', 3, 'Ничего', 'center', true),
+      ('ru', 4, 'Выгода', 'center', true),
+      ('ru', 5, 'Союзник', 'center', true),
+      ('ru', 6, 'Охота', 'center', true),
+      ('ru', 7, '|', 'center', true),
+      ('ru', 8, 'Риск (Опасные события)', 'center', true),
+      ('ru', 9, 'Риск (Раны)', 'center', true),
+      ('ru', 10, 'Риск (Враг)', 'center', true),
+      ('ru', 11, ' ', 'center', false),
+      ('en', 1, 'Chance', 'center', true),
+      ('en', 2, 'Behavior', 'center', true),
+      ('en', 3, 'Nothing', 'center', true),
+      ('en', 4, 'Benefit', 'center', true),
+      ('en', 5, 'Ally', 'center', true),
+      ('en', 6, 'A hunt', 'center', true),
+      ('en', 7, '|', 'center', true),
+      ('en', 8, 'Risk (Danger events)', 'center', true),
+      ('en', 9, 'Risk (Wounds)', 'center', true),
+      ('en', 10, 'Risk (Enemies)', 'center', true),
+      ('en', 11, ' ', 'center', false)
   )
 , ins_cols AS (
     INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -43,6 +49,8 @@ WITH
          , meta.entity, 'column_name', c_vals.lang, c_vals.text
       FROM c_vals
       CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
   )
 
 INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
@@ -56,6 +64,14 @@ SELECT meta.qu_id
          'columns', (
            SELECT jsonb_agg(ck_id('witcher_cc' ||'.'|| 'wcc_witcher_events_risk' ||'.'|| to_char(num, 'FM9900') ||'.'|| 'questions' ||'.'|| 'column_name')::text ORDER BY num)
            FROM (SELECT DISTINCT num FROM c_vals) AS cols
+         ),
+         'columnLayout', (
+           SELECT jsonb_agg(jsonb_build_object('align', align, 'fit', fit) ORDER BY num)
+           FROM (
+             SELECT DISTINCT num, align, fit
+             FROM c_vals
+             WHERE lang = 'ru'
+           ) cols
          ),
          'path', jsonb_build_array(
            ck_id('witcher_cc.hierarchy.life_events')::text,
@@ -98,15 +114,17 @@ WITH
   ) AS raw_data_en(num, chance, Safety, Nothing, Benefit, Ally, a_hunt, Danger_events, Wounds, Enemies)
 )
 , vals AS (
-  SELECT '<td>' || chance || '</td>'
+  SELECT '<td style="color: grey;">' || chance || '</td>'
          || '<td>' || Safety || '</td>'
          || '<td>' || Nothing || '</td>'
          || '<td>' || Benefit || '</td>'
          || '<td>' || Ally || '</td>'
          || '<td>' || a_hunt || '</td>'
-         || '<td style="color: red; text-align: center;"><b>' || Danger_events || '</b></td>'
-         || '<td style="color: red; text-align: center;"><b>' || Wounds || '</b></td>'
-         || '<td style="color: red; text-align: center;"><b>' || Enemies || '</b></td>' AS text,
+         || '<td>|</td>'
+         || '<td style="color: red;"><b>' || Danger_events || '</b></td>'
+         || '<td style="color: red;"><b>' || Wounds || '</b></td>'
+         || '<td style="color: red;"><b>' || Enemies || '</b></td>'
+         || '<td> </td>' AS text,
      num, lang
    FROM raw_data
 )
@@ -116,6 +134,8 @@ WITH
        , meta.entity, meta.entity_field, vals.lang, vals.text
     FROM vals
     CROSS JOIN meta
+  ON CONFLICT (id, lang) DO UPDATE
+  SET text = EXCLUDED.text
 )
 
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)

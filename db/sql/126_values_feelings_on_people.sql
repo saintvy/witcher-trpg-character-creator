@@ -74,7 +74,7 @@ WITH
          ) AS raw_data_en(num, probability, friend_txt)
 ),
 vals AS (
-         SELECT ('<td>' || to_char(probability*100, 'FM990.00') || '%</td>' ||
+         SELECT ('<td style="color: grey;">' || to_char(probability*100, 'FM990.00') || '%</td>' ||
                  '<td>' || friend_txt || '</td>') AS text,
                 num,
                 probability,

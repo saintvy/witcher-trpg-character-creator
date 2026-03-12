@@ -56,7 +56,7 @@ WITH
                 , 'label' AS entity_field)
 , vals AS (
     SELECT
-      ('<td>' || to_char(probability*100, 'FM990.00') || '%</td>' ||
+      ('<td style="color: grey;">' || to_char(probability*100, 'FM990.00') || '%</td>' ||
        '<td>' || option_text || '</td>') AS text,
       num,
       probability,

@@ -169,7 +169,7 @@ WITH
        , meta.entity
        , 'label'
        , raw_data.lang
-       , '<td>' || to_char(raw_data.probability*100, 'FM990.00') || '%</td><td>' || raw_data.text || '</td>'
+       , '<td style="color: grey;">' || to_char(raw_data.probability*100, 'FM990.00') || '%</td><td>' || raw_data.text || '</td>'
     FROM raw_data
     CROSS JOIN meta
   ON CONFLICT (id, lang) DO NOTHING

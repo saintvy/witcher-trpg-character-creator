@@ -24,22 +24,26 @@ WITH
     ON CONFLICT (id, lang) DO UPDATE
     SET text = EXCLUDED.text
 )
-, c_vals(lang, num, text) AS (
+, c_vals(lang, num, text, align, fit) AS (
     VALUES
-      ('ru', 1, 'Шанс'),
-      ('ru', 2, 'Поведение'),
-      ('ru', 3, 'Ничего'),
-      ('ru', 4, 'Выгода'),
-      ('ru', 5, 'Союзник'),
-      ('ru', 6, 'Знание'),
-      ('ru', 7, 'Риск'),
-      ('en', 1, 'Chance'),
-      ('en', 2, 'Behavior'),
-      ('en', 3, 'Nothing'),
-      ('en', 4, 'Benefit'),
-      ('en', 5, 'Ally'),
-      ('en', 6, 'Knowledge'),
-      ('en', 7, 'Risk')
+      ('ru', 1, 'Шанс', 'center', true),
+      ('ru', 2, 'Поведение', 'left', true),
+      ('ru', 3, 'Ничего', 'center', true),
+      ('ru', 4, 'Выгода', 'center', true),
+      ('ru', 5, 'Союзник', 'center', true),
+      ('ru', 6, 'Знание', 'center', true),
+      ('ru', 7, '|', 'center', true),
+      ('ru', 8, 'Риск', 'center', true),
+      ('ru', 9, ' ', 'left', false),
+      ('en', 1, 'Chance', 'left', true),
+      ('en', 2, 'Behavior', 'left', true),
+      ('en', 3, 'Nothing', 'center', true),
+      ('en', 4, 'Benefit', 'center', true),
+      ('en', 5, 'Ally', 'center', true),
+      ('en', 6, 'Knowledge', 'center', true),
+      ('en', 7, '|', 'center', true),
+      ('en', 8, 'Risk', 'center', true),
+      ('en', 9, ' ', 'left', false)
 )
 , ins_cols AS (
     INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -61,6 +65,14 @@ SELECT meta.qu_id
          'columns', (
            SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
            FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'columnLayout', (
+           SELECT jsonb_agg(jsonb_build_object('align', align, 'fit', fit) ORDER BY num)
+           FROM (
+             SELECT DISTINCT num, align, fit
+             FROM c_vals
+             WHERE lang = 'ru'
+           ) cols
          ),
          'path', jsonb_build_array(
            ck_id('witcher_cc.hierarchy.life_events')::text,
@@ -108,13 +120,15 @@ WITH
 )
 , vals AS (
   SELECT
-    '<td>' || chance || '</td>'
+    '<td style="color: grey;">' || chance || '</td>'
     || '<td>' || behavior || '</td>'
     || '<td>' || nothing || '</td>'
     || '<td>' || benefit || '</td>'
     || '<td>' || ally || '</td>'
     || '<td>' || knowledge || '</td>'
-    || '<td style="color: red; text-align: center;"><b>' || risk || '</b></td>' AS text,
+    || '<td>|</td>'
+    || '<td style="color: red;"><b>' || risk || '</b></td>'
+    || '<td> </td>' AS text,
     num,
     lang
   FROM raw_data

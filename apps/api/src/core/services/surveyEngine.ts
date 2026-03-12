@@ -516,6 +516,28 @@ function resolvePathSegmentText(
   return String(segment);
 }
 
+function resolveHistoryPath(
+  path: unknown[],
+  state: SurveyState,
+  i18nTexts: Map<string, Map<string, string>>,
+  lang: string,
+): { resolvedPath: string[]; pathTexts: string[] } {
+  const resolvedPath: string[] = [];
+  const pathTexts: string[] = [];
+
+  for (const segment of path) {
+    const resolved = evaluatePathSegment(segment, state);
+    if (resolved.trim().length === 0) {
+      continue;
+    }
+    const text = resolvePathSegmentText(segment, state, i18nTexts, lang);
+    resolvedPath.push(resolved);
+    pathTexts.push(text.trim().length > 0 ? text : resolved);
+  }
+
+  return { resolvedPath, pathTexts };
+}
+
 /**
  * Resolves i18n_uuid objects and UUID strings in computed state
  * Only resolves UUIDs that actually exist in i18n_text table
@@ -1884,9 +1906,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
       const path = (metadata?.path as unknown[] | undefined) || [];
       
       // Use state BEFORE applying current answer to compute path
-      const pathTexts = path.map((segment) => resolvePathSegmentText(segment, currentState, i18nTextsMap, lang));
-      
-      const resolvedPath = path.map((segment) => evaluatePathSegment(segment, currentState));
+      const { pathTexts, resolvedPath } = resolveHistoryPath(path, currentState, i18nTextsMap, lang);
       
       historyQuestions.push({
         questionId: answer.questionId,
@@ -1991,8 +2011,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
   
   // Build pathTexts without i18n resolving (keep UUIDs as-is, still evaluate var/jsonlogic segments)
   const emptyI18nTexts = new Map<string, Map<string, string>>();
-  const pathTexts = path.map((segment) => resolvePathSegmentText(segment, state, emptyI18nTexts, lang));
-  const resolvedPath = path.map((segment) => evaluatePathSegment(segment, state));
+  const { pathTexts, resolvedPath } = resolveHistoryPath(path, state, emptyI18nTexts, lang);
   
   const currentQuestionHistory: HistoryQuestion = {
     questionId: question.id,
@@ -4195,8 +4214,7 @@ function fetchHistoryQuestions(
     // (состояние уже содержит все предыдущие ответы)
     const path = questionPaths.get(answer.questionId) || [];
     const emptyI18nTexts = new Map<string, Map<string, string>>();
-    const pathTexts = path.map((segment) => resolvePathSegmentText(segment, currentState, emptyI18nTexts, lang));
-    const resolvedPath = path.map((segment) => evaluatePathSegment(segment, currentState));
+    const { pathTexts, resolvedPath } = resolveHistoryPath(path, currentState, emptyI18nTexts, lang);
     
     result.push({
       questionId: answer.questionId,
@@ -4289,8 +4307,7 @@ function fetchCurrentQuestionHistory(
 
   // Формируем pathTexts без i18n-resolve (UUID остаются UUID)
   const emptyI18nTexts = new Map<string, Map<string, string>>();
-  const pathTexts = path.map((segment) => resolvePathSegmentText(segment, state, emptyI18nTexts, lang));
-  const resolvedPath = path.map((segment) => evaluatePathSegment(segment, state));
+  const { pathTexts, resolvedPath } = resolveHistoryPath(path, state, emptyI18nTexts, lang);
 
   return {
     questionId: question.id,

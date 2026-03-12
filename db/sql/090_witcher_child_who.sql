@@ -69,7 +69,7 @@ raw_data AS (
 
 vals AS (
   SELECT
-    ('<td>' || to_char(probability*100, 'FM990.00') || '%</td>'
+    ('<td style="color: grey;">' || to_char(probability*100, 'FM990.00') || '%</td>'
      || '<td>' || txt || '</td>') AS text,
     num, probability, lang
   FROM raw_data

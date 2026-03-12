@@ -323,7 +323,7 @@ WITH
          , sort_order
          , rule_name
          , probability
-         , '<td>' || to_char(probability * 100, 'FM990.00') || '%</td><td>' || txt || '</td>' AS text
+         , '<td style="color: grey;">' || to_char(probability * 100, 'FM990.00') || '%</td><td>' || txt || '</td>' AS text
       FROM raw_data
 )
 , ins_i18n AS (

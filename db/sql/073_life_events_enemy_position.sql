@@ -53,7 +53,7 @@ WITH
                 , 'answer_options' AS entity
                 , 'label' AS entity_field)
 , vals AS (
-           SELECT ('<td>' || to_char(probability*100, 'FM990.00') || '%</td>' ||
+           SELECT ('<td style="color: grey;">' || to_char(probability*100, 'FM990.00') || '%</td>' ||
                    '<td>' || txt || '</td>') AS text,
                   txt,
                   num,
