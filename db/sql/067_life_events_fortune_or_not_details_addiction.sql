@@ -151,6 +151,8 @@ FROM meta;
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details', 'wcc_life_events_fortune_or_not_details_addiction', 'wcc_life_events_fortune_or_not_details_o1310', 2;
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
+  SELECT 'wcc_mage_events_danger_details', 'wcc_life_events_fortune_or_not_details_addiction', 'wcc_mage_events_danger_details_o010210', 1;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details_addiction', 'wcc_life_events_event', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
