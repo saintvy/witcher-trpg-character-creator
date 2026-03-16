@@ -32,10 +32,6 @@ SELECT meta.qu_id
            SELECT jsonb_agg(ck_id('witcher_cc.' || meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.questions.column_name')::text ORDER BY num)
              FROM (SELECT DISTINCT num FROM c_vals) AS cols
          ),
-         'counterIncrement', jsonb_build_object(
-           'id', 'lifeEventsCounter',
-           'step', 10
-         ),
          'path', jsonb_build_array(
            ck_id('witcher_cc.hierarchy.life_events')::text,
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
@@ -383,5 +379,28 @@ SELECT
     )
   )
 FROM meta;
+
+WITH vals AS (
+    SELECT num FROM (VALUES (1), (2), (3), (4), (5)) AS v(num)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_mage_events_enemy_the_power_o' || to_char(vals.num, 'FM0000'),
+  jsonb_build_object(
+    'when',
+    '{
+      "or": [
+        {"==": [{"var": "characterRaw.logicFields.flags.academy_life"}, 1]},
+        {"==": [{"var": "characterRaw.logicFields.flags.academy_life"}, 2]}
+      ]
+    }'::jsonb,
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var', 'counters.lifeEventsCounter'),
+      10
+    )
+  )
+FROM vals;
 
 -- transitions

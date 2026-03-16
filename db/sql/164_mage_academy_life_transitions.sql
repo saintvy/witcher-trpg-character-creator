@@ -6,12 +6,12 @@ VALUES
   (
     ck_id('witcher_cc.rules.is_mage_academy_life_flag_eq_1'),
     'is_mage_academy_life_flag_eq_1',
-    '{"==":[{"var":"characterRaw.logic_fields.flags.academy_life"},1]}'::jsonb
+    '{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},1]}'::jsonb
   ),
   (
     ck_id('witcher_cc.rules.is_mage_academy_life_flag_eq_2'),
     'is_mage_academy_life_flag_eq_2',
-    '{"==":[{"var":"characterRaw.logic_fields.flags.academy_life"},2]}'::jsonb
+    '{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},2]}'::jsonb
   )
 ON CONFLICT (ru_id) DO UPDATE
 SET name = EXCLUDED.name,
@@ -143,10 +143,34 @@ VALUES
 
   -- from: wcc_mage_events_enemy_the_power
   ('wcc_mage_events_enemy_the_power', 'wcc_mage_events_outcome', NULL, NULL, 0),
+  ('wcc_mage_events_enemy_the_power', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_mage_events_enemy_the_power', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
+
+  -- from: wcc_mage_events_outcome
+  ('wcc_mage_events_outcome', 'wcc_mage_events_ally_position', 'wcc_mage_events_outcome_o0103', NULL, 1),
+  ('wcc_mage_events_outcome', 'wcc_mage_events_ally_position', 'wcc_mage_events_outcome_o0203', NULL, 1),
+  ('wcc_mage_events_outcome', 'wcc_mage_events_ally_position', 'wcc_mage_events_outcome_o0303', NULL, 1),
+  ('wcc_mage_events_outcome', 'wcc_mage_events_ally_position', 'wcc_mage_events_outcome_o0403', NULL, 1),
+
+  -- from: wcc_mage_events_ally_position
+  ('wcc_mage_events_ally_position', 'wcc_mage_events_ally_how_met', NULL, NULL, 0),
+
+  -- from: wcc_mage_events_ally_how_met
+  ('wcc_mage_events_ally_how_met', 'wcc_mage_events_ally_closeness', NULL, NULL, 0),
+
+  -- from: wcc_past_academy_life
+  ('wcc_past_academy_life', 'wcc_mage_events_ally_closeness', 'wcc_past_academy_life_o0102', NULL, 1),
+  ('wcc_past_academy_life', 'wcc_mage_events_ally_closeness', 'wcc_past_academy_life_o0308', NULL, 1),
+
+  -- from: wcc_mage_events_ally_closeness
+  ('wcc_mage_events_ally_closeness', 'wcc_mage_events_ally_value', NULL, NULL, 0),
+  
+  -- from: wcc_mage_events_ally_value
+  ('wcc_mage_events_ally_value', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_mage_events_ally_value', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
 
   -- from: wcc_life_events_fortune_or_not_details_curse
   ('wcc_life_events_fortune_or_not_details_curse', 'wcc_mage_events_outcome', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_outcome_from_life_events_4_10' ORDER BY ru_id LIMIT 1), 2),
 
   -- from: wcc_life_events_fortune_or_not_details_addiction
   ('wcc_life_events_fortune_or_not_details_addiction', 'wcc_mage_events_outcome', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_outcome_from_life_events_1_2' ORDER BY ru_id LIMIT 1), 2);
-

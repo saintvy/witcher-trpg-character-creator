@@ -103,7 +103,6 @@ SELECT meta.qu_id
                10
              ))
            ))),
-           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
            ck_id('witcher_cc.hierarchy.mage_events_outcome')::text
          )
        )

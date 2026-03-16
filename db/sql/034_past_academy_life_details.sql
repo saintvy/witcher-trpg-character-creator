@@ -420,7 +420,7 @@ SELECT
   jsonb_build_object(
     'set',
     jsonb_build_array(
-      jsonb_build_object('var', 'characterRaw.logic_fields.flags.academy_life'),
+      jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
       jsonb_build_object(
         'jsonlogic_expression',
         jsonb_build_object(

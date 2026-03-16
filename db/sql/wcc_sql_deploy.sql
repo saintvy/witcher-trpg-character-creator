@@ -19608,6 +19608,8 @@ WITH effect_vals(an_id, marker) AS (
     ('wcc_past_academy_life_o0103', 'academy life 1-3'),
     ('wcc_past_academy_life_o0109', 'academy life 1-9'),
     ('wcc_past_academy_life_o0110', 'academy life 1-10'),
+    ('wcc_past_academy_life_o0202', 'academy life 2-2'),
+    ('wcc_past_academy_life_o0203', 'academy life 2-3'),
     ('wcc_past_academy_life_o0204', 'academy life 2-4'),
     ('wcc_past_academy_life_o0206', 'academy life 2-6'),
     ('wcc_past_academy_life_o0208', 'academy life 2-8'),
@@ -23165,9 +23167,747 @@ SET label = EXCLUDED.label,
 
 -- <<< END sql/045_mage_events_outcome.sql
 
--- >>> BEGIN sql/049_past_family.sql
+-- >>> BEGIN sql/046_mage_events_ally_position.sql
 
-\echo '049_past_family.sql'
+\echo '046_mage_events_ally_position.sql'
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.hierarchy.mage_events_ally'), 'hierarchy', 'path', 'ru', 'Союзник'),
+  (ck_id('witcher_cc.hierarchy.mage_events_ally'), 'hierarchy', 'path', 'en', 'Ally'),
+  (ck_id('witcher_cc.hierarchy.mage_events_ally_position'), 'hierarchy', 'path', 'ru', 'Профессия'),
+  (ck_id('witcher_cc.hierarchy.mage_events_ally_position'), 'hierarchy', 'path', 'en', 'Profession'),
+  (ck_id('witcher_cc.hierarchy.mage_events_ally_how_met'), 'hierarchy', 'path', 'ru', 'Как вы встретились'),
+  (ck_id('witcher_cc.hierarchy.mage_events_ally_how_met'), 'hierarchy', 'path', 'en', 'How You Met'),
+  (ck_id('witcher_cc.hierarchy.mage_events_ally_closeness'), 'hierarchy', 'path', 'ru', 'Насколько вы близки'),
+  (ck_id('witcher_cc.hierarchy.mage_events_ally_closeness'), 'hierarchy', 'path', 'en', 'Closeness'),
+  (ck_id('witcher_cc.hierarchy.mage_events_ally_value'), 'hierarchy', 'path', 'ru', 'Сила'),
+  (ck_id('witcher_cc.hierarchy.mage_events_ally_value'), 'hierarchy', 'path', 'en', 'Value')
+ON CONFLICT (id, lang) DO NOTHING;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_position' AS qu_id,
+           'questions' AS entity
+  ),
+  c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Профессия'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Profession')
+  ),
+  ins_cols AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(c_vals.num, 'FM9900') || '.' || meta.entity || '.column_name'),
+           meta.entity,
+           'column_name',
+           c_vals.lang,
+           c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id,
+       meta.su_su_id,
+       NULL,
+       NULL,
+       'single_table',
+       jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(
+                    ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(num, 'FM9900') || '.' || meta.entity || '.column_name')::text
+                    ORDER BY num
+                  )
+             FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.life_events')::text,
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
+             jsonb_build_object('var', 'counters.lifeEventsCounter'),
+             '-',
+             jsonb_build_object('+', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               10
+             ))
+           ))),
+           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_ally')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_ally_position')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO UPDATE
+SET metadata = EXCLUDED.metadata,
+    qtype = EXCLUDED.qtype;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_position' AS qu_id,
+           'answer_options' AS entity,
+           'label' AS entity_field
+  ),
+  vals AS (
+    SELECT *
+      FROM (VALUES
+        ('ru', 1, 'Преступник', 0.1::numeric),
+        ('ru', 2, 'Наемник', 0.1::numeric),
+        ('ru', 3, 'Торговец', 0.1::numeric),
+        ('ru', 4, 'Ремесленник', 0.1::numeric),
+        ('ru', 5, 'Ученый', 0.1::numeric),
+        ('ru', 6, 'Друид', 0.1::numeric),
+        ('ru', 7, 'Священник', 0.1::numeric),
+        ('ru', 8, 'Маг', 0.1::numeric),
+        ('ru', 9, 'Рыцарь', 0.1::numeric),
+        ('ru', 10, 'Аристократ', 0.1::numeric),
+        ('en', 1, 'Criminal', 0.1::numeric),
+        ('en', 2, 'Mercenary', 0.1::numeric),
+        ('en', 3, 'Merchant', 0.1::numeric),
+        ('en', 4, 'Artisan', 0.1::numeric),
+        ('en', 5, 'Scholar', 0.1::numeric),
+        ('en', 6, 'Druid', 0.1::numeric),
+        ('en', 7, 'Priest', 0.1::numeric),
+        ('en', 8, 'Mage', 0.1::numeric),
+        ('en', 9, 'Knight', 0.1::numeric),
+        ('en', 10, 'Noble', 0.1::numeric)
+      ) AS v(lang, num, txt, probability)
+  ),
+  ins_label AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+           meta.entity,
+           meta.entity_field,
+           vals.lang,
+           '<td style="color: grey;">' || to_char(vals.probability * 100, 'FM990.00') || '%</td><td>' || vals.txt || '</td>'
+      FROM vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  ),
+  ins_label_value AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field || '_value'),
+           meta.entity,
+           meta.entity_field || '_value',
+           vals.lang,
+           vals.txt
+      FROM vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+SELECT 'wcc_mage_events_ally_position_o' || to_char(vals.num, 'FM0000'),
+       meta.su_su_id,
+       meta.qu_id,
+       ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+       vals.num,
+       jsonb_build_object('probability', vals.probability)
+  FROM vals
+ CROSS JOIN meta
+ WHERE vals.lang = 'ru'
+ON CONFLICT (an_id) DO UPDATE
+SET label = EXCLUDED.label,
+    sort_order = EXCLUDED.sort_order,
+    metadata = EXCLUDED.metadata;
+
+-- <<< END sql/046_mage_events_ally_position.sql
+
+-- >>> BEGIN sql/047_mage_events_ally_how_met.sql
+
+\echo '047_mage_events_ally_how_met.sql'
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_how_met' AS qu_id,
+           'questions' AS entity
+  ),
+  c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Как вы встретились'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'How You Met')
+  ),
+  ins_cols AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(c_vals.num, 'FM9900') || '.' || meta.entity || '.column_name'),
+           meta.entity,
+           'column_name',
+           c_vals.lang,
+           c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id,
+       meta.su_su_id,
+       NULL,
+       NULL,
+       'single_table',
+       jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(
+                    ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(num, 'FM9900') || '.' || meta.entity || '.column_name')::text
+                    ORDER BY num
+                  )
+             FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.life_events')::text,
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
+             jsonb_build_object('var', 'counters.lifeEventsCounter'),
+             '-',
+             jsonb_build_object('+', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               10
+             ))
+           ))),
+           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_ally')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_ally_how_met')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO UPDATE
+SET metadata = EXCLUDED.metadata,
+    qtype = EXCLUDED.qtype;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_how_met' AS qu_id,
+           'answer_options' AS entity,
+           'label' AS entity_field
+  ),
+  vals AS (
+    SELECT *
+      FROM (VALUES
+        ('ru', 1, 'Вы обучались с ним/ней', 0.1::numeric),
+        ('ru', 2, 'Вы спасли его/её от несчастного случая', 0.1::numeric),
+        ('ru', 3, 'Вы поддержали его/её в трудную минуту', 0.1::numeric),
+        ('ru', 4, 'Вы помогли ему/ей, когда его/её предали', 0.1::numeric),
+        ('ru', 5, 'У вас был короткий роман', 0.1::numeric),
+        ('ru', 6, 'Вы решили манипулировать ему/ей', 0.1::numeric),
+        ('ru', 7, 'Вы показали ему/ей искреннюю доброту', 0.1::numeric),
+        ('ru', 8, 'Вы решили изучить его/её', 0.1::numeric),
+        ('ru', 9, 'Вы помогли ему/ей ударить кого-то в спину', 0.1::numeric),
+        ('ru', 10, 'Вы встретились во время какого-то наказания', 0.1::numeric),
+        ('en', 1, 'You studied with them', 0.1::numeric),
+        ('en', 2, 'You saved them from an accident', 0.1::numeric),
+        ('en', 3, 'You supported them at a tough time', 0.1::numeric),
+        ('en', 4, 'You backed them against a betrayal', 0.1::numeric),
+        ('en', 5, 'You were one-time romantic partners', 0.1::numeric),
+        ('en', 6, 'You set out to manipulate them', 0.1::numeric),
+        ('en', 7, 'You showed them genuine kindness', 0.1::numeric),
+        ('en', 8, 'You set out to study them', 0.1::numeric),
+        ('en', 9, 'You helped them backstab someone', 0.1::numeric),
+        ('en', 10, 'You met during some punishment', 0.1::numeric)
+      ) AS v(lang, num, txt, probability)
+  ),
+  ins_label AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+           meta.entity,
+           meta.entity_field,
+           vals.lang,
+           '<td style="color: grey;">' || to_char(vals.probability * 100, 'FM990.00') || '%</td><td>' || vals.txt || '</td>'
+      FROM vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  ),
+  ins_label_value AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field || '_value'),
+           meta.entity,
+           meta.entity_field || '_value',
+           vals.lang,
+           vals.txt
+      FROM vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+SELECT 'wcc_mage_events_ally_how_met_o' || to_char(vals.num, 'FM0000'),
+       meta.su_su_id,
+       meta.qu_id,
+       ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+       vals.num,
+       jsonb_build_object('probability', vals.probability)
+  FROM vals
+ CROSS JOIN meta
+ WHERE vals.lang = 'ru'
+ON CONFLICT (an_id) DO UPDATE
+SET label = EXCLUDED.label,
+    sort_order = EXCLUDED.sort_order,
+    metadata = EXCLUDED.metadata;
+
+-- <<< END sql/047_mage_events_ally_how_met.sql
+
+-- >>> BEGIN sql/048_mage_events_ally_closeness.sql
+
+\echo '048_mage_events_ally_closeness.sql'
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_closeness' AS qu_id,
+           'questions' AS entity
+  ),
+  c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Насколько вы близки'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Closeness')
+  ),
+  ins_cols AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(c_vals.num, 'FM9900') || '.' || meta.entity || '.column_name'),
+           meta.entity,
+           'column_name',
+           c_vals.lang,
+           c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id,
+       meta.su_su_id,
+       NULL,
+       NULL,
+       'single_table',
+       jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(
+                    ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(num, 'FM9900') || '.' || meta.entity || '.column_name')::text
+                    ORDER BY num
+                  )
+             FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.life_events')::text,
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
+             jsonb_build_object('var', 'counters.lifeEventsCounter'),
+             '-',
+             jsonb_build_object('+', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               10
+             ))
+           ))),
+           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_ally')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_ally_closeness')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO UPDATE
+SET metadata = EXCLUDED.metadata,
+    qtype = EXCLUDED.qtype;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_closeness' AS qu_id,
+           'answer_options' AS entity,
+           'label' AS entity_field
+  ),
+  vals AS (
+    SELECT *
+      FROM (VALUES
+        ('ru', 1, 'Знакомые', 0.6::numeric),
+        ('ru', 2, 'Друзья', 0.3::numeric),
+        ('ru', 3, 'Связанные клятвой', 0.1::numeric),
+        ('en', 1, 'Acquaintances', 0.6::numeric),
+        ('en', 2, 'Friends', 0.3::numeric),
+        ('en', 3, 'Bound by Bond', 0.1::numeric)
+      ) AS v(lang, num, txt, probability)
+  ),
+  ins_label AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+           meta.entity,
+           meta.entity_field,
+           vals.lang,
+           '<td style="color: grey;">' || to_char(vals.probability * 100, 'FM990.00') || '%</td><td>' || vals.txt || '</td>'
+      FROM vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  ),
+  ins_label_value AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field || '_value'),
+           meta.entity,
+           meta.entity_field || '_value',
+           vals.lang,
+           vals.txt
+      FROM vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+SELECT 'wcc_mage_events_ally_closeness_o' || to_char(vals.num, 'FM0000'),
+       meta.su_su_id,
+       meta.qu_id,
+       ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+       vals.num,
+       jsonb_build_object('probability', vals.probability)
+  FROM vals
+ CROSS JOIN meta
+ WHERE vals.lang = 'ru'
+ON CONFLICT (an_id) DO UPDATE
+SET label = EXCLUDED.label,
+    sort_order = EXCLUDED.sort_order,
+    metadata = EXCLUDED.metadata;
+
+-- <<< END sql/048_mage_events_ally_closeness.sql
+
+-- >>> BEGIN sql/049_mage_events_ally_value.sql
+
+\echo '049_mage_events_ally_value.sql'
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_value' AS qu_id,
+           'questions' AS entity
+  ),
+  c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Сила'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Value')
+  ),
+  ins_cols AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(c_vals.num, 'FM9900') || '.' || meta.entity || '.column_name'),
+           meta.entity,
+           'column_name',
+           c_vals.lang,
+           c_vals.text
+      FROM c_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
+SELECT meta.qu_id,
+       meta.su_su_id,
+       NULL,
+       NULL,
+       'single_table',
+       jsonb_build_object(
+         'dice', 'd_weighed',
+         'columns', (
+           SELECT jsonb_agg(
+                    ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(num, 'FM9900') || '.' || meta.entity || '.column_name')::text
+                    ORDER BY num
+                  )
+             FROM (SELECT DISTINCT num FROM c_vals) cols
+         ),
+         'path', jsonb_build_array(
+           ck_id('witcher_cc.hierarchy.life_events')::text,
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
+             jsonb_build_object('var', 'counters.lifeEventsCounter'),
+             '-',
+             jsonb_build_object('+', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               10
+             ))
+           ))),
+           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_ally')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_ally_value')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (qu_id) DO UPDATE
+SET metadata = EXCLUDED.metadata,
+    qtype = EXCLUDED.qtype;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_value' AS qu_id,
+           'answer_options' AS entity,
+           'label' AS entity_field
+  ),
+  vals AS (
+    SELECT *
+      FROM (VALUES
+        ('ru', 1, 'Социальная сфера', 0.2::numeric),
+        ('ru', 2, 'Знание', 0.2::numeric),
+        ('ru', 3, 'Физическая', 0.2::numeric),
+        ('ru', 4, 'Подручные', 0.2::numeric),
+        ('ru', 5, 'Магия', 0.2::numeric),
+        ('en', 1, 'Social', 0.2::numeric),
+        ('en', 2, 'Knowledge', 0.2::numeric),
+        ('en', 3, 'Physical', 0.2::numeric),
+        ('en', 4, 'Minions', 0.2::numeric),
+        ('en', 5, 'Magic', 0.2::numeric)
+      ) AS v(lang, num, txt, probability)
+  ),
+  ins_label AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+           meta.entity,
+           meta.entity_field,
+           vals.lang,
+           '<td style="color: grey;">' || to_char(vals.probability * 100, 'FM990.00') || '%</td><td>' || vals.txt || '</td>'
+      FROM vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  ),
+  ins_label_value AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field || '_value'),
+           meta.entity,
+           meta.entity_field || '_value',
+           vals.lang,
+           vals.txt
+      FROM vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+SELECT 'wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000'),
+       meta.su_su_id,
+       meta.qu_id,
+       ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+       vals.num,
+       jsonb_build_object('probability', vals.probability)
+  FROM vals
+ CROSS JOIN meta
+ WHERE vals.lang = 'ru'
+ON CONFLICT (an_id) DO UPDATE
+SET label = EXCLUDED.label,
+    sort_order = EXCLUDED.sort_order,
+    metadata = EXCLUDED.metadata;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id('witcher_cc.wcc_life_events_allies_and_enemies.event_type_allies_and_enemies'),
+       'character',
+       'event_type',
+       v.lang,
+       v.text
+  FROM (VALUES
+    ('ru', 'Союзники и враги'),
+    ('en', 'Allies and Enemies')
+  ) AS v(lang, text)
+ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(v.key),
+       'character',
+       'ally_field',
+       v.lang,
+       v.text
+  FROM (VALUES
+    ('witcher_cc.wcc_mage_events_ally_value.how_met_academy_life_3_8', 'ru', 'Вы помогли укрыться этому магу-отступнику'),
+    ('witcher_cc.wcc_mage_events_ally_value.how_met_academy_life_3_8', 'en', 'You helped shelter this rogue mage')
+  ) AS v(key, lang, text)
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_value' AS qu_id,
+           'character' AS entity
+  ),
+  ins_desc_ally AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '.event_desc_ally'),
+           meta.entity,
+           'event_desc',
+           v.lang,
+           v.text
+      FROM (VALUES
+        ('ru', 'Союзник'),
+        ('en', 'Ally')
+      ) AS v(lang, text)
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  ),
+  vals AS (
+    SELECT generate_series(1, 5) AS num
+  )
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       'wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000'),
+       jsonb_build_object(
+         'when',
+         jsonb_build_object(
+           '!',
+           jsonb_build_object(
+             'in',
+             jsonb_build_array(
+               jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+               jsonb_build_array(
+                 'academy life 1-2',
+                 'academy life 3-8'
+               )
+             )
+           )
+         ),
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.allies'),
+           jsonb_build_object(
+             'gender', '',
+             'position', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array(
+               'witcher_cc.',
+               jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_ally_position'), jsonb_build_object('var', 'current'), NULL)),
+               '.answer_options.label_value'
+             )))),
+             'how_met', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array(
+               'witcher_cc.',
+               jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_ally_how_met'), jsonb_build_object('var', 'current'), NULL)),
+               '.answer_options.label_value'
+             )))),
+             'how_close', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array(
+               'witcher_cc.',
+               jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_ally_closeness'), jsonb_build_object('var', 'current'), NULL)),
+               '.answer_options.label_value'
+             )))),
+             'where', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000') || '.answer_options.label_value')::text),
+             'value', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000') || '.answer_options.label_value')::text)
+           )
+         )
+       )
+  FROM vals;
+
+WITH vals AS (
+  SELECT generate_series(1, 5) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       'wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000'),
+       jsonb_build_object(
+         'when',
+         jsonb_build_object(
+           '==',
+           jsonb_build_array(
+             jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+             'academy life 1-2'
+           )
+         ),
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.allies'),
+           jsonb_build_object(
+             'gender', '',
+             'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_position_o0008.answer_options.label_value')::text),
+             'how_met', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0001.answer_options.label_value')::text),
+             'how_close', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array(
+               'witcher_cc.',
+               jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_ally_closeness'), jsonb_build_object('var', 'current'), NULL)),
+               '.answer_options.label_value'
+             )))),
+             'where', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000') || '.answer_options.label_value')::text),
+             'value', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000') || '.answer_options.label_value')::text)
+           )
+         )
+       )
+  FROM vals;
+
+WITH vals AS (
+  SELECT generate_series(1, 5) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       'wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000'),
+       jsonb_build_object(
+         'when',
+         jsonb_build_object(
+           '==',
+           jsonb_build_array(
+             jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+             'academy life 3-8'
+           )
+         ),
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.allies'),
+           jsonb_build_object(
+             'gender', '',
+             'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_position_o0008.answer_options.label_value')::text),
+             'how_met', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value.how_met_academy_life_3_8')::text),
+             'how_close', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array(
+               'witcher_cc.',
+               jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_ally_closeness'), jsonb_build_object('var', 'current'), NULL)),
+               '.answer_options.label_value'
+             )))),
+             'where', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000') || '.answer_options.label_value')::text),
+             'value', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o' || to_char(vals.num, 'FM0000') || '.answer_options.label_value')::text)
+           )
+         )
+       )
+  FROM vals;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_ally_value' AS qu_id
+  )
+INSERT INTO effects (scope, qu_qu_id, an_an_id, body)
+SELECT 'character',
+       meta.qu_id,
+       NULL,
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object('+', jsonb_build_array(
+                     jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                     10
+                   ))
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_allies_and_enemies.event_type_allies_and_enemies')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '.event_desc_ally')::text)
+           )
+         )
+       )
+  FROM meta;
+
+-- <<< END sql/049_mage_events_ally_value.sql
+
+-- >>> BEGIN sql/070_past_family.sql
+
+\echo '070_past_family.sql'
 -- Узел: Семья
 
 -- Вопрос
@@ -23244,11 +23984,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 --   SELECT 'wcc_past_homeland_elders', 'wcc_past_family';
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_ch_age', 'wcc_past_family';
--- <<< END sql/049_past_family.sql
+-- <<< END sql/070_past_family.sql
 
--- >>> BEGIN sql/050_past_family_fate.sql
+-- >>> BEGIN sql/071_past_family_fate.sql
 
-\echo '050_past_family_fate.sql'
+\echo '071_past_family_fate.sql'
 -- Узел: Судьба семьи
 
 -- Вопрос
@@ -23489,11 +24229,11 @@ CROSS JOIN meta;
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
   SELECT 'wcc_past_family', 'wcc_past_family_fate', 'wcc_past_family_o02';
--- <<< END sql/050_past_family_fate.sql
+-- <<< END sql/071_past_family_fate.sql
 
--- >>> BEGIN sql/051_past_parents.sql
+-- >>> BEGIN sql/072_past_parents.sql
 
-\echo '051_past_parents.sql'
+\echo '072_past_parents.sql'
 -- Узел: Родители
 
 -- Вопрос
@@ -23563,11 +24303,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
   SELECT 'wcc_past_family', 'wcc_past_parents', 'wcc_past_family_o01';
--- <<< END sql/051_past_parents.sql
+-- <<< END sql/072_past_parents.sql
 
--- >>> BEGIN sql/052_past_parents_fate.sql
+-- >>> BEGIN sql/073_past_parents_fate.sql
 
-\echo '052_past_parents_fate.sql'
+\echo '073_past_parents_fate.sql'
 -- Узел: Судьба родителей (wcc_past_parents_fate)
 
 -- Вопрос
@@ -23750,11 +24490,11 @@ CROSS JOIN meta;
 -- Связи  
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
   SELECT 'wcc_past_parents', 'wcc_past_parents_fate', 'wcc_past_parents_o02', 1;
--- <<< END sql/052_past_parents_fate.sql
+-- <<< END sql/073_past_parents_fate.sql
 
--- >>> BEGIN sql/053_past_parents_who.sql
+-- >>> BEGIN sql/074_past_parents_who.sql
 
-\echo '053_past_parents_who.sql'
+\echo '074_past_parents_who.sql'
 -- Узел: Родители - С кем из родителей?
 
 -- Вопрос
@@ -23906,11 +24646,11 @@ WITH
 }'::jsonb) RETURNING ru_id)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_past_parents_fate', 'wcc_past_parents_who', r.ru_id, 1 FROM r;
--- <<< END sql/053_past_parents_who.sql
+-- <<< END sql/074_past_parents_who.sql
 
--- >>> BEGIN sql/054_past_family_status.sql
+-- >>> BEGIN sql/075_past_family_status.sql
 
-\echo '054_past_family_status.sql'
+\echo '075_past_family_status.sql'
 -- Узел: Положение семьи (wcc_past_family_status) — полный текст ячеек со снаряжением
 
 -- Вопрос
@@ -24263,11 +25003,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_past_parents'     , 'wcc_past_family_status' UNION ALL
   SELECT 'wcc_past_parents_fate', 'wcc_past_family_status' UNION ALL
   SELECT 'wcc_past_parents_who' , 'wcc_past_family_status';
--- <<< END sql/054_past_family_status.sql
+-- <<< END sql/075_past_family_status.sql
 
--- >>> BEGIN sql/055_past_friend.sql
+-- >>> BEGIN sql/076_past_friend.sql
 
-\echo '055_past_friend.sql'
+\echo '076_past_friend.sql'
 -- Узел: Повлиявший друг
 
 -- Вопрос
@@ -24637,11 +25377,11 @@ CROSS JOIN meta;
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_past_family_status', 'wcc_past_friend';
--- <<< END sql/055_past_friend.sql
+-- <<< END sql/076_past_friend.sql
 
--- >>> BEGIN sql/056_past_siblings_amount.sql
+-- >>> BEGIN sql/077_past_siblings_amount.sql
 
-\echo '056_past_siblings_amount.sql'
+\echo '077_past_siblings_amount.sql'
 -- Узел: Братья и сёстры - количество
 
 -- Вопрос
@@ -24829,11 +25569,12 @@ INSERT INTO rules(name, body) VALUES ('is_there_more_siblings',
   ]
 }'::jsonb);
 
--- <<< END sql/056_past_siblings_amount.sql
 
--- >>> BEGIN sql/057_past_siblings_gender.sql
+-- <<< END sql/077_past_siblings_amount.sql
 
-\echo '057_past_siblings_gender.sql'
+-- >>> BEGIN sql/078_past_siblings_gender.sql
+
+\echo '078_past_siblings_gender.sql'
 -- Узел: Братья и сёстры - Пол
 
 -- Вопрос
@@ -24927,11 +25668,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_past_siblings_amount', 'wcc_past_siblings_gender', r.ru_id, 3
     FROM rules r WHERE name = 'is_there_more_siblings';
--- <<< END sql/057_past_siblings_gender.sql
+-- <<< END sql/078_past_siblings_gender.sql
 
--- >>> BEGIN sql/058_past_siblings_age.sql
+-- >>> BEGIN sql/079_past_siblings_age.sql
 
-\echo '058_past_siblings_age.sql'
+\echo '079_past_siblings_age.sql'
 -- Узел: Братья и сёстры - возраст
 
 -- Вопрос
@@ -25026,11 +25767,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_past_siblings_gender', 'wcc_past_siblings_age';
--- <<< END sql/058_past_siblings_age.sql
+-- <<< END sql/079_past_siblings_age.sql
 
--- >>> BEGIN sql/059_past_siblings_attitude.sql
+-- >>> BEGIN sql/080_past_siblings_attitude.sql
 
-\echo '059_past_siblings_attitude.sql'
+\echo '080_past_siblings_attitude.sql'
 -- Узел: Братья и сёстры - отношение
 
 -- Вопрос
@@ -25134,11 +25875,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_past_siblings_age', 'wcc_past_siblings_attitude';
--- <<< END sql/059_past_siblings_attitude.sql
+-- <<< END sql/080_past_siblings_attitude.sql
 
--- >>> BEGIN sql/060_past_siblings_personality.sql
+-- >>> BEGIN sql/081_past_siblings_personality.sql
 
-\echo '060_past_siblings_personality.sql'
+\echo '081_past_siblings_personality.sql'
 -- Узел: Братья и сёстры - Основная черта характера
 
 -- Вопрос
@@ -25283,11 +26024,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_past_siblings_personality', 'wcc_past_siblings_gender', r.ru_id, 3
     FROM rules r WHERE name = 'is_there_more_siblings';
--- <<< END sql/060_past_siblings_personality.sql
+-- <<< END sql/081_past_siblings_personality.sql
 
--- >>> BEGIN sql/061_life_events_event.sql
+-- >>> BEGIN sql/082_life_events_event.sql
 
-\echo '061_life_events_event.sql'
+\echo '082_life_events_event.sql'
 
 -- Узел: Выжные события - Событие
 -- Вопрос
@@ -25410,11 +26151,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
 
 
 
--- <<< END sql/061_life_events_event.sql
 
--- >>> BEGIN sql/062_life_events_fortune_or_not.sql
+-- <<< END sql/082_life_events_event.sql
 
-\echo '062_life_events_fortune_or_not.sql'
+-- >>> BEGIN sql/083_life_events_fortune_or_not.sql
+
+\echo '083_life_events_fortune_or_not.sql'
 
 -- Узел: Выжные события - Удача или неудача
 -- Вопрос
@@ -25492,11 +26234,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
   SELECT 'wcc_life_events_event', 'wcc_life_events_fortune_or_not', 'wcc_life_events_event_o01';
--- <<< END sql/062_life_events_fortune_or_not.sql
+-- <<< END sql/083_life_events_fortune_or_not.sql
 
--- >>> BEGIN sql/063_life_events_fortune.sql
+-- >>> BEGIN sql/084_life_events_fortune.sql
 
-\echo '063_life_events_fortune.sql'
+\echo '084_life_events_fortune.sql'
 
 -- Узел: Выжные события - Кто потерпевший
 -- Вопрос
@@ -25786,11 +26528,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune', 'wcc_life_events_event', r.ru_id, 1
   FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
--- <<< END sql/063_life_events_fortune.sql
+-- <<< END sql/084_life_events_fortune.sql
 
--- >>> BEGIN sql/064_life_events_misfortune.sql
+-- >>> BEGIN sql/085_life_events_misfortune.sql
 
-\echo '064_life_events_misfortune.sql'
+\echo '085_life_events_misfortune.sql'
 
 -- Узел: Выжные события - Кто потерпевший
 -- Вопрос
@@ -25889,11 +26631,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_misfortune', 'wcc_life_events_event', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
--- <<< END sql/064_life_events_misfortune.sql
+-- <<< END sql/085_life_events_misfortune.sql
 
--- >>> BEGIN sql/065_life_events_fortune_or_not_details.sql
+-- >>> BEGIN sql/086_life_events_fortune_or_not_details.sql
 
-\echo '065_life_events_fortune_or_not_details.sql'
+\echo '086_life_events_fortune_or_not_details.sql'
 -- Узел: Братья и сёстры - количество
 
 -- Вопрос
@@ -27513,11 +28255,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details', 'wcc_life_events_event', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
--- <<< END sql/065_life_events_fortune_or_not_details.sql
+-- <<< END sql/086_life_events_fortune_or_not_details.sql
 
--- >>> BEGIN sql/066_life_events_fortune_or_not_details_dice.sql
+-- >>> BEGIN sql/087_life_events_fortune_or_not_details_dice.sql
 
-\echo '066_life_events_fortune_or_not_details_dice.sql'
+\echo '087_life_events_fortune_or_not_details_dice.sql'
 -- Узел: Братья и сёстры - количество
 
 -- Вопрос
@@ -27858,11 +28600,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details_dice', 'wcc_life_events_event', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
--- <<< END sql/066_life_events_fortune_or_not_details_dice.sql
+-- <<< END sql/087_life_events_fortune_or_not_details_dice.sql
 
--- >>> BEGIN sql/067_life_events_fortune_or_not_details_addiction.sql
+-- >>> BEGIN sql/088_life_events_fortune_or_not_details_addiction.sql
 
-\echo '067_life_events_fortune_or_not_details_addiction.sql'
+\echo '088_life_events_fortune_or_not_details_addiction.sql'
 -- Узел: Братья и сёстры - Основная черта характера
 
 -- Вопрос
@@ -28021,11 +28763,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details_addiction', 'wcc_life_events_event', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
 
--- <<< END sql/067_life_events_fortune_or_not_details_addiction.sql
 
--- >>> BEGIN sql/068_life_events_fortune_or_not_details_curse.sql
+-- <<< END sql/088_life_events_fortune_or_not_details_addiction.sql
 
-\echo '068_life_events_fortune_or_not_details_curse.sql'
+-- >>> BEGIN sql/089_life_events_fortune_or_not_details_curse.sql
+
+\echo '089_life_events_fortune_or_not_details_curse.sql'
 -- Узел: Братья и сёстры - Основная черта характера
 
 -- Вопрос
@@ -28186,11 +28929,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
   SELECT 'wcc_mage_events_danger_details', 'wcc_life_events_fortune_or_not_details_curse', 'wcc_mage_events_danger_details_o041006', 1;
 
--- <<< END sql/068_life_events_fortune_or_not_details_curse.sql
 
--- >>> BEGIN sql/069_life_events_allies_and_enemies_who.sql
+-- <<< END sql/089_life_events_fortune_or_not_details_curse.sql
 
-\echo '069_life_events_allies_and_enemies_who.sql'
+-- >>> BEGIN sql/090_life_events_allies_and_enemies_who.sql
+
+\echo '090_life_events_allies_and_enemies_who.sql'
 
 -- Узел: Выжные события - Союзники и враги
 -- Вопрос
@@ -28268,11 +29012,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
   SELECT 'wcc_life_events_event', 'wcc_life_events_allies_and_enemies_who', 'wcc_life_events_event_o02';
--- <<< END sql/069_life_events_allies_and_enemies_who.sql
+-- <<< END sql/090_life_events_allies_and_enemies_who.sql
 
--- >>> BEGIN sql/070_life_events_fortune_or_not_details_curse_monstrosity.sql
+-- >>> BEGIN sql/091_life_events_fortune_or_not_details_curse_monstrosity.sql
 
-\echo '070_life_events_fortune_or_not_details_curse_monstrosity.sql'
+\echo '091_life_events_fortune_or_not_details_curse_monstrosity.sql'
 -- Узел: Детализация проклятия чудовищности — выбор животного
 
 -- Вопрос
@@ -28462,11 +29206,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
 
 
--- <<< END sql/070_life_events_fortune_or_not_details_curse_monstrosity.sql
 
--- >>> BEGIN sql/071_life_events_enemy_victim.sql
+-- <<< END sql/091_life_events_fortune_or_not_details_curse_monstrosity.sql
 
-\echo '071_life_events_enemy_victim.sql'
+-- >>> BEGIN sql/092_life_events_enemy_victim.sql
+
+\echo '092_life_events_enemy_victim.sql'
 
 -- Узел: Выжные события - Кто потерпевший
 -- Вопрос
@@ -28552,11 +29297,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
   SELECT 'wcc_life_events_allies_and_enemies_who', 'wcc_life_events_enemy_victim', 'wcc_life_events_allies_and_enemies_who_o02';
--- <<< END sql/071_life_events_enemy_victim.sql
+-- <<< END sql/092_life_events_enemy_victim.sql
 
--- >>> BEGIN sql/072_life_events_enemy_gender.sql
+-- >>> BEGIN sql/093_life_events_enemy_gender.sql
 
-\echo '072_life_events_enemy_gender.sql'
+\echo '093_life_events_enemy_gender.sql'
 
 -- Узел: 
 -- Вопрос
@@ -28652,11 +29397,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_enemy_victim', 'wcc_life_events_enemy_gender';
--- <<< END sql/072_life_events_enemy_gender.sql
+-- <<< END sql/093_life_events_enemy_gender.sql
 
--- >>> BEGIN sql/073_life_events_enemy_position.sql
+-- >>> BEGIN sql/094_life_events_enemy_position.sql
 
-\echo '073_life_events_enemy_position.sql'
+\echo '094_life_events_enemy_position.sql'
 
 -- Узел: 
 -- Вопрос
@@ -28768,11 +29513,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_enemy_gender', 'wcc_life_events_enemy_position';
--- <<< END sql/073_life_events_enemy_position.sql
+-- <<< END sql/094_life_events_enemy_position.sql
 
--- >>> BEGIN sql/074_life_events_enemy_cause.sql
+-- >>> BEGIN sql/095_life_events_enemy_cause.sql
 
-\echo '074_life_events_enemy_cause.sql'
+\echo '095_life_events_enemy_cause.sql'
 
 -- Узел: 
 -- Вопрос
@@ -28884,11 +29629,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_enemy_position', 'wcc_life_events_enemy_cause';
--- <<< END sql/074_life_events_enemy_cause.sql
+-- <<< END sql/095_life_events_enemy_cause.sql
 
--- >>> BEGIN sql/075_life_events_enemy_power_level.sql
+-- >>> BEGIN sql/096_life_events_enemy_power_level.sql
 
-\echo '075_life_events_enemy_power_level.sql'
+\echo '096_life_events_enemy_power_level.sql'
 
 -- Узел: 
 -- Вопрос
@@ -29000,11 +29745,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_enemy_cause', 'wcc_life_events_enemy_power_level';
--- <<< END sql/075_life_events_enemy_power_level.sql
+-- <<< END sql/096_life_events_enemy_power_level.sql
 
--- >>> BEGIN sql/076_life_events_enemy_how_far.sql
+-- >>> BEGIN sql/097_life_events_enemy_how_far.sql
 
-\echo '076_life_events_enemy_how_far.sql'
+\echo '097_life_events_enemy_how_far.sql'
 
 -- Узел: 
 -- Вопрос
@@ -29106,11 +29851,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_enemy_power_level', 'wcc_life_events_enemy_how_far';
--- <<< END sql/076_life_events_enemy_how_far.sql
+-- <<< END sql/097_life_events_enemy_how_far.sql
 
--- >>> BEGIN sql/077_life_events_enemy_the_power.sql
+-- >>> BEGIN sql/098_life_events_enemy_the_power.sql
 
-\echo '077_life_events_enemy_the_power.sql'
+\echo '098_life_events_enemy_the_power.sql'
 
 -- Узел: 
 -- Вопрос
@@ -29307,11 +30052,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_enemy_the_power', 'wcc_life_events_event', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
--- <<< END sql/077_life_events_enemy_the_power.sql
+-- <<< END sql/098_life_events_enemy_the_power.sql
 
--- >>> BEGIN sql/078_life_events_ally_gender.sql
+-- >>> BEGIN sql/099_life_events_ally_gender.sql
 
-\echo '078_life_events_ally_gender.sql'
+\echo '099_life_events_ally_gender.sql'
 
 -- Узел: 
 -- Вопрос
@@ -29407,11 +30152,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
   SELECT 'wcc_life_events_allies_and_enemies_who', 'wcc_life_events_ally_gender', 'wcc_life_events_allies_and_enemies_who_o01';
--- <<< END sql/078_life_events_ally_gender.sql
+-- <<< END sql/099_life_events_ally_gender.sql
 
--- >>> BEGIN sql/079_life_events_ally_position.sql
+-- >>> BEGIN sql/100_life_events_ally_position.sql
 
-\echo '079_life_events_ally_position.sql'
+\echo '100_life_events_ally_position.sql'
 
 -- Узел: 
 -- Вопрос
@@ -29523,11 +30268,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_ally_gender', 'wcc_life_events_ally_position';
--- <<< END sql/079_life_events_ally_position.sql
+-- <<< END sql/100_life_events_ally_position.sql
 
--- >>> BEGIN sql/080_life_events_ally_how_met.sql
+-- >>> BEGIN sql/101_life_events_ally_how_met.sql
 
-\echo '080_life_events_ally_how_met.sql'
+\echo '101_life_events_ally_how_met.sql'
 
 -- Узел: 
 -- Вопрос
@@ -29639,11 +30384,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_ally_position', 'wcc_life_events_ally_how_met';
--- <<< END sql/080_life_events_ally_how_met.sql
+-- <<< END sql/101_life_events_ally_how_met.sql
 
--- >>> BEGIN sql/081_life_events_ally_how_close.sql
+-- >>> BEGIN sql/102_life_events_ally_how_close.sql
 
-\echo '081_life_events_ally_how_close.sql'
+\echo '102_life_events_ally_how_close.sql'
 
 -- Узел: 
 -- Вопрос
@@ -29745,11 +30490,11 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_ally_how_met', 'wcc_life_events_ally_how_close';
--- <<< END sql/081_life_events_ally_how_close.sql
+-- <<< END sql/102_life_events_ally_how_close.sql
 
--- >>> BEGIN sql/082_life_events_ally_where.sql
+-- >>> BEGIN sql/103_life_events_ally_where.sql
 
-\echo '082_life_events_ally_where.sql'
+\echo '103_life_events_ally_where.sql'
 
 -- Узел: 
 -- Вопрос
@@ -29942,11 +30687,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_ally_where', 'wcc_life_events_event', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
--- <<< END sql/082_life_events_ally_where.sql
+-- <<< END sql/103_life_events_ally_where.sql
 
--- >>> BEGIN sql/083_life_events_lovestory.sql
+-- >>> BEGIN sql/104_life_events_lovestory.sql
 
-\echo '083_life_events_lovestory.sql'
+\echo '104_life_events_lovestory.sql'
 
 -- Узел: 
 -- Вопрос
@@ -30117,11 +30862,11 @@ SELECT 'character', 'wcc_life_events_relationshipsstory_o' || to_char(event_nums
   )
 FROM (VALUES (1), (4)) AS event_nums(num)
 CROSS JOIN meta;
--- <<< END sql/083_life_events_lovestory.sql
+-- <<< END sql/104_life_events_lovestory.sql
 
--- >>> BEGIN sql/084_life_events_lovestory_details.sql
+-- >>> BEGIN sql/105_life_events_lovestory_details.sql
 
-\echo '084_life_events_lovestory_details.sql'
+\echo '105_life_events_lovestory_details.sql'
 
 -- Узел: Выжные события - Союзники и враги
 -- Вопрос
@@ -30398,11 +31143,11 @@ SELECT 'character', meta.qu_id, NULL,
     )
   )
 FROM meta;
--- <<< END sql/084_life_events_lovestory_details.sql
+-- <<< END sql/105_life_events_lovestory_details.sql
 
--- >>> BEGIN sql/085_witcher_graduation_age.sql
+-- >>> BEGIN sql/106_witcher_graduation_age.sql
 
-\echo '085_witcher_graduation_age.sql'
+\echo '106_witcher_graduation_age.sql'
 -- Узел: Братья и сёстры - Основная черта характера
 
 -- Вопрос
@@ -30477,11 +31222,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_ch_age', 'wcc_witcher_graduation_age', cr.ru_id, 1 FROM combined_rule cr UNION ALL
   SELECT 'wcc_past_siblings_personality', 'wcc_witcher_graduation_age', r.ru_id, 2 FROM is_witcher_rule r UNION ALL
   SELECT 'wcc_past_siblings_amount', 'wcc_witcher_graduation_age', r.ru_id, 2 FROM is_witcher_rule r;
--- <<< END sql/085_witcher_graduation_age.sql
+-- <<< END sql/106_witcher_graduation_age.sql
 
--- >>> BEGIN sql/086_witcher_when.sql
+-- >>> BEGIN sql/107_witcher_when.sql
 
-\echo '086_witcher_when.sql'
+\echo '107_witcher_when.sql'
 -- Узел: Повлиявший друг
 
 -- Вопрос
@@ -30666,11 +31411,11 @@ FROM meta;
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_witcher_graduation_age', 'wcc_witcher_when';
--- <<< END sql/086_witcher_when.sql
+-- <<< END sql/107_witcher_when.sql
 
--- >>> BEGIN sql/087_witcher_first_trainings.sql
+-- >>> BEGIN sql/108_witcher_first_trainings.sql
 
-\echo '087_witcher_first_trainings.sql'
+\echo '108_witcher_first_trainings.sql'
 -- Узел: Как прошли начальные тренировки?
 
 -- Вопрос
@@ -31291,11 +32036,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 
 
 
--- <<< END sql/087_witcher_first_trainings.sql
 
--- >>> BEGIN sql/088_witcher_trials.sql
+-- <<< END sql/108_witcher_first_trainings.sql
 
-\echo '088_witcher_trials.sql'
+-- >>> BEGIN sql/109_witcher_trials.sql
+
+\echo '109_witcher_trials.sql'
 -- Узел: Как прошли испытания?
 
 -- Вопрос
@@ -31586,11 +32332,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 
 
 
--- <<< END sql/088_witcher_trials.sql
 
--- >>> BEGIN sql/089_witcher_most_important_event.sql
+-- <<< END sql/109_witcher_trials.sql
 
-\echo '089_witcher_most_important_event.sql'
+-- >>> BEGIN sql/110_witcher_most_important_event.sql
+
+\echo '110_witcher_most_important_event.sql'
 -- Узел: Самое важное событие
 
 -- Вопрос
@@ -31774,11 +32521,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 
 
 
--- <<< END sql/089_witcher_most_important_event.sql
 
--- >>> BEGIN sql/090_witcher_child_who.sql
+-- <<< END sql/110_witcher_most_important_event.sql
 
-\echo '090_witcher_child_who.sql'
+-- >>> BEGIN sql/111_witcher_child_who.sql
+
+\echo '111_witcher_child_who.sql'
 -- Узел: Пол ребёнка по Праву Неожиданности
 
 -- Вопрос
@@ -31911,11 +32659,11 @@ FROM meta;
 -- Переход: если выбран вариант 01 «Ребёнок по Праву Неожиданности», сначала уточняем пол
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
   SELECT 'wcc_witcher_most_important_event', 'wcc_witcher_child_who', 'wcc_witcher_most_important_event_o01', 1;
--- <<< END sql/090_witcher_child_who.sql
+-- <<< END sql/111_witcher_child_who.sql
 
--- >>> BEGIN sql/091_witcher_child_fate.sql
+-- >>> BEGIN sql/112_witcher_child_fate.sql
 
-\echo '091_witcher_child_fate.sql'
+\echo '112_witcher_child_fate.sql'
 -- Узел: Судьба ребёнка по Праву Неожиданности (мальчик)
 
 -- Вопрос
@@ -32064,11 +32812,11 @@ FROM meta;
 -- Переход: из выбора пола (мужской) к судьбе ребёнка
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority) 
   SELECT 'wcc_witcher_child_who', 'wcc_witcher_child_fate', 'wcc_witcher_child_who_o01', 1;
--- <<< END sql/091_witcher_child_fate.sql
+-- <<< END sql/112_witcher_child_fate.sql
 
--- >>> BEGIN sql/092_witcher_current_situation.sql
+-- >>> BEGIN sql/113_witcher_current_situation.sql
 
-\echo '092_witcher_current_situation.sql'
+\echo '113_witcher_current_situation.sql'
 -- Узел: Каково ваше нынешнее положение?
 
 -- Вопрос
@@ -32214,11 +32962,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_witcher_most_important_event', 'wcc_witcher_current_situation' UNION ALL
   SELECT 'wcc_witcher_child_who', 'wcc_witcher_current_situation' UNION ALL
   SELECT 'wcc_witcher_child_fate', 'wcc_witcher_current_situation';
--- <<< END sql/092_witcher_current_situation.sql
+-- <<< END sql/113_witcher_current_situation.sql
 
--- >>> BEGIN sql/093_witcher_events_risk.sql
+-- >>> BEGIN sql/114_witcher_events_risk.sql
 
-\echo '093_witcher_events_risk.sql'
+\echo '114_witcher_events_risk.sql'
 -- Узел: Каково ваше нынешнее положение?
 
 -- Вопрос
@@ -32374,11 +33122,12 @@ ON CONFLICT (an_id) DO NOTHING;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_witcher_current_situation', 'wcc_witcher_events_risk';
 
--- <<< END sql/093_witcher_events_risk.sql
 
--- >>> BEGIN sql/094_witcher_events_is_in_danger.sql
+-- <<< END sql/114_witcher_events_risk.sql
 
-\echo '094_witcher_events_is_in_danger.sql'
+-- >>> BEGIN sql/115_witcher_events_is_in_danger.sql
+
+\echo '115_witcher_events_is_in_danger.sql'
 -- Узел: Каково ваше нынешнее положение?
 
 -- Вопрос
@@ -32548,11 +33297,11 @@ ON CONFLICT (an_id) DO NOTHING;
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_witcher_events_risk', 'wcc_witcher_events_is_in_danger';
--- <<< END sql/094_witcher_events_is_in_danger.sql
+-- <<< END sql/115_witcher_events_is_in_danger.sql
 
--- >>> BEGIN sql/095_witcher_events_danger_events.sql
+-- >>> BEGIN sql/116_witcher_events_danger_events.sql
 
-\echo '095_witcher_events_danger_events.sql'
+\echo '116_witcher_events_danger_events.sql'
 
 -- Узел: Важные события — Опасности
 WITH
@@ -32734,11 +33483,11 @@ SELECT
   )
 FROM desc_vals
 CROSS JOIN meta;
--- <<< END sql/095_witcher_events_danger_events.sql
+-- <<< END sql/116_witcher_events_danger_events.sql
 
--- >>> BEGIN sql/096_witcher_events_danger_events_details.sql
+-- >>> BEGIN sql/117_witcher_events_danger_events_details.sql
 
-\echo '096_witcher_events_danger_events_details.sql'
+\echo '117_witcher_events_danger_events_details.sql'
 
 -- Вопрос: уточнения к опасностям ведьмака
 WITH
@@ -33327,11 +34076,12 @@ WHERE NOT (desc_vals.group_id = 3 AND desc_vals.num = 10)   -- Исключае�
 
 
 
--- <<< END sql/096_witcher_events_danger_events_details.sql
 
--- >>> BEGIN sql/097_witcher_events_danger_wounds.sql
+-- <<< END sql/117_witcher_events_danger_events_details.sql
 
-\echo '097_witcher_events_danger_wounds.sql'
+-- >>> BEGIN sql/118_witcher_events_danger_wounds.sql
+
+\echo '118_witcher_events_danger_wounds.sql'
 
 -- Вопрос
 WITH
@@ -33621,11 +34371,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
   SELECT 'wcc_witcher_events_is_in_danger', 'wcc_witcher_events_danger_wounds', 'wcc_witcher_events_is_in_danger_o0302', 1 UNION ALL
   SELECT 'wcc_witcher_events_is_in_danger', 'wcc_witcher_events_danger_wounds', 'wcc_witcher_events_is_in_danger_o0402', 1
   ;
--- <<< END sql/097_witcher_events_danger_wounds.sql
+-- <<< END sql/118_witcher_events_danger_wounds.sql
 
--- >>> BEGIN sql/098_witcher_events_danger_enemy_gender.sql
+-- >>> BEGIN sql/119_witcher_events_danger_enemy_gender.sql
 
-\echo '098_witcher_events_danger_enemy_gender.sql'
+\echo '119_witcher_events_danger_enemy_gender.sql'
 
 -- Вопрос
 WITH
@@ -33749,11 +34499,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
   SELECT 'wcc_witcher_events_is_in_danger', 'wcc_witcher_events_danger_enemy_gender', 'wcc_witcher_events_is_in_danger_o0304', 1 UNION ALL
   SELECT 'wcc_witcher_events_is_in_danger', 'wcc_witcher_events_danger_enemy_gender', 'wcc_witcher_events_is_in_danger_o0404', 1
   ;
--- <<< END sql/098_witcher_events_danger_enemy_gender.sql
+-- <<< END sql/119_witcher_events_danger_enemy_gender.sql
 
--- >>> BEGIN sql/099_witcher_events_danger_enemy_profession.sql
+-- >>> BEGIN sql/120_witcher_events_danger_enemy_profession.sql
 
-\echo '099_witcher_events_danger_enemy_profession.sql'
+\echo '120_witcher_events_danger_enemy_profession.sql'
 
 -- Вопрос
 WITH
@@ -33870,11 +34620,11 @@ ON CONFLICT (an_id) DO NOTHING;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id) 
   SELECT 'wcc_witcher_events_danger_enemy_gender', 'wcc_witcher_events_danger_enemy_profession'
   ;
--- <<< END sql/099_witcher_events_danger_enemy_profession.sql
+-- <<< END sql/120_witcher_events_danger_enemy_profession.sql
 
--- >>> BEGIN sql/100_witcher_events_danger_enemy_reason.sql
+-- >>> BEGIN sql/121_witcher_events_danger_enemy_reason.sql
 
-\echo '100_witcher_events_danger_enemy_reason.sql'
+\echo '121_witcher_events_danger_enemy_reason.sql'
 
 -- Вопрос
 WITH
@@ -33991,11 +34741,11 @@ ON CONFLICT (an_id) DO NOTHING;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id) 
   SELECT 'wcc_witcher_events_danger_enemy_profession', 'wcc_witcher_events_danger_enemy_reason'
   ;
--- <<< END sql/100_witcher_events_danger_enemy_reason.sql
+-- <<< END sql/121_witcher_events_danger_enemy_reason.sql
 
--- >>> BEGIN sql/101_witcher_events_danger_enemy_strength.sql
+-- >>> BEGIN sql/122_witcher_events_danger_enemy_strength.sql
 
-\echo '101_witcher_events_danger_enemy_strength.sql'
+\echo '122_witcher_events_danger_enemy_strength.sql'
 
 -- Вопрос
 WITH
@@ -34112,11 +34862,11 @@ ON CONFLICT (an_id) DO NOTHING;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id) 
   SELECT 'wcc_witcher_events_danger_enemy_reason', 'wcc_witcher_events_danger_enemy_strength'
   ;
--- <<< END sql/101_witcher_events_danger_enemy_strength.sql
+-- <<< END sql/122_witcher_events_danger_enemy_strength.sql
 
--- >>> BEGIN sql/102_witcher_events_danger_enemy_result.sql
+-- >>> BEGIN sql/123_witcher_events_danger_enemy_result.sql
 
-\echo '102_witcher_events_danger_enemy_result.sql'
+\echo '123_witcher_events_danger_enemy_result.sql'
 
 -- Вопрос
 WITH
@@ -34234,11 +34984,11 @@ ON CONFLICT (an_id) DO NOTHING;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id) 
   SELECT 'wcc_witcher_events_danger_enemy_strength', 'wcc_witcher_events_danger_enemy_result'
   ;
--- <<< END sql/102_witcher_events_danger_enemy_result.sql
+-- <<< END sql/123_witcher_events_danger_enemy_result.sql
 
--- >>> BEGIN sql/103_witcher_events_danger_enemy_is_alive.sql
+-- >>> BEGIN sql/124_witcher_events_danger_enemy_is_alive.sql
 
-\echo '103_witcher_events_danger_enemy_is_alive.sql'
+\echo '124_witcher_events_danger_enemy_is_alive.sql'
 
 -- Вопрос
 WITH
@@ -34458,11 +35208,11 @@ FROM meta;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id) 
   SELECT 'wcc_witcher_events_danger_enemy_result', 'wcc_witcher_events_danger_enemy_is_alive'
   ;
--- <<< END sql/103_witcher_events_danger_enemy_is_alive.sql
+-- <<< END sql/124_witcher_events_danger_enemy_is_alive.sql
 
--- >>> BEGIN sql/104_witcher_events_danger_enemy_death_reason.sql
+-- >>> BEGIN sql/125_witcher_events_danger_enemy_death_reason.sql
 
-\echo '104_witcher_events_danger_enemy_death_reason.sql'
+\echo '125_witcher_events_danger_enemy_death_reason.sql'
 
 -- Вопрос
 WITH
@@ -34668,11 +35418,11 @@ FROM meta;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id) 
   SELECT 'wcc_witcher_events_danger_enemy_is_alive', 'wcc_witcher_events_danger_enemy_death_reason'
   ;
--- <<< END sql/104_witcher_events_danger_enemy_death_reason.sql
+-- <<< END sql/125_witcher_events_danger_enemy_death_reason.sql
 
--- >>> BEGIN sql/105_witcher_events.sql
+-- >>> BEGIN sql/126_witcher_events.sql
 
-\echo '105_witcher_events.sql'
+\echo '126_witcher_events.sql'
 
 
 -- Вопрос
@@ -34869,11 +35619,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details_addiction', 'wcc_witcher_events', r.ru_id, 2 FROM is_witcher_rule r UNION ALL
   SELECT 'wcc_life_events_fortune_or_not_details_curse', 'wcc_witcher_events', r.ru_id, 2 FROM is_witcher_rule r UNION ALL
   SELECT 'wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_witcher_events', r.ru_id, 2 FROM is_witcher_rule r;
--- <<< END sql/105_witcher_events.sql
+-- <<< END sql/126_witcher_events.sql
 
--- >>> BEGIN sql/106_witcher_events_benefit.sql
+-- >>> BEGIN sql/127_witcher_events_benefit.sql
 
-\echo '106_witcher_events_benefit.sql'
+\echo '127_witcher_events_benefit.sql'
 
 -- Вопрос
 WITH
@@ -35148,11 +35898,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_witcher_events_benefit', 'wcc_witcher_events_risk', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
--- <<< END sql/106_witcher_events_benefit.sql
+-- <<< END sql/127_witcher_events_benefit.sql
 
--- >>> BEGIN sql/107_witcher_events_benefit_details.sql
+-- >>> BEGIN sql/128_witcher_events_benefit_details.sql
 
-\echo '107_witcher_events_benefit_details.sql'
+\echo '128_witcher_events_benefit_details.sql'
 
 -- Вопрос: уточнения к опасностям ведьмака
 WITH
@@ -36346,11 +37096,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_witcher_events_benefit_details', 'wcc_witcher_events_risk', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
 
--- <<< END sql/107_witcher_events_benefit_details.sql
 
--- >>> BEGIN sql/108_witcher_events_benefit_details_2.sql
+-- <<< END sql/128_witcher_events_benefit_details.sql
 
-\echo '108_witcher_events_benefit_details_2.sql'
+-- >>> BEGIN sql/129_witcher_events_benefit_details_2.sql
+
+\echo '129_witcher_events_benefit_details_2.sql'
 
 -- Вопрос: уточнения к опасностям ведьмака
 WITH
@@ -36620,11 +37371,11 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_witcher_events_benefit_details_2', 'wcc_witcher_events_risk', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
--- <<< END sql/108_witcher_events_benefit_details_2.sql
+-- <<< END sql/129_witcher_events_benefit_details_2.sql
 
--- >>> BEGIN sql/109_witcher_events_ally_gender.sql
+-- >>> BEGIN sql/130_witcher_events_ally_gender.sql
 
-\echo '109_witcher_events_ally_gender.sql'
+\echo '130_witcher_events_ally_gender.sql'
 
 -- Вопрос: пол союзника
 WITH
@@ -36778,11 +37529,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
 
 
 
--- <<< END sql/109_witcher_events_ally_gender.sql
 
--- >>> BEGIN sql/110_witcher_events_ally_who.sql
+-- <<< END sql/130_witcher_events_ally_gender.sql
 
-\echo '110_witcher_events_ally_who.sql'
+-- >>> BEGIN sql/131_witcher_events_ally_who.sql
+
+\echo '131_witcher_events_ally_who.sql'
 
 -- Вопрос: кто ваш союзник
 WITH
@@ -36949,11 +37701,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 
 
 
--- <<< END sql/110_witcher_events_ally_who.sql
 
--- >>> BEGIN sql/111_witcher_events_ally_how_met.sql
+-- <<< END sql/131_witcher_events_ally_who.sql
 
-\echo '111_witcher_events_ally_how_met.sql'
+-- >>> BEGIN sql/132_witcher_events_ally_how_met.sql
+
+\echo '132_witcher_events_ally_how_met.sql'
 
 -- Вопрос: как вы познакомились
 WITH
@@ -37120,11 +37873,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 
 
 
--- <<< END sql/111_witcher_events_ally_how_met.sql
 
--- >>> BEGIN sql/112_witcher_events_ally_closeness.sql
+-- <<< END sql/132_witcher_events_ally_how_met.sql
 
-\echo '112_witcher_events_ally_closeness.sql'
+-- >>> BEGIN sql/133_witcher_events_ally_closeness.sql
+
+\echo '133_witcher_events_ally_closeness.sql'
 
 -- Вопрос: насколько вы близки
 WITH
@@ -37277,11 +38031,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 
 
 
--- <<< END sql/112_witcher_events_ally_closeness.sql
 
--- >>> BEGIN sql/113_witcher_events_ally_is_alive.sql
+-- <<< END sql/133_witcher_events_ally_closeness.sql
 
-\echo '113_witcher_events_ally_is_alive.sql'
+-- >>> BEGIN sql/134_witcher_events_ally_is_alive.sql
+
+\echo '134_witcher_events_ally_is_alive.sql'
 
 -- Вопрос: жив ли союзник
 WITH
@@ -37546,11 +38301,12 @@ FROM meta;
 
 
 
--- <<< END sql/113_witcher_events_ally_is_alive.sql
 
--- >>> BEGIN sql/114_witcher_events_ally_death_reason.sql
+-- <<< END sql/134_witcher_events_ally_is_alive.sql
 
-\echo '114_witcher_events_ally_death_reason.sql'
+-- >>> BEGIN sql/135_witcher_events_ally_death_reason.sql
+
+\echo '135_witcher_events_ally_death_reason.sql'
 
 -- Вопрос: причина смерти союзника
 WITH
@@ -37805,11 +38561,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
 
 
 
--- <<< END sql/114_witcher_events_ally_death_reason.sql
 
--- >>> BEGIN sql/115_witcher_events_hunt_prey.sql
+-- <<< END sql/135_witcher_events_ally_death_reason.sql
 
-\echo '115_witcher_events_hunt_prey.sql'
+-- >>> BEGIN sql/136_witcher_events_hunt_prey.sql
+
+\echo '136_witcher_events_hunt_prey.sql'
 
 -- Вопрос: цель охоты (класс чудовищ)
 WITH
@@ -37979,11 +38736,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
 
 
 
--- <<< END sql/115_witcher_events_hunt_prey.sql
 
--- >>> BEGIN sql/116_witcher_events_hunt_location.sql
+-- <<< END sql/136_witcher_events_hunt_prey.sql
 
-\echo '116_witcher_events_hunt_location.sql'
+-- >>> BEGIN sql/137_witcher_events_hunt_location.sql
+
+\echo '137_witcher_events_hunt_location.sql'
 
 -- Вопрос: где была цель охоты (место)
 WITH
@@ -38150,11 +38908,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 
 
 
--- <<< END sql/116_witcher_events_hunt_location.sql
 
--- >>> BEGIN sql/117_witcher_events_hunt_outcome.sql
+-- <<< END sql/137_witcher_events_hunt_location.sql
 
-\echo '117_witcher_events_hunt_outcome.sql'
+-- >>> BEGIN sql/138_witcher_events_hunt_outcome.sql
+
+\echo '138_witcher_events_hunt_outcome.sql'
 
 -- Вопрос: чем всё закончилась охота
 WITH
@@ -38311,11 +39070,12 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
 
 
 
--- <<< END sql/117_witcher_events_hunt_outcome.sql
 
--- >>> BEGIN sql/118_witcher_events_hunt_twist.sql
+-- <<< END sql/138_witcher_events_hunt_outcome.sql
 
-\echo '118_witcher_events_hunt_twist.sql'
+-- >>> BEGIN sql/139_witcher_events_hunt_twist.sql
+
+\echo '139_witcher_events_hunt_twist.sql'
 
 -- Вопрос: был ли поворот сюжета
 WITH
@@ -38539,11 +39299,12 @@ FROM meta;
 
 
 
--- <<< END sql/118_witcher_events_hunt_twist.sql
 
--- >>> BEGIN sql/119_witcher_events_hunt_twist_details.sql
+-- <<< END sql/139_witcher_events_hunt_twist.sql
 
-\echo '119_witcher_events_hunt_twist_details.sql'
+-- >>> BEGIN sql/140_witcher_events_hunt_twist_details.sql
+
+\echo '140_witcher_events_hunt_twist_details.sql'
 
 -- Вопрос: какой случился поворот сюжета
 WITH
@@ -38786,11 +39547,12 @@ FROM meta;
 
 
 
--- <<< END sql/119_witcher_events_hunt_twist_details.sql
 
--- >>> BEGIN sql/120_style_clothing.sql
+-- <<< END sql/140_witcher_events_hunt_twist_details.sql
 
-\echo '120_style_clothing.sql'
+-- >>> BEGIN sql/141_style_clothing.sql
+
+\echo '141_style_clothing.sql'
 
 -- Узел: Выжные события - Кто потерпевший
 -- Вопрос
@@ -38956,11 +39718,11 @@ SELECT 'character', 'wcc_style_clothing_o' || to_char(answer_nums.num, 'FM9900')
   )
 FROM answer_nums
 CROSS JOIN meta;
--- <<< END sql/120_style_clothing.sql
+-- <<< END sql/141_style_clothing.sql
 
--- >>> BEGIN sql/121_style_personality.sql
+-- >>> BEGIN sql/142_style_personality.sql
 
-\echo '121_style_personality.sql'
+\echo '142_style_personality.sql'
 
 -- Узел: Выжные события - Кто потерпевший
 -- Вопрос
@@ -39057,11 +39819,11 @@ SELECT 'character', 'wcc_style_personality_o' || to_char(answer_nums.num, 'FM990
   )
 FROM answer_nums
 CROSS JOIN meta;
--- <<< END sql/121_style_personality.sql
+-- <<< END sql/142_style_personality.sql
 
--- >>> BEGIN sql/122_style_hair.sql
+-- >>> BEGIN sql/143_style_hair.sql
 
-\echo '122_style_hair.sql'
+\echo '143_style_hair.sql'
 
 -- Узел: Выжные события - Кто потерпевший
 -- Вопрос
@@ -39158,11 +39920,11 @@ SELECT 'character', 'wcc_style_hair_o' || to_char(answer_nums.num, 'FM9900'),
   )
 FROM answer_nums
 CROSS JOIN meta;
--- <<< END sql/122_style_hair.sql
+-- <<< END sql/143_style_hair.sql
 
--- >>> BEGIN sql/123_style_affectations.sql
+-- >>> BEGIN sql/144_style_affectations.sql
 
-\echo '123_style_affectations.sql'
+\echo '144_style_affectations.sql'
 
 -- Узел: Выжные события - Кто потерпевший
 -- Вопрос
@@ -39259,11 +40021,11 @@ SELECT 'character', 'wcc_style_affectations_o' || to_char(answer_nums.num, 'FM99
   )
 FROM answer_nums
 CROSS JOIN meta;
--- <<< END sql/123_style_affectations.sql
+-- <<< END sql/144_style_affectations.sql
 
--- >>> BEGIN sql/124_values_valued_person.sql
+-- >>> BEGIN sql/145_values_valued_person.sql
 
-\echo '124_values_valued_person.sql'
+\echo '145_values_valued_person.sql'
 
 -- Узел: Выжные события - Кто потерпевший
 -- Вопрос
@@ -39360,11 +40122,11 @@ SELECT 'character', 'wcc_values_valued_person_o' || to_char(answer_nums.num, 'FM
   )
 FROM answer_nums
 CROSS JOIN meta;
--- <<< END sql/124_values_valued_person.sql
+-- <<< END sql/145_values_valued_person.sql
 
--- >>> BEGIN sql/125_values_value.sql
+-- >>> BEGIN sql/146_values_value.sql
 
-\echo '125_values_value.sql'
+\echo '146_values_value.sql'
 
 -- Узел: Выжные события - Кто потерпевший
 -- Вопрос
@@ -39461,11 +40223,11 @@ SELECT 'character', 'wcc_values_value_o' || to_char(answer_nums.num, 'FM9900'),
   )
 FROM answer_nums
 CROSS JOIN meta;
--- <<< END sql/125_values_value.sql
+-- <<< END sql/146_values_value.sql
 
--- >>> BEGIN sql/126_values_feelings_on_people.sql
+-- >>> BEGIN sql/147_values_feelings_on_people.sql
 
-\echo '126_values_feelings_on_people.sql'
+\echo '147_values_feelings_on_people.sql'
 -- Узел: Повлиявший друг
 
 -- Вопрос
@@ -39599,11 +40361,11 @@ SELECT 'character', 'wcc_values_feelings_on_people_o' || to_char(answer_nums.num
   )
 FROM answer_nums
 CROSS JOIN meta;
--- <<< END sql/126_values_feelings_on_people.sql
+-- <<< END sql/147_values_feelings_on_people.sql
 
--- >>> BEGIN sql/127_shop_professional.sql
+-- >>> BEGIN sql/148_shop_professional.sql
 
-\echo '127_shop_professional.sql'
+\echo '148_shop_professional.sql'
 -- Узел: Профессиональный магазин (специализированный магазин для профессий)
 
 -- i18n записи для бюджета и предупреждений профессионального магазина
@@ -40127,11 +40889,12 @@ SELECT 'wcc_values_feelings_on_people', 'wcc_shop_professional';
 
 
 
--- <<< END sql/127_shop_professional.sql
 
--- >>> BEGIN sql/128_shop.sql
+-- <<< END sql/148_shop_professional.sql
 
-\echo '128_shop.sql'
+-- >>> BEGIN sql/149_shop.sql
+
+\echo '149_shop.sql'
 -- Узел: Магазин (закупка перед стартом)
 
 -- Иерархия путей (если ещё не добавлена)
@@ -40784,11 +41547,12 @@ WHERE r.name = 'witcher_skip_professional_shop'
       AND t.ru_ru_id = r.ru_id
   );
 
--- <<< END sql/128_shop.sql
 
--- >>> BEGIN sql/129_shop_item_dlc_extra.sql
+-- <<< END sql/149_shop.sql
 
-\echo '129_shop_item_dlc_extra.sql'
+-- >>> BEGIN sql/150_shop_item_dlc_extra.sql
+
+\echo '150_shop_item_dlc_extra.sql'
 -- Extra DLC eligibility for shop items (rare cases where an item should be available under multiple DLCs)
 -- Motivation: avoid duplicating item rows (and double appearance) when both DLCs are enabled.
 
@@ -40825,11 +41589,12 @@ ON CONFLICT DO NOTHING;
 
 
 
--- <<< END sql/129_shop_item_dlc_extra.sql
 
--- >>> BEGIN sql/130_shop_magic.sql
+-- <<< END sql/150_shop_item_dlc_extra.sql
 
-\echo '130_shop_magic.sql'
+-- >>> BEGIN sql/151_shop_magic.sql
+
+\echo '151_shop_magic.sql'
 -- New shop step after 092_shop.sql: magic shop (spells, hexes, rituals, invocations).
 
 -- i18n records for new source titles and new column labels
@@ -41219,11 +41984,12 @@ WHERE NOT EXISTS (
 
 
 
--- <<< END sql/130_shop_magic.sql
 
--- >>> BEGIN sql/131_stats_skills.sql
+-- <<< END sql/151_shop_magic.sql
 
-\echo '131_stats_skills.sql'
+-- >>> BEGIN sql/152_stats_skills.sql
+
+\echo '152_stats_skills.sql'
 -- Node: Attributes & Skills distribution (custom renderer)
 
 -- Add hierarchy label for history
@@ -41289,11 +42055,12 @@ WHERE NOT EXISTS (
     AND t.to_qu_qu_id = 'wcc_stats_skills'
 );
 
--- <<< END sql/131_stats_skills.sql
 
--- >>> BEGIN sql/132_pdf_i18n_texts.sql
+-- <<< END sql/152_stats_skills.sql
 
-\echo '132_pdf_i18n_texts.sql'
+-- >>> BEGIN sql/153_pdf_i18n_texts.sql
+
+\echo '153_pdf_i18n_texts.sql'
 
 -- Page 1 PDF static labels (stored in i18n_text, id = ck_id(key))
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -41848,11 +42615,12 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.tables.trophies.col.effect'), 'pdf', 'page2.tables.trophies.col.effect', 'en', 'Effect')
 ON CONFLICT (id, lang) DO NOTHING;
 
--- <<< END sql/132_pdf_i18n_texts.sql
 
--- >>> BEGIN sql/133_pdf_page4_and_magic_templates_i18n.sql
+-- <<< END sql/153_pdf_i18n_texts.sql
 
-\echo '133_pdf_page4_and_magic_templates_i18n.sql'
+-- >>> BEGIN sql/154_pdf_page4_and_magic_templates_i18n.sql
+
+\echo '154_pdf_page4_and_magic_templates_i18n.sql'
 
 -- Magic (shop tooltips) templates
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -41885,11 +42653,12 @@ VALUES
 ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text;
 
--- <<< END sql/133_pdf_page4_and_magic_templates_i18n.sql
 
--- >>> BEGIN sql/134_pdf_page4_item_effects_glossary_i18n.sql
+-- <<< END sql/154_pdf_page4_and_magic_templates_i18n.sql
 
-\echo '134_pdf_page4_item_effects_glossary_i18n.sql'
+-- >>> BEGIN sql/155_pdf_page4_item_effects_glossary_i18n.sql
+
+\echo '155_pdf_page4_item_effects_glossary_i18n.sql'
 
 -- PDF page 4: item effects glossary
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -41900,11 +42669,12 @@ ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text;
 
 
--- <<< END sql/134_pdf_page4_item_effects_glossary_i18n.sql
 
--- >>> BEGIN sql/135_user_characters.sql
+-- <<< END sql/155_pdf_page4_item_effects_glossary_i18n.sql
 
-\echo '135_user_characters.sql'
+-- >>> BEGIN sql/156_user_characters.sql
+
+\echo '156_user_characters.sql'
 
 CREATE TABLE IF NOT EXISTS wcc_user_characters (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -41927,11 +42697,12 @@ CREATE INDEX IF NOT EXISTS wcc_user_characters_owner_email_idx
 CREATE INDEX IF NOT EXISTS wcc_user_characters_owner_email_created_at_idx
   ON wcc_user_characters (owner_email, created_at DESC);
 
--- <<< END sql/135_user_characters.sql
 
--- >>> BEGIN sql/136_magic_shop_warnings_i18n.sql
+-- <<< END sql/156_user_characters.sql
 
-\echo '136_magic_shop_warnings_i18n.sql'
+-- >>> BEGIN sql/157_magic_shop_warnings_i18n.sql
+
+\echo '157_magic_shop_warnings_i18n.sql'
 
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
 VALUES
@@ -41940,11 +42711,12 @@ VALUES
 ON CONFLICT (id, lang) DO UPDATE
 SET text = EXCLUDED.text;
 
--- <<< END sql/136_magic_shop_warnings_i18n.sql
 
--- >>> BEGIN sql/137_user_settings.sql
+-- <<< END sql/157_magic_shop_warnings_i18n.sql
 
-\echo '137_user_settings.sql'
+-- >>> BEGIN sql/158_user_settings.sql
+
+\echo '158_user_settings.sql'
 
 CREATE TABLE IF NOT EXISTS wcc_user_settings (
   owner_email            TEXT PRIMARY KEY,
@@ -41955,11 +42727,12 @@ CREATE TABLE IF NOT EXISTS wcc_user_settings (
   updated_at             TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- <<< END sql/137_user_settings.sql
 
--- >>> BEGIN sql/138_cloud_pdf_i18n_extras.sql
+-- <<< END sql/158_user_settings.sql
 
-\echo '138_cloud_pdf_i18n_extras.sql'
+-- >>> BEGIN sql/159_cloud_pdf_i18n_extras.sql
+
+\echo '159_cloud_pdf_i18n_extras.sql'
 
 -- Cloud PDF extra labels that are not covered by legacy page1/page2/page4 keysets.
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -42005,11 +42778,12 @@ VALUES
 ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text;
 
--- <<< END sql/138_cloud_pdf_i18n_extras.sql
 
--- >>> BEGIN sql/139_migrate_legacy_prof_branch_ids.sql
+-- <<< END sql/159_cloud_pdf_i18n_extras.sql
 
-\echo '139_migrate_legacy_prof_branch_ids.sql'
+-- >>> BEGIN sql/160_migrate_legacy_prof_branch_ids.sql
+
+\echo '160_migrate_legacy_prof_branch_ids.sql'
 
 -- Migrate legacy professional branch UUIDs stored in saved raw characters.
 -- Legacy IDs were generated from RU branch names:
@@ -42058,11 +42832,12 @@ SELECT COUNT(*) AS migrated_rows
 FROM updated;
 
 
--- <<< END sql/139_migrate_legacy_prof_branch_ids.sql
 
--- >>> BEGIN sql/140_update_pdf_page1_column_labels.sql
+-- <<< END sql/160_migrate_legacy_prof_branch_ids.sql
 
-\echo '140_update_pdf_page1_column_labels.sql'
+-- >>> BEGIN sql/161_update_pdf_page1_column_labels.sql
+
+\echo '161_update_pdf_page1_column_labels.sql'
 
 -- Ensure latest PDF page1 table column labels are applied for existing DBs.
 UPDATE i18n_text
@@ -42085,11 +42860,12 @@ SET text = 'Magic'
 WHERE id = ck_id('witcher_cc.pdf.page1.tables.magic.col.name')
   AND lang = 'en';
 
--- <<< END sql/140_update_pdf_page1_column_labels.sql
 
--- >>> BEGIN sql/141_rebuild_prof_branch_ids_from_prof_skills.sql
+-- <<< END sql/161_update_pdf_page1_column_labels.sql
 
-\echo '141_rebuild_prof_branch_ids_from_prof_skills.sql'
+-- >>> BEGIN sql/162_rebuild_prof_branch_ids_from_prof_skills.sql
+
+\echo '162_rebuild_prof_branch_ids_from_prof_skills.sql'
 
 -- Rebuild professional branch UUIDs in saved raw characters based on
 -- canonical mapping from professional skill ids -> wcc_skills.branch_name_id.
@@ -42186,19 +42962,21 @@ updated AS (
 SELECT COUNT(*) AS migrated_rows
 FROM updated;
 
--- <<< END sql/141_rebuild_prof_branch_ids_from_prof_skills.sql
 
--- >>> BEGIN sql/142_avatar_column.sql
+-- <<< END sql/162_rebuild_prof_branch_ids_from_prof_skills.sql
 
-\echo '142_avatar_column.sql'
+-- >>> BEGIN sql/163_avatar_column.sql
+
+\echo '163_avatar_column.sql'
 
 ALTER TABLE wcc_user_characters ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
--- <<< END sql/142_avatar_column.sql
 
--- >>> BEGIN sql/143_mage_academy_life_transitions.sql
+-- <<< END sql/163_avatar_column.sql
 
-\echo '143_mage_academy_life_transitions.sql'
+-- >>> BEGIN sql/164_mage_academy_life_transitions.sql
+
+\echo '164_mage_academy_life_transitions.sql'
 
 -- Rules for academy-life pass routing
 INSERT INTO rules (ru_id, name, body)
@@ -42344,13 +43122,32 @@ VALUES
   -- from: wcc_mage_events_enemy_the_power
   ('wcc_mage_events_enemy_the_power', 'wcc_mage_events_outcome', NULL, NULL, 0),
 
+  -- from: wcc_mage_events_outcome
+  ('wcc_mage_events_outcome', 'wcc_mage_events_ally_position', 'wcc_mage_events_outcome_o0103', NULL, 1),
+  ('wcc_mage_events_outcome', 'wcc_mage_events_ally_position', 'wcc_mage_events_outcome_o0203', NULL, 1),
+  ('wcc_mage_events_outcome', 'wcc_mage_events_ally_position', 'wcc_mage_events_outcome_o0303', NULL, 1),
+  ('wcc_mage_events_outcome', 'wcc_mage_events_ally_position', 'wcc_mage_events_outcome_o0403', NULL, 1),
+
+  -- from: wcc_mage_events_ally_position
+  ('wcc_mage_events_ally_position', 'wcc_mage_events_ally_how_met', NULL, NULL, 0),
+
+  -- from: wcc_mage_events_ally_how_met
+  ('wcc_mage_events_ally_how_met', 'wcc_mage_events_ally_closeness', NULL, NULL, 0),
+
+  -- from: wcc_past_academy_life
+  ('wcc_past_academy_life', 'wcc_mage_events_ally_closeness', 'wcc_past_academy_life_o0102', NULL, 1),
+  ('wcc_past_academy_life', 'wcc_mage_events_ally_closeness', 'wcc_past_academy_life_o0308', NULL, 1),
+
+  -- from: wcc_mage_events_ally_closeness
+  ('wcc_mage_events_ally_closeness', 'wcc_mage_events_ally_value', NULL, NULL, 0),
+
   -- from: wcc_life_events_fortune_or_not_details_curse
   ('wcc_life_events_fortune_or_not_details_curse', 'wcc_mage_events_outcome', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_outcome_from_life_events_4_10' ORDER BY ru_id LIMIT 1), 2),
 
   -- from: wcc_life_events_fortune_or_not_details_addiction
   ('wcc_life_events_fortune_or_not_details_addiction', 'wcc_mage_events_outcome', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_outcome_from_life_events_1_2' ORDER BY ru_id LIMIT 1), 2);
 
--- <<< END sql/143_mage_academy_life_transitions.sql
+-- <<< END sql/164_mage_academy_life_transitions.sql
 
 -- >>> BEGIN sql/items/001_wcc_items_dict.sql
 
