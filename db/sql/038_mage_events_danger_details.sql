@@ -741,30 +741,3 @@ SET label = EXCLUDED.label,
     sort_order = EXCLUDED.sort_order,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     metadata = EXCLUDED.metadata;
-
--- Links from realization node to detail node
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-SELECT *
-  FROM (VALUES
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0101', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0102', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0104', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0105', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0106', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0110', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0202', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0207', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0208', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0301', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0302', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0310', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0403', 1),
-    ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0410', 1)
-  ) AS v(from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-WHERE NOT EXISTS (
-  SELECT 1
-    FROM transitions t
-   WHERE t.from_qu_qu_id = v.from_qu_qu_id
-     AND t.to_qu_qu_id = v.to_qu_qu_id
-     AND t.via_an_an_id = v.via_an_an_id
-);

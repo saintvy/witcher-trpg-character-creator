@@ -191,9 +191,3 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
-
--- Transitions
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-VALUES
-  ('wcc_mage_events_danger_details', 'wcc_mage_events_danger_details_2', 'wcc_mage_events_danger_details_o010502', 1),
-  ('wcc_mage_events_danger_details', 'wcc_mage_events_danger_details_2', 'wcc_mage_events_danger_details_o010503', 1);

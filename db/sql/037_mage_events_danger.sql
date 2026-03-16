@@ -280,19 +280,25 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     metadata = EXCLUDED.metadata;
 
--- Links from previous node through danger outcomes
-INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-SELECT *
-  FROM (VALUES
-    ('wcc_mage_events_is_in_danger', 'wcc_mage_events_danger', 'wcc_mage_events_is_in_danger_o0102', 1),
-    ('wcc_mage_events_is_in_danger', 'wcc_mage_events_danger', 'wcc_mage_events_is_in_danger_o0202', 1),
-    ('wcc_mage_events_is_in_danger', 'wcc_mage_events_danger', 'wcc_mage_events_is_in_danger_o0302', 1),
-    ('wcc_mage_events_is_in_danger', 'wcc_mage_events_danger', 'wcc_mage_events_is_in_danger_o0402', 1)
-  ) AS v(from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-WHERE NOT EXISTS (
-  SELECT 1
-    FROM transitions t
-   WHERE t.from_qu_qu_id = v.from_qu_qu_id
-     AND t.to_qu_qu_id = v.to_qu_qu_id
-     AND t.via_an_an_id = v.via_an_an_id
-);
+-- Effects: remember selected danger outcomes for downstream branches
+WITH effect_vals(an_id, marker) AS (
+  VALUES
+    ('wcc_mage_events_danger_o0201', 'life events 1-2'),
+    ('wcc_mage_events_danger_o0201', 'life events 2-1'),
+    ('wcc_mage_events_danger_o0204', 'life events 2-4'),
+    ('wcc_mage_events_danger_o0205', 'life events 2-5'),
+    ('wcc_mage_events_danger_o0209', 'life events 2-9'),
+    ('wcc_mage_events_danger_o0410', 'life events 4-10')
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  effect_vals.an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+      effect_vals.marker
+    )
+  )
+FROM effect_vals;

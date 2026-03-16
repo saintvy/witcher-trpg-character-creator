@@ -490,3 +490,63 @@ SELECT
       )
     )
   );
+
+-- Effects: remember key academy life outcomes for downstream branches
+WITH effect_vals(an_id, marker) AS (
+  VALUES
+    ('wcc_past_academy_life_o0102', 'academy life 1-2'),
+    ('wcc_past_academy_life_o0103', 'academy life 1-3'),
+    ('wcc_past_academy_life_o0109', 'academy life 1-9'),
+    ('wcc_past_academy_life_o0110', 'academy life 1-10'),
+    ('wcc_past_academy_life_o0204', 'academy life 2-4'),
+    ('wcc_past_academy_life_o0206', 'academy life 2-6'),
+    ('wcc_past_academy_life_o0208', 'academy life 2-8'),
+    ('wcc_past_academy_life_o0306', 'academy life 3-6'),
+    ('wcc_past_academy_life_o0308', 'academy life 3-8'),
+    ('wcc_past_academy_life_o0403', 'academy life 4-3'),
+    ('wcc_past_academy_life_o0406', 'academy life 4-6'),
+    ('wcc_past_academy_life_o0407', 'academy life 4-7')
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  effect_vals.an_id,
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+      effect_vals.marker
+    )
+  )
+FROM effect_vals;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(v.key), 'character', 'enemy_field', v.lang, v.text
+FROM (VALUES
+  ('witcher_cc.wcc_past_academy_life_o0403.enemy.position', 'ru', 'Ведьмак'),
+  ('witcher_cc.wcc_past_academy_life_o0403.enemy.position', 'en', 'Witcher'),
+  ('witcher_cc.wcc_past_academy_life_o0403.enemy.cause', 'ru', 'Ущерб из-за вашей магии'),
+  ('witcher_cc.wcc_past_academy_life_o0403.enemy.cause', 'en', 'Damage caused by your magic')
+) AS v(key, lang, text)
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0403',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.enemies'),
+      jsonb_build_object(
+        'gender', '',
+        'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0002.answer_options.label_value')::text),
+        'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.position')::text),
+        'cause', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.cause')::text),
+        'power_level', '',
+        'how_far', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_how_far_o0009.answer_options.label_value')::text),
+        'the_power', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_the_power_o0003.answer_options.label_value')::text)
+      )
+    )
+  );

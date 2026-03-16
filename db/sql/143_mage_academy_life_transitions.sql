@@ -46,6 +46,13 @@ VALUES
   ('wcc_past_mentor_relationship_end', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 1),
 
   -- from: wcc_mage_events_risk
+  ('wcc_mage_events_danger', 'wcc_mage_events_enemy_victim', 'wcc_mage_events_danger_o0201', NULL, 1),
+
+  -- from: wcc_mage_events_is_in_danger
+  ('wcc_mage_events_is_in_danger', 'wcc_mage_events_danger', 'wcc_mage_events_is_in_danger_o0102', NULL, 1),
+  ('wcc_mage_events_is_in_danger', 'wcc_mage_events_danger', 'wcc_mage_events_is_in_danger_o0202', NULL, 1),
+  ('wcc_mage_events_is_in_danger', 'wcc_mage_events_danger', 'wcc_mage_events_is_in_danger_o0302', NULL, 1),
+  ('wcc_mage_events_is_in_danger', 'wcc_mage_events_danger', 'wcc_mage_events_is_in_danger_o0402', NULL, 1),
 
   -- from: wcc_life_events_ally_where
   ('wcc_life_events_ally_where', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
@@ -89,4 +96,56 @@ VALUES
 
   -- from: wcc_life_events_relationshipsstory_details
   ('wcc_life_events_relationshipsstory_details', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 2),
-  ('wcc_life_events_relationshipsstory_details', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2);
+  ('wcc_life_events_relationshipsstory_details', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_mage_events_enemy_victim
+  ('wcc_mage_events_enemy_victim', 'wcc_mage_events_enemy_position', NULL, NULL, 0),
+
+  -- from: wcc_past_academy_life
+  ('wcc_past_academy_life', 'wcc_mage_events_enemy_position', 'wcc_past_academy_life_o0206', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_mage_events_enemy_position', 'wcc_past_academy_life_o0306', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_mage_events_enemy_how_far', 'wcc_past_academy_life_o0103', NULL, 2),
+
+  -- from: wcc_mage_events_danger
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0101', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0102', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0104', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0105', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0106', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0110', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0202', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0207', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0208', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0301', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0302', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0310', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0403', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0410', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_enemy_position', 'wcc_mage_events_danger_o0205', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_enemy_position', 'wcc_mage_events_danger_o0209', NULL, 1),
+
+  -- from: wcc_mage_events_danger_details
+  ('wcc_mage_events_danger_details', 'wcc_mage_events_danger_details_2', 'wcc_mage_events_danger_details_o010502', NULL, 1),
+  ('wcc_mage_events_danger_details', 'wcc_mage_events_danger_details_2', 'wcc_mage_events_danger_details_o010503', NULL, 1),
+  ('wcc_mage_events_danger_details', 'wcc_mage_events_outcome', NULL, NULL, 0),
+  ('wcc_mage_events_danger_details_2', 'wcc_mage_events_outcome', NULL, NULL, 0),
+
+  -- from: wcc_mage_events_enemy_position
+  ('wcc_mage_events_enemy_position', 'wcc_mage_events_enemy_cause', NULL, NULL, 0),
+  ('wcc_mage_events_enemy_position', 'wcc_mage_events_enemy_how_far', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_enemy_skip_cause' ORDER BY ru_id LIMIT 1), 1),
+
+  -- from: wcc_mage_events_enemy_cause
+  ('wcc_mage_events_enemy_cause', 'wcc_mage_events_enemy_how_far', NULL, NULL, 0),
+
+  -- from: wcc_mage_events_enemy_how_far
+  ('wcc_mage_events_enemy_how_far', 'wcc_mage_events_enemy_the_power', NULL, NULL, 0),
+  ('wcc_mage_events_enemy_how_far', 'wcc_mage_events_outcome', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_outcome_from_life_events_2_5' ORDER BY ru_id LIMIT 1), 1),
+
+  -- from: wcc_mage_events_enemy_the_power
+  ('wcc_mage_events_enemy_the_power', 'wcc_mage_events_outcome', NULL, NULL, 0),
+
+  -- from: wcc_life_events_fortune_or_not_details_curse
+  ('wcc_life_events_fortune_or_not_details_curse', 'wcc_mage_events_outcome', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_outcome_from_life_events_4_10' ORDER BY ru_id LIMIT 1), 2),
+
+  -- from: wcc_life_events_fortune_or_not_details_addiction
+  ('wcc_life_events_fortune_or_not_details_addiction', 'wcc_mage_events_outcome', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_outcome_from_life_events_1_2' ORDER BY ru_id LIMIT 1), 2);
