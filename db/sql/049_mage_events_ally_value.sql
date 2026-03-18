@@ -40,6 +40,23 @@ SELECT meta.qu_id,
                   )
              FROM (SELECT DISTINCT num FROM c_vals) cols
          ),
+         'counterIncrement', jsonb_build_object(
+           'jsonlogic_expression',
+           jsonb_build_object(
+             'if',
+             jsonb_build_array(
+               jsonb_build_object(
+                 '==',
+                 jsonb_build_array(
+                   jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                   3
+                 )
+               ),
+               jsonb_build_object('id', 'lifeEventsCounter', 'step', 10),
+               NULL
+             )
+           )
+         ),
          'path', jsonb_build_array(
            ck_id('witcher_cc.hierarchy.life_events')::text,
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
