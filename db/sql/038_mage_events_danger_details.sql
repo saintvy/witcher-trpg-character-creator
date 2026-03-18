@@ -572,6 +572,39 @@ WITH
            'You once nearly died while studying ' || v.en_name || '. You now have a phobia of it and suffer a -2 penalty to Courage checks against it. The first time you meet one, a failed Courage check at DC 15 leaves you Staggered.'
       FROM monster_vals v
 
+    -- 3-9 Lost a sense
+    UNION ALL
+    SELECT 'ru',
+           'wcc_mage_events_danger_details_o0309' || to_char(v.num, 'FM00'),
+           v.num,
+           (1.0::numeric / 3),
+           'wcc_mage_events_danger_o0309',
+           NULL,
+           '<b>Потеря чувств</b>',
+           v.ru_name,
+           'Из-за потери ' || lower(v.ru_gen) || ' вы имеете штраф -2 при проверке навыков, использующих это чувство.'
+      FROM (VALUES
+        (1, 'Вкус', 'вкуса'),
+        (2, 'Обоняние', 'обоняния'),
+        (3, 'Осязание', 'осязания')
+      ) AS v(num, ru_name, ru_gen)
+
+    UNION ALL
+    SELECT 'en',
+           'wcc_mage_events_danger_details_o0309' || to_char(v.num, 'FM00'),
+           v.num,
+           (1.0::numeric / 3),
+           'wcc_mage_events_danger_o0309',
+           NULL,
+           '<b>Lost a Sense</b>',
+           v.en_name,
+           'Because of the loss of ' || lower(v.en_name) || ', you suffer a -2 penalty on skill checks that rely on that sense.'
+      FROM (VALUES
+        (1, 'Taste'),
+        (2, 'Smell'),
+        (3, 'Touch')
+      ) AS v(num, en_name)
+
     -- 3-10 Minor mutation
     UNION ALL
     SELECT 'ru',
@@ -741,3 +774,545 @@ SET label = EXCLUDED.label,
     sort_order = EXCLUDED.sort_order,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     metadata = EXCLUDED.metadata;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details' AS qu_id
+  )
+, region_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1,  'Каэдвен', 'Северные королевства', 'Kaedwen', 'Northern Kingdoms'),
+        (2,  'Ковир и Повисс', 'Северные королевства', 'Kovir and Poviss', 'Northern Kingdoms'),
+        (3,  'Редания', 'Северные королевства', 'Redania', 'Northern Kingdoms'),
+        (4,  'Аэдирн', 'Северные королевства', 'Aedirn', 'Northern Kingdoms'),
+        (5,  'Лирия и Ривия', 'Северные королевства', 'Lyria and Rivia', 'Northern Kingdoms'),
+        (6,  'Темерия', 'Северные королевства', 'Temeria', 'Northern Kingdoms'),
+        (7,  'Цидарис', 'Северные королевства', 'Cidaris', 'Northern Kingdoms'),
+        (8,  'Керак', 'Северные королевства', 'Kerack', 'Northern Kingdoms'),
+        (9,  'Вердэн', 'Северные королевства', 'Verden', 'Northern Kingdoms'),
+        (10, 'Скеллиге', 'Северные королевства', 'Skellige', 'Northern Kingdoms'),
+        (11, 'Цинтра', 'Нильфгаард', 'Cintra', 'Nilfgaard'),
+        (12, 'Ангрен', 'Нильфгаард', 'Angren', 'Nilfgaard'),
+        (13, 'Назаир', 'Нильфгаард', 'Nazair', 'Nilfgaard'),
+        (14, 'Меттина', 'Нильфгаард', 'Mettina', 'Nilfgaard'),
+        (15, 'Туссент', 'Нильфгаард', 'Toussaint', 'Nilfgaard'),
+        (16, 'Маг Турга', 'Нильфгаард', 'Mag Turga', 'Nilfgaard'),
+        (17, 'Гесо', 'Нильфгаард', 'Gheso', 'Nilfgaard'),
+        (18, 'Эббинг', 'Нильфгаард', 'Ebbing', 'Nilfgaard'),
+        (19, 'Мехт', 'Нильфгаард', 'Maecht', 'Nilfgaard'),
+        (20, 'Этолия', 'Нильфгаард', 'Etolia', 'Nilfgaard'),
+        (21, 'Геммера', 'Нильфгаард', 'Gemmera', 'Nilfgaard'),
+        (22, 'Доль Блатанна', 'Земли старших народов', 'Dol Blathanna', 'Elderlands'),
+        (23, 'Махакам', 'Земли старших народов', 'Mahakam', 'Elderlands')
+      ) AS v(sort_order, ru_name, ru_group, en_name, en_group)
+)
+, addiction_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Алкоголь', 'Alcohol'),
+        (2, 'Табак', 'Tobacco'),
+        (3, 'Фисштех', 'Fisstech'),
+        (4, 'Азартные игры', 'Gambling'),
+        (5, 'Клептомания', 'Kleptomania'),
+        (6, 'Похоть', 'Lust'),
+        (7, 'Обжорство', 'Gluttony'),
+        (8, 'Адреналиновая зависимость', 'Adrenaline addiction'),
+        (10, 'Другое', 'Other')
+      ) AS v(num, ru_name, en_name)
+)
+, accusation_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Кража', 'Theft'),
+        (2, 'Трусость', 'Cowardice'),
+        (3, 'Измена', 'Treason'),
+        (4, 'Изнасилование', 'Rape'),
+        (5, 'Убийство', 'Murder'),
+        (6, 'Мошенничество', 'Fraud'),
+        (7, 'Запретная магия', 'Forbidden Magic'),
+        (8, 'Уклонение от уплаты налогов', 'Tax Evasion'),
+        (9, 'Неэтичные действия', 'Unethical Practices')
+      ) AS v(num, ru_name, en_name)
+)
+, element_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Вода', 'Water'),
+        (2, 'Земля', 'Earth'),
+        (3, 'Огонь', 'Fire'),
+        (4, 'Воздух', 'Air')
+      ) AS v(num, ru_name, en_name)
+)
+, curse_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Проклятие чудовищности', 'Curse of Monstrosity', 'Интенсивность: Средняя', 'Intensity: Moderate'),
+        (2, 'Проклятие призраков', 'Curse of Phantoms', 'Интенсивность: Средняя', 'Intensity: Moderate'),
+        (3, 'Проклятие заразы', 'Curse of Pestilence', 'Интенсивность: Высокая', 'Intensity: High'),
+        (4, 'Проклятие странника', 'Curse of the Wanderer', 'Интенсивность: Высокая', 'Intensity: High'),
+        (5, 'Проклятие ликантропии', 'Curse of Lycanthropy', 'Интенсивность: Высокая', 'Intensity: High'),
+        (6, 'Другое проклятие', 'Other Curse', 'Кастомное проклятие', 'Custom curse')
+      ) AS v(num, ru_name, en_name, ru_detail, en_detail)
+)
+, monster_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1,  'Вампиры', 'Alp', 'Vampires', 'Alp'),
+        (2,  'Вампиры', 'Bruxa', 'Vampires', 'Bruxa'),
+        (3,  'Вампиры', 'Garkain', 'Vampires', 'Garkain'),
+        (4,  'Вампиры', 'Katakan', 'Vampires', 'Katakan'),
+        (5,  'Вампиры', 'On Shadow Wings', 'Vampires', 'On Shadow Wings'),
+        (6,  'Вампиры', 'Plumard', 'Vampires', 'Plumard'),
+        (7,  'Гибриды', 'Гарпия', 'Hybrids', 'Harpy'),
+        (8,  'Гибриды', 'Глаз охотника', 'Hybrids', 'With Hunting Eyes'),
+        (9,  'Гибриды', 'Грифон', 'Hybrids', 'Griffin'),
+        (10, 'Гибриды', 'Мантикора', 'Hybrids', 'Manticore'),
+        (11, 'Гибриды', 'Сирена', 'Hybrids', 'Siren'),
+        (12, 'Гибриды', 'Суккуб', 'Hybrids', 'Succubus'),
+        (13, 'Дракониды', 'Виверна', 'Draconids', 'Wyvern'),
+        (14, 'Дракониды', 'Куролиск', 'Draconids', 'Cockatrice'),
+        (15, 'Дракониды', 'Огонь с небес', 'Draconids', 'Fire From The Sky'),
+        (16, 'Дракониды', 'Осгазир', 'Draconids', 'Slyzard'),
+        (17, 'Дракониды', 'Феникс', 'Draconids', 'Phoenix'),
+        (18, 'Духи', 'Амальгама трупов', 'Specters', 'Corpse Amalgam'),
+        (19, 'Духи', 'Варгест', 'Specters', 'Barghest'),
+        (20, 'Духи', 'Демон Рогатый', 'Specters', 'Bes'),
+        (21, 'Духи', 'Касглидд', 'Specters', 'Casglydd'),
+        (22, 'Духи', 'Мари Луид', 'Specters', 'Mari Lwyd'),
+        (23, 'Духи', 'Песта', 'Specters', 'Pesta'),
+        (24, 'Духи', 'Покаянник', 'Specters', 'Penitent'),
+        (25, 'Духи', 'Полуденница', 'Specters', 'Noon Wraith'),
+        (26, 'Духи', 'Призрак', 'Specters', 'Wraith'),
+        (27, 'Духи', 'Среди мертвых тел', 'Specters', 'Among Corpses'),
+        (28, 'Духи', 'Хим', 'Specters', 'Hym'),
+        (29, 'Духи стихий', 'Голем', 'Elementa', 'Golem'),
+        (30, 'Духи стихий', 'Живая броня', 'Elementa', 'Living Armor'),
+        (31, 'Духи стихий', 'Пожар', 'Elementa', 'Wildfire'),
+        (32, 'Духи стихий', 'Элементаль земли', 'Elementa', 'Earth Elemental'),
+        (33, 'Духи стихий', 'Элементаль льда', 'Elementa', 'Ice Elemental'),
+        (34, 'Духи стихий', 'Элементаль огня', 'Elementa', 'Fire Elemental'),
+        (35, 'Инсектоиды', 'Барбегази', 'Insectoids', 'Barbegazi'),
+        (36, 'Инсектоиды', 'Главоглаз', 'Insectoids', 'Arachas'),
+        (37, 'Инсектоиды', 'Жагница', 'Insectoids', 'Glustyworp'),
+        (38, 'Инсектоиды', 'Из-под земли', 'Insectoids', 'Scurrying From Tunnels'),
+        (39, 'Инсектоиды', 'Сколопендроморф', 'Insectoids', 'Giant Centipede'),
+        (40, 'Инсектоиды', 'Химера', 'Insectoids', 'Frigher'),
+        (41, 'Инсектоиды', 'Эндриага', 'Insectoids', 'Endrega'),
+        (42, 'Огры', 'Накер', 'Ogroids', 'Nekker'),
+        (43, 'Огры', 'Нежеланный гость', 'Ogroids', 'Unwanted Hunter'),
+        (44, 'Огры', 'Скальный тролль', 'Ogroids', 'Rock Troll'),
+        (45, 'Огры', 'Стукач', 'Ogroids', 'Knockers'),
+        (46, 'Огры', 'Тролль', 'Ogroids', 'Troll'),
+        (47, 'Огры', 'Циклоп', 'Ogroids', 'Cyclops'),
+        (48, 'Проклятые', 'Археспора', 'Cursed Ones', 'Archespore'),
+        (49, 'Проклятые', 'Вендиго', 'Cursed Ones', 'Vendigo'),
+        (50, 'Проклятые', 'Волколак', 'Cursed Ones', 'Werewolf'),
+        (51, 'Проклятые', 'Игоша', 'Cursed Ones', 'Botchling'),
+        (52, 'Проклятые', 'Котолак', 'Cursed Ones', 'Werecat'),
+        (53, 'Проклятые', 'Сирота', 'Cursed Ones', 'The Orphan'),
+        (54, 'Реликты', 'Бес', 'Relicts', 'Fiend'),
+        (55, 'Реликты', 'Леший', 'Relicts', 'Leshy'),
+        (56, 'Реликты', 'Мелкая пакость', 'Relicts', 'Undermining'),
+        (57, 'Реликты', 'Прибожек', 'Relicts', 'Godling'),
+        (58, 'Реликты', 'Шарлей', 'Relicts', 'Shalmaar'),
+        (59, 'Трупоеды', 'В туманной мгле', 'Necrophages', 'In Cirrus Gloom'),
+        (60, 'Трупоеды', 'Гнилец', 'Necrophages', 'Rotfiend'),
+        (61, 'Трупоеды', 'Гуль', 'Necrophages', 'Ghoul'),
+        (62, 'Трупоеды', 'Кладбищенская баба', 'Necrophages', 'Grave Hag'),
+        (63, 'Трупоеды', 'Туманник', 'Necrophages', 'Foglet'),
+        (64, 'Трупоеды', 'Утковол', 'Necrophages', 'Bullvore'),
+        (65, 'Трупоеды', 'Утопец', 'Necrophages', 'Drowner')
+      ) AS v(sort_order, ru_type, ru_name, en_type, en_name)
+)
+, mutation_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Альп', 'Тёмно-красные вены по всему телу', 'Alp', 'A patchwork of dark red veins under your skin'),
+        (2, 'Гаркон', 'Мягкие наросты на голове', 'Garkain', 'Fleshy growths on the head'),
+        (3, 'Катакан', 'Долговязость', 'Katakan', 'Gangly proportions'),
+        (4, 'Брукса', 'Полупрозрачная кожа и шипящий голос', 'Bruxa', 'Semi-translucent skin & a hissing voice'),
+        (5, 'Грифон', 'Прорастание перьев', 'Griffin', 'Feather growth'),
+        (6, 'Мантикора', 'Рожки и кошачьи черты лица', 'Manticore', 'Small horns & feline features'),
+        (7, 'Суккуб', 'Рожки и хвост', 'Succubus', 'Small horns and a tail'),
+        (8, 'Виверна', 'Огрубение кожи', 'Wyvern', 'Rough skin'),
+        (9, 'Куролиск', 'Пучки зелёных перьев', 'Cockatrice', 'Tufts of green feathers'),
+        (10, 'Феникс', 'Пучки серых перьев и свечение изнутри', 'Phoenix', 'Tufts of grey feathers & an internal glow'),
+        (11, 'Песта', 'Болезненно-бледная кожа и впалые щёки', 'Pesta', 'Sickly pale skin & gaunt features'),
+        (12, 'Покаянник', 'Светящиеся белые отметины', 'Penitent', 'Glowing white markings'),
+        (13, 'Полуденница', 'Сухая, туго обтягивающая кожа', 'Noon Wraith', 'Dry, taut skin'),
+        (14, 'Голем', 'Твёрдые наросты на теле', 'Golem', 'Hard protrusions'),
+        (15, 'Элементаль Земли', 'Каменные наросты по всему телу', 'Earth Elemental', 'Rocky growths along your body'),
+        (16, 'Элементаль Льда', 'Вечно холодная на ощупь кожа', 'Ice Elemental', 'Skin cold to the touch'),
+        (17, 'Элементаль Огня', 'Струйки пламени изо рта', 'Fire Elemental', 'Small spouts of flame from your mouth'),
+        (18, 'Главоглаз', 'Зелёная кровь и другие жидкости', 'Arachas', 'Green bodily fluids'),
+        (19, 'Жагница', 'Небольшие участки хитина на теле', 'Glustyworp', 'Small patches of chitin'),
+        (20, 'Химера', 'Фасеточные глаза и участки хитина', 'Frigher', 'Multi-faceted eyes & patches of chitin'),
+        (21, 'Накер', 'Облысение и серая кожа', 'Nekker', 'Baldness & grey skin'),
+        (22, 'Скальный тролль', 'Сгорбленность', 'Rock Troll', 'Hunched posture'),
+        (23, 'Тролль', 'Жёсткая голубоватая кожа', 'Troll', 'Blue-ish leathery skin'),
+        (24, 'Вендиго', 'Клочки меха и болезненно-серая кожа', 'Vendigo', 'Patchy fur & sickly grey skin'),
+        (25, 'Волколак', 'Рост волос по всему телу', 'Werewolf', 'Rapid hair growth'),
+        (26, 'Игоша', 'Волчья пасть и красные белки глаз', 'Botchling', 'Wolf''s maw & red eye whites'),
+        (27, 'Котолак', 'Кошачьи глаза и усиленный рост волос', 'Werecat', 'Cat''s eyes and increased hair growth'),
+        (28, 'Бес', 'Небольшие рожки', 'Fiend', 'Small antlers'),
+        (29, 'Леший', 'На теле вырастают побеги и листья', 'Leshy', 'Plants growing on the body'),
+        (30, 'Шарлей', 'Участки твёрдой, как камень, кожи', 'Shalmaar', 'Patches of thick rock-textured skin'),
+        (31, 'Утковол', 'Твёрдые наросты по всему телу', 'Bullvore', 'Hard growths all over the body'),
+        (32, 'Медведь', 'Усиленный рост волос на теле', 'Bear', 'Prolific fur growth')
+      ) AS v(sort_order, ru_name, ru_mutation, en_name, en_mutation)
+)
+, event_desc_vals(lang, group_id, option_id, text) AS (
+    SELECT 'ru', 101, gs.num, 'Долг: ' || (gs.num * 100)::text || ' крон.'
+      FROM generate_series(1, 10) AS gs(num)
+    UNION ALL
+    SELECT 'en', 101, gs.num, 'Debt: ' || (gs.num * 100)::text || ' crowns.'
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+    SELECT 'ru', 102, v.num, 'Зависимость: ' || v.ru_name || '.'
+      FROM addiction_vals v
+    UNION ALL
+    SELECT 'en', 102, v.num, 'Addiction: ' || v.en_name || '.'
+      FROM addiction_vals v
+
+    UNION ALL
+    SELECT 'ru', 104, v.sort_order, 'Разгневанные горожане: (' || v.ru_group || ') ' || v.ru_name || '.'
+      FROM region_vals v
+    UNION ALL
+    SELECT 'en', 104, v.sort_order, 'Angered City Folk: (' || v.en_group || ') ' || v.en_name || '.'
+      FROM region_vals v
+
+    UNION ALL
+    VALUES
+      ('ru', 105, 1, 'Несчастный случай: Изуродованы.'),
+      ('en', 105, 1, 'Accident: Disfigured.'),
+      ('ru', 105, 4, 'Несчастный случай: Ужасные кошмары.'),
+      ('en', 105, 4, 'Accident: Horrible nightmares.')
+
+    UNION ALL
+    SELECT 'ru', 106, gs.num,
+           'Заключение в тюрьму: ' || gs.num::text || CASE WHEN gs.num = 1 THEN ' год.' WHEN gs.num BETWEEN 2 AND 4 THEN ' года.' ELSE ' лет.' END
+      FROM generate_series(1, 10) AS gs(num)
+    UNION ALL
+    SELECT 'en', 106, gs.num,
+           'Imprisonment: ' || gs.num::text || CASE WHEN gs.num = 1 THEN ' year.' ELSE ' years.' END
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+    SELECT 'ru', 110, v.num, 'Проклятие: ' || v.ru_name || ' (' || v.ru_detail || ').'
+      FROM curse_vals v
+    UNION ALL
+    SELECT 'en', 110, v.num, 'Curse: ' || v.en_name || ' (' || v.en_detail || ').'
+      FROM curse_vals v
+
+    UNION ALL
+    SELECT 'ru', 202, v.num, 'Ложное обвинение: ' || v.ru_name || '.'
+      FROM accusation_vals v
+    UNION ALL
+    SELECT 'en', 202, v.num, 'False Accusation: ' || v.en_name || '.'
+      FROM accusation_vals v
+
+    UNION ALL
+    SELECT 'ru', 207, gs.num, 'Цель охоты: ' || (gs.num + 5)::text || CASE WHEN gs.num + 5 BETWEEN 2 AND 4 THEN ' охотника.' ELSE ' охотников.' END
+      FROM generate_series(1, 6) AS gs(num)
+    UNION ALL
+    SELECT 'en', 207, gs.num, 'Hunted: ' || (gs.num + 5)::text || ' bounty hunters.'
+      FROM generate_series(1, 6) AS gs(num)
+
+    UNION ALL
+    SELECT 'ru', 208, v.sort_order, 'Враг государства: (' || v.ru_group || ') ' || v.ru_name || '.'
+      FROM region_vals v
+    UNION ALL
+    SELECT 'en', 208, v.sort_order, 'Enemy of the State: (' || v.en_group || ') ' || v.en_name || '.'
+      FROM region_vals v
+
+    UNION ALL
+    SELECT 'ru', 301, v.num, 'Магическая блокировка: ' || v.ru_name || ', штраф -2 к Сотворению заклинаний.'
+      FROM element_vals v
+    UNION ALL
+    SELECT 'en', 301, v.num, 'Magical Block: ' || v.en_name || ', -2 to Spell Casting.'
+      FROM element_vals v
+
+    UNION ALL
+    SELECT 'ru', 302, v.sort_order, 'Встреча с монстром: ' || v.ru_type || ' - ' || v.ru_name || '.'
+      FROM monster_vals v
+    UNION ALL
+    SELECT 'en', 302, v.sort_order, 'Monster Encounter: ' || v.en_type || ' - ' || v.en_name || '.'
+      FROM monster_vals v
+
+    UNION ALL
+    SELECT 'ru', 309, 1, 'Потеря чувств: вкус.'
+    UNION ALL
+    SELECT 'en', 309, 1, 'Lost a Sense: taste.'
+    UNION ALL
+    SELECT 'ru', 309, 2, 'Потеря чувств: обоняние.'
+    UNION ALL
+    SELECT 'en', 309, 2, 'Lost a Sense: smell.'
+    UNION ALL
+    SELECT 'ru', 309, 3, 'Потеря чувств: осязание.'
+    UNION ALL
+    SELECT 'en', 309, 3, 'Lost a Sense: touch.'
+
+    UNION ALL
+    SELECT 'ru', 310, v.sort_order, 'Малая мутация (' || v.ru_name || ').'
+      FROM mutation_vals v
+    UNION ALL
+    SELECT 'en', 310, v.sort_order, 'Minor Mutation (' || v.en_name || ').'
+      FROM mutation_vals v
+
+    UNION ALL
+    SELECT 'ru', 403, v.sort_order, 'Признан опасным: (' || v.ru_group || ') ' || v.ru_name || '.'
+      FROM region_vals v
+    UNION ALL
+    SELECT 'en', 403, v.sort_order, 'Deemed Dangerous: (' || v.en_group || ') ' || v.en_name || '.'
+      FROM region_vals v
+
+    UNION ALL
+    SELECT 'ru', 410, v.num, 'Проклятие: ' || v.ru_name || '.'
+      FROM curse_vals v
+    UNION ALL
+    SELECT 'en', 410, v.num, 'Cursed: ' || v.en_name || '.'
+      FROM curse_vals v
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(event_desc_vals.group_id, 'FM0000') || to_char(event_desc_vals.option_id, 'FM00') ||'.event_desc')
+     , 'character'
+     , 'event_desc'
+     , event_desc_vals.lang
+     , event_desc_vals.text
+  FROM event_desc_vals
+  CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details' AS qu_id
+  )
+, event_effects(group_id, option_id) AS (
+    VALUES
+      (101, 1), (101, 2), (101, 3), (101, 4), (101, 5), (101, 6), (101, 7), (101, 8), (101, 9), (101,10),
+      (102, 1), (102, 2), (102, 3), (102, 4), (102, 5), (102, 6), (102, 7), (102, 8), (102,10),
+      (104, 1), (104, 2), (104, 3), (104, 4), (104, 5), (104, 6), (104, 7), (104, 8), (104, 9), (104,10),
+      (104,11), (104,12), (104,13), (104,14), (104,15), (104,16), (104,17), (104,18), (104,19), (104,20),
+      (104,21), (104,22), (104,23),
+      (105, 1), (105, 4),
+      (106, 1), (106, 2), (106, 3), (106, 4), (106, 5), (106, 6), (106, 7), (106, 8), (106, 9), (106,10),
+      (110, 1), (110, 2), (110, 3), (110, 4), (110, 5), (110, 6),
+      (202, 1), (202, 2), (202, 3), (202, 4), (202, 5), (202, 6), (202, 7), (202, 8), (202, 9),
+      (207, 1), (207, 2), (207, 3), (207, 4), (207, 5), (207, 6),
+      (208, 1), (208, 2), (208, 3), (208, 4), (208, 5), (208, 6), (208, 7), (208, 8), (208, 9), (208,10),
+      (208,11), (208,12), (208,13), (208,14), (208,15), (208,16), (208,17), (208,18), (208,19), (208,20),
+      (208,21), (208,22), (208,23),
+      (301, 1), (301, 2), (301, 3), (301, 4),
+      (302, 1), (302, 2), (302, 3), (302, 4), (302, 5), (302, 6), (302, 7), (302, 8), (302, 9), (302,10),
+      (302,11), (302,12), (302,13), (302,14), (302,15), (302,16), (302,17), (302,18), (302,19), (302,20),
+      (302,21), (302,22), (302,23), (302,24), (302,25), (302,26), (302,27), (302,28), (302,29), (302,30),
+      (302,31), (302,32), (302,33), (302,34), (302,35), (302,36), (302,37), (302,38), (302,39), (302,40),
+      (302,41), (302,42), (302,43), (302,44), (302,45), (302,46), (302,47), (302,48), (302,49), (302,50),
+      (302,51), (302,52), (302,53), (302,54), (302,55), (302,56), (302,57), (302,58), (302,59), (302,60),
+      (302,61), (302,62), (302,63), (302,64), (302,65),
+      (309, 1), (309, 2), (309, 3),
+      (310, 1), (310, 2), (310, 3), (310, 4), (310, 5), (310, 6), (310, 7), (310, 8), (310, 9), (310,10),
+      (310,11), (310,12), (310,13), (310,14), (310,15), (310,16), (310,17), (310,18), (310,19), (310,20),
+      (310,21), (310,22), (310,23), (310,24), (310,25), (310,26), (310,27), (310,28), (310,29), (310,30),
+      (310,31), (310,32),
+      (403, 1), (403, 2), (403, 3), (403, 4), (403, 5), (403, 6), (403, 7), (403, 8), (403, 9), (403,10),
+      (403,11), (403,12), (403,13), (403,14), (403,15), (403,16), (403,17), (403,18), (403,19), (403,20),
+      (403,21), (403,22), (403,23),
+      (410, 1), (410, 2), (410, 3), (410, 4), (410, 5), (410, 6)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , meta.qu_id || '_o' || to_char(event_effects.group_id, 'FM0000') || to_char(event_effects.option_id, 'FM00')
+     , jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object(
+                     '+',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                       10
+                     )
+                   )
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.wcc_mage_events_danger.life_event_type.danger')::text),
+             'description',
+             jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id || '_o' || to_char(event_effects.group_id, 'FM0000') || to_char(event_effects.option_id, 'FM00') ||'.event_desc')::text
+             )
+           )
+         )
+       )
+  FROM event_effects
+ CROSS JOIN meta;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details' AS qu_id
+  )
+, perk_desc_vals(key_suffix, lang, text) AS (
+    VALUES
+      ('o030901.disease_name', 'ru', 'Потеря чувств (Вкус)'),
+      ('o030901.disease_name', 'en', 'Lost a Sense (Taste)'),
+      ('o030901.disease_desc', 'ru', 'Из-за потери вкуса вы имеете штраф -2 при проверке навыков, использующих это чувство.'),
+      ('o030901.disease_desc', 'en', 'Because of the loss of taste, you suffer a -2 penalty on skill checks that rely on that sense.'),
+      ('o030902.disease_name', 'ru', 'Потеря чувств (Обоняние)'),
+      ('o030902.disease_name', 'en', 'Lost a Sense (Smell)'),
+      ('o030902.disease_desc', 'ru', 'Из-за потери обоняния вы имеете штраф -2 при проверке навыков, использующих это чувство.'),
+      ('o030902.disease_desc', 'en', 'Because of the loss of smell, you suffer a -2 penalty on skill checks that rely on that sense.'),
+      ('o030903.disease_name', 'ru', 'Потеря чувств (Осязание)'),
+      ('o030903.disease_name', 'en', 'Lost a Sense (Touch)'),
+      ('o030903.disease_desc', 'ru', 'Из-за потери осязания вы имеете штраф -2 при проверке навыков, использующих это чувство.'),
+      ('o030903.disease_desc', 'en', 'Because of the loss of touch, you suffer a -2 penalty on skill checks that rely on that sense.')
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| perk_desc_vals.key_suffix)
+     , 'character'
+     , 'disease'
+     , perk_desc_vals.lang
+     , perk_desc_vals.text
+  FROM perk_desc_vals
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details' AS qu_id
+  )
+, mutation_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Альп', 'Тёмно-красные вены по всему телу', 'Alp', 'A patchwork of dark red veins under your skin'),
+        (2, 'Гаркон', 'Мягкие наросты на голове', 'Garkain', 'Fleshy growths on the head'),
+        (3, 'Катакан', 'Долговязость', 'Katakan', 'Gangly proportions'),
+        (4, 'Брукса', 'Полупрозрачная кожа и шипящий голос', 'Bruxa', 'Semi-translucent skin & a hissing voice'),
+        (5, 'Грифон', 'Прорастание перьев', 'Griffin', 'Feather growth'),
+        (6, 'Мантикора', 'Рожки и кошачьи черты лица', 'Manticore', 'Small horns & feline features'),
+        (7, 'Суккуб', 'Рожки и хвост', 'Succubus', 'Small horns and a tail'),
+        (8, 'Виверна', 'Огрубение кожи', 'Wyvern', 'Rough skin'),
+        (9, 'Куролиск', 'Пучки зелёных перьев', 'Cockatrice', 'Tufts of green feathers'),
+        (10, 'Феникс', 'Пучки серых перьев и свечение изнутри', 'Phoenix', 'Tufts of grey feathers & an internal glow'),
+        (11, 'Песта', 'Болезненно-бледная кожа и впалые щёки', 'Pesta', 'Sickly pale skin & gaunt features'),
+        (12, 'Покаянник', 'Светящиеся белые отметины', 'Penitent', 'Glowing white markings'),
+        (13, 'Полуденница', 'Сухая, туго обтягивающая кожа', 'Noon Wraith', 'Dry, taut skin'),
+        (14, 'Голем', 'Твёрдые наросты на теле', 'Golem', 'Hard protrusions'),
+        (15, 'Элементаль Земли', 'Каменные наросты по всему телу', 'Earth Elemental', 'Rocky growths along your body'),
+        (16, 'Элементаль Льда', 'Вечно холодная на ощупь кожа', 'Ice Elemental', 'Skin cold to the touch'),
+        (17, 'Элементаль Огня', 'Струйки пламени изо рта', 'Fire Elemental', 'Small spouts of flame from your mouth'),
+        (18, 'Главоглаз', 'Зелёная кровь и другие жидкости', 'Arachas', 'Green bodily fluids'),
+        (19, 'Жагница', 'Небольшие участки хитина на теле', 'Glustyworp', 'Small patches of chitin'),
+        (20, 'Химера', 'Фасеточные глаза и участки хитина', 'Frigher', 'Multi-faceted eyes & patches of chitin'),
+        (21, 'Накер', 'Облысение и серая кожа', 'Nekker', 'Baldness & grey skin'),
+        (22, 'Скальный тролль', 'Сгорбленность', 'Rock Troll', 'Hunched posture'),
+        (23, 'Тролль', 'Жёсткая голубоватая кожа', 'Troll', 'Blue-ish leathery skin'),
+        (24, 'Вендиго', 'Клочки меха и болезненно-серая кожа', 'Vendigo', 'Patchy fur & sickly grey skin'),
+        (25, 'Волколак', 'Рост волос по всему телу', 'Werewolf', 'Rapid hair growth'),
+        (26, 'Игоша', 'Волчья пасть и красные белки глаз', 'Botchling', 'Wolf''s maw & red eye whites'),
+        (27, 'Котолак', 'Кошачьи глаза и усиленный рост волос', 'Werecat', 'Cat''s eyes and increased hair growth'),
+        (28, 'Бес', 'Небольшие рожки', 'Fiend', 'Small antlers'),
+        (29, 'Леший', 'На теле вырастают побеги и листья', 'Leshy', 'Plants growing on the body'),
+        (30, 'Шарлей', 'Участки твёрдой, как камень, кожи', 'Shalmaar', 'Patches of thick rock-textured skin'),
+        (31, 'Утковол', 'Твёрдые наросты по всему телу', 'Bullvore', 'Hard growths all over the body'),
+        (32, 'Медведь', 'Усиленный рост волос на теле', 'Bear', 'Prolific fur growth')
+      ) AS v(sort_order, ru_name, ru_mutation, en_name, en_mutation)
+)
+, mutation_perk_vals AS (
+    SELECT sort_order,
+           'o0310' || to_char(sort_order, 'FM00') || '.disease_name' AS name_key_suffix,
+           'o0310' || to_char(sort_order, 'FM00') || '.disease_desc' AS desc_key_suffix,
+           'Малая мутация (' || ru_name || ')' AS ru_name_text,
+           'Minor Mutation (' || en_name || ')' AS en_name_text,
+           ru_mutation || '.' AS ru_desc_text,
+           en_mutation || '.' AS en_desc_text
+      FROM mutation_vals
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| key_vals.key_suffix)
+     , 'character'
+     , 'disease'
+     , key_vals.lang
+     , key_vals.text
+  FROM mutation_perk_vals
+ CROSS JOIN meta
+ CROSS JOIN LATERAL (
+   VALUES
+     (mutation_perk_vals.name_key_suffix, 'ru', mutation_perk_vals.ru_name_text),
+     (mutation_perk_vals.name_key_suffix, 'en', mutation_perk_vals.en_name_text),
+     (mutation_perk_vals.desc_key_suffix, 'ru', mutation_perk_vals.ru_desc_text),
+     (mutation_perk_vals.desc_key_suffix, 'en', mutation_perk_vals.en_desc_text)
+ ) AS key_vals(key_suffix, lang, text)
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH meta AS (
+  SELECT 'witcher_cc' AS su_su_id
+       , 'wcc_mage_events_danger_details' AS qu_id
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , meta.qu_id || '_o010501'
+     , jsonb_build_object('set_all_social_status_feared', true)
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0309' || to_char(v.num, 'FM00')
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'name', jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o0309' || to_char(v.num, 'FM00') || '.disease_name')::text
+             ),
+             'description', jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o0309' || to_char(v.num, 'FM00') || '.disease_desc')::text
+             )
+           )
+         )
+       )
+  FROM meta
+ CROSS JOIN (VALUES (1), (2), (3)) AS v(num)
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0310' || to_char(v.sort_order, 'FM00')
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'name', jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o0310' || to_char(v.sort_order, 'FM00') || '.disease_name')::text
+             ),
+             'description', jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o0310' || to_char(v.sort_order, 'FM00') || '.disease_desc')::text
+             )
+           )
+         )
+       )
+  FROM meta
+ CROSS JOIN generate_series(1, 32) AS v(sort_order);

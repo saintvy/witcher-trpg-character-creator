@@ -668,3 +668,97 @@ SELECT
       'Mage'
     )
   ) AS body;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_profession' AS qu_id
+         , 'character' AS entity
+  )
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o04.social_status_vocation.' || v.key)
+     , meta.entity
+     , 'social_status_vocation_group'
+     , v.lang
+     , v.text
+  FROM (VALUES
+    ('north',         'ru', 'Север'),
+    ('north',         'en', 'The North'),
+    ('nilfgaard',     'ru', 'Нильфгаард'),
+    ('nilfgaard',     'en', 'Nilfgaard'),
+    ('skellige',      'ru', 'Скеллиге'),
+    ('skellige',      'en', 'Skellige'),
+    ('dol_blathanna', 'ru', 'Доль Блатанна'),
+    ('dol_blathanna', 'en', 'Dol Blathanna'),
+    ('mahakam',       'ru', 'Махакам'),
+    ('mahakam',       'en', 'Mahakam')
+  ) AS v(key, lang, text)
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.north')::text),
+        'group_status', 1,
+        'group_is_feared', true
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.nilfgaard')::text),
+        'group_status', 2,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.skellige')::text),
+        'group_status', 2,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.dol_blathanna')::text),
+        'group_status', 3,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.mahakam')::text),
+        'group_status', 2,
+        'group_is_feared', false
+      )
+    )
+  );

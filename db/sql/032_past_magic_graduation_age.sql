@@ -35,7 +35,57 @@ SELECT meta.qu_id
         'placeholder' , 'Years',
         'valueTarget' , 'counters.lifeEventsCounter',
         'path', jsonb_build_array(
-          ck_id('witcher_cc.hierarchy.life_events')::text,
+          jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+            jsonb_build_object('and', jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+              jsonb_build_object('or', jsonb_build_array(
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+              ))
+            )),
+            ck_id('witcher_cc.hierarchy.life_events')::text,
+            ''
+          ))),
+          jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+            jsonb_build_object('and', jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+              jsonb_build_object('or', jsonb_build_array(
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+              ))
+            )),
+            jsonb_build_object('cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object('+', jsonb_build_array(
+                jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                10
+              ))
+            )),
+            ''
+          ))),
+          jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+            jsonb_build_object('and', jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+              jsonb_build_object('or', jsonb_build_array(
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+              ))
+            )),
+            ck_id('witcher_cc.hierarchy.academy_life')::text,
+            ''
+          ))),
+          jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+            jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+              jsonb_build_object('or', jsonb_build_array(
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+              ))
+            ))),
+            ck_id('witcher_cc.hierarchy.life_events')::text,
+            ''
+          ))),
           ck_id('witcher_cc.hierarchy.magic_graduation_age')::text
         ),
         'min', 20,

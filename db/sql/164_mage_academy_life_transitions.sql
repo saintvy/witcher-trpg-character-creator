@@ -12,6 +12,26 @@ VALUES
     ck_id('witcher_cc.rules.is_mage_academy_life_flag_eq_2'),
     'is_mage_academy_life_flag_eq_2',
     '{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},2]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_not_there_a_friend'),
+    'is_not_there_a_friend',
+    '{"!":{"is_there_a_friend":[]}}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_mentor_personality_missing'),
+    'is_mage_mentor_personality_missing',
+    '{"==":[{"var":"characterRaw.lore.mentor.personality"},null]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_mentor_personality_present'),
+    'is_mage_mentor_personality_present',
+    '{"!=":[{"var":"characterRaw.lore.mentor.personality"},null]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_event_from_academy_life_1_9'),
+    'is_mage_event_from_academy_life_1_9',
+    '{"and":[{"==":[{"var":"characterRaw.logicFields.last_node_and_answer"},"academy life 1-9"]},{"or":[{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},1]},{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},2]}]}]}'::jsonb
   )
 ON CONFLICT (ru_id) DO UPDATE
 SET name = EXCLUDED.name,
@@ -31,17 +51,19 @@ VALUES
   ('wcc_past_academy_life', 'wcc_past_mentor_personality', 'wcc_past_academy_life_o0302', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0406', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0407', NULL, 2),
-  ('wcc_past_academy_life', 'wcc_life_events_event', 'wcc_past_academy_life_o0109', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_mentor_personality', 'wcc_past_academy_life_o0109', (SELECT ru_id FROM rules WHERE name = 'is_mage_mentor_personality_missing' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_past_academy_life', 'wcc_life_events_event', 'wcc_past_academy_life_o0109', (SELECT ru_id FROM rules WHERE name = 'is_mage_mentor_personality_present' ORDER BY ru_id LIMIT 1), 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'magic_academy_life_counter_le_19'), 1),
   ('wcc_past_academy_life', 'wcc_mage_events_risk', NULL, NULL, 0),
 
   -- from: wcc_past_academy_life_details
-  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse', 'wcc_past_academy_life_o010706', NULL, 2),
-  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_past_academy_life_o010701', NULL, 2),
+  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse', 'wcc_past_academy_life_o011006', NULL, 2),
+  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_past_academy_life_o011001', NULL, 2),
   ('wcc_past_academy_life_details', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
   ('wcc_past_academy_life_details', 'wcc_past_academy_life', NULL, NULL, 0),
 
   -- from: wcc_past_mentor_relationship_end
+  ('wcc_past_mentor_relationship_end', 'wcc_life_events_event', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_event_from_academy_life_1_9' ORDER BY ru_id LIMIT 1), 2),
   ('wcc_past_mentor_relationship_end', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
   ('wcc_past_mentor_relationship_end', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 1),
 
@@ -107,6 +129,7 @@ VALUES
   ('wcc_past_academy_life', 'wcc_mage_events_enemy_how_far', 'wcc_past_academy_life_o0103', NULL, 2),
 
   -- from: wcc_mage_events_danger
+  ('wcc_mage_events_danger', 'wcc_mage_events_outcome', NULL, NULL, 0),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0101', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0102', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0104', NULL, 1),
@@ -118,11 +141,14 @@ VALUES
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0208', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0301', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0302', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0309', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0310', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0403', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0410', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_enemy_position', 'wcc_mage_events_danger_o0205', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_enemy_position', 'wcc_mage_events_danger_o0209', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_enemy_position', 'wcc_mage_events_danger_o0203', (SELECT ru_id FROM rules WHERE name = 'is_not_there_a_friend' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_mage_events_danger', 'wcc_mage_events_ally_position', 'wcc_mage_events_danger_o0204', (SELECT ru_id FROM rules WHERE name = 'is_not_there_a_friend' ORDER BY ru_id LIMIT 1), 2),
 
   -- from: wcc_mage_events_danger_details
   ('wcc_mage_events_danger_details', 'wcc_mage_events_danger_details_2', 'wcc_mage_events_danger_details_o010502', NULL, 1),

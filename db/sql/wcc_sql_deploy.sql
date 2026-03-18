@@ -7756,6 +7756,100 @@ SELECT
     )
   ) AS body;
 
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_profession' AS qu_id
+         , 'character' AS entity
+  )
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o04.social_status_vocation.' || v.key)
+     , meta.entity
+     , 'social_status_vocation_group'
+     , v.lang
+     , v.text
+  FROM (VALUES
+    ('north',         'ru', 'Север'),
+    ('north',         'en', 'The North'),
+    ('nilfgaard',     'ru', 'Нильфгаард'),
+    ('nilfgaard',     'en', 'Nilfgaard'),
+    ('skellige',      'ru', 'Скеллиге'),
+    ('skellige',      'en', 'Skellige'),
+    ('dol_blathanna', 'ru', 'Доль Блатанна'),
+    ('dol_blathanna', 'en', 'Dol Blathanna'),
+    ('mahakam',       'ru', 'Махакам'),
+    ('mahakam',       'en', 'Mahakam')
+  ) AS v(key, lang, text)
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.north')::text),
+        'group_status', 1,
+        'group_is_feared', true
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.nilfgaard')::text),
+        'group_status', 2,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.skellige')::text),
+        'group_status', 2,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.dol_blathanna')::text),
+        'group_status', 3,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o04',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o04.social_status_vocation.mahakam')::text),
+        'group_status', 2,
+        'group_is_feared', false
+      )
+    )
+  );
+
 -- <<< END sql/007_profession_04_mage.sql
 
 -- >>> BEGIN sql/007_profession_05_man_at_arms.sql
@@ -12008,6 +12102,85 @@ SELECT
     )
   ) AS body;
 
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_profession' AS qu_id
+         , 'character' AS entity
+  )
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o10.social_status_vocation.' || v.key)
+     , meta.entity
+     , 'social_status_vocation_group'
+     , v.lang
+     , v.text
+  FROM (VALUES
+    ('skellige',      'ru', 'Скеллиге'),
+    ('skellige',      'en', 'Skellige'),
+    ('rural',         'ru', 'Сельские общины'),
+    ('rural',         'en', 'Rural Communities'),
+    ('magic_haters',  'ru', 'Ненавистники магии'),
+    ('magic_haters',  'en', 'Haters of Magic'),
+    ('others',        'ru', 'Остальные'),
+    ('others',        'en', 'Others')
+  ) AS v(key, lang, text)
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o10',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o10.social_status_vocation.skellige')::text),
+        'group_status', 3,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o10',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o10.social_status_vocation.rural')::text),
+        'group_status', 3,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o10',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o10.social_status_vocation.magic_haters')::text),
+        'group_status', 1,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o10',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o10.social_status_vocation.others')::text),
+        'group_status', 2,
+        'group_is_feared', false
+      )
+    )
+  );
+
 
 -- <<< END sql/007_profession_10_druid.sql
 
@@ -12726,6 +12899,70 @@ SELECT
     )
   ) AS body
 FROM meta;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_profession' AS qu_id
+         , 'character' AS entity
+  )
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o11.social_status_vocation.' || v.key)
+     , meta.entity
+     , 'social_status_vocation_group'
+     , v.lang
+     , v.text
+  FROM (VALUES
+    ('same_faith',   'ru', 'Единоверцы'),
+    ('same_faith',   'en', 'Followers of the Same Faith'),
+    ('other_faiths', 'ru', 'Иноверцы и атеисты'),
+    ('other_faiths', 'en', 'Other Faiths and Atheists'),
+    ('magic_haters', 'ru', 'Ненавистники магии и моего бога'),
+    ('magic_haters', 'en', 'Haters of Magic and My God')
+  ) AS v(key, lang, text)
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o11',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o11.social_status_vocation.same_faith')::text),
+        'group_status', 3,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o11',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o11.social_status_vocation.other_faiths')::text),
+        'group_status', 2,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o11',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o11.social_status_vocation.magic_haters')::text),
+        'group_status', 1,
+        'group_is_feared', false
+      )
+    )
+  );
 
 -- <<< END sql/007_profession_11_priest_exp_toc.sql
 
@@ -17898,12 +18135,24 @@ SELECT meta.qu_id
          ),
          'path', jsonb_build_array(
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              ck_id('witcher_cc.hierarchy.life_events')::text,
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              jsonb_build_object('cat', jsonb_build_array(
                jsonb_build_object('var', 'counters.lifeEventsCounter'),
                '-',
@@ -17915,7 +18164,62 @@ SELECT meta.qu_id
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
              ck_id('witcher_cc.hierarchy.academy_life')::text,
              ''
            ))),
@@ -18069,12 +18373,24 @@ SELECT meta.qu_id
          ),
          'path', jsonb_build_array(
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              ck_id('witcher_cc.hierarchy.life_events')::text,
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              jsonb_build_object('cat', jsonb_build_array(
                jsonb_build_object('var', 'counters.lifeEventsCounter'),
                '-',
@@ -18086,7 +18402,62 @@ SELECT meta.qu_id
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
              ck_id('witcher_cc.hierarchy.academy_life')::text,
              ''
            ))),
@@ -18234,12 +18605,24 @@ SELECT meta.qu_id
          ),
          'path', jsonb_build_array(
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              ck_id('witcher_cc.hierarchy.life_events')::text,
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              jsonb_build_object('cat', jsonb_build_array(
                jsonb_build_object('var', 'counters.lifeEventsCounter'),
                '-',
@@ -18251,7 +18634,62 @@ SELECT meta.qu_id
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
              ck_id('witcher_cc.hierarchy.academy_life')::text,
              ''
            ))),
@@ -18399,12 +18837,24 @@ SELECT meta.qu_id
          ),
          'path', jsonb_build_array(
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              ck_id('witcher_cc.hierarchy.life_events')::text,
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              jsonb_build_object('cat', jsonb_build_array(
                jsonb_build_object('var', 'counters.lifeEventsCounter'),
                '-',
@@ -18416,7 +18866,62 @@ SELECT meta.qu_id
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
              ck_id('witcher_cc.hierarchy.academy_life')::text,
              ''
            ))),
@@ -18564,12 +19069,24 @@ SELECT meta.qu_id
          ),
          'path', jsonb_build_array(
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              ck_id('witcher_cc.hierarchy.life_events')::text,
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              jsonb_build_object('cat', jsonb_build_array(
                jsonb_build_object('var', 'counters.lifeEventsCounter'),
                '-',
@@ -18581,7 +19098,62 @@ SELECT meta.qu_id
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
              ck_id('witcher_cc.hierarchy.academy_life')::text,
              ''
            ))),
@@ -18721,12 +19293,24 @@ SELECT meta.qu_id
          ),
          'path', jsonb_build_array(
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              ck_id('witcher_cc.hierarchy.life_events')::text,
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              jsonb_build_object('cat', jsonb_build_array(
                jsonb_build_object('var', 'counters.lifeEventsCounter'),
                '-',
@@ -18738,7 +19322,62 @@ SELECT meta.qu_id
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
              ck_id('witcher_cc.hierarchy.academy_life')::text,
              ''
            ))),
@@ -18886,12 +19525,24 @@ SELECT meta.qu_id
          ),
          'path', jsonb_build_array(
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              ck_id('witcher_cc.hierarchy.life_events')::text,
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
              jsonb_build_object('cat', jsonb_build_array(
                jsonb_build_object('var', 'counters.lifeEventsCounter'),
                '-',
@@ -18903,7 +19554,62 @@ SELECT meta.qu_id
              ''
            ))),
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
-             jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+               jsonb_build_object('or', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+               ))
+             )),
+             ck_id('witcher_cc.hierarchy.academy_life')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             ck_id('witcher_cc.hierarchy.life_events')::text,
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
+             jsonb_build_object('cat', jsonb_build_array(
+               jsonb_build_object('var', 'counters.lifeEventsCounter'),
+               '-',
+               jsonb_build_object('+', jsonb_build_array(
+                 jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                 10
+               ))
+             )),
+             ''
+           ))),
+           jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+             jsonb_build_object('and', jsonb_build_array(
+               jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+               jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+                 jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                 jsonb_build_object('or', jsonb_build_array(
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                   jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                 ))
+               )))
+             )),
              ck_id('witcher_cc.hierarchy.academy_life')::text,
              ''
            ))),
@@ -18978,7 +19684,28 @@ SELECT meta.qu_id || '_o' || to_char(raw_data.num, 'FM00') AS an_id
               jsonb_build_object(
                 'if',
                 jsonb_build_array(
-                  jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+                  jsonb_build_object(
+                    'and',
+                    jsonb_build_array(
+                      jsonb_build_object('>', jsonb_build_array(jsonb_build_object('var', 'counters.lifeEventsCounter'), 0)),
+                      jsonb_build_object(
+                        '!',
+                        jsonb_build_object(
+                          'and',
+                          jsonb_build_array(
+                            jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+                            jsonb_build_object(
+                              'or',
+                              jsonb_build_array(
+                                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  ),
                   jsonb_build_array(
                     jsonb_build_object('id', 'lifeEventsCounter', 'step', 10)
                   ),
@@ -19012,6 +19739,66 @@ SELECT 'character'
          )
        )
   FROM nums
+ CROSS JOIN meta;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_past_mentor_relationship_end' AS qu_id
+         , 'character' AS entity
+  )
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.mentor.is_alive.' || v.key)
+     , meta.entity
+     , 'mentor_is_alive'
+     , v.lang
+     , v.text
+  FROM (VALUES
+    ('alive', 'ru', 'Жив'),
+    ('alive', 'en', 'Alive'),
+    ('dead', 'ru', 'Мёртв'),
+    ('dead', 'en', 'Dead')
+  ) AS v(key, lang, text)
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_past_mentor_relationship_end' AS qu_id
+  )
+, dead_answers(num) AS (VALUES (1), (2), (9), (10))
+, alive_answers(num) AS (VALUES (3), (4), (5), (6), (7), (8))
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , meta.qu_id || '_o' || to_char(dead_answers.num, 'FM00')
+     , jsonb_build_object(
+         'set',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.mentor.is_alive'),
+           jsonb_build_object(
+             'i18n_uuid',
+             ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.mentor.is_alive.dead')::text
+           )
+         )
+       )
+  FROM dead_answers
+ CROSS JOIN meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o' || to_char(alive_answers.num, 'FM00')
+     , jsonb_build_object(
+         'set',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.mentor.is_alive'),
+           jsonb_build_object(
+             'i18n_uuid',
+             ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.mentor.is_alive.alive')::text
+           )
+         )
+       )
+  FROM alive_answers
  CROSS JOIN meta;
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
@@ -19058,7 +19845,57 @@ SELECT meta.qu_id
         'placeholder' , 'Years',
         'valueTarget' , 'counters.lifeEventsCounter',
         'path', jsonb_build_array(
-          ck_id('witcher_cc.hierarchy.life_events')::text,
+          jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+            jsonb_build_object('and', jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+              jsonb_build_object('or', jsonb_build_array(
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+              ))
+            )),
+            ck_id('witcher_cc.hierarchy.life_events')::text,
+            ''
+          ))),
+          jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+            jsonb_build_object('and', jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+              jsonb_build_object('or', jsonb_build_array(
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+              ))
+            )),
+            jsonb_build_object('cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object('+', jsonb_build_array(
+                jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                10
+              ))
+            )),
+            ''
+          ))),
+          jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+            jsonb_build_object('and', jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+              jsonb_build_object('or', jsonb_build_array(
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+              ))
+            )),
+            ck_id('witcher_cc.hierarchy.academy_life')::text,
+            ''
+          ))),
+          jsonb_build_object('jsonlogic_expression', jsonb_build_object('if', jsonb_build_array(
+            jsonb_build_object('!', jsonb_build_object('and', jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'), 'academy life 1-9')),
+              jsonb_build_object('or', jsonb_build_array(
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+                jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+              ))
+            ))),
+            ck_id('witcher_cc.hierarchy.life_events')::text,
+            ''
+          ))),
           ck_id('witcher_cc.hierarchy.magic_graduation_age')::text
         ),
         'min', 20,
@@ -19283,7 +20120,7 @@ WITH
       (4, 3, 'Цель ведьмака', 'Ваше неконтролируемое использование магии нанесло достаточно ущерба, чтобы ведьмак из школы Кота был нанят, чтобы убить вас. Этот ведьмак все еще ищет тебя.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 4, 'Аптекарь', 'Частью вашего обучения была способность диагностировать и лечить болезни людей из вашего сообщества. Получите +2 к Первой помощи.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 5, 'Ботаник', 'Вы ухаживали за школьным садом. Получите +2 к Выживанию.', 1.0::numeric, 'is_mentor_school_minor'),
-      (4, 6, 'Помогали местным жителям с различными проблемами - социальный статус "Равенство" в выбранном регионе', 'Вы использовали свою магию, чтобы помочь нуждающемуся региону. Ваше социальное положение равно Равенству в этой области. Определите с ведущим, что это за область.', 1.0::numeric, 'is_mentor_school_minor'),
+      (4, 6, 'Помогали местным жителям с различными проблемами', 'Вы использовали свою магию, чтобы помочь нуждающемуся региону. Ваше социальное положение равно Равенству в этой области. Определите с ведущим, что это за область.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 7, 'Прокляты', 'Вы были прокляты либо собственной рукой, либо гневом кого-то из вашей школы. Вместе с ведущим выберите подходящее проклятие из перечисленных в Основной книге.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 8, 'Защитили деревню от чудовища', 'Вы использовали свою магию, чтобы отразить атаку монстра из деревни. Получите +1 к Монстрологии.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 9, 'Обучение вне академии', 'Вы учились у многих наставников, узнавая столько, сколько могли. Начните с дополнительным заклинания новичка.', 1.0::numeric, 'is_mentor_school_minor'),
@@ -19336,7 +20173,7 @@ WITH
       (4, 3, 'Witcher Target', 'Your unsupervised use of magic caused enough damage that a Cat school witcher was hired to kill you. This witcher is still looking for you.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 4, 'Apothecary', 'Part of your learning involved being able to diagnose and cure ailments for the people of your community. Gain a +2 to First Aid.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 5, 'Botanist', 'You tended to your school''s garden. Gain +2 to Wilderness Survival.', 1.0::numeric, 'is_mentor_school_minor'),
-      (4, 6, 'Helped Locals with Various Issues - Social Standing "Equal" in a chosen region', 'You have used your magic to aid a region in need. Your Social Standing is Equal in this area. Work with the GM to determine where this is.', 1.0::numeric, 'is_mentor_school_minor'),
+      (4, 6, 'Helped Locals with Various Issues', 'You have used your magic to aid a region in need. Your Social Standing is Equal in this area. Work with the GM to determine where this is.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 7, 'Cursed', 'You were cursed, either by your own hand or the ire of another at your school. Work with the GM to pick an appropriate curse from the ones listed in the Core Book.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 8, 'Defended a Village from a Monster', 'You used your magic to repel a monster attack from a village. Gain +1 to Monster Lore.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 9, 'Extracurricular Learning', 'You studied under many mentors, learning as much as you could. Start with an extra Novice spell.', 1.0::numeric, 'is_mentor_school_minor'),
@@ -19442,6 +20279,7 @@ CROSS JOIN meta
 WHERE NOT (
   (options.group_id = 1 AND options.num = 10) OR
   (options.group_id = 2 AND options.num = 8) OR
+  (options.group_id = 3 AND options.num = 7) OR
   (options.group_id = 4 AND options.num IN (6, 7))
 );
 
@@ -19855,12 +20693,12 @@ WITH
     SELECT 'ru' AS lang, v.*
       FROM (VALUES
         -- Group 1: details for o0110/o0208/o0407
-        ('wcc_past_academy_life_o010701', 1, 0.2::numeric, '<b>Проклятие чудовищности</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010702', 2, 0.2::numeric, '<b>Проклятие призраков</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010703', 3, 0.2::numeric, '<b>Проклятие заразы</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010704', 4, 0.2::numeric, '<b>Проклятие странника</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010705', 5, 0.2::numeric, '<b>Проклятие ликантропии</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010706', 6, 0.0::numeric, '<b>Другое проклятие</b> (кастомное)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011001', 1, 0.2::numeric, '<b>Проклятие чудовищности</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011002', 2, 0.2::numeric, '<b>Проклятие призраков</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011003', 3, 0.2::numeric, '<b>Проклятие заразы</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011004', 4, 0.2::numeric, '<b>Проклятие странника</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011005', 5, 0.2::numeric, '<b>Проклятие ликантропии</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011006', 6, 0.0::numeric, '<b>Другое проклятие</b> (кастомное)', 'is_academy_life_details_from_curse'),
 
         -- Group 2: details for o0207
         ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 100 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
@@ -19923,12 +20761,12 @@ WITH
     SELECT 'en' AS lang, v.*
       FROM (VALUES
         -- Group 1: details for o0110/o0208/o0407
-        ('wcc_past_academy_life_o010701', 1, 0.2::numeric, '<b>Curse of Monstrosity</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010702', 2, 0.2::numeric, '<b>Curse of Phantoms</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010703', 3, 0.2::numeric, '<b>Curse of Pestilence</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010704', 4, 0.2::numeric, '<b>Curse of the Wanderer</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010705', 5, 0.2::numeric, '<b>Curse of Lycanthropy</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010706', 6, 0.0::numeric, '<b>Other Curse</b> (custom)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011001', 1, 0.2::numeric, '<b>Curse of Monstrosity</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011002', 2, 0.2::numeric, '<b>Curse of Phantoms</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011003', 3, 0.2::numeric, '<b>Curse of Pestilence</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011004', 4, 0.2::numeric, '<b>Curse of the Wanderer</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011005', 5, 0.2::numeric, '<b>Curse of Lycanthropy</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011006', 6, 0.0::numeric, '<b>Other Curse</b> (custom)', 'is_academy_life_details_from_curse'),
 
         -- Group 2: details for o0207
         ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 100 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
@@ -20025,7 +20863,7 @@ SELECT vals.an_id
      , (SELECT ru_id FROM rules WHERE name = vals.rule_name ORDER BY ru_id LIMIT 1)
      , jsonb_build_object('probability', vals.probability)
        || CASE
-            WHEN vals.an_id IN ('wcc_past_academy_life_o010701', 'wcc_past_academy_life_o010706')
+            WHEN vals.an_id IN ('wcc_past_academy_life_o011001', 'wcc_past_academy_life_o011006')
               THEN '{}'::jsonb
             ELSE jsonb_build_object('counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10))
           END
@@ -20089,7 +20927,7 @@ SELECT
   jsonb_build_object(
     'set',
     jsonb_build_array(
-      jsonb_build_object('var', 'characterRaw.logic_fields.flags.academy_life'),
+      jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
       jsonb_build_object(
         'jsonlogic_expression',
         jsonb_build_object(
@@ -20124,7 +20962,7 @@ WITH curse_mapping AS (
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
   'character',
-  'wcc_past_academy_life_o0107' || to_char(curse_mapping.num, 'FM00'),
+  'wcc_past_academy_life_o0110' || to_char(curse_mapping.num, 'FM00'),
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -20138,6 +20976,48 @@ SELECT
     )
   )
 FROM curse_mapping;
+
+-- Effects: save curse detail choices to academy life events
+WITH curse_event_mapping(detail_num, source_num) AS (
+  VALUES
+    (1, 1),
+    (2, 2),
+    (3, 3),
+    (4, 4),
+    (5, 5)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0110' || to_char(curse_event_mapping.detail_num, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_fortune_or_not_details_o' || to_char(2000 + curse_event_mapping.source_num, 'FM0000') || '.event_desc')::text)
+      )
+    )
+  )
+FROM curse_event_mapping;
 
 -- Effects: crowns for o0207 details
 WITH crowns_vals AS (
@@ -20490,7 +21370,7 @@ SELECT
   jsonb_build_object(
     'set',
     jsonb_build_array(
-      jsonb_build_object('var', 'characterRaw.logic_fields.flags.academy_life'),
+      jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
       3
     )
   )
@@ -20758,22 +21638,80 @@ VALUES
       "and": [
         { "==": [ { "var": "answers.lastAnswer.questionId" }, "wcc_mage_events_is_in_danger" ] },
         { "in": [ "wcc_mage_events_is_in_danger_o0102", { "var": "answers.lastAnswer.answerIds" } ] },
-        {
-          "or": [
-            { "!!": { "var": "answers.byAnswer.wcc_past_mentor_relationship_end_o03" } },
-            { "!!": { "var": "answers.byAnswer.wcc_past_mentor_relationship_end_o04" } },
-            { "!!": { "var": "answers.byAnswer.wcc_past_mentor_relationship_end_o05" } },
-            { "!!": { "var": "answers.byAnswer.wcc_past_mentor_relationship_end_o06" } },
-            { "!!": { "var": "answers.byAnswer.wcc_past_mentor_relationship_end_o07" } },
-            { "!!": { "var": "answers.byAnswer.wcc_past_mentor_relationship_end_o08" } }
-          ]
-        }
+        { "!!": { "var": "characterRaw.lore.mentor.relationship_end" } }
       ]
     }'::jsonb
   )
 ON CONFLICT (ru_id) DO UPDATE
 SET name = EXCLUDED.name,
     body = EXCLUDED.body;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger' AS qu_id
+         , 'character' AS entity
+  )
+, ally_status_vals(lang, text) AS (
+    VALUES
+      ('ru', 'Погиб'),
+      ('en', 'Was killed')
+)
+, traitor_cause_vals(kind, num, ru_text, en_text) AS (
+    VALUES
+      ('mage', 1, 'Вы обучались вместе, но вас предали', 'You studied together, but you were betrayed'),
+      ('mage', 2, 'Вы спасли от несчастного случая, но вас предали', 'You saved them from an accident, but you were betrayed'),
+      ('mage', 3, 'Вы поддержали в трудную минуту, но вас предали', 'You supported them in a hard time, but you were betrayed'),
+      ('mage', 4, 'Вы помогли справиться с предательством, но вас предали', 'You helped them through a betrayal, but you were betrayed'),
+      ('mage', 5, 'У вас была разовая интрижка, но вас предали', 'You were one-time romantic partners, but you were betrayed'),
+      ('mage', 6, 'Вы собирались манипулировать, но вас предали', 'You set out to manipulate them, but you were betrayed'),
+      ('mage', 7, 'Вы показали искреннюю доброту, но вас предали', 'You showed them genuine kindness, but you were betrayed'),
+      ('mage', 8, 'Вы познакомились чтобы изучить, но вас предали', 'You set out to study them, but you were betrayed'),
+      ('mage', 9, 'Вы помогли ударить кого-то в спину, но вас предали', 'You helped them backstab someone, but you were betrayed'),
+      ('mage', 10, 'Вы были наказаны вместе, но вас предали', 'You were punished together, but you were betrayed'),
+      ('mage', 11, 'Вы помогли укрыться этому магу-отступнику, но вас предали', 'You helped shelter this rogue mage, but you were betrayed'),
+      ('witcher', 1, 'Вы его спасли от чего-то, но вас предали', 'You saved them from something, but you were betrayed'),
+      ('witcher', 2, 'Вы встретились в таверне, но вас предали', 'You met in a tavern, but you were betrayed'),
+      ('witcher', 3, 'Он вас от чего-то спас, но вас предали', 'They saved you from something, but you were betrayed'),
+      ('witcher', 4, 'Он вас нанял, но вас предали', 'They hired you for something, but you were betrayed'),
+      ('witcher', 5, 'Вы вместе попали в ловушку, но вас предали', 'You were trapped together, but you were betrayed'),
+      ('witcher', 6, 'Вас заставили работать вместе, но вас предали', 'You were forced to work together, but you were betrayed'),
+      ('witcher', 7, 'Вы его наняли, но вас предали', 'You hired them for something, but you were betrayed'),
+      ('witcher', 8, 'Вы повстречались пьяными и сблизились, но вас предали', 'You met while drunk and hit it off, but you were betrayed'),
+      ('witcher', 9, 'Вы встретились во время путешествий, но вас предали', 'You met while traveling, but you were betrayed'),
+      ('witcher', 10, 'Вы вместе сражались, но вас предали', 'You fought together, but you were betrayed')
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(v2.key), meta.entity, v.entity_field, v.lang, v.text
+FROM (
+  SELECT 'common.ally_status.was_killed' AS key_suffix
+       , 'ally_field' AS entity_field
+       , ally_status_vals.lang
+       , ally_status_vals.text
+    FROM ally_status_vals
+
+  UNION ALL
+
+  SELECT meta.qu_id || '.traitor_cause_' || traitor_cause_vals.kind || '_' || to_char(traitor_cause_vals.num, 'FM00')
+       , 'enemy_field'
+       , 'ru'
+       , traitor_cause_vals.ru_text
+    FROM traitor_cause_vals
+    CROSS JOIN meta
+
+  UNION ALL
+
+  SELECT meta.qu_id || '.traitor_cause_' || traitor_cause_vals.kind || '_' || to_char(traitor_cause_vals.num, 'FM00')
+       , 'enemy_field'
+       , 'en'
+       , traitor_cause_vals.en_text
+    FROM traitor_cause_vals
+    CROSS JOIN meta
+) AS v(key_suffix, entity_field, lang, text)
+CROSS JOIN meta
+CROSS JOIN LATERAL (VALUES (meta.su_su_id || '.' || v.key_suffix)) AS v2(key)
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
 
 -- Question
 WITH
@@ -20853,127 +21791,135 @@ WITH
 , raw_data AS (
   SELECT 'ru' AS lang, v.*
     FROM (VALUES
-      ('wcc_mage_events_danger_o0101', 1, 0.1::numeric, 'is_mage_danger_cautious', '<b>Долг</b><br>За вами долг от 100 до 1000 крон.'),
-      ('wcc_mage_events_danger_o0102', 2, 0.1::numeric, 'is_mage_danger_cautious', '<b>Зависимость</b><br>У вас есть зависимость на ваш выбор:<br> - Алкоголь<br> - Табак<br> - Фисштех<br> - Азартные игры<br> - Клептомания<br> - Похоть<br> - Обжорство<br> - Адреналиновая зависимость<br> - Другое (можете придумать сами)'),
-      ('wcc_mage_events_danger_o0103', 3, 0.1::numeric, 'is_mage_danger_cautious', '<b>Болезнь</b><br>Вы заболели изнурительной болезнью. В конце концов, вы выздоровели, но выздоровление далось тяжело. Ваша Вын снижается на 2.'),
-      ('wcc_mage_events_danger_o0104', 4, 0.1::numeric, 'is_mage_danger_cautious', '<b>Разгневанные горожане</b><br>Это может быть что-то, что вы сделали (или чего не сделали), но вы разозлили жителей крупного города. Если вы вернетесь в этот город, горожане сразу увидят в вас угрозу или цель.'),
-      ('wcc_mage_events_danger_o0105', 5, 0.1::numeric, 'is_mage_danger_cautious', '<b>Несчастный случай</b><br>С вами произошел несчастный случай.'),
-      ('wcc_mage_events_danger_o0106', 6, 0.1::numeric, 'is_mage_danger_cautious', '<b>Заключение в тюрьму</b><br>Вас посадили в тюрьму на срок от 1 до 10 лет за то, что вы совершили (либо по ложному обвинению).'),
-      ('wcc_mage_events_danger_o0107', 7, 0.1::numeric, 'is_mage_danger_cautious_mentor_friend', '<b>Смерть наставника</b><br>Если ваш наставник был еще жив, он умер в течение этого десятилетия. Если у вас не было наставника, вы можете перебросить этот результат. Вы и ведущий решаете, как он умер.'),
-      ('wcc_mage_events_danger_o0108', 8, 0.1::numeric, 'is_mage_danger_cautious', '<b>Выпадение волос</b><br>В результате неудачного заклинания все волосы на вашем теле выпали и отказываются расти обратно.'),
-      ('wcc_mage_events_danger_o0109', 9, 0.1::numeric, 'is_mage_danger_cautious', '<b>Артрит</b><br>Ваши руки не могут делать замысловатые жесты, необходимые для произнесения заклинаний без боли. Вы получаете штраф -1 к Сотворению заклинаний всякий раз, когда произносите заклинание, требующее движения рук.'),
-      ('wcc_mage_events_danger_o0110', 10, 0.1::numeric, 'is_mage_danger_cautious', '<b>Порча</b><br>На вас наложил порчу кто-то, кого вы раздражали или вы сами, своими руками.'),
+      (1, 1, 0.1, '<b>Долг</b><br>За вами долг от 100 до 1000 крон.'),
+      (1, 2, 0.1, '<b>Зависимость</b><br>У вас есть зависимость на ваш выбор:<br> - Алкоголь<br> - Табак<br> - Фисштех<br> - Азартные игры<br> - Клептомания<br> - Похоть<br> - Обжорство<br> - Адреналиновая зависимость<br> - Другое (можете придумать сами)'),
+      (1, 3, 0.1, '<b>Болезнь</b><br>Вы заболели изнурительной болезнью. В конце концов, вы выздоровели, но выздоровление далось тяжело. Ваша Вын снижается на 2.'),
+      (1, 4, 0.1, '<b>Разгневанные горожане</b><br>Это может быть что-то, что вы сделали (или чего не сделали), но вы разозлили жителей крупного города. Если вы вернетесь в этот город, горожане сразу увидят в вас угрозу или цель.'),
+      (1, 5, 0.1, '<b>Несчастный случай</b><br>С вами произошел несчастный случай.'),
+      (1, 6, 0.1, '<b>Заключение в тюрьму</b><br>Вас посадили в тюрьму на срок от 1 до 10 лет за то, что вы совершили (либо по ложному обвинению).'),
+      (1, 7, 0.1, '<b>Смерть наставника</b><br>Если ваш наставник был еще жив, он умер в течение этого десятилетия. Если у вас не было наставника, вы можете перебросить этот результат. Вы и ведущий решаете, как он умер.'),
+      (1, 8, 0.1, '<b>Выпадение волос</b><br>В результате неудачного заклинания все волосы на вашем теле выпали и отказываются расти обратно.'),
+      (1, 9, 0.1, '<b>Артрит</b><br>Ваши руки не могут делать замысловатые жесты, необходимые для произнесения заклинаний без боли. Вы получаете штраф -1 к Сотворению заклинаний всякий раз, когда произносите заклинание, требующее движения рук.'),
+      (1, 10, 0.1, '<b>Порча</b><br>На вас наложил порчу кто-то, кого вы раздражали или вы сами, своими руками.'),
 
-      ('wcc_mage_events_danger_o0201', 1, 0.1::numeric, 'is_mage_danger_politics', '<b>Обида</b><br>Кто-то задел ваши чувства, или вы задели их. Тем не менее, один из вас держит обиду на это происшествие.'),
-      ('wcc_mage_events_danger_o0202', 2, 0.1::numeric, 'is_mage_danger_politics', '<b>Ложное обвинение</b><br>Вас в чем-то ложно обвинили.'),
-      ('wcc_mage_events_danger_o0203', 3, 0.1::numeric, 'is_mage_danger_politics', '<b>Предательство</b><br>Вас предал друг или знакомый. Имеющийся друг становится врагом.'),
-      ('wcc_mage_events_danger_o0204', 4, 0.1::numeric, 'is_mage_danger_politics', '<b>Друг или возлюбленный(-ая) убит</b><br>Друг или возлюбленный(-ая) погиб(ла) в результате несчастного случая или, возможно, из-за заговора.'),
-      ('wcc_mage_events_danger_o0205', 5, 0.1::numeric, 'is_mage_danger_politics', '<b>Поймали с поличным</b><br>Вас поймали на попытке манипулировать другими, заставляя их делать вашу грязную работу. Вы получаете врага, чья сила основывается на слугах.'),
-      ('wcc_mage_events_danger_o0206', 6, 0.1::numeric, 'is_mage_danger_politics', '<b>Социальные оплошности</b><br>Вы совершили ужасную социальную оплошность на собрании магов, и теперь другие маги относятся к вам как к Терпимому, а не как к Равному.'),
-      ('wcc_mage_events_danger_o0207', 7, 0.1::numeric, 'is_mage_danger_politics', '<b>Цель охоты</b><br>За вас назначена награда. Вас активно ищет группа от 6 до 11 охотников за головами.'),
-      ('wcc_mage_events_danger_o0208', 8, 0.1::numeric, 'is_mage_danger_politics', '<b>Враг государства</b><br>Ваши политические планы были раскрыты, и вас заклеймили врагом нации, против которой вы замышляли заговор. Ваш статус Ненависть в этой стране независимо от вашего социального положения в этом регионе.'),
-      ('wcc_mage_events_danger_o0209', 9, 0.1::numeric, 'is_mage_danger_politics', '<b>Соперник</b><br>Своими действиями вы сделали соперником другого члена вашей школы.'),
-      ('wcc_mage_events_danger_o0210', 10, 0.1::numeric, 'is_mage_danger_politics', '<b>На службе у дворянина</b><br>Мелкий аристократ нанял вас за ваши магические способности и тайные знания. Каждый месяц вы получаете жалование в размере 100 крон. Тем не менее, вы должны немедленно отправляться к нему/ней, когда позовут вас, и выполнять любые поручения, которые он(а) потребуют от вас, иначе вы рискуете разозлить их.'),
+      (2, 1, 0.1, '<b>Обида</b><br>Кто-то задел ваши чувства, или вы задели их. Тем не менее, один из вас держит обиду на это происшествие.'),
+      (2, 2, 0.1, '<b>Ложное обвинение</b><br>Вас в чем-то ложно обвинили.'),
+      (2, 3, 0.1, '<b>Предательство</b><br>Вас предал друг или знакомый. Имеющийся друг становится врагом.'),
+      (2, 4, 0.1, '<b>Друг или возлюбленный(-ая) убит</b><br>Друг или возлюбленный(-ая) погиб(ла) в результате несчастного случая или, возможно, из-за заговора.'),
+      (2, 5, 0.1, '<b>Поймали с поличным</b><br>Вас поймали на попытке манипулировать другими, заставляя их делать вашу грязную работу. Вы получаете врага, чья сила основывается на слугах.'),
+      (2, 6, 0.1, '<b>Социальные оплошности</b><br>Вы совершили ужасную социальную оплошность на собрании магов, и теперь другие маги относятся к вам как к Терпимому, а не как к Равному.'),
+      (2, 7, 0.1, '<b>Цель охоты</b><br>За вас назначена награда. Вас активно ищет группа от 6 до 11 охотников за головами.'),
+      (2, 8, 0.1, '<b>Враг государства</b><br>Ваши политические планы были раскрыты, и вас заклеймили врагом нации, против которой вы замышляли заговор. Ваш статус Ненависть в этой стране независимо от вашего социального положения в этом регионе.'),
+      (2, 9, 0.1, '<b>Соперник</b><br>Своими действиями вы сделали соперником другого члена вашей школы.'),
+      (2, 10, 0.1, '<b>На службе у дворянина</b><br>Мелкий аристократ нанял вас за ваши магические способности и тайные знания. Каждый месяц вы получаете жалование в размере 100 крон. Тем не менее, вы должны немедленно отправляться к нему/ней, когда позовут вас, и выполнять любые поручения, которые он(а) потребуют от вас, иначе вы рискуете разозлить их.'),
 
-      ('wcc_mage_events_danger_o0301', 1, 0.1::numeric, 'is_mage_danger_study', '<b>Магическая блокировка</b><br>В своих исследованиях вы пренебрегали одним из элементов в пользу других. При произнесении заклинаний этого элемента вы получаете штраф -2 к проверке Сотворения заклинаний. Эффект стакается.'),
-      ('wcc_mage_events_danger_o0302', 2, 0.1::numeric, 'is_mage_danger_study', '<b>Встреча с монстром</b><br>Вы однажды чуть не умерли, когда изучали монстра. Теперь у вас есть фобия перед ним, а также получите -2 к проверкам Храбрости против него. Кроме того, вы должны пройти проверку Храбрости со СЛ 15, когда впервые столкнетесь с любым экземпляром этого существа, иначе будете ошеломлены.'),
-      ('wcc_mage_events_danger_o0303', 3, 0.1::numeric, 'is_mage_danger_study', '<b>Перегрузка с Местом силы</b><br>Вы нашли Место Силы, но по своей неопытности взяли слишком много энергии из него, и в процессе остались шрамы. Каждое Место Силы, из которого вы черпаете, требует пройти проверку Вын так, как если бы вы брали из него во второй раз.'),
-      ('wcc_mage_events_danger_o0304', 4, 0.1::numeric, 'is_mage_danger_study', '<b>Преследуется големом</b><br>В процессе учебы вам удалось перейти дорогу могущественному магу, который послал голема за вами. Теперь он ищет вас по всему континенту. Если он найдет вас, он попытается вас убить.'),
-      ('wcc_mage_events_danger_o0305', 5, 0.1::numeric, 'is_mage_danger_study', '<b>Громкая телепатия</b><br>Вы изучали заклинание телепатии. Вы пытались улучшить базовое заклинание телепатии, но результат оказался не таким, как вы ожидали. Когда вы телепатически шпионите за целью, вы не можете не издать низкое бормотание в ее голове, которое может насторожить ее. Любой, за кем вы шпионите, может пройти проверку Внимания.'),
-      ('wcc_mage_events_danger_o0306', 6, 0.1::numeric, 'is_mage_danger_study', '<b>Полиморфный</b><br>Вы провели десятилетие, будучи превращенными другим магом. Потребовалось много времени, чтобы найти способ обратиться обратно. Вы до сих пор сохранили некоторые манеры того существа. Вы получаете -2 к вашему Этикету.'),
-      ('wcc_mage_events_danger_o0307', 7, 0.1::numeric, 'is_mage_danger_study', '<b>Экстремальная уязвимость</b><br>Ты пытался сделать себя устойчивым к двимериту. Вы получили обратный результат. Вы получаете штраф -3 к проверкам Стойкости, чтобы сопротивляться эффектам двимерита.'),
-      ('wcc_mage_events_danger_o0308', 8, 0.1::numeric, 'is_mage_danger_study', '<b>Телепортационная болезнь</b><br>Вы испытываете телепортационную болезнь. Всякий раз, когда вы телепортируетесь или путешествуете через портал, вы должны пройти проверку Стойкости со СЛ 12, иначе вы будете страдать от тошноты в течение 10 минут.'),
-      ('wcc_mage_events_danger_o0309', 9, 0.1::numeric, 'is_mage_danger_study', '<b>Потеря чувств</b><br>Ваши эксперименты дорого вам обошлись. Вы потеряли чувство вкуса, обоняния или осязания. У вас есть штраф -2 к проверкам навыков, основанным на этом чувстве.'),
-      ('wcc_mage_events_danger_o0310', 10, 0.1::numeric, 'is_mage_danger_study', '<b>Мутация</b><br>Твои попытки понять мутагены привели к обратным результатам. Вы получаете физические изменения малой Мутации Мутагена по вашему выбору и изменения в социальном положении.'),
+      (3, 1, 0.1, '<b>Магическая блокировка</b><br>В своих исследованиях вы пренебрегали одним из элементов в пользу других. При произнесении заклинаний этого элемента вы получаете штраф -2 к проверке Сотворения заклинаний. Эффект стакается.'),
+      (3, 2, 0.1, '<b>Встреча с монстром</b><br>Вы однажды чуть не умерли, когда изучали монстра. Теперь у вас есть фобия перед ним, а также получите -2 к проверкам Храбрости против него. Кроме того, вы должны пройти проверку Храбрости со СЛ 15, когда впервые столкнетесь с любым экземпляром этого существа, иначе будете ошеломлены.'),
+      (3, 3, 0.1, '<b>Перегрузка с Местом силы</b><br>Вы нашли Место Силы, но по своей неопытности взяли слишком много энергии из него, и в процессе остались шрамы. Каждое Место Силы, из которого вы черпаете, требует пройти проверку Вын так, как если бы вы брали из него во второй раз.'),
+      (3, 4, 0.1, '<b>Преследуется големом</b><br>В процессе учебы вам удалось перейти дорогу могущественному магу, который послал голема за вами. Теперь он ищет вас по всему континенту. Если он найдет вас, он попытается вас убить.'),
+      (3, 5, 0.1, '<b>Громкая телепатия</b><br>Вы изучали заклинание телепатии. Вы пытались улучшить базовое заклинание телепатии, но результат оказался не таким, как вы ожидали. Когда вы телепатически шпионите за целью, вы не можете не издать низкое бормотание в ее голове, которое может насторожить ее. Любой, за кем вы шпионите, может пройти проверку Внимания.'),
+      (3, 6, 0.1, '<b>Полиморфный</b><br>Вы провели десятилетие, будучи превращенными другим магом. Потребовалось много времени, чтобы найти способ обратиться обратно. Вы до сих пор сохранили некоторые манеры того существа. Вы получаете -2 к вашему Этикету.'),
+      (3, 7, 0.1, '<b>Экстремальная уязвимость</b><br>Ты пытался сделать себя устойчивым к двимериту. Вы получили обратный результат. Вы получаете штраф -3 к проверкам Стойкости, чтобы сопротивляться эффектам двимерита.'),
+      (3, 8, 0.1, '<b>Телепортационная болезнь</b><br>Вы испытываете телепортационную болезнь. Всякий раз, когда вы телепортируетесь или путешествуете через портал, вы должны пройти проверку Стойкости со СЛ 12, иначе вы будете страдать от тошноты в течение 10 минут.'),
+      (3, 9, 0.1, '<b>Потеря чувств</b><br>Ваши эксперименты дорого вам обошлись. Вы потеряли чувство вкуса, обоняния или осязания. У вас есть штраф -2 к проверкам навыков, основанным на этом чувстве.'),
+      (3, 10, 0.1, '<b>Мутация</b><br>Твои попытки понять мутагены привели к обратным результатам. Вы получаете физические изменения малой Мутации Мутагена по вашему выбору и изменения в социальном положении.'),
 
-      ('wcc_mage_events_danger_o0401', 1, 0.1::numeric, 'is_mage_danger_experiments', '<b>Перегрузка</b><br>Из-за своего высокомерия или своего невежества вы втянули в свое тело слишком много энергии и пострадали от последствий. Понизьте свои ПЗ на 2.'),
-      ('wcc_mage_events_danger_o0402', 2, 0.1::numeric, 'is_mage_danger_experiments', '<b>Встреча с демоном</b><br>В какой-то момент, будь то ваши собственные действия или действия сокурсника, вы вступили в контакт с демоном. Возможно, вы бежали или, возможно, боролись за свою жизнь, но в любом случае вы несете Люцифуг (печать, истинное имя) демона, и тот всегда знает, где вы находитесь.'),
-      ('wcc_mage_events_danger_o0403', 3, 0.1::numeric, 'is_mage_danger_experiments', '<b>Признан опасным</b><br>Что-то, что вы сделали, заклеймило вас как опасного для жителей королевства. В этом королевстве вас разыскивают власти.'),
-      ('wcc_mage_events_danger_o0404', 4, 0.1::numeric, 'is_mage_danger_experiments', '<b>Алхимическое происшествие</b><br>Вы смешали неправильные реагенты и пострадали от последствий. Вы получаете штраф -2 к Вын.'),
-      ('wcc_mage_events_danger_o0405', 5, 0.1::numeric, 'is_mage_danger_experiments', '<b>Старые шрамы</b><br>Один из ваших экспериментов привел к ужасным неприятным последствиям, исказив ваше лицо. Измените свое социальное положение на Опасение.'),
-      ('wcc_mage_events_danger_o0406', 6, 0.1::numeric, 'is_mage_danger_experiments', '<b>Магическая аллергия</b><br>У вас развилась аллергия на магию. Всякий раз, когда вы пьете зелье или эликсир, помимо стандартных эффектов, вы также страдаете от тошноты на время действия эликсира.'),
-      ('wcc_mage_events_danger_o0407', 7, 0.1::numeric, 'is_mage_danger_experiments', '<b>Опьянение</b><br>Вы попробовали на себе плохо приготовленную смесь, и она навсегда изменила ваш метаболизм. Когда вы пьете зелье или эликсир, вы должны сделать бросок 1d10 ниже своего Тел или будете опьяненны.'),
-      ('wcc_mage_events_danger_o0408', 8, 0.1::numeric, 'is_mage_danger_experiments', '<b>Алхимическая зависимость</b><br>Благодаря постоянному тестированию эликсиров и зелий у вас развилась зависимость от эликсиров. Это работает точно так же, как и любая другая зависимость.'),
-      ('wcc_mage_events_danger_o0409', 9, 0.1::numeric, 'is_mage_danger_experiments', '<b>Разыскивается охотниками</b><br>Вы сделали что-то настолько неосторожное и отвратительное своей магией, что церковь послала за вами пару охотников на ведьм (или охотников на магов в Нильфгаарде). Это враги, которые сделают все, чтобы подчинить или убить вас.'),
-      ('wcc_mage_events_danger_o0410', 10, 0.1::numeric, 'is_mage_danger_experiments', '<b>Проклят</b><br>Вы случайно прокляли себя, пытаясь понять действие проклятий.')
-    ) AS v(an_id, sort_order, probability, rule_name, txt)
+      (4, 1, 0.1, '<b>Перегрузка</b><br>Из-за своего высокомерия или своего невежества вы втянули в свое тело слишком много энергии и пострадали от последствий. Понизьте свои ПЗ на 2.'),
+      (4, 2, 0.1, '<b>Встреча с демоном</b><br>В какой-то момент, будь то ваши собственные действия или действия сокурсника, вы вступили в контакт с демоном. Возможно, вы бежали или, возможно, боролись за свою жизнь, но в любом случае вы несете Люцифуг (печать, истинное имя) демона, и тот всегда знает, где вы находитесь.'),
+      (4, 3, 0.1, '<b>Признан опасным</b><br>Что-то, что вы сделали, заклеймило вас как опасного для жителей королевства. В этом королевстве вас разыскивают власти.'),
+      (4, 4, 0.1, '<b>Алхимическое происшествие</b><br>Вы смешали неправильные реагенты и пострадали от последствий. Вы получаете штраф -2 к Вын.'),
+      (4, 5, 0.1, '<b>Старые шрамы</b><br>Один из ваших экспериментов привел к ужасным неприятным последствиям, исказив ваше лицо. Измените свое социальное положение на Опасение.'),
+      (4, 6, 0.1, '<b>Магическая аллергия</b><br>У вас развилась аллергия на магию. Всякий раз, когда вы пьете зелье или эликсир, помимо стандартных эффектов, вы также страдаете от тошноты на время действия эликсира.'),
+      (4, 7, 0.1, '<b>Опьянение</b><br>Вы попробовали на себе плохо приготовленную смесь, и она навсегда изменила ваш метаболизм. Когда вы пьете зелье или эликсир, вы должны сделать бросок 1d10 ниже своего Тел или будете опьяненны.'),
+      (4, 8, 0.1, '<b>Алхимическая зависимость</b><br>Благодаря постоянному тестированию эликсиров и зелий у вас развилась зависимость от эликсиров. Это работает точно так же, как и любая другая зависимость.'),
+      (4, 9, 0.1, '<b>Разыскивается охотниками</b><br>Вы сделали что-то настолько неосторожное и отвратительное своей магией, что церковь послала за вами пару охотников на ведьм (или охотников на магов в Нильфгаарде). Это враги, которые сделают все, чтобы подчинить или убить вас.'),
+      (4, 10, 0.1, '<b>Проклят</b><br>Вы случайно прокляли себя, пытаясь понять действие проклятий.')
+    ) AS v(group_id, option_id, probability, txt)
 
   UNION ALL
 
   SELECT 'en' AS lang, v.*
     FROM (VALUES
-      ('wcc_mage_events_danger_o0101', 1, 0.1::numeric, 'is_mage_danger_cautious', '<b>Debt</b><br>You owe between 100 and 1,000 crowns.'),
-      ('wcc_mage_events_danger_o0102', 2, 0.1::numeric, 'is_mage_danger_cautious', '<b>Addiction</b><br>You have an addiction of your choice:<br> - Alcohol<br> - Tobacco<br> - Fisstech<br> - Gambling<br> - Kleptomania<br> - Lust<br> - Gluttony<br> - Adrenaline Addiction<br> - Other (create your own)'),
-      ('wcc_mage_events_danger_o0103', 3, 0.1::numeric, 'is_mage_danger_cautious', '<b>Fell Ill</b><br>You fell ill from a wasting disease. You eventually recovered, but it left behind lasting fatigue. Lower your STA by 2.'),
-      ('wcc_mage_events_danger_o0104', 4, 0.1::numeric, 'is_mage_danger_cautious', '<b>Angered City Folk</b><br>It might be something you did (or something you did not do), but you have riled up the citizens of a major city. If you return to that city, the citizens will immediately see you as a threat or a target.'),
-      ('wcc_mage_events_danger_o0105', 5, 0.1::numeric, 'is_mage_danger_cautious', '<b>Accident</b><br>You suffered an accident.'),
-      ('wcc_mage_events_danger_o0106', 6, 0.1::numeric, 'is_mage_danger_cautious', '<b>Imprisonment</b><br>Something you did, or a false accusation, had you imprisoned for between 1 and 10 years.'),
-      ('wcc_mage_events_danger_o0107', 7, 0.1::numeric, 'is_mage_danger_cautious_mentor_friend', '<b>Mentor Passed Away</b><br>If your mentor was still alive, they passed away during this decade. If you did not have a mentor, you can re-roll this result. It is up to you and the GM to determine how they died.'),
-      ('wcc_mage_events_danger_o0108', 8, 0.1::numeric, 'is_mage_danger_cautious', '<b>Hair Fell Out</b><br>A spell went awry and as a result, all of the hair on your body has fallen out and refuses to grow back.'),
-      ('wcc_mage_events_danger_o0109', 9, 0.1::numeric, 'is_mage_danger_cautious', '<b>Arthritis</b><br>Your hands have trouble making the intricate gestures required for spell casting without pain. You suffer a -1 penalty to your Spell Casting checks whenever you cast a spell that requires hand movement.'),
-      ('wcc_mage_events_danger_o0110', 10, 0.1::numeric, 'is_mage_danger_cautious', '<b>Hexed</b><br>You were hexed either by someone you irritated or by your own hand.'),
+      (1, 1, 0.1, '<b>Debt</b><br>You owe between 100 and 1,000 crowns.'),
+      (1, 2, 0.1, '<b>Addiction</b><br>You have an addiction of your choice:<br> - Alcohol<br> - Tobacco<br> - Fisstech<br> - Gambling<br> - Kleptomania<br> - Lust<br> - Gluttony<br> - Adrenaline Addiction<br> - Other (create your own)'),
+      (1, 3, 0.1, '<b>Fell Ill</b><br>You fell ill from a wasting disease. You eventually recovered, but it left behind lasting fatigue. Lower your STA by 2.'),
+      (1, 4, 0.1, '<b>Angered City Folk</b><br>It might be something you did (or something you did not do), but you have riled up the citizens of a major city. If you return to that city, the citizens will immediately see you as a threat or a target.'),
+      (1, 5, 0.1, '<b>Accident</b><br>You suffered an accident.'),
+      (1, 6, 0.1, '<b>Imprisonment</b><br>Something you did, or a false accusation, had you imprisoned for between 1 and 10 years.'),
+      (1, 7, 0.1, '<b>Mentor Passed Away</b><br>If your mentor was still alive, they passed away during this decade. If you did not have a mentor, you can re-roll this result. It is up to you and the GM to determine how they died.'),
+      (1, 8, 0.1, '<b>Hair Fell Out</b><br>A spell went awry and as a result, all of the hair on your body has fallen out and refuses to grow back.'),
+      (1, 9, 0.1, '<b>Arthritis</b><br>Your hands have trouble making the intricate gestures required for spell casting without pain. You suffer a -1 penalty to your Spell Casting checks whenever you cast a spell that requires hand movement.'),
+      (1, 10, 0.1, '<b>Hexed</b><br>You were hexed either by someone you irritated or by your own hand.'),
 
-      ('wcc_mage_events_danger_o0201', 1, 0.1::numeric, 'is_mage_danger_politics', '<b>Grudge</b><br>Someone hurt your feelings, or you hurt theirs. Nevertheless, one of you is holding a grudge from this event.'),
-      ('wcc_mage_events_danger_o0202', 2, 0.1::numeric, 'is_mage_danger_politics', '<b>False Accusation</b><br>You were falsely accused of something.'),
-      ('wcc_mage_events_danger_o0203', 3, 0.1::numeric, 'is_mage_danger_politics', '<b>Betrayed</b><br>You were betrayed by a friend or acquaintance. One of your existing friends becomes an enemy.'),
-      ('wcc_mage_events_danger_o0204', 4, 0.1::numeric, 'is_mage_danger_politics', '<b>Friend or Lover Killed</b><br>A friend or lover was killed in an accident or perhaps due to a scheme.'),
-      ('wcc_mage_events_danger_o0205', 5, 0.1::numeric, 'is_mage_danger_politics', '<b>Caught Red Handed</b><br>You were caught attempting to manipulate others into doing your dirty work. You gain an enemy whose power is based on minions.'),
-      ('wcc_mage_events_danger_o0206', 6, 0.1::numeric, 'is_mage_danger_politics', '<b>Social Faux Pas</b><br>You made a terrible social faux pas at a gathering of mages and are now treated as Tolerated by other mages instead of Equal.'),
-      ('wcc_mage_events_danger_o0207', 7, 0.1::numeric, 'is_mage_danger_politics', '<b>Hunted</b><br>There are bounties out on you. A group of 6 to 11 bounty hunters is actively looking for you.'),
-      ('wcc_mage_events_danger_o0208', 8, 0.1::numeric, 'is_mage_danger_politics', '<b>Enemy of the State</b><br>Your political schemes were discovered, and you have been branded the enemy of a nation you were conspiring against. You are Hated in that nation regardless of what your Social Standing is in that region.'),
-      ('wcc_mage_events_danger_o0209', 9, 0.1::numeric, 'is_mage_danger_politics', '<b>Rival</b><br>Through your actions, you have made a rival of another school member.'),
-      ('wcc_mage_events_danger_o0210', 10, 0.1::numeric, 'is_mage_danger_politics', '<b>Retained by a Noble</b><br>A minor noble hired you for your magical abilities and arcane knowledge. Each month, you gain a stipend of 100 crowns. However, you must go to them immediately whenever they summon you and perform any tasks they require of you, or risk angering them.'),
+      (2, 1, 0.1, '<b>Grudge</b><br>Someone hurt your feelings, or you hurt theirs. Nevertheless, one of you is holding a grudge from this event.'),
+      (2, 2, 0.1, '<b>False Accusation</b><br>You were falsely accused of something.'),
+      (2, 3, 0.1, '<b>Betrayed</b><br>You were betrayed by a friend or acquaintance. One of your existing friends becomes an enemy.'),
+      (2, 4, 0.1, '<b>Friend or Lover Killed</b><br>A friend or lover was killed in an accident or perhaps due to a scheme.'),
+      (2, 5, 0.1, '<b>Caught Red Handed</b><br>You were caught attempting to manipulate others into doing your dirty work. You gain an enemy whose power is based on minions.'),
+      (2, 6, 0.1, '<b>Social Faux Pas</b><br>You made a terrible social faux pas at a gathering of mages and are now treated as Tolerated by other mages instead of Equal.'),
+      (2, 7, 0.1, '<b>Hunted</b><br>There are bounties out on you. A group of 6 to 11 bounty hunters is actively looking for you.'),
+      (2, 8, 0.1, '<b>Enemy of the State</b><br>Your political schemes were discovered, and you have been branded the enemy of a nation you were conspiring against. You are Hated in that nation regardless of what your Social Standing is in that region.'),
+      (2, 9, 0.1, '<b>Rival</b><br>Through your actions, you have made a rival of another school member.'),
+      (2, 10, 0.1, '<b>Retained by a Noble</b><br>A minor noble hired you for your magical abilities and arcane knowledge. Each month, you gain a stipend of 100 crowns. However, you must go to them immediately whenever they summon you and perform any tasks they require of you, or risk angering them.'),
 
-      ('wcc_mage_events_danger_o0301', 1, 0.1::numeric, 'is_mage_danger_study', '<b>Magical Block</b><br>In your studies you neglected one of the elements in favor of others. When casting spells of that element, you take a -2 penalty to the Spell Casting check. This effect stacks.'),
-      ('wcc_mage_events_danger_o0302', 2, 0.1::numeric, 'is_mage_danger_study', '<b>Monster Encounter</b><br>You once nearly died while studying a monster. You now have a phobia of this creature and take a -2 penalty to Courage checks against it. Additionally, you must make a Courage check at DC 15 when first encountering any instance of this creature or be Staggered.'),
-      ('wcc_mage_events_danger_o0303', 3, 0.1::numeric, 'is_mage_danger_study', '<b>Overdrew from a Place of Power</b><br>You found a Place of Power, but in your inexperience over-drew from it and was permanently scarred in the process. Every Place of Power you draw from requires an Endurance save as if you were drawing from it a second time.'),
-      ('wcc_mage_events_danger_o0304', 4, 0.1::numeric, 'is_mage_danger_study', '<b>Hunted by a Golem</b><br>In your studies you managed to step on the toes of a powerful mage who sent a golem after you. It now seeks you out across the Continent. If it finds you it will try to destroy you.'),
-      ('wcc_mage_events_danger_o0305', 5, 0.1::numeric, 'is_mage_danger_study', '<b>Loud Telepathy</b><br>You learn the Telepathy Spell. You tried to improve upon the basic telepathy spell, but the result was not what you expected. When you spy telepathically on a target, you cannot help but emit a low mumble in their mind that may alert them. Anyone you spy upon can roll an Awareness check at a DC 15 to sense you.'),
-      ('wcc_mage_events_danger_o0306', 6, 0.1::numeric, 'is_mage_danger_study', '<b>Polymorphed</b><br>You spent the decade polymorphed by another mage. It took a long time to find a way to reverse it. To this day, you have kept some of the manners of that animal. You suffer a -2 to your Social Etiquette.'),
-      ('wcc_mage_events_danger_o0307', 7, 0.1::numeric, 'is_mage_danger_study', '<b>Extreme Vulnerability</b><br>You tried to make yourself resistant to dimeritium. You got the opposite result. You suffer a -3 penalty to your Endurance checks to resist the effects of dimeritium.'),
-      ('wcc_mage_events_danger_o0308', 8, 0.1::numeric, 'is_mage_danger_study', '<b>Teleportation Sickness</b><br>You experience teleportation sickness. Whenever you teleport or travel through a portal, you must make an Endurance check at a DC 12 or suffer from the Nausea condition for 10 minutes.'),
-      ('wcc_mage_events_danger_o0309', 9, 0.1::numeric, 'is_mage_danger_study', '<b>Lost a Sense</b><br>Your experiments have cost you much. You lost the sense of taste, smell or touch. You have a -2 penalty on skill checks that rely on that sense.'),
-      ('wcc_mage_events_danger_o0310', 10, 0.1::numeric, 'is_mage_danger_study', '<b>Mutation</b><br>Your attempts at understanding mutagens backfired. You gain the physical changes of a Minor Mutation of a Mutagen of your choice and the changes in Social Standing.'),
+      (3, 1, 0.1, '<b>Magical Block</b><br>In your studies you neglected one of the elements in favor of others. When casting spells of that element, you take a -2 penalty to the Spell Casting check. This effect stacks.'),
+      (3, 2, 0.1, '<b>Monster Encounter</b><br>You once nearly died while studying a monster. You now have a phobia of this creature and take a -2 penalty to Courage checks against it. Additionally, you must make a Courage check at DC 15 when first encountering any instance of this creature or be Staggered.'),
+      (3, 3, 0.1, '<b>Overdrew from a Place of Power</b><br>You found a Place of Power, but in your inexperience over-drew from it and was permanently scarred in the process. Every Place of Power you draw from requires an Endurance save as if you were drawing from it a second time.'),
+      (3, 4, 0.1, '<b>Hunted by a Golem</b><br>In your studies you managed to step on the toes of a powerful mage who sent a golem after you. It now seeks you out across the Continent. If it finds you it will try to destroy you.'),
+      (3, 5, 0.1, '<b>Loud Telepathy</b><br>You learn the Telepathy Spell. You tried to improve upon the basic telepathy spell, but the result was not what you expected. When you spy telepathically on a target, you cannot help but emit a low mumble in their mind that may alert them. Anyone you spy upon can roll an Awareness check at a DC 15 to sense you.'),
+      (3, 6, 0.1, '<b>Polymorphed</b><br>You spent the decade polymorphed by another mage. It took a long time to find a way to reverse it. To this day, you have kept some of the manners of that animal. You suffer a -2 to your Social Etiquette.'),
+      (3, 7, 0.1, '<b>Extreme Vulnerability</b><br>You tried to make yourself resistant to dimeritium. You got the opposite result. You suffer a -3 penalty to your Endurance checks to resist the effects of dimeritium.'),
+      (3, 8, 0.1, '<b>Teleportation Sickness</b><br>You experience teleportation sickness. Whenever you teleport or travel through a portal, you must make an Endurance check at a DC 12 or suffer from the Nausea condition for 10 minutes.'),
+      (3, 9, 0.1, '<b>Lost a Sense</b><br>Your experiments have cost you much. You lost the sense of taste, smell or touch. You have a -2 penalty on skill checks that rely on that sense.'),
+      (3, 10, 0.1, '<b>Mutation</b><br>Your attempts at understanding mutagens backfired. You gain the physical changes of a Minor Mutation of a Mutagen of your choice and the changes in Social Standing.'),
 
-      ('wcc_mage_events_danger_o0401', 1, 0.1::numeric, 'is_mage_danger_experiments', '<b>Overdraw</b><br>In your arrogance or your ignorance, you drew too much power into your body and suffered the consequences. Lower your Hit Points by 2.'),
-      ('wcc_mage_events_danger_o0402', 2, 0.1::numeric, 'is_mage_danger_experiments', '<b>Demonic Encounter</b><br>At some point, whether it was your own doing or the workings of a fellow student, you came in contact with a demon. You may have fled or perhaps you fought for your life, but either way you bear the demon''s lucifuge (seal, true name) and they always know where you are.'),
-      ('wcc_mage_events_danger_o0403', 3, 0.1::numeric, 'is_mage_danger_experiments', '<b>Deemed Dangerous</b><br>Something you did labeled you as dangerous to the people of a kingdom. In this kingdom you are wanted by the authorities.'),
-      ('wcc_mage_events_danger_o0404', 4, 0.1::numeric, 'is_mage_danger_experiments', '<b>Alchemical Incident</b><br>You mixed the wrong reagents and suffered consequences. You take a -2 penalty to STA.'),
-      ('wcc_mage_events_danger_o0405', 5, 0.1::numeric, 'is_mage_danger_experiments', '<b>Lasting Scars</b><br>One of your experiments backfired horrendously, deforming your face. Change your social standing to Feared.'),
-      ('wcc_mage_events_danger_o0406', 6, 0.1::numeric, 'is_mage_danger_experiments', '<b>Magical Allergy</b><br>You have developed an allergy to magic. Whenever you drink a potion or elixir, in addition to the standard effects, you also suffer from the Nausea condition for the duration of the elixir.'),
-      ('wcc_mage_events_danger_o0407', 7, 0.1::numeric, 'is_mage_danger_experiments', '<b>Intoxicated</b><br>You tried a poorly made concoction on yourself and it changed your metabolism forever. When drinking a potion or an elixir, you must roll beneath your BODY on 1d10 or become Intoxicated.'),
-      ('wcc_mage_events_danger_o0408', 8, 0.1::numeric, 'is_mage_danger_experiments', '<b>Alchemical Dependency</b><br>Through constant testing of elixirs and potions, you have developed an addiction to Elixirs. This works exactly the same as any other addiction.'),
-      ('wcc_mage_events_danger_o0409', 9, 0.1::numeric, 'is_mage_danger_experiments', '<b>Wanted by Hunters</b><br>You did something so careless and heinous with your magic that a church sent a pair of Witch Hunters (or Mage Hunters in Nilfgaard) after you. They are enemies that will do anything to subdue or kill you.'),
-      ('wcc_mage_events_danger_o0410', 10, 0.1::numeric, 'is_mage_danger_experiments', '<b>Cursed</b><br>You cursed yourself by accident while trying to understand curses.')
-    ) AS v(an_id, sort_order, probability, rule_name, txt)
+      (4, 1, 0.1, '<b>Overdraw</b><br>In your arrogance or your ignorance, you drew too much power into your body and suffered the consequences. Lower your Hit Points by 2.'),
+      (4, 2, 0.1, '<b>Demonic Encounter</b><br>At some point, whether it was your own doing or the workings of a fellow student, you came in contact with a demon. You may have fled or perhaps you fought for your life, but either way you bear the demon''s lucifuge (seal, true name) and they always know where you are.'),
+      (4, 3, 0.1, '<b>Deemed Dangerous</b><br>Something you did labeled you as dangerous to the people of a kingdom. In this kingdom you are wanted by the authorities.'),
+      (4, 4, 0.1, '<b>Alchemical Incident</b><br>You mixed the wrong reagents and suffered consequences. You take a -2 penalty to STA.'),
+      (4, 5, 0.1, '<b>Lasting Scars</b><br>One of your experiments backfired horrendously, deforming your face. Change your social standing to Feared.'),
+      (4, 6, 0.1, '<b>Magical Allergy</b><br>You have developed an allergy to magic. Whenever you drink a potion or elixir, in addition to the standard effects, you also suffer from the Nausea condition for the duration of the elixir.'),
+      (4, 7, 0.1, '<b>Intoxicated</b><br>You tried a poorly made concoction on yourself and it changed your metabolism forever. When drinking a potion or an elixir, you must roll beneath your BODY on 1d10 or become Intoxicated.'),
+      (4, 8, 0.1, '<b>Alchemical Dependency</b><br>Through constant testing of elixirs and potions, you have developed an addiction to Elixirs. This works exactly the same as any other addiction.'),
+      (4, 9, 0.1, '<b>Wanted by Hunters</b><br>You did something so careless and heinous with your magic that a church sent a pair of Witch Hunters (or Mage Hunters in Nilfgaard) after you. They are enemies that will do anything to subdue or kill you.'),
+      (4, 10, 0.1, '<b>Cursed</b><br>You cursed yourself by accident while trying to understand curses.')
+    ) AS v(group_id, option_id, probability, txt)
 )
 , vals AS (
   SELECT
     lang,
-    an_id,
-    sort_order,
+    meta.qu_id || '_o' || to_char(100 * raw_data.group_id + raw_data.option_id, 'FM0000') AS an_id,
+    raw_data.option_id AS sort_order,
     probability,
-    rule_name,
+    CASE raw_data.group_id
+      WHEN 1 THEN CASE raw_data.option_id WHEN 7 THEN 'is_mage_danger_cautious_mentor_friend' ELSE 'is_mage_danger_cautious' END
+      WHEN 2 THEN 'is_mage_danger_politics'
+      WHEN 3 THEN 'is_mage_danger_study'
+      WHEN 4 THEN 'is_mage_danger_experiments'
+    END AS rule_name,
     '<td style="color: grey;">' || to_char(probability * 100, 'FM990.00') || '%</td><td>' || txt || '</td>' AS text
   FROM raw_data
+  CROSS JOIN meta
 )
 , ins_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id('witcher_cc.' || vals.an_id || '.answer_options.label') AS id
-       , 'answer_options', 'label', vals.lang, vals.text
+  SELECT ck_id(meta.su_su_id ||'.'|| vals.an_id ||'.'|| meta.entity ||'.'|| meta.entity_field) AS id
+       , meta.entity, meta.entity_field, vals.lang, vals.text
     FROM vals
+    CROSS JOIN meta
   ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text
 )
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
 SELECT vals.an_id
-     , 'witcher_cc'
-     , 'wcc_mage_events_danger'
-     , ck_id('witcher_cc.' || vals.an_id || '.answer_options.label')
+     , meta.su_su_id
+     , meta.qu_id
+     , ck_id(meta.su_su_id ||'.'|| vals.an_id ||'.'|| meta.entity ||'.'|| meta.entity_field)
      , vals.sort_order
      , (SELECT ru_id FROM rules WHERE name = vals.rule_name ORDER BY ru_id LIMIT 1)
      , jsonb_build_object('probability', vals.probability)
   FROM vals
+ CROSS JOIN meta
  WHERE vals.lang = 'ru'
 ON CONFLICT (an_id) DO UPDATE
 SET label = EXCLUDED.label,
@@ -20981,11 +21927,141 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     metadata = EXCLUDED.metadata;
 
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger' AS qu_id
+         , 'character' AS entity
+         , 'event_desc' AS entity_field
+  )
+, event_type_vals(lang, text) AS (
+    VALUES
+      ('ru', 'Опасность'),
+      ('en', 'Danger')
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.life_event_type.danger') AS id
+     , meta.entity
+     , 'event_type'
+     , event_type_vals.lang
+     , event_type_vals.text
+  FROM event_type_vals
+  CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger' AS qu_id
+         , 'character' AS entity
+         , 'event_desc' AS entity_field
+  )
+, event_desc_vals(group_id, option_id, ru_text, en_text) AS (
+    VALUES
+      (1, 3, 'Болезнь.', 'Fell ill.'),
+      (1, 7, 'Смерть наставника.', 'Mentor passed away.'),
+      (1, 8, 'Выпадение волос.', 'Hair fell out.'),
+      (1, 9, 'Артрит.', 'Arthritis.'),
+
+      (2, 1, 'Обида.', 'Grudge.'),
+      (2, 3, 'Предательство.', 'Betrayed.'),
+      (2, 4, 'Друг или возлюбленный(-ая) убит(а).', 'Friend or lover killed.'),
+      (2, 5, 'Поймали с поличным.', 'Caught red-handed.'),
+      (2, 6, 'Социальные оплошности.', 'Social faux pas.'),
+      (2, 9, 'Соперник.', 'Rival.'),
+      (2, 10, 'На службе у дворянина.', 'Retained by a noble.'),
+
+      (3, 3, 'Перегрузка с Местом силы.', 'Overdrew from a Place of Power.'),
+      (3, 4, 'Преследуется големом.', 'Hunted by a golem.'),
+      (3, 5, 'Громкая телепатия.', 'Loud telepathy.'),
+      (3, 6, 'Полиморфный.', 'Polymorphed.'),
+      (3, 7, 'Экстремальная уязвимость.', 'Extreme vulnerability.'),
+      (3, 8, 'Телепортационная болезнь.', 'Teleportation sickness.'),
+
+      (4, 1, 'Перегрузка.', 'Overdraw.'),
+      (4, 2, 'Встреча с демоном.', 'Demonic encounter.'),
+      (4, 4, 'Алхимическое происшествие.', 'Alchemical incident.'),
+      (4, 5, 'Старые шрамы.', 'Lasting scars.'),
+      (4, 6, 'Магическая аллергия.', 'Magical allergy.'),
+      (4, 7, 'Опьянение.', 'Intoxicated.'),
+      (4, 8, 'Алхимическая зависимость.', 'Alchemical dependency.'),
+      (4, 9, 'Разыскивается охотниками.', 'Wanted by hunters.')
+)
+, vals(lang, group_id, option_id, text) AS (
+    SELECT 'ru', group_id, option_id, ru_text FROM event_desc_vals
+    UNION ALL
+    SELECT 'en', group_id, option_id, en_text FROM event_desc_vals
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * vals.group_id + vals.option_id, 'FM0000') ||'.'|| meta.entity_field) AS id
+     , meta.entity
+     , meta.entity_field
+     , vals.lang
+     , vals.text
+  FROM vals
+  CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger' AS qu_id
+  )
+, i18n_vals(key_suffix, entity, entity_field, lang, text) AS (
+    VALUES
+      ('enemy_position_golem', 'character', 'enemy_field', 'ru', 'Голем'),
+      ('enemy_position_golem', 'character', 'enemy_field', 'en', 'Golem'),
+      ('enemy_cause_crossed_powerful_mage', 'character', 'enemy_field', 'ru', 'Перешел дорогу могущественному магу'),
+      ('enemy_cause_crossed_powerful_mage', 'character', 'enemy_field', 'en', 'Crossed a powerful mage'),
+      ('enemy_how_far_relentless_hunt', 'character', 'enemy_field', 'ru', 'Неустанно преследует вас, чтобы убить'),
+      ('enemy_how_far_relentless_hunt', 'character', 'enemy_field', 'en', 'Relentlessly hunts you down to kill you'),
+
+      ('disease_loud_telepathy_name', 'character', 'disease', 'ru', 'Громкая телепатия'),
+      ('disease_loud_telepathy_name', 'character', 'disease', 'en', 'Loud Telepathy'),
+      ('disease_loud_telepathy_desc', 'character', 'disease', 'ru', 'Ваша цель слышит бормотание в голове при телепатической слежке. Пройдя проверку Внимания СЛ15, она почувствует слежку.'),
+      ('disease_loud_telepathy_desc', 'character', 'disease', 'en', 'Your target hears muttering in their head when you spy on them telepathically. Passing an Awareness check at DC 15 lets them sense the surveillance.'),
+
+      ('disease_extreme_vulnerability_name', 'character', 'disease', 'ru', 'Экстремальная уязвимость'),
+      ('disease_extreme_vulnerability_name', 'character', 'disease', 'en', 'Extreme Vulnerability'),
+      ('disease_extreme_vulnerability_desc', 'character', 'disease', 'ru', 'Штраф -3 к проверкам Стойкости при сопротивлении эффектам двимерита.'),
+      ('disease_extreme_vulnerability_desc', 'character', 'disease', 'en', 'You suffer a -3 penalty to Endurance checks when resisting dimeritium effects.'),
+      ('disease_teleportation_sickness_name', 'character', 'disease', 'ru', 'Телепортационная болезнь'),
+      ('disease_teleportation_sickness_name', 'character', 'disease', 'en', 'Teleportation Sickness'),
+      ('disease_teleportation_sickness_desc', 'character', 'disease', 'ru', 'После телепортации или прохода через портал вы 10 минут испытываете тошноту при провале Стойкости со СЛ12.'),
+      ('disease_teleportation_sickness_desc', 'character', 'disease', 'en', 'After teleporting or passing through a portal, you suffer nausea for 10 minutes if you fail an Endurance check at DC 12.'),
+
+      ('disease_magical_allergy_name', 'character', 'disease', 'ru', 'Магическая аллергия'),
+      ('disease_magical_allergy_name', 'character', 'disease', 'en', 'Magical Allergy'),
+      ('disease_magical_allergy_desc', 'character', 'disease', 'ru', 'Вы страдаете от тошноты на время действия выпитого зелья или эликсира.'),
+      ('disease_magical_allergy_desc', 'character', 'disease', 'en', 'You suffer nausea for the duration of any potion or elixir you drink.'),
+
+      ('disease_intoxicated_name', 'character', 'disease', 'ru', 'Одурманенный'),
+      ('disease_intoxicated_name', 'character', 'disease', 'en', 'Intoxicated'),
+      ('disease_intoxicated_desc', 'character', 'disease', 'ru', 'Выпивая эликсир или зелье, вы получаете опьянение при броске 1d10 выше вашего Тел.'),
+      ('disease_intoxicated_desc', 'character', 'disease', 'en', 'When you drink a potion or elixir, you become intoxicated on a 1d10 roll higher than your BODY.'),
+
+      ('addiction_potions_elixirs_desc', 'character', 'disease', 'ru', 'Зависимость: Зелья и эликсиры.'),
+      ('addiction_potions_elixirs_desc', 'character', 'disease', 'en', 'Addiction: Potions and elixirs.')
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| i18n_vals.key_suffix)
+     , i18n_vals.entity
+     , i18n_vals.entity_field
+     , i18n_vals.lang
+     , i18n_vals.text
+  FROM i18n_vals
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
 -- Effects: remember selected danger outcomes for downstream branches
 WITH effect_vals(an_id, marker) AS (
   VALUES
-    ('wcc_mage_events_danger_o0201', 'life events 1-2'),
+    ('wcc_mage_events_danger_o0102', 'life events 1-2'),
     ('wcc_mage_events_danger_o0201', 'life events 2-1'),
+    ('wcc_mage_events_danger_o0203', 'life events 2-3'),
     ('wcc_mage_events_danger_o0204', 'life events 2-4'),
     ('wcc_mage_events_danger_o0205', 'life events 2-5'),
     ('wcc_mage_events_danger_o0209', 'life events 2-9'),
@@ -21003,6 +22079,247 @@ SELECT
     )
   )
 FROM effect_vals;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger' AS qu_id
+  )
+, event_effects(group_id, option_id) AS (
+    VALUES
+      (1, 3), (1, 7), (1, 8), (1, 9),
+      (2, 1), (2, 3), (2, 4), (2, 5), (2, 6), (2, 9), (2, 10),
+      (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8),
+      (4, 1), (4, 2), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  meta.qu_id || '_o' || to_char(100 * event_effects.group_id + event_effects.option_id, 'FM0000'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression',
+          jsonb_build_object(
+            'cat',
+            jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+',
+                jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object(
+          'i18n_uuid',
+          ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.life_event_type.danger')::text
+        ),
+        'description',
+        jsonb_build_object(
+          'i18n_uuid',
+          ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * event_effects.group_id + event_effects.option_id, 'FM0000') ||'.event_desc')::text
+        )
+      )
+    )
+  )
+FROM event_effects
+CROSS JOIN meta;
+
+INSERT INTO effects (scope, an_an_id, body)
+VALUES
+  ('character', 'wcc_mage_events_danger_o0203', '{"make_a_traitor": true}'::jsonb),
+  ('character', 'wcc_mage_events_danger_o0204', '{"kill_a_friend": true}'::jsonb);
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger' AS qu_id
+  )
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , meta.qu_id || '_o0103'
+     , jsonb_build_object(
+         'inc',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.skills.common.endurance.bonus'),
+           -2
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0107'
+     , jsonb_build_object(
+         'set',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.mentor.is_alive'),
+           jsonb_build_object(
+             'i18n_uuid',
+             ck_id(meta.su_su_id ||'.wcc_past_mentor_relationship_end.mentor.is_alive.dead')::text
+           )
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0304'
+     , jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.enemies'),
+           jsonb_build_object(
+             'gender', '',
+             'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0002.answer_options.label_value')::text),
+             'position', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.enemy_position_golem')::text),
+             'cause', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.enemy_cause_crossed_powerful_mage')::text),
+             'power_level', '',
+             'how_far', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.enemy_how_far_relentless_hunt')::text),
+             'the_power', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_the_power_o0003.answer_options.label_value')::text)
+           )
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0305'
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_loud_telepathy_name')::text),
+             'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_loud_telepathy_desc')::text)
+           )
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0306'
+     , jsonb_build_object(
+         'inc',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.skills.common.social_etiquette.bonus'),
+           -2
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0307'
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_extreme_vulnerability_name')::text),
+             'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_extreme_vulnerability_desc')::text)
+           )
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0308'
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_teleportation_sickness_name')::text),
+             'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_teleportation_sickness_desc')::text)
+           )
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0401'
+     , jsonb_build_object(
+         'inc',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.statistics.calculated.max_HP.bonus'),
+           -2
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0404'
+     , jsonb_build_object(
+         'inc',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.skills.common.endurance.bonus'),
+           -2
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0406'
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_magical_allergy_name')::text),
+             'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_magical_allergy_desc')::text)
+           )
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0407'
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'name', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_intoxicated_name')::text),
+             'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.disease_intoxicated_desc')::text)
+           )
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0408'
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'type', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_fortune_or_not_details.disease_type_addiction')::text),
+             'description', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.addiction_potions_elixirs_desc')::text)
+           )
+         )
+       )
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0108'
+     , jsonb_build_object(
+         'set',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.style.hair_style'),
+           jsonb_build_object(
+             'i18n_uuid',
+             ck_id(meta.su_su_id ||'.wcc_style_hair_o0006.answer_options.label')::text
+           )
+         )
+       )
+  FROM meta;
 
 -- <<< END sql/037_mage_events_danger.sql
 
@@ -21582,6 +22899,39 @@ WITH
            'You once nearly died while studying ' || v.en_name || '. You now have a phobia of it and suffer a -2 penalty to Courage checks against it. The first time you meet one, a failed Courage check at DC 15 leaves you Staggered.'
       FROM monster_vals v
 
+    -- 3-9 Lost a sense
+    UNION ALL
+    SELECT 'ru',
+           'wcc_mage_events_danger_details_o0309' || to_char(v.num, 'FM00'),
+           v.num,
+           (1.0::numeric / 3),
+           'wcc_mage_events_danger_o0309',
+           NULL,
+           '<b>Потеря чувств</b>',
+           v.ru_name,
+           'Из-за потери ' || lower(v.ru_gen) || ' вы имеете штраф -2 при проверке навыков, использующих это чувство.'
+      FROM (VALUES
+        (1, 'Вкус', 'вкуса'),
+        (2, 'Обоняние', 'обоняния'),
+        (3, 'Осязание', 'осязания')
+      ) AS v(num, ru_name, ru_gen)
+
+    UNION ALL
+    SELECT 'en',
+           'wcc_mage_events_danger_details_o0309' || to_char(v.num, 'FM00'),
+           v.num,
+           (1.0::numeric / 3),
+           'wcc_mage_events_danger_o0309',
+           NULL,
+           '<b>Lost a Sense</b>',
+           v.en_name,
+           'Because of the loss of ' || lower(v.en_name) || ', you suffer a -2 penalty on skill checks that rely on that sense.'
+      FROM (VALUES
+        (1, 'Taste'),
+        (2, 'Smell'),
+        (3, 'Touch')
+      ) AS v(num, en_name)
+
     -- 3-10 Minor mutation
     UNION ALL
     SELECT 'ru',
@@ -21751,6 +23101,548 @@ SET label = EXCLUDED.label,
     sort_order = EXCLUDED.sort_order,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     metadata = EXCLUDED.metadata;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details' AS qu_id
+  )
+, region_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1,  'Каэдвен', 'Северные королевства', 'Kaedwen', 'Northern Kingdoms'),
+        (2,  'Ковир и Повисс', 'Северные королевства', 'Kovir and Poviss', 'Northern Kingdoms'),
+        (3,  'Редания', 'Северные королевства', 'Redania', 'Northern Kingdoms'),
+        (4,  'Аэдирн', 'Северные королевства', 'Aedirn', 'Northern Kingdoms'),
+        (5,  'Лирия и Ривия', 'Северные королевства', 'Lyria and Rivia', 'Northern Kingdoms'),
+        (6,  'Темерия', 'Северные королевства', 'Temeria', 'Northern Kingdoms'),
+        (7,  'Цидарис', 'Северные королевства', 'Cidaris', 'Northern Kingdoms'),
+        (8,  'Керак', 'Северные королевства', 'Kerack', 'Northern Kingdoms'),
+        (9,  'Вердэн', 'Северные королевства', 'Verden', 'Northern Kingdoms'),
+        (10, 'Скеллиге', 'Северные королевства', 'Skellige', 'Northern Kingdoms'),
+        (11, 'Цинтра', 'Нильфгаард', 'Cintra', 'Nilfgaard'),
+        (12, 'Ангрен', 'Нильфгаард', 'Angren', 'Nilfgaard'),
+        (13, 'Назаир', 'Нильфгаард', 'Nazair', 'Nilfgaard'),
+        (14, 'Меттина', 'Нильфгаард', 'Mettina', 'Nilfgaard'),
+        (15, 'Туссент', 'Нильфгаард', 'Toussaint', 'Nilfgaard'),
+        (16, 'Маг Турга', 'Нильфгаард', 'Mag Turga', 'Nilfgaard'),
+        (17, 'Гесо', 'Нильфгаард', 'Gheso', 'Nilfgaard'),
+        (18, 'Эббинг', 'Нильфгаард', 'Ebbing', 'Nilfgaard'),
+        (19, 'Мехт', 'Нильфгаард', 'Maecht', 'Nilfgaard'),
+        (20, 'Этолия', 'Нильфгаард', 'Etolia', 'Nilfgaard'),
+        (21, 'Геммера', 'Нильфгаард', 'Gemmera', 'Nilfgaard'),
+        (22, 'Доль Блатанна', 'Земли старших народов', 'Dol Blathanna', 'Elderlands'),
+        (23, 'Махакам', 'Земли старших народов', 'Mahakam', 'Elderlands')
+      ) AS v(sort_order, ru_name, ru_group, en_name, en_group)
+)
+, addiction_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Алкоголь', 'Alcohol'),
+        (2, 'Табак', 'Tobacco'),
+        (3, 'Фисштех', 'Fisstech'),
+        (4, 'Азартные игры', 'Gambling'),
+        (5, 'Клептомания', 'Kleptomania'),
+        (6, 'Похоть', 'Lust'),
+        (7, 'Обжорство', 'Gluttony'),
+        (8, 'Адреналиновая зависимость', 'Adrenaline addiction'),
+        (10, 'Другое', 'Other')
+      ) AS v(num, ru_name, en_name)
+)
+, accusation_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Кража', 'Theft'),
+        (2, 'Трусость', 'Cowardice'),
+        (3, 'Измена', 'Treason'),
+        (4, 'Изнасилование', 'Rape'),
+        (5, 'Убийство', 'Murder'),
+        (6, 'Мошенничество', 'Fraud'),
+        (7, 'Запретная магия', 'Forbidden Magic'),
+        (8, 'Уклонение от уплаты налогов', 'Tax Evasion'),
+        (9, 'Неэтичные действия', 'Unethical Practices')
+      ) AS v(num, ru_name, en_name)
+)
+, element_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Вода', 'Water'),
+        (2, 'Земля', 'Earth'),
+        (3, 'Огонь', 'Fire'),
+        (4, 'Воздух', 'Air')
+      ) AS v(num, ru_name, en_name)
+)
+, curse_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Проклятие чудовищности', 'Curse of Monstrosity', 'Интенсивность: Средняя', 'Intensity: Moderate'),
+        (2, 'Проклятие призраков', 'Curse of Phantoms', 'Интенсивность: Средняя', 'Intensity: Moderate'),
+        (3, 'Проклятие заразы', 'Curse of Pestilence', 'Интенсивность: Высокая', 'Intensity: High'),
+        (4, 'Проклятие странника', 'Curse of the Wanderer', 'Интенсивность: Высокая', 'Intensity: High'),
+        (5, 'Проклятие ликантропии', 'Curse of Lycanthropy', 'Интенсивность: Высокая', 'Intensity: High'),
+        (6, 'Другое проклятие', 'Other Curse', 'Кастомное проклятие', 'Custom curse')
+      ) AS v(num, ru_name, en_name, ru_detail, en_detail)
+)
+, monster_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1,  'Вампиры', 'Alp', 'Vampires', 'Alp'),
+        (2,  'Вампиры', 'Bruxa', 'Vampires', 'Bruxa'),
+        (3,  'Вампиры', 'Garkain', 'Vampires', 'Garkain'),
+        (4,  'Вампиры', 'Katakan', 'Vampires', 'Katakan'),
+        (5,  'Вампиры', 'On Shadow Wings', 'Vampires', 'On Shadow Wings'),
+        (6,  'Вампиры', 'Plumard', 'Vampires', 'Plumard'),
+        (7,  'Гибриды', 'Гарпия', 'Hybrids', 'Harpy'),
+        (8,  'Гибриды', 'Глаз охотника', 'Hybrids', 'With Hunting Eyes'),
+        (9,  'Гибриды', 'Грифон', 'Hybrids', 'Griffin'),
+        (10, 'Гибриды', 'Мантикора', 'Hybrids', 'Manticore'),
+        (11, 'Гибриды', 'Сирена', 'Hybrids', 'Siren'),
+        (12, 'Гибриды', 'Суккуб', 'Hybrids', 'Succubus'),
+        (13, 'Дракониды', 'Виверна', 'Draconids', 'Wyvern'),
+        (14, 'Дракониды', 'Куролиск', 'Draconids', 'Cockatrice'),
+        (15, 'Дракониды', 'Огонь с небес', 'Draconids', 'Fire From The Sky'),
+        (16, 'Дракониды', 'Осгазир', 'Draconids', 'Slyzard'),
+        (17, 'Дракониды', 'Феникс', 'Draconids', 'Phoenix'),
+        (18, 'Духи', 'Амальгама трупов', 'Specters', 'Corpse Amalgam'),
+        (19, 'Духи', 'Варгест', 'Specters', 'Barghest'),
+        (20, 'Духи', 'Демон Рогатый', 'Specters', 'Bes'),
+        (21, 'Духи', 'Касглидд', 'Specters', 'Casglydd'),
+        (22, 'Духи', 'Мари Луид', 'Specters', 'Mari Lwyd'),
+        (23, 'Духи', 'Песта', 'Specters', 'Pesta'),
+        (24, 'Духи', 'Покаянник', 'Specters', 'Penitent'),
+        (25, 'Духи', 'Полуденница', 'Specters', 'Noon Wraith'),
+        (26, 'Духи', 'Призрак', 'Specters', 'Wraith'),
+        (27, 'Духи', 'Среди мертвых тел', 'Specters', 'Among Corpses'),
+        (28, 'Духи', 'Хим', 'Specters', 'Hym'),
+        (29, 'Духи стихий', 'Голем', 'Elementa', 'Golem'),
+        (30, 'Духи стихий', 'Живая броня', 'Elementa', 'Living Armor'),
+        (31, 'Духи стихий', 'Пожар', 'Elementa', 'Wildfire'),
+        (32, 'Духи стихий', 'Элементаль земли', 'Elementa', 'Earth Elemental'),
+        (33, 'Духи стихий', 'Элементаль льда', 'Elementa', 'Ice Elemental'),
+        (34, 'Духи стихий', 'Элементаль огня', 'Elementa', 'Fire Elemental'),
+        (35, 'Инсектоиды', 'Барбегази', 'Insectoids', 'Barbegazi'),
+        (36, 'Инсектоиды', 'Главоглаз', 'Insectoids', 'Arachas'),
+        (37, 'Инсектоиды', 'Жагница', 'Insectoids', 'Glustyworp'),
+        (38, 'Инсектоиды', 'Из-под земли', 'Insectoids', 'Scurrying From Tunnels'),
+        (39, 'Инсектоиды', 'Сколопендроморф', 'Insectoids', 'Giant Centipede'),
+        (40, 'Инсектоиды', 'Химера', 'Insectoids', 'Frigher'),
+        (41, 'Инсектоиды', 'Эндриага', 'Insectoids', 'Endrega'),
+        (42, 'Огры', 'Накер', 'Ogroids', 'Nekker'),
+        (43, 'Огры', 'Нежеланный гость', 'Ogroids', 'Unwanted Hunter'),
+        (44, 'Огры', 'Скальный тролль', 'Ogroids', 'Rock Troll'),
+        (45, 'Огры', 'Стукач', 'Ogroids', 'Knockers'),
+        (46, 'Огры', 'Тролль', 'Ogroids', 'Troll'),
+        (47, 'Огры', 'Циклоп', 'Ogroids', 'Cyclops'),
+        (48, 'Проклятые', 'Археспора', 'Cursed Ones', 'Archespore'),
+        (49, 'Проклятые', 'Вендиго', 'Cursed Ones', 'Vendigo'),
+        (50, 'Проклятые', 'Волколак', 'Cursed Ones', 'Werewolf'),
+        (51, 'Проклятые', 'Игоша', 'Cursed Ones', 'Botchling'),
+        (52, 'Проклятые', 'Котолак', 'Cursed Ones', 'Werecat'),
+        (53, 'Проклятые', 'Сирота', 'Cursed Ones', 'The Orphan'),
+        (54, 'Реликты', 'Бес', 'Relicts', 'Fiend'),
+        (55, 'Реликты', 'Леший', 'Relicts', 'Leshy'),
+        (56, 'Реликты', 'Мелкая пакость', 'Relicts', 'Undermining'),
+        (57, 'Реликты', 'Прибожек', 'Relicts', 'Godling'),
+        (58, 'Реликты', 'Шарлей', 'Relicts', 'Shalmaar'),
+        (59, 'Трупоеды', 'В туманной мгле', 'Necrophages', 'In Cirrus Gloom'),
+        (60, 'Трупоеды', 'Гнилец', 'Necrophages', 'Rotfiend'),
+        (61, 'Трупоеды', 'Гуль', 'Necrophages', 'Ghoul'),
+        (62, 'Трупоеды', 'Кладбищенская баба', 'Necrophages', 'Grave Hag'),
+        (63, 'Трупоеды', 'Туманник', 'Necrophages', 'Foglet'),
+        (64, 'Трупоеды', 'Утковол', 'Necrophages', 'Bullvore'),
+        (65, 'Трупоеды', 'Утопец', 'Necrophages', 'Drowner')
+      ) AS v(sort_order, ru_type, ru_name, en_type, en_name)
+)
+, mutation_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Альп', 'Тёмно-красные вены по всему телу', 'Alp', 'A patchwork of dark red veins under your skin'),
+        (2, 'Гаркон', 'Мягкие наросты на голове', 'Garkain', 'Fleshy growths on the head'),
+        (3, 'Катакан', 'Долговязость', 'Katakan', 'Gangly proportions'),
+        (4, 'Брукса', 'Полупрозрачная кожа и шипящий голос', 'Bruxa', 'Semi-translucent skin & a hissing voice'),
+        (5, 'Грифон', 'Прорастание перьев', 'Griffin', 'Feather growth'),
+        (6, 'Мантикора', 'Рожки и кошачьи черты лица', 'Manticore', 'Small horns & feline features'),
+        (7, 'Суккуб', 'Рожки и хвост', 'Succubus', 'Small horns and a tail'),
+        (8, 'Виверна', 'Огрубение кожи', 'Wyvern', 'Rough skin'),
+        (9, 'Куролиск', 'Пучки зелёных перьев', 'Cockatrice', 'Tufts of green feathers'),
+        (10, 'Феникс', 'Пучки серых перьев и свечение изнутри', 'Phoenix', 'Tufts of grey feathers & an internal glow'),
+        (11, 'Песта', 'Болезненно-бледная кожа и впалые щёки', 'Pesta', 'Sickly pale skin & gaunt features'),
+        (12, 'Покаянник', 'Светящиеся белые отметины', 'Penitent', 'Glowing white markings'),
+        (13, 'Полуденница', 'Сухая, туго обтягивающая кожа', 'Noon Wraith', 'Dry, taut skin'),
+        (14, 'Голем', 'Твёрдые наросты на теле', 'Golem', 'Hard protrusions'),
+        (15, 'Элементаль Земли', 'Каменные наросты по всему телу', 'Earth Elemental', 'Rocky growths along your body'),
+        (16, 'Элементаль Льда', 'Вечно холодная на ощупь кожа', 'Ice Elemental', 'Skin cold to the touch'),
+        (17, 'Элементаль Огня', 'Струйки пламени изо рта', 'Fire Elemental', 'Small spouts of flame from your mouth'),
+        (18, 'Главоглаз', 'Зелёная кровь и другие жидкости', 'Arachas', 'Green bodily fluids'),
+        (19, 'Жагница', 'Небольшие участки хитина на теле', 'Glustyworp', 'Small patches of chitin'),
+        (20, 'Химера', 'Фасеточные глаза и участки хитина', 'Frigher', 'Multi-faceted eyes & patches of chitin'),
+        (21, 'Накер', 'Облысение и серая кожа', 'Nekker', 'Baldness & grey skin'),
+        (22, 'Скальный тролль', 'Сгорбленность', 'Rock Troll', 'Hunched posture'),
+        (23, 'Тролль', 'Жёсткая голубоватая кожа', 'Troll', 'Blue-ish leathery skin'),
+        (24, 'Вендиго', 'Клочки меха и болезненно-серая кожа', 'Vendigo', 'Patchy fur & sickly grey skin'),
+        (25, 'Волколак', 'Рост волос по всему телу', 'Werewolf', 'Rapid hair growth'),
+        (26, 'Игоша', 'Волчья пасть и красные белки глаз', 'Botchling', 'Wolf''s maw & red eye whites'),
+        (27, 'Котолак', 'Кошачьи глаза и усиленный рост волос', 'Werecat', 'Cat''s eyes and increased hair growth'),
+        (28, 'Бес', 'Небольшие рожки', 'Fiend', 'Small antlers'),
+        (29, 'Леший', 'На теле вырастают побеги и листья', 'Leshy', 'Plants growing on the body'),
+        (30, 'Шарлей', 'Участки твёрдой, как камень, кожи', 'Shalmaar', 'Patches of thick rock-textured skin'),
+        (31, 'Утковол', 'Твёрдые наросты по всему телу', 'Bullvore', 'Hard growths all over the body'),
+        (32, 'Медведь', 'Усиленный рост волос на теле', 'Bear', 'Prolific fur growth')
+      ) AS v(sort_order, ru_name, ru_mutation, en_name, en_mutation)
+)
+, event_desc_vals(lang, group_id, option_id, text) AS (
+    SELECT 'ru', 101, gs.num, 'Долг: ' || (gs.num * 100)::text || ' крон.'
+      FROM generate_series(1, 10) AS gs(num)
+    UNION ALL
+    SELECT 'en', 101, gs.num, 'Debt: ' || (gs.num * 100)::text || ' crowns.'
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+    SELECT 'ru', 102, v.num, 'Зависимость: ' || v.ru_name || '.'
+      FROM addiction_vals v
+    UNION ALL
+    SELECT 'en', 102, v.num, 'Addiction: ' || v.en_name || '.'
+      FROM addiction_vals v
+
+    UNION ALL
+    SELECT 'ru', 104, v.sort_order, 'Разгневанные горожане: (' || v.ru_group || ') ' || v.ru_name || '.'
+      FROM region_vals v
+    UNION ALL
+    SELECT 'en', 104, v.sort_order, 'Angered City Folk: (' || v.en_group || ') ' || v.en_name || '.'
+      FROM region_vals v
+
+    UNION ALL
+    VALUES
+      ('ru', 105, 1, 'Несчастный случай: Изуродованы.'),
+      ('en', 105, 1, 'Accident: Disfigured.'),
+      ('ru', 105, 4, 'Несчастный случай: Ужасные кошмары.'),
+      ('en', 105, 4, 'Accident: Horrible nightmares.')
+
+    UNION ALL
+    SELECT 'ru', 106, gs.num,
+           'Заключение в тюрьму: ' || gs.num::text || CASE WHEN gs.num = 1 THEN ' год.' WHEN gs.num BETWEEN 2 AND 4 THEN ' года.' ELSE ' лет.' END
+      FROM generate_series(1, 10) AS gs(num)
+    UNION ALL
+    SELECT 'en', 106, gs.num,
+           'Imprisonment: ' || gs.num::text || CASE WHEN gs.num = 1 THEN ' year.' ELSE ' years.' END
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+    SELECT 'ru', 110, v.num, 'Проклятие: ' || v.ru_name || ' (' || v.ru_detail || ').'
+      FROM curse_vals v
+    UNION ALL
+    SELECT 'en', 110, v.num, 'Curse: ' || v.en_name || ' (' || v.en_detail || ').'
+      FROM curse_vals v
+
+    UNION ALL
+    SELECT 'ru', 202, v.num, 'Ложное обвинение: ' || v.ru_name || '.'
+      FROM accusation_vals v
+    UNION ALL
+    SELECT 'en', 202, v.num, 'False Accusation: ' || v.en_name || '.'
+      FROM accusation_vals v
+
+    UNION ALL
+    SELECT 'ru', 207, gs.num, 'Цель охоты: ' || (gs.num + 5)::text || CASE WHEN gs.num + 5 BETWEEN 2 AND 4 THEN ' охотника.' ELSE ' охотников.' END
+      FROM generate_series(1, 6) AS gs(num)
+    UNION ALL
+    SELECT 'en', 207, gs.num, 'Hunted: ' || (gs.num + 5)::text || ' bounty hunters.'
+      FROM generate_series(1, 6) AS gs(num)
+
+    UNION ALL
+    SELECT 'ru', 208, v.sort_order, 'Враг государства: (' || v.ru_group || ') ' || v.ru_name || '.'
+      FROM region_vals v
+    UNION ALL
+    SELECT 'en', 208, v.sort_order, 'Enemy of the State: (' || v.en_group || ') ' || v.en_name || '.'
+      FROM region_vals v
+
+    UNION ALL
+    SELECT 'ru', 301, v.num, 'Магическая блокировка: ' || v.ru_name || ', штраф -2 к Сотворению заклинаний.'
+      FROM element_vals v
+    UNION ALL
+    SELECT 'en', 301, v.num, 'Magical Block: ' || v.en_name || ', -2 to Spell Casting.'
+      FROM element_vals v
+
+    UNION ALL
+    SELECT 'ru', 302, v.sort_order, 'Встреча с монстром: ' || v.ru_type || ' - ' || v.ru_name || '.'
+      FROM monster_vals v
+    UNION ALL
+    SELECT 'en', 302, v.sort_order, 'Monster Encounter: ' || v.en_type || ' - ' || v.en_name || '.'
+      FROM monster_vals v
+
+    UNION ALL
+    SELECT 'ru', 309, 1, 'Потеря чувств: вкус.'
+    UNION ALL
+    SELECT 'en', 309, 1, 'Lost a Sense: taste.'
+    UNION ALL
+    SELECT 'ru', 309, 2, 'Потеря чувств: обоняние.'
+    UNION ALL
+    SELECT 'en', 309, 2, 'Lost a Sense: smell.'
+    UNION ALL
+    SELECT 'ru', 309, 3, 'Потеря чувств: осязание.'
+    UNION ALL
+    SELECT 'en', 309, 3, 'Lost a Sense: touch.'
+
+    UNION ALL
+    SELECT 'ru', 310, v.sort_order, 'Малая мутация (' || v.ru_name || ').'
+      FROM mutation_vals v
+    UNION ALL
+    SELECT 'en', 310, v.sort_order, 'Minor Mutation (' || v.en_name || ').'
+      FROM mutation_vals v
+
+    UNION ALL
+    SELECT 'ru', 403, v.sort_order, 'Признан опасным: (' || v.ru_group || ') ' || v.ru_name || '.'
+      FROM region_vals v
+    UNION ALL
+    SELECT 'en', 403, v.sort_order, 'Deemed Dangerous: (' || v.en_group || ') ' || v.en_name || '.'
+      FROM region_vals v
+
+    UNION ALL
+    SELECT 'ru', 410, v.num, 'Проклятие: ' || v.ru_name || '.'
+      FROM curse_vals v
+    UNION ALL
+    SELECT 'en', 410, v.num, 'Cursed: ' || v.en_name || '.'
+      FROM curse_vals v
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(event_desc_vals.group_id, 'FM0000') || to_char(event_desc_vals.option_id, 'FM00') ||'.event_desc')
+     , 'character'
+     , 'event_desc'
+     , event_desc_vals.lang
+     , event_desc_vals.text
+  FROM event_desc_vals
+  CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details' AS qu_id
+  )
+, event_effects(group_id, option_id) AS (
+    VALUES
+      (101, 1), (101, 2), (101, 3), (101, 4), (101, 5), (101, 6), (101, 7), (101, 8), (101, 9), (101,10),
+      (102, 1), (102, 2), (102, 3), (102, 4), (102, 5), (102, 6), (102, 7), (102, 8), (102,10),
+      (104, 1), (104, 2), (104, 3), (104, 4), (104, 5), (104, 6), (104, 7), (104, 8), (104, 9), (104,10),
+      (104,11), (104,12), (104,13), (104,14), (104,15), (104,16), (104,17), (104,18), (104,19), (104,20),
+      (104,21), (104,22), (104,23),
+      (105, 1), (105, 4),
+      (106, 1), (106, 2), (106, 3), (106, 4), (106, 5), (106, 6), (106, 7), (106, 8), (106, 9), (106,10),
+      (110, 1), (110, 2), (110, 3), (110, 4), (110, 5), (110, 6),
+      (202, 1), (202, 2), (202, 3), (202, 4), (202, 5), (202, 6), (202, 7), (202, 8), (202, 9),
+      (207, 1), (207, 2), (207, 3), (207, 4), (207, 5), (207, 6),
+      (208, 1), (208, 2), (208, 3), (208, 4), (208, 5), (208, 6), (208, 7), (208, 8), (208, 9), (208,10),
+      (208,11), (208,12), (208,13), (208,14), (208,15), (208,16), (208,17), (208,18), (208,19), (208,20),
+      (208,21), (208,22), (208,23),
+      (301, 1), (301, 2), (301, 3), (301, 4),
+      (302, 1), (302, 2), (302, 3), (302, 4), (302, 5), (302, 6), (302, 7), (302, 8), (302, 9), (302,10),
+      (302,11), (302,12), (302,13), (302,14), (302,15), (302,16), (302,17), (302,18), (302,19), (302,20),
+      (302,21), (302,22), (302,23), (302,24), (302,25), (302,26), (302,27), (302,28), (302,29), (302,30),
+      (302,31), (302,32), (302,33), (302,34), (302,35), (302,36), (302,37), (302,38), (302,39), (302,40),
+      (302,41), (302,42), (302,43), (302,44), (302,45), (302,46), (302,47), (302,48), (302,49), (302,50),
+      (302,51), (302,52), (302,53), (302,54), (302,55), (302,56), (302,57), (302,58), (302,59), (302,60),
+      (302,61), (302,62), (302,63), (302,64), (302,65),
+      (309, 1), (309, 2), (309, 3),
+      (310, 1), (310, 2), (310, 3), (310, 4), (310, 5), (310, 6), (310, 7), (310, 8), (310, 9), (310,10),
+      (310,11), (310,12), (310,13), (310,14), (310,15), (310,16), (310,17), (310,18), (310,19), (310,20),
+      (310,21), (310,22), (310,23), (310,24), (310,25), (310,26), (310,27), (310,28), (310,29), (310,30),
+      (310,31), (310,32),
+      (403, 1), (403, 2), (403, 3), (403, 4), (403, 5), (403, 6), (403, 7), (403, 8), (403, 9), (403,10),
+      (403,11), (403,12), (403,13), (403,14), (403,15), (403,16), (403,17), (403,18), (403,19), (403,20),
+      (403,21), (403,22), (403,23),
+      (410, 1), (410, 2), (410, 3), (410, 4), (410, 5), (410, 6)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , meta.qu_id || '_o' || to_char(event_effects.group_id, 'FM0000') || to_char(event_effects.option_id, 'FM00')
+     , jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object(
+                     '+',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                       10
+                     )
+                   )
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.wcc_mage_events_danger.life_event_type.danger')::text),
+             'description',
+             jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id || '_o' || to_char(event_effects.group_id, 'FM0000') || to_char(event_effects.option_id, 'FM00') ||'.event_desc')::text
+             )
+           )
+         )
+       )
+  FROM event_effects
+ CROSS JOIN meta;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details' AS qu_id
+  )
+, perk_desc_vals(key_suffix, lang, text) AS (
+    VALUES
+      ('o030901.disease_name', 'ru', 'Потеря чувств (Вкус)'),
+      ('o030901.disease_name', 'en', 'Lost a Sense (Taste)'),
+      ('o030901.disease_desc', 'ru', 'Из-за потери вкуса вы имеете штраф -2 при проверке навыков, использующих это чувство.'),
+      ('o030901.disease_desc', 'en', 'Because of the loss of taste, you suffer a -2 penalty on skill checks that rely on that sense.'),
+      ('o030902.disease_name', 'ru', 'Потеря чувств (Обоняние)'),
+      ('o030902.disease_name', 'en', 'Lost a Sense (Smell)'),
+      ('o030902.disease_desc', 'ru', 'Из-за потери обоняния вы имеете штраф -2 при проверке навыков, использующих это чувство.'),
+      ('o030902.disease_desc', 'en', 'Because of the loss of smell, you suffer a -2 penalty on skill checks that rely on that sense.'),
+      ('o030903.disease_name', 'ru', 'Потеря чувств (Осязание)'),
+      ('o030903.disease_name', 'en', 'Lost a Sense (Touch)'),
+      ('o030903.disease_desc', 'ru', 'Из-за потери осязания вы имеете штраф -2 при проверке навыков, использующих это чувство.'),
+      ('o030903.disease_desc', 'en', 'Because of the loss of touch, you suffer a -2 penalty on skill checks that rely on that sense.')
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| perk_desc_vals.key_suffix)
+     , 'character'
+     , 'disease'
+     , perk_desc_vals.lang
+     , perk_desc_vals.text
+  FROM perk_desc_vals
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details' AS qu_id
+  )
+, mutation_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1, 'Альп', 'Тёмно-красные вены по всему телу', 'Alp', 'A patchwork of dark red veins under your skin'),
+        (2, 'Гаркон', 'Мягкие наросты на голове', 'Garkain', 'Fleshy growths on the head'),
+        (3, 'Катакан', 'Долговязость', 'Katakan', 'Gangly proportions'),
+        (4, 'Брукса', 'Полупрозрачная кожа и шипящий голос', 'Bruxa', 'Semi-translucent skin & a hissing voice'),
+        (5, 'Грифон', 'Прорастание перьев', 'Griffin', 'Feather growth'),
+        (6, 'Мантикора', 'Рожки и кошачьи черты лица', 'Manticore', 'Small horns & feline features'),
+        (7, 'Суккуб', 'Рожки и хвост', 'Succubus', 'Small horns and a tail'),
+        (8, 'Виверна', 'Огрубение кожи', 'Wyvern', 'Rough skin'),
+        (9, 'Куролиск', 'Пучки зелёных перьев', 'Cockatrice', 'Tufts of green feathers'),
+        (10, 'Феникс', 'Пучки серых перьев и свечение изнутри', 'Phoenix', 'Tufts of grey feathers & an internal glow'),
+        (11, 'Песта', 'Болезненно-бледная кожа и впалые щёки', 'Pesta', 'Sickly pale skin & gaunt features'),
+        (12, 'Покаянник', 'Светящиеся белые отметины', 'Penitent', 'Glowing white markings'),
+        (13, 'Полуденница', 'Сухая, туго обтягивающая кожа', 'Noon Wraith', 'Dry, taut skin'),
+        (14, 'Голем', 'Твёрдые наросты на теле', 'Golem', 'Hard protrusions'),
+        (15, 'Элементаль Земли', 'Каменные наросты по всему телу', 'Earth Elemental', 'Rocky growths along your body'),
+        (16, 'Элементаль Льда', 'Вечно холодная на ощупь кожа', 'Ice Elemental', 'Skin cold to the touch'),
+        (17, 'Элементаль Огня', 'Струйки пламени изо рта', 'Fire Elemental', 'Small spouts of flame from your mouth'),
+        (18, 'Главоглаз', 'Зелёная кровь и другие жидкости', 'Arachas', 'Green bodily fluids'),
+        (19, 'Жагница', 'Небольшие участки хитина на теле', 'Glustyworp', 'Small patches of chitin'),
+        (20, 'Химера', 'Фасеточные глаза и участки хитина', 'Frigher', 'Multi-faceted eyes & patches of chitin'),
+        (21, 'Накер', 'Облысение и серая кожа', 'Nekker', 'Baldness & grey skin'),
+        (22, 'Скальный тролль', 'Сгорбленность', 'Rock Troll', 'Hunched posture'),
+        (23, 'Тролль', 'Жёсткая голубоватая кожа', 'Troll', 'Blue-ish leathery skin'),
+        (24, 'Вендиго', 'Клочки меха и болезненно-серая кожа', 'Vendigo', 'Patchy fur & sickly grey skin'),
+        (25, 'Волколак', 'Рост волос по всему телу', 'Werewolf', 'Rapid hair growth'),
+        (26, 'Игоша', 'Волчья пасть и красные белки глаз', 'Botchling', 'Wolf''s maw & red eye whites'),
+        (27, 'Котолак', 'Кошачьи глаза и усиленный рост волос', 'Werecat', 'Cat''s eyes and increased hair growth'),
+        (28, 'Бес', 'Небольшие рожки', 'Fiend', 'Small antlers'),
+        (29, 'Леший', 'На теле вырастают побеги и листья', 'Leshy', 'Plants growing on the body'),
+        (30, 'Шарлей', 'Участки твёрдой, как камень, кожи', 'Shalmaar', 'Patches of thick rock-textured skin'),
+        (31, 'Утковол', 'Твёрдые наросты по всему телу', 'Bullvore', 'Hard growths all over the body'),
+        (32, 'Медведь', 'Усиленный рост волос на теле', 'Bear', 'Prolific fur growth')
+      ) AS v(sort_order, ru_name, ru_mutation, en_name, en_mutation)
+)
+, mutation_perk_vals AS (
+    SELECT sort_order,
+           'o0310' || to_char(sort_order, 'FM00') || '.disease_name' AS name_key_suffix,
+           'o0310' || to_char(sort_order, 'FM00') || '.disease_desc' AS desc_key_suffix,
+           'Малая мутация (' || ru_name || ')' AS ru_name_text,
+           'Minor Mutation (' || en_name || ')' AS en_name_text,
+           ru_mutation || '.' AS ru_desc_text,
+           en_mutation || '.' AS en_desc_text
+      FROM mutation_vals
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| key_vals.key_suffix)
+     , 'character'
+     , 'disease'
+     , key_vals.lang
+     , key_vals.text
+  FROM mutation_perk_vals
+ CROSS JOIN meta
+ CROSS JOIN LATERAL (
+   VALUES
+     (mutation_perk_vals.name_key_suffix, 'ru', mutation_perk_vals.ru_name_text),
+     (mutation_perk_vals.name_key_suffix, 'en', mutation_perk_vals.en_name_text),
+     (mutation_perk_vals.desc_key_suffix, 'ru', mutation_perk_vals.ru_desc_text),
+     (mutation_perk_vals.desc_key_suffix, 'en', mutation_perk_vals.en_desc_text)
+ ) AS key_vals(key_suffix, lang, text)
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH meta AS (
+  SELECT 'witcher_cc' AS su_su_id
+       , 'wcc_mage_events_danger_details' AS qu_id
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , meta.qu_id || '_o010501'
+     , jsonb_build_object('set_all_social_status_feared', true)
+  FROM meta
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0309' || to_char(v.num, 'FM00')
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'name', jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o0309' || to_char(v.num, 'FM00') || '.disease_name')::text
+             ),
+             'description', jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o0309' || to_char(v.num, 'FM00') || '.disease_desc')::text
+             )
+           )
+         )
+       )
+  FROM meta
+ CROSS JOIN (VALUES (1), (2), (3)) AS v(num)
+UNION ALL
+SELECT 'character'
+     , meta.qu_id || '_o0310' || to_char(v.sort_order, 'FM00')
+     , jsonb_build_object(
+         'add_unique',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.diseases_and_curses'),
+           jsonb_build_object(
+             'name', jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o0310' || to_char(v.sort_order, 'FM00') || '.disease_name')::text
+             ),
+             'description', jsonb_build_object(
+               'i18n_uuid',
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o0310' || to_char(v.sort_order, 'FM00') || '.disease_desc')::text
+             )
+           )
+         )
+       )
+  FROM meta
+ CROSS JOIN generate_series(1, 32) AS v(sort_order);
 
 -- <<< END sql/038_mage_events_danger_details.sql
 
@@ -21949,6 +23841,115 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details_2' AS qu_id
+  )
+, event_desc_vals(lang, group_id, num, text) AS (
+    SELECT 'ru' AS lang,
+           10502 AS group_id,
+           gs.num,
+           'Несчастный случай: Прикованы к постели на ' ||
+           gs.num::text || ' ' ||
+           CASE
+             WHEN gs.num = 1 THEN 'год.'
+             WHEN gs.num BETWEEN 2 AND 4 THEN 'года.'
+             ELSE 'лет.'
+           END AS text
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+
+    SELECT 'en' AS lang,
+           10502 AS group_id,
+           gs.num,
+           'Accident: Bedridden for ' ||
+           gs.num::text || ' ' ||
+           CASE WHEN gs.num = 1 THEN 'year.' ELSE 'years.' END AS text
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+
+    SELECT 'ru' AS lang,
+           10503 AS group_id,
+           gs.num,
+           'Несчастный случай: Потеря памяти о ' ||
+           gs.num::text || ' ' ||
+           CASE
+             WHEN gs.num = 1 THEN 'годе.'
+             ELSE 'годах.'
+           END || ' из этой декады.' AS text
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+
+    SELECT 'en' AS lang,
+           10503 AS group_id,
+           gs.num,
+           'Accident: Lost memories of ' ||
+           gs.num::text || ' ' ||
+           CASE WHEN gs.num = 1 THEN 'year' ELSE 'years' END || ' from this decade.' AS text
+      FROM generate_series(1, 10) AS gs(num)
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(event_desc_vals.group_id, 'FM00000') || to_char(event_desc_vals.num, 'FM00') ||'.event_desc')
+     , 'character'
+     , 'event_desc'
+     , event_desc_vals.lang
+     , event_desc_vals.text
+  FROM event_desc_vals
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details_2' AS qu_id
+  )
+, event_effects AS (
+    SELECT an_id
+      FROM answer_options
+     CROSS JOIN meta
+     WHERE qu_qu_id = meta.qu_id
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , event_effects.an_id
+     , jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object(
+                     '+',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                       10
+                     )
+                   )
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.wcc_mage_events_danger.life_event_type.danger')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| event_effects.an_id ||'.event_desc')::text)
+           )
+         )
+       )
+  FROM event_effects
+ CROSS JOIN meta;
 
 -- <<< END sql/039_mage_events_danger_details_2.sql
 
@@ -22272,6 +24273,22 @@ ON CONFLICT (qu_id) DO UPDATE
 SET qtype = EXCLUDED.qtype,
     metadata = EXCLUDED.metadata;
 
+INSERT INTO rules (ru_id, name, body)
+VALUES
+  (
+    ck_id('witcher_cc.rules.is_enemy_cause_life_events_2_3'),
+    'is_enemy_cause_life_events_2_3',
+    '{"==":[{"var":"characterRaw.logicFields.last_node_and_answer"},"life events 2-3"]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_not_enemy_cause_life_events_2_3'),
+    'is_not_enemy_cause_life_events_2_3',
+    '{"!=":[{"var":"characterRaw.logicFields.last_node_and_answer"},"life events 2-3"]}'::jsonb
+  )
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
                 , 'wcc_mage_events_enemy_cause' AS qu_id
@@ -22283,32 +24300,54 @@ WITH
          , num
          , probability
          , lang
+         , variant
       FROM (VALUES
-        ('ru', 1, 'Сдал потерпевшую сторону', 0.1::numeric),
-        ('ru', 2, 'Нанес удар в спину потерпевшей стороне', 0.1::numeric),
-        ('ru', 3, 'Отказал потерпевшей стороне', 0.1::numeric),
-        ('ru', 4, 'Удержал потерпевшую сторону от приобретения чего-либо', 0.1::numeric),
-        ('ru', 5, 'Украл что-то у потерпевшей стороны', 0.1::numeric),
-        ('ru', 6, 'Причинил потерпевшей стороне вред', 0.1::numeric),
-        ('ru', 7, 'Пытался испортить репутацию потерпевшей стороны', 0.1::numeric),
-        ('ru', 8, 'Манипулировал потерпевшей стороной', 0.1::numeric),
-        ('ru', 9, 'Пытался отравить потерпевшую сторону', 0.1::numeric),
-        ('ru', 10, 'Оскорбил потерпевшую сторону', 0.1::numeric),
-        ('en', 1, 'Sold out the offended party', 0.1::numeric),
-        ('en', 2, 'Backstabbed the offended party', 0.1::numeric),
-        ('en', 3, 'Turned down the offended party', 0.1::numeric),
-        ('en', 4, 'Kept the offended party from acquiring something', 0.1::numeric),
-        ('en', 5, 'Stole something from the offended party', 0.1::numeric),
-        ('en', 6, 'Caused the offended party harm', 0.1::numeric),
-        ('en', 7, 'Tried to ruin the offended party''s reputation', 0.1::numeric),
-        ('en', 8, 'Manipulated the offended party', 0.1::numeric),
-        ('en', 9, 'Tried to poison the offended party', 0.1::numeric),
-        ('en', 10, 'Insulted the offended party', 0.1::numeric)
-      ) AS v(lang, num, txt, probability)
+        ('ru', 1, 'Сдал потерпевшую сторону', 0.1::numeric, 'default'),
+        ('ru', 2, 'Нанес удар в спину потерпевшей стороне', 0.1::numeric, 'default'),
+        ('ru', 3, 'Отказал потерпевшей стороне', 0.1::numeric, 'default'),
+        ('ru', 4, 'Удержал потерпевшую сторону от приобретения чего-либо', 0.1::numeric, 'default'),
+        ('ru', 5, 'Украл что-то у потерпевшей стороны', 0.1::numeric, 'default'),
+        ('ru', 6, 'Причинил потерпевшей стороне вред', 0.1::numeric, 'default'),
+        ('ru', 7, 'Пытался испортить репутацию потерпевшей стороны', 0.1::numeric, 'default'),
+        ('ru', 8, 'Манипулировал потерпевшей стороной', 0.1::numeric, 'default'),
+        ('ru', 9, 'Пытался отравить потерпевшую сторону', 0.1::numeric, 'default'),
+        ('ru', 10, 'Оскорбил потерпевшую сторону', 0.1::numeric, 'default'),
+        ('ru', 1, 'Сдал потерпевшую сторону, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('ru', 2, 'Нанес удар в спину потерпевшей стороне, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('ru', 3, 'Отказал потерпевшей стороне, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('ru', 4, 'Удержал потерпевшую сторону от приобретения чего-либо, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('ru', 5, 'Украл что-то у потерпевшей стороны, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('ru', 6, 'Причинил потерпевшей стороне вред, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('ru', 7, 'Пытался испортить репутацию потерпевшей стороны, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('ru', 8, 'Манипулировал потерпевшей стороной, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('ru', 9, 'Пытался отравить потерпевшую сторону, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('ru', 10, 'Оскорбил потерпевшую сторону, но вы были преданы', 0.1::numeric, 'betrayal'),
+        ('en', 1, 'Sold out the offended party', 0.1::numeric, 'default'),
+        ('en', 2, 'Backstabbed the offended party', 0.1::numeric, 'default'),
+        ('en', 3, 'Turned down the offended party', 0.1::numeric, 'default'),
+        ('en', 4, 'Kept the offended party from acquiring something', 0.1::numeric, 'default'),
+        ('en', 5, 'Stole something from the offended party', 0.1::numeric, 'default'),
+        ('en', 6, 'Caused the offended party harm', 0.1::numeric, 'default'),
+        ('en', 7, 'Tried to ruin the offended party''s reputation', 0.1::numeric, 'default'),
+        ('en', 8, 'Manipulated the offended party', 0.1::numeric, 'default'),
+        ('en', 9, 'Tried to poison the offended party', 0.1::numeric, 'default'),
+        ('en', 10, 'Insulted the offended party', 0.1::numeric, 'default'),
+        ('en', 1, 'Sold out the offended party, but you were betrayed', 0.1::numeric, 'betrayal'),
+        ('en', 2, 'Backstabbed the offended party, but you were betrayed', 0.1::numeric, 'betrayal'),
+        ('en', 3, 'Turned down the offended party, but you were betrayed', 0.1::numeric, 'betrayal'),
+        ('en', 4, 'Kept the offended party from acquiring something, but you were betrayed', 0.1::numeric, 'betrayal'),
+        ('en', 5, 'Stole something from the offended party, but you were betrayed', 0.1::numeric, 'betrayal'),
+        ('en', 6, 'Caused the offended party harm, but you were betrayed', 0.1::numeric, 'betrayal'),
+        ('en', 7, 'Tried to ruin the offended party''s reputation, but you were betrayed', 0.1::numeric, 'betrayal'),
+        ('en', 8, 'Manipulated the offended party, but you were betrayed', 0.1::numeric, 'betrayal'),
+        ('en', 9, 'Tried to poison the offended party, but you were betrayed', 0.1::numeric, 'betrayal'),
+        ('en', 10, 'Insulted the offended party, but you were betrayed', 0.1::numeric, 'betrayal')
+      ) AS v(lang, num, txt, probability, variant)
 )
 , ins_label AS (
     INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field)
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM0000') ||
+                 CASE WHEN vals.variant = 'betrayal' THEN '_betrayal' ELSE '' END ||'.'|| meta.entity ||'.'|| meta.entity_field)
          , meta.entity, meta.entity_field, vals.lang, vals.text
       FROM vals
       CROSS JOIN meta
@@ -22317,19 +24356,26 @@ WITH
 )
 , ins_label_value AS (
     INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field || '_value')
+    SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM0000') ||
+                 CASE WHEN vals.variant = 'betrayal' THEN '_betrayal' ELSE '' END ||'.'|| meta.entity ||'.'|| meta.entity_field || '_value')
          , meta.entity, meta.entity_field || '_value', vals.lang, vals.txt
       FROM vals
       CROSS JOIN meta
     ON CONFLICT (id, lang) DO UPDATE
     SET text = EXCLUDED.text
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
-SELECT 'wcc_mage_events_enemy_cause_o' || to_char(vals.num, 'FM0000')
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
+SELECT 'wcc_mage_events_enemy_cause_o' || to_char(vals.num, 'FM0000') ||
+       CASE WHEN vals.variant = 'betrayal' THEN '_betrayal' ELSE '' END
      , meta.su_su_id
      , meta.qu_id
-     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field)
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM0000') ||
+             CASE WHEN vals.variant = 'betrayal' THEN '_betrayal' ELSE '' END ||'.'|| meta.entity ||'.'|| meta.entity_field)
      , vals.num
+     , CASE
+         WHEN vals.variant = 'betrayal' THEN (SELECT ru_id FROM rules WHERE name = 'is_enemy_cause_life_events_2_3' ORDER BY ru_id LIMIT 1)
+         ELSE (SELECT ru_id FROM rules WHERE name = 'is_not_enemy_cause_life_events_2_3' ORDER BY ru_id LIMIT 1)
+       END
      , jsonb_build_object('probability', vals.probability)
   FROM vals
  CROSS JOIN meta
@@ -22337,6 +24383,7 @@ SELECT 'wcc_mage_events_enemy_cause_o' || to_char(vals.num, 'FM0000')
 ON CONFLICT (an_id) DO UPDATE
 SET label = EXCLUDED.label,
     sort_order = EXCLUDED.sort_order,
+    visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     metadata = EXCLUDED.metadata;
 
 -- <<< END sql/042_mage_events_enemy_cause.sql
@@ -22605,10 +24652,6 @@ SELECT meta.qu_id
            SELECT jsonb_agg(ck_id('witcher_cc.' || meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.questions.column_name')::text ORDER BY num)
              FROM (SELECT DISTINCT num FROM c_vals) AS cols
          ),
-         'counterIncrement', jsonb_build_object(
-           'id', 'lifeEventsCounter',
-           'step', 10
-         ),
          'path', jsonb_build_array(
            ck_id('witcher_cc.hierarchy.life_events')::text,
            jsonb_build_object('jsonlogic_expression', jsonb_build_object('cat', jsonb_build_array(
@@ -22726,6 +24769,7 @@ SELECT
             'academy life 1-3',
             'academy life 2-6',
             'academy life 3-6',
+            'life events 2-3',
             'life events 2-5',
             'life events 2-9'
           )
@@ -22738,6 +24782,44 @@ SELECT
       jsonb_build_object(
         'gender', '',
         'victim', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_victim'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
+        'position', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_position'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
+        'cause', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_cause'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
+        'power_level', '',
+        'how_far', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_how_far'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
+        'the_power', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field || '_value')::text)
+      )
+    )
+  )
+FROM vals
+CROSS JOIN meta;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_mage_events_enemy_the_power' AS qu_id
+                , 'answer_options' AS entity
+                , 'label' AS entity_field)
+, vals AS (
+    SELECT num FROM (VALUES (1), (2), (3), (4), (5)) AS v(num)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_mage_events_enemy_the_power_o' || to_char(vals.num, 'FM0000'),
+  jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      '==',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+        'life events 2-3'
+      )
+    ),
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.enemies'),
+      jsonb_build_object(
+        'gender', '',
+        'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0001.answer_options.label_value')::text),
         'position', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_position'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
         'cause', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_cause'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
         'power_level', '',
@@ -22957,6 +25039,29 @@ SELECT
   )
 FROM meta;
 
+WITH vals AS (
+    SELECT num FROM (VALUES (1), (2), (3), (4), (5)) AS v(num)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_mage_events_enemy_the_power_o' || to_char(vals.num, 'FM0000'),
+  jsonb_build_object(
+    'when',
+    '{
+      "or": [
+        {"==": [{"var": "characterRaw.logicFields.flags.academy_life"}, 1]},
+        {"==": [{"var": "characterRaw.logicFields.flags.academy_life"}, 2]}
+      ]
+    }'::jsonb,
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var', 'counters.lifeEventsCounter'),
+      10
+    )
+  )
+FROM vals;
+
 -- transitions
 
 -- <<< END sql/044_mage_events_enemy_the_power.sql
@@ -23068,7 +25173,6 @@ SELECT meta.qu_id
                10
              ))
            ))),
-           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
            ck_id('witcher_cc.hierarchy.mage_events_outcome')::text
          )
        )
@@ -23235,7 +25339,7 @@ SELECT meta.qu_id,
                10
              ))
            ))),
-           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_outcome')::text,
            ck_id('witcher_cc.hierarchy.mage_events_ally')::text,
            ck_id('witcher_cc.hierarchy.mage_events_ally_position')::text
          )
@@ -23372,7 +25476,7 @@ SELECT meta.qu_id,
                10
              ))
            ))),
-           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_outcome')::text,
            ck_id('witcher_cc.hierarchy.mage_events_ally')::text,
            ck_id('witcher_cc.hierarchy.mage_events_ally_how_met')::text
          )
@@ -23392,16 +25496,16 @@ WITH
   vals AS (
     SELECT *
       FROM (VALUES
-        ('ru', 1, 'Вы обучались с ним/ней', 0.1::numeric),
-        ('ru', 2, 'Вы спасли его/её от несчастного случая', 0.1::numeric),
-        ('ru', 3, 'Вы поддержали его/её в трудную минуту', 0.1::numeric),
-        ('ru', 4, 'Вы помогли ему/ей, когда его/её предали', 0.1::numeric),
-        ('ru', 5, 'У вас был короткий роман', 0.1::numeric),
-        ('ru', 6, 'Вы решили манипулировать ему/ей', 0.1::numeric),
-        ('ru', 7, 'Вы показали ему/ей искреннюю доброту', 0.1::numeric),
-        ('ru', 8, 'Вы решили изучить его/её', 0.1::numeric),
-        ('ru', 9, 'Вы помогли ему/ей ударить кого-то в спину', 0.1::numeric),
-        ('ru', 10, 'Вы встретились во время какого-то наказания', 0.1::numeric),
+        ('ru', 1, 'Вы обучались вместе', 0.1::numeric),
+        ('ru', 2, 'Вы спасли от несчастного случая', 0.1::numeric),
+        ('ru', 3, 'Вы поддержали в трудную минуту', 0.1::numeric),
+        ('ru', 4, 'Вы помогли справиться с предательством', 0.1::numeric),
+        ('ru', 5, 'У вас была разовая интрижка', 0.1::numeric),
+        ('ru', 6, 'Вы собирались манипулировать', 0.1::numeric),
+        ('ru', 7, 'Вы показали искреннюю доброту', 0.1::numeric),
+        ('ru', 8, 'Вы познакомились чтобы изучить', 0.1::numeric),
+        ('ru', 9, 'Вы помогли ударить кого-то в спину', 0.1::numeric),
+        ('ru', 10, 'Вы были наказаны вместе', 0.1::numeric),
         ('en', 1, 'You studied with them', 0.1::numeric),
         ('en', 2, 'You saved them from an accident', 0.1::numeric),
         ('en', 3, 'You supported them at a tough time', 0.1::numeric),
@@ -23509,7 +25613,7 @@ SELECT meta.qu_id,
                10
              ))
            ))),
-           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_outcome')::text,
            ck_id('witcher_cc.hierarchy.mage_events_ally')::text,
            ck_id('witcher_cc.hierarchy.mage_events_ally_closeness')::text
          )
@@ -23632,7 +25736,7 @@ SELECT meta.qu_id,
                10
              ))
            ))),
-           ck_id('witcher_cc.hierarchy.mage_events_risk')::text,
+           ck_id('witcher_cc.hierarchy.mage_events_outcome')::text,
            ck_id('witcher_cc.hierarchy.mage_events_ally')::text,
            ck_id('witcher_cc.hierarchy.mage_events_ally_value')::text
          )
@@ -29565,6 +31669,22 @@ INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
          )
     FROM meta;
 
+INSERT INTO rules (ru_id, name, body)
+VALUES
+  (
+    ck_id('witcher_cc.rules.is_enemy_cause_life_events_2_3'),
+    'is_enemy_cause_life_events_2_3',
+    '{"==":[{"var":"characterRaw.logicFields.last_node_and_answer"},"life events 2-3"]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_not_enemy_cause_life_events_2_3'),
+    'is_not_enemy_cause_life_events_2_3',
+    '{"!=":[{"var":"characterRaw.logicFields.last_node_and_answer"},"life events 2-3"]}'::jsonb
+  )
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
 -- Ответы
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
@@ -29577,48 +31697,77 @@ WITH
                   txt,
                   num,
                   probability,
-                  lang
+                  lang,
+                  variant
            FROM (VALUES
-                  ('ru', 1, 'Нападение', 0.1::numeric),
-                  ('ru', 2, 'Потеря возлюбленного', 0.1),
-                  ('ru', 3, 'Серьёзное унижение', 0.1),
-                  ('ru', 4, 'Проклятие', 0.1),
-                  ('ru', 5, 'Обвинение в нелегальном колдовстве', 0.1),
-                  ('ru', 6, 'Отказ в романтических притязаниях', 0.1),
-                  ('ru', 7, 'Нанесение серьёзной раны', 0.1),
-                  ('ru', 8, 'Шантаж', 0.1),
-                  ('ru', 9, 'Сорванные планы', 0.1),
-                  ('ru', 10, 'Провокация нападения чудовищ', 0.1),
-                  ('en', 1, 'Assaulted the Offended Party', 0.1),
-                  ('en', 2, 'Caused the Loss of a Loved One', 0.1),
-                  ('en', 3, 'Caused Major Humiliation', 0.1),
-                  ('en', 4, 'Caused a Curse', 0.1),
-                  ('en', 5, 'Accused of Illegal Witchcraft', 0.1),
-                  ('en', 6, 'Turned Down Romantically', 0.1),
-                  ('en', 7, 'Caused a Terrible Wound', 0.1),
-                  ('en', 8, 'Blackmail', 0.1),
-                  ('en', 9, 'Foiled Plans', 0.1),
-                  ('en', 10, 'Caused a Monster Attack', 0.1)
-           ) AS v(lang, num, txt, probability)
+                  ('ru', 1, 'Нападение', 0.1::numeric, 'default'),
+                  ('ru', 2, 'Потеря возлюбленного', 0.1, 'default'),
+                  ('ru', 3, 'Серьёзное унижение', 0.1, 'default'),
+                  ('ru', 4, 'Проклятие', 0.1, 'default'),
+                  ('ru', 5, 'Обвинение в нелегальном колдовстве', 0.1, 'default'),
+                  ('ru', 6, 'Отказ в романтических притязаниях', 0.1, 'default'),
+                  ('ru', 7, 'Нанесение серьёзной раны', 0.1, 'default'),
+                  ('ru', 8, 'Шантаж', 0.1, 'default'),
+                  ('ru', 9, 'Сорванные планы', 0.1, 'default'),
+                  ('ru', 10, 'Провокация нападения чудовищ', 0.1, 'default'),
+                  ('ru', 1, 'Нападение, но вы были преданы', 0.1::numeric, 'betrayal'),
+                  ('ru', 2, 'Потеря возлюбленного, но вы были преданы', 0.1, 'betrayal'),
+                  ('ru', 3, 'Серьёзное унижение, но вы были преданы', 0.1, 'betrayal'),
+                  ('ru', 4, 'Проклятие, но вы были преданы', 0.1, 'betrayal'),
+                  ('ru', 5, 'Обвинение в нелегальном колдовстве, но вы были преданы', 0.1, 'betrayal'),
+                  ('ru', 6, 'Отказ в романтических притязаниях, но вы были преданы', 0.1, 'betrayal'),
+                  ('ru', 7, 'Нанесение серьёзной раны, но вы были преданы', 0.1, 'betrayal'),
+                  ('ru', 8, 'Шантаж, но вы были преданы', 0.1, 'betrayal'),
+                  ('ru', 9, 'Сорванные планы, но вы были преданы', 0.1, 'betrayal'),
+                  ('ru', 10, 'Провокация нападения чудовищ, но вы были преданы', 0.1, 'betrayal'),
+                  ('en', 1, 'Assaulted the Offended Party', 0.1, 'default'),
+                  ('en', 2, 'Caused the Loss of a Loved One', 0.1, 'default'),
+                  ('en', 3, 'Caused Major Humiliation', 0.1, 'default'),
+                  ('en', 4, 'Caused a Curse', 0.1, 'default'),
+                  ('en', 5, 'Accused of Illegal Witchcraft', 0.1, 'default'),
+                  ('en', 6, 'Turned Down Romantically', 0.1, 'default'),
+                  ('en', 7, 'Caused a Terrible Wound', 0.1, 'default'),
+                  ('en', 8, 'Blackmail', 0.1, 'default'),
+                  ('en', 9, 'Foiled Plans', 0.1, 'default'),
+                  ('en', 10, 'Caused a Monster Attack', 0.1, 'default'),
+                  ('en', 1, 'Assaulted the Offended Party, but you were betrayed', 0.1, 'betrayal'),
+                  ('en', 2, 'Caused the Loss of a Loved One, but you were betrayed', 0.1, 'betrayal'),
+                  ('en', 3, 'Caused Major Humiliation, but you were betrayed', 0.1, 'betrayal'),
+                  ('en', 4, 'Caused a Curse, but you were betrayed', 0.1, 'betrayal'),
+                  ('en', 5, 'Accused of Illegal Witchcraft, but you were betrayed', 0.1, 'betrayal'),
+                  ('en', 6, 'Turned Down Romantically, but you were betrayed', 0.1, 'betrayal'),
+                  ('en', 7, 'Caused a Terrible Wound, but you were betrayed', 0.1, 'betrayal'),
+                  ('en', 8, 'Blackmail, but you were betrayed', 0.1, 'betrayal'),
+                  ('en', 9, 'Foiled Plans, but you were betrayed', 0.1, 'betrayal'),
+                  ('en', 10, 'Caused a Monster Attack, but you were betrayed', 0.1, 'betrayal')
+           ) AS v(lang, num, txt, probability, variant)
 )
 , ins_label AS (INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-                SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS id
+                SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||
+                             CASE WHEN vals.variant = 'betrayal' THEN '_betrayal' ELSE '' END ||'.'|| meta.entity ||'.'|| meta.entity_field) AS id
                      , meta.entity, meta.entity_field, vals.lang, vals.text
                   FROM vals
                   CROSS JOIN meta
 )
 , ins_label_value AS (INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-                SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field || '_value') AS id
+                SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||
+                             CASE WHEN vals.variant = 'betrayal' THEN '_betrayal' ELSE '' END ||'.'|| meta.entity ||'.'|| meta.entity_field || '_value') AS id
                      , meta.entity, meta.entity_field || '_value', vals.lang, vals.txt
                   FROM vals
                   CROSS JOIN meta
 )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
-  SELECT 'wcc_life_events_enemy_cause_o' || to_char(vals.num, 'FM9900') AS an_id,
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
+  SELECT 'wcc_life_events_enemy_cause_o' || to_char(vals.num, 'FM9900') ||
+         CASE WHEN vals.variant = 'betrayal' THEN '_betrayal' ELSE '' END AS an_id,
          meta.su_su_id,
          meta.qu_id,
-         ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label,
+         ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||
+               CASE WHEN vals.variant = 'betrayal' THEN '_betrayal' ELSE '' END ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label,
          vals.num AS sort_order,
+         CASE
+           WHEN vals.variant = 'betrayal' THEN (SELECT ru_id FROM rules WHERE name = 'is_enemy_cause_life_events_2_3' ORDER BY ru_id LIMIT 1)
+           ELSE (SELECT ru_id FROM rules WHERE name = 'is_not_enemy_cause_life_events_2_3' ORDER BY ru_id LIMIT 1)
+         END AS visible_ru_ru_id,
          jsonb_build_object(
            'probability', vals.probability
          ) AS metadata
@@ -29629,6 +31778,7 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_life_events_enemy_position', 'wcc_life_events_enemy_cause';
+
 -- <<< END sql/095_life_events_enemy_cause.sql
 
 -- >>> BEGIN sql/096_life_events_enemy_power_level.sql
@@ -39897,6 +42047,43 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
     FROM vals
     CROSS JOIN meta
   ON CONFLICT (an_id) DO NOTHING;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_style_hair' AS qu_id
+  )
+INSERT INTO rules (ru_id, name, body)
+SELECT ck_id(meta.su_su_id ||'.rules.wcc_style_hair_is_not_bald')
+     , 'wcc_style_hair_is_not_bald'
+     , jsonb_build_object(
+         'or',
+         jsonb_build_array(
+           jsonb_build_object('!', jsonb_build_object('var', 'characterRaw.lore.style.hair_style.i18n_uuid')),
+           jsonb_build_object(
+             '!=',
+             jsonb_build_array(
+               jsonb_build_object('var', 'characterRaw.lore.style.hair_style.i18n_uuid'),
+               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o0006.answer_options.label')::text
+             )
+           )
+         )
+       )
+  FROM meta
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
+WITH rule_ref AS (
+  SELECT ru_id
+    FROM rules
+   WHERE name = 'wcc_style_hair_is_not_bald'
+)
+UPDATE answer_options
+   SET visible_ru_ru_id = rule_ref.ru_id
+  FROM rule_ref
+ WHERE qu_qu_id = 'wcc_style_hair'
+   AND an_id <> 'wcc_style_hair_o0006';
   
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
@@ -39920,6 +42107,7 @@ SELECT 'character', 'wcc_style_hair_o' || to_char(answer_nums.num, 'FM9900'),
   )
 FROM answer_nums
 CROSS JOIN meta;
+
 -- <<< END sql/143_style_hair.sql
 
 -- >>> BEGIN sql/144_style_affectations.sql
@@ -42984,12 +45172,32 @@ VALUES
   (
     ck_id('witcher_cc.rules.is_mage_academy_life_flag_eq_1'),
     'is_mage_academy_life_flag_eq_1',
-    '{"==":[{"var":"characterRaw.logic_fields.flags.academy_life"},1]}'::jsonb
+    '{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},1]}'::jsonb
   ),
   (
     ck_id('witcher_cc.rules.is_mage_academy_life_flag_eq_2'),
     'is_mage_academy_life_flag_eq_2',
-    '{"==":[{"var":"characterRaw.logic_fields.flags.academy_life"},2]}'::jsonb
+    '{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},2]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_not_there_a_friend'),
+    'is_not_there_a_friend',
+    '{"!":{"is_there_a_friend":[]}}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_mentor_personality_missing'),
+    'is_mage_mentor_personality_missing',
+    '{"==":[{"var":"characterRaw.lore.mentor.personality"},null]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_mentor_personality_present'),
+    'is_mage_mentor_personality_present',
+    '{"!=":[{"var":"characterRaw.lore.mentor.personality"},null]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_event_from_academy_life_1_9'),
+    'is_mage_event_from_academy_life_1_9',
+    '{"and":[{"==":[{"var":"characterRaw.logicFields.last_node_and_answer"},"academy life 1-9"]},{"or":[{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},1]},{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},2]}]}]}'::jsonb
   )
 ON CONFLICT (ru_id) DO UPDATE
 SET name = EXCLUDED.name,
@@ -43009,17 +45217,19 @@ VALUES
   ('wcc_past_academy_life', 'wcc_past_mentor_personality', 'wcc_past_academy_life_o0302', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0406', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0407', NULL, 2),
-  ('wcc_past_academy_life', 'wcc_life_events_event', 'wcc_past_academy_life_o0109', NULL, 2),
+  ('wcc_past_academy_life', 'wcc_past_mentor_personality', 'wcc_past_academy_life_o0109', (SELECT ru_id FROM rules WHERE name = 'is_mage_mentor_personality_missing' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_past_academy_life', 'wcc_life_events_event', 'wcc_past_academy_life_o0109', (SELECT ru_id FROM rules WHERE name = 'is_mage_mentor_personality_present' ORDER BY ru_id LIMIT 1), 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'magic_academy_life_counter_le_19'), 1),
   ('wcc_past_academy_life', 'wcc_mage_events_risk', NULL, NULL, 0),
 
   -- from: wcc_past_academy_life_details
-  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse', 'wcc_past_academy_life_o010706', NULL, 2),
-  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_past_academy_life_o010701', NULL, 2),
+  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse', 'wcc_past_academy_life_o011006', NULL, 2),
+  ('wcc_past_academy_life_details', 'wcc_life_events_fortune_or_not_details_curse_monstrosity', 'wcc_past_academy_life_o011001', NULL, 2),
   ('wcc_past_academy_life_details', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
   ('wcc_past_academy_life_details', 'wcc_past_academy_life', NULL, NULL, 0),
 
   -- from: wcc_past_mentor_relationship_end
+  ('wcc_past_mentor_relationship_end', 'wcc_life_events_event', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_event_from_academy_life_1_9' ORDER BY ru_id LIMIT 1), 2),
   ('wcc_past_mentor_relationship_end', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
   ('wcc_past_mentor_relationship_end', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 1),
 
@@ -43085,6 +45295,7 @@ VALUES
   ('wcc_past_academy_life', 'wcc_mage_events_enemy_how_far', 'wcc_past_academy_life_o0103', NULL, 2),
 
   -- from: wcc_mage_events_danger
+  ('wcc_mage_events_danger', 'wcc_mage_events_outcome', NULL, NULL, 0),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0101', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0102', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0104', NULL, 1),
@@ -43096,11 +45307,14 @@ VALUES
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0208', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0301', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0302', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0309', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0310', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0403', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_danger_details', 'wcc_mage_events_danger_o0410', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_enemy_position', 'wcc_mage_events_danger_o0205', NULL, 1),
   ('wcc_mage_events_danger', 'wcc_mage_events_enemy_position', 'wcc_mage_events_danger_o0209', NULL, 1),
+  ('wcc_mage_events_danger', 'wcc_mage_events_enemy_position', 'wcc_mage_events_danger_o0203', (SELECT ru_id FROM rules WHERE name = 'is_not_there_a_friend' ORDER BY ru_id LIMIT 1), 2),
+  ('wcc_mage_events_danger', 'wcc_mage_events_ally_position', 'wcc_mage_events_danger_o0204', (SELECT ru_id FROM rules WHERE name = 'is_not_there_a_friend' ORDER BY ru_id LIMIT 1), 2),
 
   -- from: wcc_mage_events_danger_details
   ('wcc_mage_events_danger_details', 'wcc_mage_events_danger_details_2', 'wcc_mage_events_danger_details_o010502', NULL, 1),
@@ -43121,6 +45335,8 @@ VALUES
 
   -- from: wcc_mage_events_enemy_the_power
   ('wcc_mage_events_enemy_the_power', 'wcc_mage_events_outcome', NULL, NULL, 0),
+  ('wcc_mage_events_enemy_the_power', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_mage_events_enemy_the_power', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
 
   -- from: wcc_mage_events_outcome
   ('wcc_mage_events_outcome', 'wcc_mage_events_ally_position', 'wcc_mage_events_outcome_o0103', NULL, 1),
@@ -43140,6 +45356,10 @@ VALUES
 
   -- from: wcc_mage_events_ally_closeness
   ('wcc_mage_events_ally_closeness', 'wcc_mage_events_ally_value', NULL, NULL, 0),
+  
+  -- from: wcc_mage_events_ally_value
+  ('wcc_mage_events_ally_value', 'wcc_past_academy_life', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_1' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_mage_events_ally_value', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_academy_life_flag_eq_2' ORDER BY ru_id LIMIT 1), 1),
 
   -- from: wcc_life_events_fortune_or_not_details_curse
   ('wcc_life_events_fortune_or_not_details_curse', 'wcc_mage_events_outcome', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_outcome_from_life_events_4_10' ORDER BY ru_id LIMIT 1), 2),

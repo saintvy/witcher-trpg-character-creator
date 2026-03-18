@@ -149,6 +149,7 @@ SELECT
             'academy life 1-3',
             'academy life 2-6',
             'academy life 3-6',
+            'life events 2-3',
             'life events 2-5',
             'life events 2-9'
           )
@@ -161,6 +162,44 @@ SELECT
       jsonb_build_object(
         'gender', '',
         'victim', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_victim'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
+        'position', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_position'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
+        'cause', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_cause'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
+        'power_level', '',
+        'how_far', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_how_far'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
+        'the_power', jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field || '_value')::text)
+      )
+    )
+  )
+FROM vals
+CROSS JOIN meta;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_mage_events_enemy_the_power' AS qu_id
+                , 'answer_options' AS entity
+                , 'label' AS entity_field)
+, vals AS (
+    SELECT num FROM (VALUES (1), (2), (3), (4), (5)) AS v(num)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_mage_events_enemy_the_power_o' || to_char(vals.num, 'FM0000'),
+  jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      '==',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+        'life events 2-3'
+      )
+    ),
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.enemies'),
+      jsonb_build_object(
+        'gender', '',
+        'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0001.answer_options.label_value')::text),
         'position', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_position'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
         'cause', jsonb_build_object('i18n_uuid', jsonb_build_object('ck_id', jsonb_build_object('cat', jsonb_build_array('witcher_cc.', jsonb_build_object('reduce', jsonb_build_array(jsonb_build_object('var', 'answers.byQuestion.wcc_mage_events_enemy_cause'), jsonb_build_object('var', 'current'), NULL)), '.answer_options.label_value')))),
         'power_level', '',

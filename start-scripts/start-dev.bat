@@ -60,7 +60,10 @@ if "%COMPOSE_MODE%"=="plugin" (
 exit /b %errorlevel%
 
 :ensure_db
-call :compose -f "%COMPOSE_FILE%" ps --status running %SERVICE_NAME% | findstr /I "running" >nul 2>&1
+set "PS_OUT=%TEMP%\witcher_start_dev_ps.txt"
+call :compose -f "%COMPOSE_FILE%" ps --status running %SERVICE_NAME% >"%PS_OUT%" 2>&1
+findstr /I "running" "%PS_OUT%" >nul 2>&1
+del "%PS_OUT%" >nul 2>&1
 if %errorlevel%==0 (
   echo [start-dev] Database container already running.
   goto :eof
@@ -71,22 +74,13 @@ exit /b %errorlevel%
 
 :wait_db_ready
 echo [start-dev] Waiting for database readiness...
-set "READY="
-for /L %%i in (1,1,30) do (
-  call :compose -f "%COMPOSE_FILE%" exec -T %SERVICE_NAME% pg_isready -U %POSTGRES_USER% -d %POSTGRES_DB% >nul 2>&1
-  if !errorlevel! == 0 (
-    set "READY=1"
-    goto :ready_ok
-  )
-  timeout /t 1 /nobreak >nul
+call :compose -f "%COMPOSE_FILE%" up -d --wait %SERVICE_NAME%
+if %errorlevel%==0 (
+  echo [start-dev] Database is ready.
+  exit /b 0
 )
-:ready_ok
-if not defined READY (
-  echo [start-dev] Database failed to become ready within 30 seconds.
-  exit /b 1
-)
-echo [start-dev] Database is ready.
-exit /b 0
+echo [start-dev] Database failed to become ready.
+exit /b 1
 
 :seed_db
 if not exist "%DB_DIR%\seed.sh" (

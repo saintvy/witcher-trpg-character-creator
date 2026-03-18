@@ -332,6 +332,7 @@ CROSS JOIN meta
 WHERE NOT (
   (options.group_id = 1 AND options.num = 10) OR
   (options.group_id = 2 AND options.num = 8) OR
+  (options.group_id = 3 AND options.num = 7) OR
   (options.group_id = 4 AND options.num IN (6, 7))
 );
 

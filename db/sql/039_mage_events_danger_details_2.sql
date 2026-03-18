@@ -191,3 +191,112 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details_2' AS qu_id
+  )
+, event_desc_vals(lang, group_id, num, text) AS (
+    SELECT 'ru' AS lang,
+           10502 AS group_id,
+           gs.num,
+           'Несчастный случай: Прикованы к постели на ' ||
+           gs.num::text || ' ' ||
+           CASE
+             WHEN gs.num = 1 THEN 'год.'
+             WHEN gs.num BETWEEN 2 AND 4 THEN 'года.'
+             ELSE 'лет.'
+           END AS text
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+
+    SELECT 'en' AS lang,
+           10502 AS group_id,
+           gs.num,
+           'Accident: Bedridden for ' ||
+           gs.num::text || ' ' ||
+           CASE WHEN gs.num = 1 THEN 'year.' ELSE 'years.' END AS text
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+
+    SELECT 'ru' AS lang,
+           10503 AS group_id,
+           gs.num,
+           'Несчастный случай: Потеря памяти о ' ||
+           gs.num::text || ' ' ||
+           CASE
+             WHEN gs.num = 1 THEN 'годе.'
+             ELSE 'годах.'
+           END || ' из этой декады.' AS text
+      FROM generate_series(1, 10) AS gs(num)
+
+    UNION ALL
+
+    SELECT 'en' AS lang,
+           10503 AS group_id,
+           gs.num,
+           'Accident: Lost memories of ' ||
+           gs.num::text || ' ' ||
+           CASE WHEN gs.num = 1 THEN 'year' ELSE 'years' END || ' from this decade.' AS text
+      FROM generate_series(1, 10) AS gs(num)
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(event_desc_vals.group_id, 'FM00000') || to_char(event_desc_vals.num, 'FM00') ||'.event_desc')
+     , 'character'
+     , 'event_desc'
+     , event_desc_vals.lang
+     , event_desc_vals.text
+  FROM event_desc_vals
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_mage_events_danger_details_2' AS qu_id
+  )
+, event_effects AS (
+    SELECT an_id
+      FROM answer_options
+     CROSS JOIN meta
+     WHERE qu_qu_id = meta.qu_id
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character'
+     , event_effects.an_id
+     , jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object(
+                     '+',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                       10
+                     )
+                   )
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.wcc_mage_events_danger.life_event_type.danger')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| event_effects.an_id ||'.event_desc')::text)
+           )
+         )
+       )
+  FROM event_effects
+ CROSS JOIN meta;

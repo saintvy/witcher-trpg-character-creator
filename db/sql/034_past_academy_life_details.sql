@@ -186,12 +186,12 @@ WITH
     SELECT 'ru' AS lang, v.*
       FROM (VALUES
         -- Group 1: details for o0110/o0208/o0407
-        ('wcc_past_academy_life_o010701', 1, 0.2::numeric, '<b>Проклятие чудовищности</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010702', 2, 0.2::numeric, '<b>Проклятие призраков</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010703', 3, 0.2::numeric, '<b>Проклятие заразы</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010704', 4, 0.2::numeric, '<b>Проклятие странника</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010705', 5, 0.2::numeric, '<b>Проклятие ликантропии</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010706', 6, 0.0::numeric, '<b>Другое проклятие</b> (кастомное)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011001', 1, 0.2::numeric, '<b>Проклятие чудовищности</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011002', 2, 0.2::numeric, '<b>Проклятие призраков</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011003', 3, 0.2::numeric, '<b>Проклятие заразы</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011004', 4, 0.2::numeric, '<b>Проклятие странника</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011005', 5, 0.2::numeric, '<b>Проклятие ликантропии</b> (Интенсивность: Высокая)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011006', 6, 0.0::numeric, '<b>Другое проклятие</b> (кастомное)', 'is_academy_life_details_from_curse'),
 
         -- Group 2: details for o0207
         ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 100 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
@@ -254,12 +254,12 @@ WITH
     SELECT 'en' AS lang, v.*
       FROM (VALUES
         -- Group 1: details for o0110/o0208/o0407
-        ('wcc_past_academy_life_o010701', 1, 0.2::numeric, '<b>Curse of Monstrosity</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010702', 2, 0.2::numeric, '<b>Curse of Phantoms</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010703', 3, 0.2::numeric, '<b>Curse of Pestilence</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010704', 4, 0.2::numeric, '<b>Curse of the Wanderer</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010705', 5, 0.2::numeric, '<b>Curse of Lycanthropy</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
-        ('wcc_past_academy_life_o010706', 6, 0.0::numeric, '<b>Other Curse</b> (custom)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011001', 1, 0.2::numeric, '<b>Curse of Monstrosity</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011002', 2, 0.2::numeric, '<b>Curse of Phantoms</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011003', 3, 0.2::numeric, '<b>Curse of Pestilence</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011004', 4, 0.2::numeric, '<b>Curse of the Wanderer</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011005', 5, 0.2::numeric, '<b>Curse of Lycanthropy</b> (Intensity: High)', 'is_academy_life_details_from_curse'),
+        ('wcc_past_academy_life_o011006', 6, 0.0::numeric, '<b>Other Curse</b> (custom)', 'is_academy_life_details_from_curse'),
 
         -- Group 2: details for o0207
         ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 100 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
@@ -356,7 +356,7 @@ SELECT vals.an_id
      , (SELECT ru_id FROM rules WHERE name = vals.rule_name ORDER BY ru_id LIMIT 1)
      , jsonb_build_object('probability', vals.probability)
        || CASE
-            WHEN vals.an_id IN ('wcc_past_academy_life_o010701', 'wcc_past_academy_life_o010706')
+            WHEN vals.an_id IN ('wcc_past_academy_life_o011001', 'wcc_past_academy_life_o011006')
               THEN '{}'::jsonb
             ELSE jsonb_build_object('counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10))
           END
@@ -455,7 +455,7 @@ WITH curse_mapping AS (
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
   'character',
-  'wcc_past_academy_life_o0107' || to_char(curse_mapping.num, 'FM00'),
+  'wcc_past_academy_life_o0110' || to_char(curse_mapping.num, 'FM00'),
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -469,6 +469,48 @@ SELECT
     )
   )
 FROM curse_mapping;
+
+-- Effects: save curse detail choices to academy life events
+WITH curse_event_mapping(detail_num, source_num) AS (
+  VALUES
+    (1, 1),
+    (2, 2),
+    (3, 3),
+    (4, 4),
+    (5, 5)
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0110' || to_char(curse_event_mapping.detail_num, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_fortune_or_not_details_o' || to_char(2000 + curse_event_mapping.source_num, 'FM0000') || '.event_desc')::text)
+      )
+    )
+  )
+FROM curse_event_mapping;
 
 -- Effects: crowns for o0207 details
 WITH crowns_vals AS (

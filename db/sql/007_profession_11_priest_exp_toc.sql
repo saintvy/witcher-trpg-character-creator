@@ -711,3 +711,67 @@ SELECT
     )
   ) AS body
 FROM meta;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id
+         , 'wcc_profession' AS qu_id
+         , 'character' AS entity
+  )
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.o11.social_status_vocation.' || v.key)
+     , meta.entity
+     , 'social_status_vocation_group'
+     , v.lang
+     , v.text
+  FROM (VALUES
+    ('same_faith',   'ru', 'Единоверцы'),
+    ('same_faith',   'en', 'Followers of the Same Faith'),
+    ('other_faiths', 'ru', 'Иноверцы и атеисты'),
+    ('other_faiths', 'en', 'Other Faiths and Atheists'),
+    ('magic_haters', 'ru', 'Ненавистники магии и моего бога'),
+    ('magic_haters', 'en', 'Haters of Magic and My God')
+  ) AS v(key, lang, text)
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_profession_o11',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o11.social_status_vocation.same_faith')::text),
+        'group_status', 3,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o11',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o11.social_status_vocation.other_faiths')::text),
+        'group_status', 2,
+        'group_is_feared', false
+      )
+    )
+  )
+UNION ALL
+SELECT 'character', 'wcc_profession_o11',
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.social_status_vocation'),
+      jsonb_build_object(
+        'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_profession.o11.social_status_vocation.magic_haters')::text),
+        'group_status', 1,
+        'group_is_feared', false
+      )
+    )
+  );

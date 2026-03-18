@@ -25,6 +25,208 @@ function resolveDefaultCharacterPath(): string {
 const defaultCharacterPath = resolveDefaultCharacterPath();
 const defaultCharacter = JSON.parse(fs.readFileSync(defaultCharacterPath, 'utf-8'));
 
+const WCC_FRIEND_EFFECT_PROCESSED_PROP = '__wcc_friend_effect_processed';
+const FRIEND_CLOSENESS_UUIDS = new Set<string>([
+  ck_id('witcher_cc.wcc_mage_events_ally_closeness_o0002.answer_options.label_value'),
+  ck_id('witcher_cc.wcc_mage_events_ally_closeness_o0003.answer_options.label_value'),
+  ck_id('witcher_cc.wcc_witcher_events_ally_closeness_o02.answer_options.label_value'),
+  ck_id('witcher_cc.wcc_witcher_events_ally_closeness_o03.answer_options.label_value'),
+]);
+const ALLY_WAS_KILLED_UUID = ck_id('witcher_cc.common.ally_status.was_killed');
+const ENEMY_VICTIM_YOU_UUID = ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0001.answer_options.label_value');
+const MAGE_ENEMY_HOW_FAR_UUIDS = Array.from({ length: 10 }, (_, index) =>
+  ck_id(`witcher_cc.wcc_mage_events_enemy_how_far_o${String(index + 1).padStart(4, '0')}.answer_options.label_value`),
+);
+const TRAITOR_CAUSE_BY_HOW_MET_UUID = new Map<string, string>([
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0001.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_01')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0002.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_02')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0003.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_03')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0004.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_04')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0005.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_05')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0006.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_06')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0007.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_07')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0008.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_08')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0009.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_09')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_how_met_o0010.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_10')],
+  [ck_id('witcher_cc.wcc_mage_events_ally_value.how_met_academy_life_3_8'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_mage_11')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o01.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_01')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o02.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_02')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o03.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_03')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o04.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_04')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o05.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_05')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o06.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_06')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o07.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_07')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o08.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_08')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o09.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_09')],
+  [ck_id('witcher_cc.wcc_witcher_events_ally_how_met_o10.answer_options.label_value'), ck_id('witcher_cc.wcc_mage_events_danger.traitor_cause_witcher_10')],
+]);
+
+function extractI18nUuid(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    return UUID_PATTERN.test(value) ? value : undefined;
+  }
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const obj = value as Record<string, unknown>;
+    if (typeof obj.i18n_uuid === 'string') {
+      return obj.i18n_uuid;
+    }
+  }
+  return undefined;
+}
+
+function cloneJsonValue<T>(value: T): T {
+  if (value === undefined) return value;
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function getAlliesArray(state: SurveyState): Record<string, unknown>[] {
+  const allies = getAtPath(state, 'characterRaw.allies');
+  return Array.isArray(allies)
+    ? allies.filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item))
+    : [];
+}
+
+function hasFriendEffectProcessed(state: SurveyState): boolean {
+  return Boolean((state as any)[WCC_FRIEND_EFFECT_PROCESSED_PROP]);
+}
+
+function setFriendEffectProcessed(state: SurveyState, value: boolean): void {
+  (state as any)[WCC_FRIEND_EFFECT_PROCESSED_PROP] = value;
+}
+
+function findFriendCandidates(
+  state: SurveyState,
+  requireTraitorMapping = false,
+): Array<{ index: number; ally: Record<string, unknown>; howMetUuid?: string }> {
+  return getAlliesArray(state)
+    .map((ally, index) => ({ ally, index, howMetUuid: extractI18nUuid(ally.how_met) }))
+    .filter(({ ally, howMetUuid }) => {
+      const closenessUuid = extractI18nUuid(ally.how_close);
+      if (!closenessUuid || !FRIEND_CLOSENESS_UUIDS.has(closenessUuid)) {
+        return false;
+      }
+      if (Object.prototype.hasOwnProperty.call(ally, 'is_alive') && ally.is_alive !== undefined && ally.is_alive !== null) {
+        return false;
+      }
+      if (requireTraitorMapping && (!howMetUuid || !TRAITOR_CAUSE_BY_HOW_MET_UUID.has(howMetUuid))) {
+        return false;
+      }
+      return true;
+    });
+}
+
+function pickRandomEntry<T>(state: SurveyState, items: T[]): T | null {
+  if (!items.length) return null;
+  const index = rollDieDeterministic(state, items.length) - 1;
+  return items[index] ?? null;
+}
+
+function hasFriendCandidate(state: SurveyState): boolean {
+  return hasFriendEffectProcessed(state) || findFriendCandidates(state).length > 0;
+}
+
+function killFriend(state: SurveyState): void {
+  const candidate = pickRandomEntry(state, findFriendCandidates(state));
+  if (!candidate) {
+    return;
+  }
+
+  candidate.ally.is_alive = { i18n_uuid: ALLY_WAS_KILLED_UUID };
+  setFriendEffectProcessed(state, true);
+}
+
+function addEnemyToState(state: SurveyState, enemy: Record<string, unknown>): void {
+  const existing = getAtPath(state, 'characterRaw.enemies');
+  if (Array.isArray(existing)) {
+    existing.push(enemy);
+    return;
+  }
+  if (existing === undefined) {
+    setAtPath(state as Record<string, unknown>, 'characterRaw.enemies', [enemy]);
+    return;
+  }
+  setAtPath(state as Record<string, unknown>, 'characterRaw.enemies', [existing, enemy]);
+}
+
+function makeTraitor(state: SurveyState): void {
+  const allies = getAtPath(state, 'characterRaw.allies');
+  if (!Array.isArray(allies)) {
+    return;
+  }
+
+  const candidate = pickRandomEntry(state, findFriendCandidates(state, true));
+  if (!candidate || !candidate.howMetUuid) {
+    return;
+  }
+
+  const causeUuid = TRAITOR_CAUSE_BY_HOW_MET_UUID.get(candidate.howMetUuid);
+  if (!causeUuid) {
+    return;
+  }
+
+  const howFarUuid = pickRandomEntry(state, MAGE_ENEMY_HOW_FAR_UUIDS);
+  if (!howFarUuid) {
+    return;
+  }
+
+  const power = cloneJsonValue(candidate.ally.value ?? candidate.ally.where ?? '');
+  const position = cloneJsonValue(candidate.ally.position ?? '');
+
+  const enemy: Record<string, unknown> = {
+    gender: '',
+    victim: { i18n_uuid: ENEMY_VICTIM_YOU_UUID },
+    position,
+    cause: { i18n_uuid: causeUuid },
+    power_level: '',
+    how_far: { i18n_uuid: howFarUuid },
+    the_power: power,
+  };
+
+  allies.splice(candidate.index, 1);
+  addEnemyToState(state, enemy);
+  setFriendEffectProcessed(state, true);
+}
+
+function jsonValuesEqual(a: unknown, b: unknown): boolean {
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+}
+
+function addUniqueValueToPath(state: SurveyState, path: string, value: unknown): void {
+  const existing = getAtPath(state, path);
+  if (Array.isArray(existing)) {
+    if (!existing.some((item) => jsonValuesEqual(item, value))) {
+      existing.push(value);
+    }
+    return;
+  }
+
+  if (existing === undefined) {
+    setAtPath(state as Record<string, unknown>, path, [value]);
+    return;
+  }
+
+  if (!jsonValuesEqual(existing, value)) {
+    setAtPath(state as Record<string, unknown>, path, [existing, value]);
+  }
+}
+
+function markAllSocialStatusFeared(state: SurveyState): void {
+  const socialStatus = getAtPath(state, 'characterRaw.social_status');
+  if (!Array.isArray(socialStatus)) {
+    return;
+  }
+
+  for (const entry of socialStatus) {
+    if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+      (entry as Record<string, unknown>).group_is_feared = true;
+    }
+  }
+}
+
 function rollDie(sides: number): number {
   const safeSides = Number.isFinite(sides) && sides > 0 ? Math.floor(sides) : 1;
   return Math.floor(Math.random() * safeSides) + 1;
@@ -705,6 +907,7 @@ jsonLogic.add_operation('ck_id', (src: unknown): string => {
 // Dice operations: random integer 1..6 and 1..10
 jsonLogic.add_operation('d6', () => currentJsonLogicState ? rollDieDeterministic(currentJsonLogicState, 6) : rollDie(6));
 jsonLogic.add_operation('d10', () => currentJsonLogicState ? rollDieDeterministic(currentJsonLogicState, 10) : rollDie(10));
+jsonLogic.add_operation('is_there_a_friend', () => currentJsonLogicState ? hasFriendCandidate(currentJsonLogicState) : false);
 
 // Register cat_array operation in jsonLogic
 // Extracts values from nested arrays using a path with [] syntax
@@ -1602,7 +1805,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
       if (row.via_an_an_id && !selected.has(row.via_an_an_id)) {
         continue;
       }
-      if (row.rule && !jsonLogic.apply(row.rule, state)) {
+      if (row.rule && !evaluateJsonLogicExpression(row.rule, state)) {
         continue;
       }
       nextQuestionId = row.to_qu_qu_id;
@@ -1847,7 +2050,7 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
           return true;
         }
         try {
-          return Boolean(jsonLogic.apply(visibleRule, state));
+          return Boolean(evaluateJsonLogicExpression(visibleRule, state));
         } catch (error) {
           console.error('[survey] option visibility', option.id, error);
           return false;
@@ -1950,6 +2153,8 @@ export async function getNextQuestion(payload: NextQuestionRequest): Promise<Nex
         lastAnswer.value = answer.value;
       }
       answersIndex.lastAnswer = lastAnswer;
+
+      setFriendEffectProcessed(currentState, false);
       
       for (const answerId of answer.answerIds) {
         answersIndex.byAnswer[answerId] = true;
@@ -2156,7 +2361,7 @@ function fetchAnswerOptions(
       return true;
     }
     try {
-      return Boolean(jsonLogic.apply(visibleRule, state));
+      return Boolean(evaluateJsonLogicExpression(visibleRule, state));
     } catch (error) {
       console.error('[survey] option visibility', option.id, error);
       return false;
@@ -2188,7 +2393,7 @@ function resolveNextQuestionId(
     if (transition.viaAnswerId && !selected.has(transition.viaAnswerId)) {
       continue;
     }
-    if (transition.rule && !jsonLogic.apply(transition.rule, state)) {
+    if (transition.rule && !evaluateJsonLogicExpression(transition.rule, state)) {
       continue;
     }
     return transition.toQuestionId;
@@ -2264,6 +2469,8 @@ function deriveStateFromStateData(
       lastAnswer.value = entry.value;
     }
     answersIndex.lastAnswer = lastAnswer;
+
+    setFriendEffectProcessed(state, false);
 
     // 5. Apply value target (using current state)
     if (entry.value !== undefined) {
@@ -3466,6 +3673,8 @@ function deriveState(
     }
     answersIndex.lastAnswer = lastAnswer;
 
+    setFriendEffectProcessed(state, false);
+
     // 5. Apply value target (using current state)
     if (entry.value !== undefined) {
       applyValueTarget(entry.value, questionMeta, state);
@@ -3795,6 +4004,30 @@ function applyEffect(
     } else {
       setAtPath(state, path, [existing, evaluatedValue]);
     }
+    return;
+  }
+
+  if ('add_unique' in effect) {
+    const [target, valueExpr] = normalisePair((effect as Record<string, unknown>).add_unique);
+    const path = extractPath(target);
+    const evaluatedValue = evaluateEffectValue(valueExpr);
+    addUniqueValueToPath(state, path, evaluatedValue);
+    return;
+  }
+
+  if ('kill_a_friend' in effect) {
+    killFriend(state);
+    return;
+  }
+
+  if ('make_a_traitor' in effect) {
+    makeTraitor(state);
+    return;
+  }
+
+  if ('set_all_social_status_feared' in effect) {
+    markAllSocialStatusFeared(state);
+    return;
   }
 }
 
