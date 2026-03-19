@@ -18,7 +18,7 @@ export default function HomePage() {
       news: [
         {
           title: "March 6, 2026: Two professions from DLC",
-          text: "Added the professions Aristocrat (DLC \"Lords and Lands\") and Peasant (DLC \"Peasant\").",
+          text: "Added the professions Noble (DLC \"Lords and Lands\") and Peasant (DLC \"Peasant\").",
         },
         {
           title: "March 5, 2026: DLC races",
@@ -77,7 +77,7 @@ export default function HomePage() {
     <>
       <Topbar title={t.title} subtitle={t.subtitle} />
       <section className="content" suppressHydrationWarning>
-        <div
+        <h1
           style={{
             color: accentColor,
             fontSize: 28,
@@ -89,7 +89,11 @@ export default function HomePage() {
           }}
         >
           {t.greetingTitle}
-        </div>
+        </h1>
+        {/* Visually hidden text for SEO indexing */}
+        <span style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0, 0, 0, 0)", whiteSpace: "nowrap", borderWidth: 0 }}>
+          {lang === "en" ? "Witcher Character Creator, Witcher TTRPG, Character Generator" : "Генератор персонажей Ведьмак НРИ"}
+        </span>
 
         <div className="card">
           <p
@@ -105,7 +109,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div
+        <h2
           style={{
             color: accentColor,
             fontSize: 24,
@@ -116,7 +120,7 @@ export default function HomePage() {
           }}
         >
           {t.whatsNew}
-        </div>
+        </h2>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {t.news.map((item, index) => (
