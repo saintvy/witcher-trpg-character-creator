@@ -37,6 +37,21 @@ VALUES
     ck_id('witcher_cc.rules.is_mage_academy_life_flag_eq_3_and_counter_valid'),
     'is_mage_academy_life_flag_eq_3_and_counter_valid',
     '{"and":[{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},3]},{"<":[{"var":"counters.lifeEventsCounter"},{"var":"characterRaw.age"}]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_benefit_not_profit_1_and_counter_valid'),
+    'is_mage_benefit_not_profit_1_and_counter_valid',
+    '{"and":[{"<":[{"var":"counters.lifeEventsCounter"},{"var":"characterRaw.age"}]},{"!=":[{"reduce":[{"var":["answers.byQuestion.wcc_mage_events_benefit",[]]},{"var":"current"},null]},"wcc_mage_events_benefit_o0001"]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_profit_1_and_academy_4_counter_valid'),
+    'is_profit_1_and_academy_4_counter_valid',
+    '{"and":[{"==":[{"var":"characterRaw.logicFields.last_node_and_answer"},"Profit 1"]},{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},4]},{"<":[{"var":"counters.lifeEventsCounter"},{"var":"characterRaw.age"}]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_profit_1_and_academy_4_counter_exhausted'),
+    'is_profit_1_and_academy_4_counter_exhausted',
+    '{"and":[{"==":[{"var":"characterRaw.logicFields.last_node_and_answer"},"Profit 1"]},{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},4]},{">=":[{"var":"counters.lifeEventsCounter"},{"var":"characterRaw.age"}]}]}'::jsonb
   )
 ON CONFLICT (ru_id) DO UPDATE
 SET name = EXCLUDED.name,
@@ -196,6 +211,7 @@ VALUES
   ('wcc_mage_events_outcome', 'wcc_mage_events_knowledge', 'wcc_mage_events_outcome_o0404', NULL, 1),
 
   -- from: wcc_mage_events_benefit
+  ('wcc_mage_events_benefit', 'wcc_mage_events_ally_closeness', 'wcc_mage_events_benefit_o0001', NULL, 1),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0002', NULL, 2),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0003', NULL, 2),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0004', NULL, 2),
@@ -203,7 +219,7 @@ VALUES
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0006', NULL, 2),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0007', NULL, 2),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0009', NULL, 2),
-  ('wcc_mage_events_benefit', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_mage_events_benefit', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_benefit_not_profit_1_and_counter_valid' ORDER BY ru_id LIMIT 1), 1),
   ('wcc_mage_events_benefit', 'wcc_style_clothing', NULL, NULL, 0),
 
   -- from: wcc_mage_events_benefit_details
@@ -238,7 +254,7 @@ VALUES
   ('wcc_mage_events_benefit_details_2', 'wcc_style_clothing', NULL, NULL, 0),
 
   -- from: wcc_mage_events_knowledge
-  ('wcc_mage_events_knowledge', 'wcc_mage_events_knowledge_details', 'wcc_mage_events_knowledge_o0010', NULL, 1),
+  ('wcc_mage_events_knowledge', 'wcc_mage_events_knowledge_details', 'wcc_mage_events_knowledge_o0010', NULL, 3),
   ('wcc_mage_events_knowledge', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid' ORDER BY ru_id LIMIT 1), 2),
   ('wcc_mage_events_knowledge', 'wcc_style_clothing', NULL, NULL, 0),
 
@@ -257,6 +273,8 @@ VALUES
   ('wcc_past_academy_life', 'wcc_mage_events_ally_closeness', 'wcc_past_academy_life_o0308', NULL, 1),
 
   -- from: wcc_mage_events_ally_closeness
+  ('wcc_mage_events_ally_closeness', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_profit_1_and_academy_4_counter_valid' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_mage_events_ally_closeness', 'wcc_style_clothing', NULL, (SELECT ru_id FROM rules WHERE name = 'is_profit_1_and_academy_4_counter_exhausted' ORDER BY ru_id LIMIT 1), 1),
   ('wcc_mage_events_ally_closeness', 'wcc_mage_events_ally_value', NULL, NULL, 0),
   
   -- from: wcc_mage_events_ally_value

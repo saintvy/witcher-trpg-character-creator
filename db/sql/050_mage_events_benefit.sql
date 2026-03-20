@@ -85,6 +85,17 @@ SET body = EXCLUDED.body,
     qtype = EXCLUDED.qtype,
     metadata = EXCLUDED.metadata;
 
+INSERT INTO rules (ru_id, name, body)
+VALUES
+  (
+    ck_id('witcher_cc.rules.is_mage_events_benefit_not_selected_10'),
+    'is_mage_events_benefit_not_selected_10',
+    '{"!":{"in":["wcc_mage_events_benefit_o0010",{"var":["answers.byQuestion.wcc_mage_events_benefit",[]]}]}}'::jsonb
+  )
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
 WITH
   meta AS (
     SELECT 'witcher_cc' AS su_su_id,
@@ -128,10 +139,13 @@ WITH
            num,
            probability,
            CASE WHEN num IN (1, 8, 10)
+                AND num NOT IN (1)
                 THEN jsonb_build_object(
                        'probability', probability,
                        'counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10)
                      )
+                WHEN num = 1
+                THEN jsonb_build_object('probability', probability)
                 ELSE jsonb_build_object('probability', probability)
             END AS metadata,
            '<td style="color: grey;">' || to_char(probability * 100, 'FM990.00') || '%</td><td><b>' || head || '</b><br>' || txt || '</td>' AS text
@@ -149,11 +163,16 @@ WITH
     ON CONFLICT (id, lang) DO UPDATE
     SET text = EXCLUDED.text
   )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, visible_ru_ru_id, sort_order, metadata)
 SELECT 'wcc_mage_events_benefit_o' || to_char(vals.num, 'FM0000'),
        meta.su_su_id,
        meta.qu_id,
        ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+       CASE
+         WHEN vals.num = 10
+           THEN (SELECT ru_id FROM rules WHERE name = 'is_mage_events_benefit_not_selected_10' ORDER BY ru_id LIMIT 1)
+         ELSE NULL
+       END,
        vals.num,
        vals.metadata
   FROM vals
@@ -161,5 +180,115 @@ SELECT 'wcc_mage_events_benefit_o' || to_char(vals.num, 'FM0000'),
  WHERE vals.lang = 'ru'
 ON CONFLICT (an_id) DO UPDATE
 SET label = EXCLUDED.label,
+    visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.wcc_mage_events_benefit.event_type_benefit'), 'character', 'event_type', 'ru', 'Выгода'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.event_type_benefit'), 'character', 'event_type', 'en', 'Benefit'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0001.event_desc'), 'character', 'event_desc', 'ru', 'Союзник (Маг)'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0001.event_desc'), 'character', 'event_desc', 'en', 'Ally (Mage)'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0008.event_desc'), 'character', 'event_desc', 'ru', 'Тренировки в боевой магии, [+1 к Сопротивлению магии]'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0008.event_desc'), 'character', 'event_desc', 'en', 'Battle magic training, [+1 to Resist Magic]'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0010.event_desc'), 'character', 'event_desc', 'ru', 'Научился колдовать в доспехах'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0010.event_desc'), 'character', 'event_desc', 'en', 'Learned to cast in armor'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_name'), 'character', 'perk_name', 'ru', 'Колдовство в доспехах'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_name'), 'character', 'perk_name', 'en', 'Armored Casting'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_desc'), 'character', 'perk_desc', 'ru', '-1 к Скованности Движений доспеха при использовании магии'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_desc'), 'character', 'perk_desc', 'en', '-1 Encumbrance of armor when using magic')
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_benefit' AS qu_id
+  ),
+  event_vals(num) AS (
+    VALUES (1), (8), (10)
+  )
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       meta.qu_id || '_o' || to_char(event_vals.num, 'FM0000'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var','counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object('+', jsonb_build_array(
+                     jsonb_build_object('var','counters.lifeEventsCounter'),
+                     10
+                   ))
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '.event_type_benefit')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(event_vals.num, 'FM0000') || '.event_desc')::text)
+           )
+         )
+       )
+  FROM meta
+  CROSS JOIN event_vals;
+
+INSERT INTO effects (scope, an_an_id, body)
+VALUES
+  (
+    'character',
+    'wcc_mage_events_benefit_o0001',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+        'Profit 1'
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_benefit_o0001',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+        4
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_benefit_o0008',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.common.resist_magic.bonus'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_benefit_o0010',
+    jsonb_build_object(
+      'add_unique',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.perks'),
+        jsonb_build_object(
+          'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_name')::text),
+          'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_desc')::text)
+        )
+      )
+    )
+  )
+ON CONFLICT DO NOTHING;

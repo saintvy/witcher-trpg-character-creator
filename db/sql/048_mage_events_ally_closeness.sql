@@ -33,6 +33,35 @@ SELECT meta.qu_id,
        'single_table',
        jsonb_build_object(
          'dice', 'd_weighed',
+         'counterIncrement', jsonb_build_object(
+           'jsonlogic_expression',
+           jsonb_build_object(
+             'if',
+             jsonb_build_array(
+               jsonb_build_object(
+                 'and',
+                 jsonb_build_array(
+                   jsonb_build_object(
+                     '==',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+                       'Profit 1'
+                     )
+                   ),
+                   jsonb_build_object(
+                     '==',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                       4
+                     )
+                   )
+                 )
+               ),
+               jsonb_build_object('id', 'lifeEventsCounter', 'step', 10),
+               NULL
+             )
+           )
+         ),
          'columns', (
            SELECT jsonb_agg(
                     ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(num, 'FM9900') || '.' || meta.entity || '.column_name')::text
@@ -116,3 +145,52 @@ ON CONFLICT (an_id) DO UPDATE
 SET label = EXCLUDED.label,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.wcc_mage_events_ally_closeness.how_met_profit_1'), 'character', 'ally_field', 'ru', 'Вы обучили его'),
+  (ck_id('witcher_cc.wcc_mage_events_ally_closeness.how_met_profit_1'), 'character', 'ally_field', 'en', 'You trained them')
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH vals AS (
+  SELECT generate_series(1, 3) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       'wcc_mage_events_ally_closeness_o' || to_char(vals.num, 'FM0000'),
+       jsonb_build_object(
+         'when',
+         jsonb_build_object(
+           'and',
+           jsonb_build_array(
+             jsonb_build_object(
+               '==',
+               jsonb_build_array(
+                 jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+                 'Profit 1'
+               )
+             ),
+             jsonb_build_object(
+               '==',
+               jsonb_build_array(
+                 jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                 4
+               )
+             )
+           )
+         ),
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.allies'),
+           jsonb_build_object(
+             'gender', '',
+             'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_position_o0008.answer_options.label_value')::text),
+             'how_met', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_closeness.how_met_profit_1')::text),
+             'how_close', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_closeness_o' || to_char(vals.num, 'FM0000') || '.answer_options.label_value')::text),
+             'where', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o0005.answer_options.label_value')::text),
+             'value', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o0005.answer_options.label_value')::text)
+           )
+         )
+       )
+  FROM vals;

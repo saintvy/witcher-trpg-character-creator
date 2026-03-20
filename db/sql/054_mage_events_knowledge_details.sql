@@ -162,3 +162,51 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+INSERT INTO effects (scope, an_an_id, body)
+VALUES
+  (
+    'character',
+    'wcc_mage_events_knowledge_details_o0001',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.hydromancy_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_details_o0002',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.pyromancy_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_details_o0003',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.tyromancy_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_details_o0004',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.oneiromancy_tokens'),
+        1
+      )
+    )
+  )
+ON CONFLICT DO NOTHING;

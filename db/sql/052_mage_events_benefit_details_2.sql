@@ -164,3 +164,114 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_benefit_details_2' AS qu_id
+  ),
+  region_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1,  'Каэдвен', 'Северные королевства', 'Kaedwen', 'Northern Kingdoms'),
+        (2,  'Ковир и Повисс', 'Северные королевства', 'Kovir and Poviss', 'Northern Kingdoms'),
+        (3,  'Редания', 'Северные королевства', 'Redania', 'Northern Kingdoms'),
+        (4,  'Аэдирн', 'Северные королевства', 'Aedirn', 'Northern Kingdoms'),
+        (5,  'Лирия и Ривия', 'Северные королевства', 'Lyria and Rivia', 'Northern Kingdoms'),
+        (6,  'Темерия', 'Северные королевства', 'Temeria', 'Northern Kingdoms'),
+        (7,  'Цидарис', 'Северные королевства', 'Cidaris', 'Northern Kingdoms'),
+        (8,  'Керак', 'Северные королевства', 'Kerack', 'Northern Kingdoms'),
+        (9,  'Вердэн', 'Северные королевства', 'Verden', 'Northern Kingdoms'),
+        (10, 'Скеллиге', 'Северные королевства', 'Skellige', 'Northern Kingdoms'),
+        (11, 'Цинтра', 'Нильфгаард', 'Cintra', 'Nilfgaard'),
+        (12, 'Ангрен', 'Нильфгаард', 'Angren', 'Nilfgaard'),
+        (13, 'Назаир', 'Нильфгаард', 'Nazair', 'Nilfgaard'),
+        (14, 'Меттина', 'Нильфгаард', 'Mettina', 'Nilfgaard'),
+        (15, 'Туссент', 'Нильфгаард', 'Toussaint', 'Nilfgaard'),
+        (16, 'Маг Турга', 'Нильфгаард', 'Mag Turga', 'Nilfgaard'),
+        (17, 'Гесо', 'Нильфгаард', 'Gheso', 'Nilfgaard'),
+        (18, 'Эббинг', 'Нильфгаард', 'Ebbing', 'Nilfgaard'),
+        (19, 'Мехт', 'Нильфгаард', 'Maecht', 'Nilfgaard'),
+        (20, 'Этолия', 'Нильфгаард', 'Etolia', 'Nilfgaard'),
+        (21, 'Геммера', 'Нильфгаард', 'Gemmera', 'Nilfgaard'),
+        (22, 'Доль Блатанна', 'Земли старших народов', 'Dol Blathanna', 'Elderlands'),
+        (23, 'Махакам', 'Земли старших народов', 'Mahakam', 'Elderlands')
+      ) AS v(group_id, ru_name, ru_group, en_name, en_group)
+  ),
+  element_vals AS (
+    SELECT * FROM (VALUES
+      (1, 'Вода', 'Water'),
+      (2, 'Воздух', 'Air'),
+      (3, 'Земля', 'Earth'),
+      (4, 'Огонь', 'Fire')
+    ) AS v(num, ru_name, en_name)
+  ),
+  event_desc_vals AS (
+    SELECT 'ru' AS lang, region_vals.group_id, element_vals.num,
+           'Нашел место силы в (' || region_vals.ru_group || ') ' || region_vals.ru_name || ' (' || element_vals.ru_name || ')' AS text
+      FROM region_vals
+      CROSS JOIN element_vals
+    UNION ALL
+    SELECT 'en', region_vals.group_id, element_vals.num,
+           'Found a Place of Power in (' || region_vals.en_group || ') ' || region_vals.en_name || ' (' || element_vals.en_name || ')'
+      FROM region_vals
+      CROSS JOIN element_vals
+  ),
+  ins_event_desc AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(100 * group_id + num, 'FM0000') || '.event_desc'),
+           'character',
+           'event_desc',
+           lang,
+           text
+      FROM event_desc_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       meta.qu_id || '_o' || to_char(100 * region_vals.group_id + element_vals.num, 'FM0000'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var','counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object('+', jsonb_build_array(
+                     jsonb_build_object('var','counters.lifeEventsCounter'),
+                     10
+                   ))
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit.event_type_benefit')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(100 * region_vals.group_id + element_vals.num, 'FM0000') || '.event_desc')::text)
+           )
+         )
+       )
+  FROM meta
+  CROSS JOIN region_vals
+  CROSS JOIN element_vals
+UNION ALL
+SELECT 'character',
+       meta.qu_id || '_o' || to_char(100 * region_vals.group_id + element_vals.num, 'FM0000'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.gear.ingredients.alchemy'),
+           jsonb_build_object('i_id','I027','sourceId','ingredients_alchemy','amount',5)
+         )
+       )
+  FROM meta
+  CROSS JOIN region_vals
+  CROSS JOIN element_vals;

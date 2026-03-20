@@ -25596,6 +25596,35 @@ SELECT meta.qu_id,
        'single_table',
        jsonb_build_object(
          'dice', 'd_weighed',
+         'counterIncrement', jsonb_build_object(
+           'jsonlogic_expression',
+           jsonb_build_object(
+             'if',
+             jsonb_build_array(
+               jsonb_build_object(
+                 'and',
+                 jsonb_build_array(
+                   jsonb_build_object(
+                     '==',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+                       'Profit 1'
+                     )
+                   ),
+                   jsonb_build_object(
+                     '==',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                       4
+                     )
+                   )
+                 )
+               ),
+               jsonb_build_object('id', 'lifeEventsCounter', 'step', 10),
+               NULL
+             )
+           )
+         ),
          'columns', (
            SELECT jsonb_agg(
                     ck_id(meta.su_su_id || '.' || meta.qu_id || '.' || to_char(num, 'FM9900') || '.' || meta.entity || '.column_name')::text
@@ -25679,6 +25708,55 @@ ON CONFLICT (an_id) DO UPDATE
 SET label = EXCLUDED.label,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.wcc_mage_events_ally_closeness.how_met_profit_1'), 'character', 'ally_field', 'ru', 'Вы обучили его'),
+  (ck_id('witcher_cc.wcc_mage_events_ally_closeness.how_met_profit_1'), 'character', 'ally_field', 'en', 'You trained them')
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH vals AS (
+  SELECT generate_series(1, 3) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       'wcc_mage_events_ally_closeness_o' || to_char(vals.num, 'FM0000'),
+       jsonb_build_object(
+         'when',
+         jsonb_build_object(
+           'and',
+           jsonb_build_array(
+             jsonb_build_object(
+               '==',
+               jsonb_build_array(
+                 jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+                 'Profit 1'
+               )
+             ),
+             jsonb_build_object(
+               '==',
+               jsonb_build_array(
+                 jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                 4
+               )
+             )
+           )
+         ),
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.allies'),
+           jsonb_build_object(
+             'gender', '',
+             'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_position_o0008.answer_options.label_value')::text),
+             'how_met', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_closeness.how_met_profit_1')::text),
+             'how_close', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_closeness_o' || to_char(vals.num, 'FM0000') || '.answer_options.label_value')::text),
+             'where', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o0005.answer_options.label_value')::text),
+             'value', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_ally_value_o0005.answer_options.label_value')::text)
+           )
+         )
+       )
+  FROM vals;
 
 -- <<< END sql/048_mage_events_ally_closeness.sql
 
@@ -26115,6 +26193,17 @@ SET body = EXCLUDED.body,
     qtype = EXCLUDED.qtype,
     metadata = EXCLUDED.metadata;
 
+INSERT INTO rules (ru_id, name, body)
+VALUES
+  (
+    ck_id('witcher_cc.rules.is_mage_events_benefit_not_selected_10'),
+    'is_mage_events_benefit_not_selected_10',
+    '{"!":{"in":["wcc_mage_events_benefit_o0010",{"var":["answers.byQuestion.wcc_mage_events_benefit",[]]}]}}'::jsonb
+  )
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
 WITH
   meta AS (
     SELECT 'witcher_cc' AS su_su_id,
@@ -26158,10 +26247,13 @@ WITH
            num,
            probability,
            CASE WHEN num IN (1, 8, 10)
+                AND num NOT IN (1)
                 THEN jsonb_build_object(
                        'probability', probability,
                        'counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10)
                      )
+                WHEN num = 1
+                THEN jsonb_build_object('probability', probability)
                 ELSE jsonb_build_object('probability', probability)
             END AS metadata,
            '<td style="color: grey;">' || to_char(probability * 100, 'FM990.00') || '%</td><td><b>' || head || '</b><br>' || txt || '</td>' AS text
@@ -26179,11 +26271,16 @@ WITH
     ON CONFLICT (id, lang) DO UPDATE
     SET text = EXCLUDED.text
   )
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, visible_ru_ru_id, sort_order, metadata)
 SELECT 'wcc_mage_events_benefit_o' || to_char(vals.num, 'FM0000'),
        meta.su_su_id,
        meta.qu_id,
        ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.' || meta.entity || '.' || meta.entity_field),
+       CASE
+         WHEN vals.num = 10
+           THEN (SELECT ru_id FROM rules WHERE name = 'is_mage_events_benefit_not_selected_10' ORDER BY ru_id LIMIT 1)
+         ELSE NULL
+       END,
        vals.num,
        vals.metadata
   FROM vals
@@ -26191,8 +26288,118 @@ SELECT 'wcc_mage_events_benefit_o' || to_char(vals.num, 'FM0000'),
  WHERE vals.lang = 'ru'
 ON CONFLICT (an_id) DO UPDATE
 SET label = EXCLUDED.label,
+    visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.wcc_mage_events_benefit.event_type_benefit'), 'character', 'event_type', 'ru', 'Выгода'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.event_type_benefit'), 'character', 'event_type', 'en', 'Benefit'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0001.event_desc'), 'character', 'event_desc', 'ru', 'Союзник (Маг)'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0001.event_desc'), 'character', 'event_desc', 'en', 'Ally (Mage)'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0008.event_desc'), 'character', 'event_desc', 'ru', 'Тренировки в боевой магии, [+1 к Сопротивлению магии]'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0008.event_desc'), 'character', 'event_desc', 'en', 'Battle magic training, [+1 to Resist Magic]'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0010.event_desc'), 'character', 'event_desc', 'ru', 'Научился колдовать в доспехах'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_o0010.event_desc'), 'character', 'event_desc', 'en', 'Learned to cast in armor'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_name'), 'character', 'perk_name', 'ru', 'Колдовство в доспехах'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_name'), 'character', 'perk_name', 'en', 'Armored Casting'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_desc'), 'character', 'perk_desc', 'ru', '-1 к Скованности Движений доспеха при использовании магии'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_desc'), 'character', 'perk_desc', 'en', '-1 Encumbrance of armor when using magic')
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_benefit' AS qu_id
+  ),
+  event_vals(num) AS (
+    VALUES (1), (8), (10)
+  )
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       meta.qu_id || '_o' || to_char(event_vals.num, 'FM0000'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var','counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object('+', jsonb_build_array(
+                     jsonb_build_object('var','counters.lifeEventsCounter'),
+                     10
+                   ))
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '.event_type_benefit')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(event_vals.num, 'FM0000') || '.event_desc')::text)
+           )
+         )
+       )
+  FROM meta
+  CROSS JOIN event_vals;
+
+INSERT INTO effects (scope, an_an_id, body)
+VALUES
+  (
+    'character',
+    'wcc_mage_events_benefit_o0001',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+        'Profit 1'
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_benefit_o0001',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+        4
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_benefit_o0008',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.common.resist_magic.bonus'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_benefit_o0010',
+    jsonb_build_object(
+      'add_unique',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.perks'),
+        jsonb_build_object(
+          'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_name')::text),
+          'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit.perk_armored_casting_desc')::text)
+        )
+      )
+    )
+  )
+ON CONFLICT DO NOTHING;
 
 -- <<< END sql/050_mage_events_benefit.sql
 
@@ -26354,14 +26561,14 @@ WITH
         ('en', 3, 5, (1.0 / 6.0)::numeric, '<b>Payment Due</b>: 500 crowns', 'wcc_mage_events_benefit_details_group_03'),
         ('en', 3, 6, (1.0 / 6.0)::numeric, '<b>Payment Due</b>: 600 crowns', 'wcc_mage_events_benefit_details_group_03'),
 
-        ('ru', 4, 1, 0.25::numeric, '<b>Фамильяр</b>: кошка', 'wcc_mage_events_benefit_details_group_04'),
-        ('ru', 4, 2, 0.25::numeric, '<b>Фамильяр</b>: собака', 'wcc_mage_events_benefit_details_group_04'),
-        ('ru', 4, 3, 0.25::numeric, '<b>Фамильяр</b>: птица', 'wcc_mage_events_benefit_details_group_04'),
-        ('ru', 4, 4, 0.25::numeric, '<b>Фамильяр</b>: змея', 'wcc_mage_events_benefit_details_group_04'),
-        ('en', 4, 1, 0.25::numeric, '<b>Familiar</b>: cat', 'wcc_mage_events_benefit_details_group_04'),
-        ('en', 4, 2, 0.25::numeric, '<b>Familiar</b>: dog', 'wcc_mage_events_benefit_details_group_04'),
-        ('en', 4, 3, 0.25::numeric, '<b>Familiar</b>: bird', 'wcc_mage_events_benefit_details_group_04'),
-        ('en', 4, 4, 0.25::numeric, '<b>Familiar</b>: serpent', 'wcc_mage_events_benefit_details_group_04'),
+        ('ru', 4, 1, 0.25::numeric, '<b>Фамильяр</b>: кошка — зверь с оружием "Укус" на 1d6 урона, скоростью атаки 1 и ночным зрением', 'wcc_mage_events_benefit_details_group_04'),
+        ('ru', 4, 2, 0.25::numeric, '<b>Фамильяр</b>: собака — зверь с оружием "Укус" на 2d6 урона, скоростью атаки 1 и острым нюхом', 'wcc_mage_events_benefit_details_group_04'),
+        ('ru', 4, 3, 0.25::numeric, '<b>Фамильяр</b>: птица — зверь с оружием "Когти" на 1d6/2 урона, скоростью атаки 1 и полётом', 'wcc_mage_events_benefit_details_group_04'),
+        ('ru', 4, 4, 0.25::numeric, '<b>Фамильяр</b>: змея — зверь с оружием "Укус" на 1d6 урона, скоростью атаки 1 и отравлением (75%)', 'wcc_mage_events_benefit_details_group_04'),
+        ('en', 4, 1, 0.25::numeric, '<b>Familiar</b>: cat — beast with a "Bite" weapon that deals 1d6 damage, attack speed 1, and night vision', 'wcc_mage_events_benefit_details_group_04'),
+        ('en', 4, 2, 0.25::numeric, '<b>Familiar</b>: dog — beast with a "Bite" weapon that deals 2d6 damage, attack speed 1, and keen smell', 'wcc_mage_events_benefit_details_group_04'),
+        ('en', 4, 3, 0.25::numeric, '<b>Familiar</b>: bird — beast with "Claws" that deal 1d6/2 damage, attack speed 1, and flight', 'wcc_mage_events_benefit_details_group_04'),
+        ('en', 4, 4, 0.25::numeric, '<b>Familiar</b>: serpent — beast with a "Bite" weapon that deals 1d6 damage, attack speed 1, and poisoning (75%)', 'wcc_mage_events_benefit_details_group_04'),
 
         ('ru', 5, 1, 0.6::numeric, '<b>Любовная связь</b>: всё длилось несколько месяцев', 'wcc_mage_events_benefit_details_group_05'),
         ('ru', 5, 2, 0.2::numeric, '<b>Любовная связь</b>: всё длилось несколько лет', 'wcc_mage_events_benefit_details_group_05'),
@@ -26457,6 +26664,267 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0401.gear_name'), 'character', 'gear_name', 'ru', 'Кошка'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0401.gear_name'), 'character', 'gear_name', 'en', 'Cat'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0402.gear_name'), 'character', 'gear_name', 'ru', 'Собака'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0402.gear_name'), 'character', 'gear_name', 'en', 'Dog'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0403.gear_name'), 'character', 'gear_name', 'ru', 'Птица'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0403.gear_name'), 'character', 'gear_name', 'en', 'Bird'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0404.gear_name'), 'character', 'gear_name', 'ru', 'Змея'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0404.gear_name'), 'character', 'gear_name', 'en', 'Serpent'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0401.gear_notes'), 'character', 'gear_notes', 'ru', 'Зверь с оружием "Укус" на 1d6 урона, скоростью атаки 1 и ночным зрением'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0401.gear_notes'), 'character', 'gear_notes', 'en', 'Beast with a "Bite" weapon that deals 1d6 damage, attack speed 1, and night vision.'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0402.gear_notes'), 'character', 'gear_notes', 'ru', 'Зверь с оружием "Укус" на 2d6 урона, скоростью атаки 1 и острым нюхом'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0402.gear_notes'), 'character', 'gear_notes', 'en', 'Beast with a "Bite" weapon that deals 2d6 damage, attack speed 1, and keen smell.'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0403.gear_notes'), 'character', 'gear_notes', 'ru', 'Зверь с оружием "Когти" на 1d6/2 урона, скоростью атаки 1 и полётом'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0403.gear_notes'), 'character', 'gear_notes', 'en', 'Beast with "Claws" that deal 1d6/2 damage, attack speed 1, and flight.'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0404.gear_notes'), 'character', 'gear_notes', 'ru', 'Зверь с оружием "Укус" на 1d6 урона, скоростью атаки 1 и отравлением (75%)'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0404.gear_notes'), 'character', 'gear_notes', 'en', 'Beast with a "Bite" weapon that deals 1d6 damage, attack speed 1, and poisoning (75%).'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0501.event_desc'), 'character', 'event_desc', 'ru', 'Роман продлился несколько месяцев'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0501.event_desc'), 'character', 'event_desc', 'en', 'The affair lasted a few months'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0502.event_desc'), 'character', 'event_desc', 'ru', 'Роман продлился несколько лет'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0502.event_desc'), 'character', 'event_desc', 'en', 'The affair lasted a few years'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0503.event_desc'), 'character', 'event_desc', 'ru', 'Роман всё еще длится с перерывами'),
+  (ck_id('witcher_cc.wcc_mage_events_benefit_details_o0503.event_desc'), 'character', 'event_desc', 'en', 'The affair is still going on and off')
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_benefit_details' AS qu_id
+  ),
+  region_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1,  'Каэдвен', 'Северные королевства', 'Kaedwen', 'Northern Kingdoms'),
+        (2,  'Ковир и Повисс', 'Северные королевства', 'Kovir and Poviss', 'Northern Kingdoms'),
+        (3,  'Редания', 'Северные королевства', 'Redania', 'Northern Kingdoms'),
+        (4,  'Аэдирн', 'Северные королевства', 'Aedirn', 'Northern Kingdoms'),
+        (5,  'Лирия и Ривия', 'Северные королевства', 'Lyria and Rivia', 'Northern Kingdoms'),
+        (6,  'Темерия', 'Северные королевства', 'Temeria', 'Northern Kingdoms'),
+        (7,  'Цидарис', 'Северные королевства', 'Cidaris', 'Northern Kingdoms'),
+        (8,  'Керак', 'Северные королевства', 'Kerack', 'Northern Kingdoms'),
+        (9,  'Вердэн', 'Северные королевства', 'Verden', 'Northern Kingdoms'),
+        (10, 'Скеллиге', 'Северные королевства', 'Skellige', 'Northern Kingdoms'),
+        (11, 'Цинтра', 'Нильфгаард', 'Cintra', 'Nilfgaard'),
+        (12, 'Ангрен', 'Нильфгаард', 'Angren', 'Nilfgaard'),
+        (13, 'Назаир', 'Нильфгаард', 'Nazair', 'Nilfgaard'),
+        (14, 'Меттина', 'Нильфгаард', 'Mettina', 'Nilfgaard'),
+        (15, 'Туссент', 'Нильфгаард', 'Toussaint', 'Nilfgaard'),
+        (16, 'Маг Турга', 'Нильфгаард', 'Mag Turga', 'Nilfgaard'),
+        (17, 'Гесо', 'Нильфгаард', 'Gheso', 'Nilfgaard'),
+        (18, 'Эббинг', 'Нильфгаард', 'Ebbing', 'Nilfgaard'),
+        (19, 'Мехт', 'Нильфгаард', 'Maecht', 'Nilfgaard'),
+        (20, 'Этолия', 'Нильфгаард', 'Etolia', 'Nilfgaard'),
+        (21, 'Геммера', 'Нильфгаард', 'Gemmera', 'Nilfgaard'),
+        (22, 'Доль Блатанна', 'Земли старших народов', 'Dol Blathanna', 'Elderlands'),
+        (23, 'Махакам', 'Земли старших народов', 'Mahakam', 'Elderlands')
+      ) AS v(num, ru_name, ru_group, en_name, en_group)
+  ),
+  event_desc_vals AS (
+    SELECT 'ru' AS lang, 2 AS group_id, num,
+           'Помог местной деревне в (' || ru_group || ') ' || ru_name || '. Локальный социальный статус "Равенство".' AS text
+      FROM region_vals
+    UNION ALL
+    SELECT 'en', 2, num,
+           'Helped a local village in (' || en_group || ') ' || en_name || '. Local social standing "Equal".'
+      FROM region_vals
+    UNION ALL
+    SELECT 'ru', 3, num, 'Получил в возврат долга ' || (num * 100) || ' крон'
+      FROM generate_series(1, 6) AS num
+    UNION ALL
+    SELECT 'en', 3, num, 'Collected ' || (num * 100) || ' crowns from a debt repayment'
+      FROM generate_series(1, 6) AS num
+    UNION ALL
+    SELECT * FROM (VALUES
+      ('ru', 4, 1, 'Приручённый зверь: Кошка'),
+      ('ru', 4, 2, 'Приручённый зверь: Собака'),
+      ('ru', 4, 3, 'Приручённый зверь: Птица'),
+      ('ru', 4, 4, 'Приручённый зверь: Змея'),
+      ('en', 4, 1, 'Tamed beast: Cat'),
+      ('en', 4, 2, 'Tamed beast: Dog'),
+      ('en', 4, 3, 'Tamed beast: Bird'),
+      ('en', 4, 4, 'Tamed beast: Serpent'),
+      ('ru', 6, 1, 'Победа в дуэли. Трофей - Эльфийский дорожный посох'),
+      ('ru', 6, 2, 'Победа в дуэли. Трофей - Гномий посох'),
+      ('ru', 6, 3, 'Победа в дуэли. Трофей - Хрустальный череп животного'),
+      ('en', 6, 1, 'Won a duel. Trophy - Elven Walking Staff'),
+      ('en', 6, 2, 'Won a duel. Trophy - Gnomish Staff'),
+      ('en', 6, 3, 'Won a duel. Trophy - Crystal Animal Skull'),
+      ('ru', 7, 1, 'Нашел активный эльфский портал (выход: старая поляна в Доль Блатанне)'),
+      ('ru', 7, 2, 'Нашел активный эльфский портал (выход: горы Тир Тохаир)'),
+      ('ru', 7, 3, 'Нашел активный эльфский портал (выход: болото в северном Каэдвене)'),
+      ('ru', 7, 4, 'Нашел активный эльфский портал (выход: глубоко под Новиградом)'),
+      ('ru', 7, 5, 'Нашел активный эльфский портал (выход: другое место назначения)'),
+      ('ru', 7, 6, 'Нашел пассивный эльфский портал (выход: старая поляна в Доль Блатанне)'),
+      ('ru', 7, 7, 'Нашел пассивный эльфский портал (выход: горы Тир Тохаир)'),
+      ('ru', 7, 8, 'Нашел пассивный эльфский портал (выход: болото в северном Каэдвене)'),
+      ('ru', 7, 9, 'Нашел пассивный эльфский портал (выход: глубоко под Новиградом)'),
+      ('ru', 7,10, 'Нашел пассивный эльфский портал (выход: другое место назначения)'),
+      ('en', 7, 1, 'Found an active elven portal (exit: an old glade in Dol Blathanna)'),
+      ('en', 7, 2, 'Found an active elven portal (exit: the Tir Tochair mountains)'),
+      ('en', 7, 3, 'Found an active elven portal (exit: a swamp in northern Kaedwen)'),
+      ('en', 7, 4, 'Found an active elven portal (exit: deep under Novigrad)'),
+      ('en', 7, 5, 'Found an active elven portal (exit: another destination)'),
+      ('en', 7, 6, 'Found a dormant elven portal (exit: an old glade in Dol Blathanna)'),
+      ('en', 7, 7, 'Found a dormant elven portal (exit: the Tir Tochair mountains)'),
+      ('en', 7, 8, 'Found a dormant elven portal (exit: a swamp in northern Kaedwen)'),
+      ('en', 7, 9, 'Found a dormant elven portal (exit: deep under Novigrad)'),
+      ('en', 7,10, 'Found a dormant elven portal (exit: another destination)')
+    ) AS v(lang, group_id, num, text)
+  ),
+  ins_event_desc AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(100 * group_id + num, 'FM0000') || '.event_desc'),
+           'character',
+           'event_desc',
+           lang,
+           text
+      FROM event_desc_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  ),
+  life_event_groups AS (
+    SELECT 2 AS group_id UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 6 UNION ALL SELECT 7
+  ),
+  life_event_nums AS (
+    SELECT 2 AS group_id, generate_series(1, 23) AS num
+    UNION ALL
+    SELECT 3 AS group_id, generate_series(1, 6) AS num
+    UNION ALL
+    SELECT 4 AS group_id, generate_series(1, 4) AS num
+    UNION ALL
+    SELECT 6 AS group_id, generate_series(1, 3) AS num
+    UNION ALL
+    SELECT 7 AS group_id, generate_series(1, 10) AS num
+  )
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       meta.qu_id || '_o' || to_char(100 * life_event_groups.group_id + life_event_nums.num, 'FM0000'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var','counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object('+', jsonb_build_array(
+                     jsonb_build_object('var','counters.lifeEventsCounter'),
+                     10
+                   ))
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit.event_type_benefit')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(100 * life_event_groups.group_id + life_event_nums.num, 'FM0000') || '.event_desc')::text)
+           )
+         )
+       )
+  FROM meta
+  CROSS JOIN life_event_groups
+  JOIN life_event_nums
+    ON life_event_nums.group_id = life_event_groups.group_id
+UNION ALL
+SELECT 'character',
+       'wcc_mage_events_benefit_details_o05' || to_char(num, 'FM00'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var','counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object('+', jsonb_build_array(
+                     jsonb_build_object('var','counters.lifeEventsCounter'),
+                     10
+                   ))
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_relationships.event_type_relationships')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit_details_o05' || to_char(num, 'FM00') || '.event_desc')::text)
+           )
+         )
+       )
+  FROM generate_series(1, 3) AS num;
+
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       'wcc_mage_events_benefit_details_o03' || to_char(num, 'FM00'),
+       jsonb_build_object(
+         'inc',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.money.crowns'),
+           num * 100
+         )
+       )
+  FROM generate_series(1, 6) AS num
+UNION ALL
+SELECT 'character',
+       'wcc_mage_events_benefit_details_o04' || to_char(num, 'FM00'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.gear.general_gear'),
+           jsonb_build_object(
+             'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit_details_o04' || to_char(num, 'FM00') || '.gear_name')::text),
+             'weight', 0,
+             'notes', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit_details_o04' || to_char(num, 'FM00') || '.gear_notes')::text)
+           )
+         )
+       )
+  FROM generate_series(1, 4) AS num
+UNION ALL
+SELECT 'character',
+       'wcc_mage_events_benefit_details_o0601',
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.gear.weapons'),
+           jsonb_build_object('w_id','W161','sourceId','weapons','amount',1)
+         )
+       )
+UNION ALL
+SELECT 'character',
+       'wcc_mage_events_benefit_details_o0602',
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.gear.weapons'),
+           jsonb_build_object('w_id','W154','sourceId','weapons','amount',1)
+         )
+       )
+UNION ALL
+SELECT 'character',
+       'wcc_mage_events_benefit_details_o0603',
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.gear.general_gear'),
+           jsonb_build_object('t_id','T149','sourceId','general_gear','amount',1)
+         )
+       );
 
 -- <<< END sql/051_mage_events_benefit_details.sql
 
@@ -26628,6 +27096,117 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_benefit_details_2' AS qu_id
+  ),
+  region_vals AS (
+    SELECT *
+      FROM (VALUES
+        (1,  'Каэдвен', 'Северные королевства', 'Kaedwen', 'Northern Kingdoms'),
+        (2,  'Ковир и Повисс', 'Северные королевства', 'Kovir and Poviss', 'Northern Kingdoms'),
+        (3,  'Редания', 'Северные королевства', 'Redania', 'Northern Kingdoms'),
+        (4,  'Аэдирн', 'Северные королевства', 'Aedirn', 'Northern Kingdoms'),
+        (5,  'Лирия и Ривия', 'Северные королевства', 'Lyria and Rivia', 'Northern Kingdoms'),
+        (6,  'Темерия', 'Северные королевства', 'Temeria', 'Northern Kingdoms'),
+        (7,  'Цидарис', 'Северные королевства', 'Cidaris', 'Northern Kingdoms'),
+        (8,  'Керак', 'Северные королевства', 'Kerack', 'Northern Kingdoms'),
+        (9,  'Вердэн', 'Северные королевства', 'Verden', 'Northern Kingdoms'),
+        (10, 'Скеллиге', 'Северные королевства', 'Skellige', 'Northern Kingdoms'),
+        (11, 'Цинтра', 'Нильфгаард', 'Cintra', 'Nilfgaard'),
+        (12, 'Ангрен', 'Нильфгаард', 'Angren', 'Nilfgaard'),
+        (13, 'Назаир', 'Нильфгаард', 'Nazair', 'Nilfgaard'),
+        (14, 'Меттина', 'Нильфгаард', 'Mettina', 'Nilfgaard'),
+        (15, 'Туссент', 'Нильфгаард', 'Toussaint', 'Nilfgaard'),
+        (16, 'Маг Турга', 'Нильфгаард', 'Mag Turga', 'Nilfgaard'),
+        (17, 'Гесо', 'Нильфгаард', 'Gheso', 'Nilfgaard'),
+        (18, 'Эббинг', 'Нильфгаард', 'Ebbing', 'Nilfgaard'),
+        (19, 'Мехт', 'Нильфгаард', 'Maecht', 'Nilfgaard'),
+        (20, 'Этолия', 'Нильфгаард', 'Etolia', 'Nilfgaard'),
+        (21, 'Геммера', 'Нильфгаард', 'Gemmera', 'Nilfgaard'),
+        (22, 'Доль Блатанна', 'Земли старших народов', 'Dol Blathanna', 'Elderlands'),
+        (23, 'Махакам', 'Земли старших народов', 'Mahakam', 'Elderlands')
+      ) AS v(group_id, ru_name, ru_group, en_name, en_group)
+  ),
+  element_vals AS (
+    SELECT * FROM (VALUES
+      (1, 'Вода', 'Water'),
+      (2, 'Воздух', 'Air'),
+      (3, 'Земля', 'Earth'),
+      (4, 'Огонь', 'Fire')
+    ) AS v(num, ru_name, en_name)
+  ),
+  event_desc_vals AS (
+    SELECT 'ru' AS lang, region_vals.group_id, element_vals.num,
+           'Нашел место силы в (' || region_vals.ru_group || ') ' || region_vals.ru_name || ' (' || element_vals.ru_name || ')' AS text
+      FROM region_vals
+      CROSS JOIN element_vals
+    UNION ALL
+    SELECT 'en', region_vals.group_id, element_vals.num,
+           'Found a Place of Power in (' || region_vals.en_group || ') ' || region_vals.en_name || ' (' || element_vals.en_name || ')'
+      FROM region_vals
+      CROSS JOIN element_vals
+  ),
+  ins_event_desc AS (
+    INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(100 * group_id + num, 'FM0000') || '.event_desc'),
+           'character',
+           'event_desc',
+           lang,
+           text
+      FROM event_desc_vals
+      CROSS JOIN meta
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
+  )
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       meta.qu_id || '_o' || to_char(100 * region_vals.group_id + element_vals.num, 'FM0000'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var','counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object('+', jsonb_build_array(
+                     jsonb_build_object('var','counters.lifeEventsCounter'),
+                     10
+                   ))
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_benefit.event_type_benefit')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(100 * region_vals.group_id + element_vals.num, 'FM0000') || '.event_desc')::text)
+           )
+         )
+       )
+  FROM meta
+  CROSS JOIN region_vals
+  CROSS JOIN element_vals
+UNION ALL
+SELECT 'character',
+       meta.qu_id || '_o' || to_char(100 * region_vals.group_id + element_vals.num, 'FM0000'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.gear.ingredients.alchemy'),
+           jsonb_build_object('i_id','I027','sourceId','ingredients_alchemy','amount',5)
+         )
+       )
+  FROM meta
+  CROSS JOIN region_vals
+  CROSS JOIN element_vals;
 
 -- <<< END sql/052_mage_events_benefit_details_2.sql
 
@@ -26826,6 +27405,224 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     metadata = EXCLUDED.metadata;
 
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.event_type_knowledge'), 'character', 'event_type', 'ru', 'Знания'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.event_type_knowledge'), 'character', 'event_type', 'en', 'Knowledge'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0001.event_desc'), 'character', 'event_desc', 'ru', 'Сведущий в порче, [+1 к Магическому познанию] и [+1 к Наведению порчи]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0001.event_desc'), 'character', 'event_desc', 'en', 'Stumped by a curse, [+1 to Magical Training] and [+1 to Hex Weaving]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0002.event_desc'), 'character', 'event_desc', 'ru', 'Заучивание формул заклинаний'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0002.event_desc'), 'character', 'event_desc', 'en', 'Memorized spell formulae'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0003.event_desc'), 'character', 'event_desc', 'ru', 'Изучение магии в останках монстров'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0003.event_desc'), 'character', 'event_desc', 'en', 'Studied magic in monster remains'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0004.event_desc'), 'character', 'event_desc', 'ru', 'Изучение зерриканского огня'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0004.event_desc'), 'character', 'event_desc', 'en', 'Studied Zerrikanian Fire'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0005.event_desc'), 'character', 'event_desc', 'ru', 'В символах и метафорах видел значимые события будущего. Уточнить у ведущего'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0005.event_desc'), 'character', 'event_desc', 'en', 'Saw significant future events through symbols and metaphors. Clarify with the GM'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0006.event_desc'), 'character', 'event_desc', 'ru', 'Изучение законов хаоса, [+2 к Магическому познанию]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0006.event_desc'), 'character', 'event_desc', 'en', 'Studied the laws of Chaos, [+2 to Magical Training]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0007.event_desc'), 'character', 'event_desc', 'ru', 'Исследования Лей-линий'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0007.event_desc'), 'character', 'event_desc', 'en', 'Ley Line studies'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0008.event_desc'), 'character', 'event_desc', 'ru', 'Учился быть учителем'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0008.event_desc'), 'character', 'event_desc', 'en', 'Learned to be a teacher'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0009.event_desc'), 'character', 'event_desc', 'ru', 'Учился алхимии, [+1 к Алхимии]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0009.event_desc'), 'character', 'event_desc', 'en', 'Studied alchemy, [+1 to Alchemy]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0010.event_desc'), 'character', 'event_desc', 'ru', 'Изучал гадания и ясновидение'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0010.event_desc'), 'character', 'event_desc', 'en', 'Studied divination and clairvoyance'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_name'), 'character', 'perk_name', 'ru', 'Понимание Лей-линий'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_name'), 'character', 'perk_name', 'en', 'Understanding of Ley Lines'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_desc'), 'character', 'perk_desc', 'ru', '+2 при попытке вытягивания силы из Лей-линии'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_desc'), 'character', 'perk_desc', 'en', '+2 when attempting to draw power from a Ley Line'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_name'), 'character', 'perk_name', 'ru', 'Учитель магии'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_name'), 'character', 'perk_name', 'en', 'Teacher of Magic'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_desc'), 'character', 'perk_desc', 'ru', 'Требуется вдвое меньше успешных проверок при обучении других магов новым заклинаниям'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_desc'), 'character', 'perk_desc', 'en', 'Teaching other mages new spells requires half as many successful learning checks')
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_knowledge' AS qu_id
+  ),
+  vals AS (
+    SELECT generate_series(1, 10) AS num
+  )
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       meta.qu_id || '_o' || to_char(vals.num, 'FM0000'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var','counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object('+', jsonb_build_array(
+                     jsonb_build_object('var','counters.lifeEventsCounter'),
+                     10
+                   ))
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '.event_type_knowledge')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.event_desc')::text)
+           )
+         )
+       )
+  FROM meta
+  CROSS JOIN vals;
+
+INSERT INTO effects (scope, an_an_id, body)
+VALUES
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0001',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.defining.bonus'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0001',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.common.hex_weaving.bonus'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0002',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.novice_spells_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0002',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.journeyman_spells_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0003',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.imbue_trophy_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0004',
+    jsonb_build_object(
+      'add',
+      jsonb_build_array(
+        jsonb_build_object('var','characterRaw.gear.recipes'),
+        jsonb_build_object('r_id','R046','sourceId','recipes','amount',0)
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0006',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.defining.bonus'),
+        2
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0007',
+    jsonb_build_object(
+      'add_unique',
+      jsonb_build_array(
+        jsonb_build_object('var','characterRaw.perks'),
+        jsonb_build_object(
+          'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_name')::text),
+          'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_desc')::text)
+        )
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0007',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.detect_ley_line_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0008',
+    jsonb_build_object(
+      'add_unique',
+      jsonb_build_array(
+        jsonb_build_object('var','characterRaw.perks'),
+        jsonb_build_object(
+          'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_name')::text),
+          'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_desc')::text)
+        )
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0009',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.common.alchemy.bonus'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0009',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.novice_recipe_tokens'),
+        2
+      )
+    )
+  )
+ON CONFLICT DO NOTHING;
+
 -- <<< END sql/053_mage_events_knowledge.sql
 
 -- >>> BEGIN sql/054_mage_events_knowledge_details.sql
@@ -26994,6 +27791,54 @@ SET label = EXCLUDED.label,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     sort_order = EXCLUDED.sort_order,
     metadata = EXCLUDED.metadata;
+
+INSERT INTO effects (scope, an_an_id, body)
+VALUES
+  (
+    'character',
+    'wcc_mage_events_knowledge_details_o0001',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.hydromancy_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_details_o0002',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.pyromancy_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_details_o0003',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.tyromancy_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_details_o0004',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.oneiromancy_tokens'),
+        1
+      )
+    )
+  )
+ON CONFLICT DO NOTHING;
 
 -- <<< END sql/054_mage_events_knowledge_details.sql
 
@@ -34159,9 +35004,9 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visibl
   
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-  SELECT 'wcc_life_events_relationshipsstory', 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_relationshipsstory_o02', 2;
+  SELECT 'wcc_life_events_relationshipsstory', 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_relationshipsstory_o02', 3;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-  SELECT 'wcc_life_events_relationshipsstory', 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_relationshipsstory_o03', 2;
+  SELECT 'wcc_life_events_relationshipsstory', 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_relationshipsstory_o03', 3;
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_event', r.ru_id, 1
@@ -43036,42 +43881,9 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
     CROSS JOIN meta
   ON CONFLICT (an_id) DO NOTHING;
 
-WITH
-  meta AS (
-    SELECT 'witcher_cc' AS su_su_id
-         , 'wcc_style_hair' AS qu_id
-  )
-INSERT INTO rules (ru_id, name, body)
-SELECT ck_id(meta.su_su_id ||'.rules.wcc_style_hair_is_not_bald')
-     , 'wcc_style_hair_is_not_bald'
-     , jsonb_build_object(
-         'or',
-         jsonb_build_array(
-           jsonb_build_object('!', jsonb_build_object('var', 'characterRaw.lore.style.hair_style.i18n_uuid')),
-           jsonb_build_object(
-             '!=',
-             jsonb_build_array(
-               jsonb_build_object('var', 'characterRaw.lore.style.hair_style.i18n_uuid'),
-               ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o0006.answer_options.label')::text
-             )
-           )
-         )
-       )
-  FROM meta
-ON CONFLICT (ru_id) DO UPDATE
-SET name = EXCLUDED.name,
-    body = EXCLUDED.body;
-
-WITH rule_ref AS (
-  SELECT ru_id
-    FROM rules
-   WHERE name = 'wcc_style_hair_is_not_bald'
-)
 UPDATE answer_options
-   SET visible_ru_ru_id = rule_ref.ru_id
-  FROM rule_ref
- WHERE qu_qu_id = 'wcc_style_hair'
-   AND an_id <> 'wcc_style_hair_o0006';
+   SET visible_ru_ru_id = NULL
+ WHERE qu_qu_id = 'wcc_style_hair';
   
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
@@ -43174,8 +43986,32 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
     FROM vals
     CROSS JOIN meta
   ON CONFLICT (an_id) DO NOTHING;
+
+WITH meta AS (
+  SELECT 'witcher_cc' AS su_su_id
+)
+INSERT INTO rules (ru_id, name, body)
+SELECT ck_id(meta.su_su_id || '.rules.wcc_style_hair_is_bald')
+     , 'wcc_style_hair_is_bald'
+     , jsonb_build_object(
+         '==',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.style.hair_style.i18n_uuid'),
+           ck_id(meta.su_su_id || '.wcc_style_hair_o0006.answer_options.label')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
   
 -- Связи
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+SELECT 'wcc_style_personality'
+     , 'wcc_style_affectations'
+     , ck_id('witcher_cc.rules.wcc_style_hair_is_bald')
+     , 1;
+
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_style_hair', 'wcc_style_affectations';
 
@@ -44243,6 +45079,8 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('budget.witcher_silver_sword_tokens.name', 'en', 'Tokens: Witcher''s Silver Sword'),
           ('budget.simple_blueprint_tokens.name', 'ru', 'Жетоны: обычные чертежи/формулы'),
           ('budget.simple_blueprint_tokens.name', 'en', 'Tokens: Common Diagrams/Formulae'),
+          ('budget.novice_recipe_tokens.name', 'ru', 'Жетоны: рецепты новичка'),
+          ('budget.novice_recipe_tokens.name', 'en', 'Tokens: Novice Recipes'),
           ('budget.witcher_silver_sword_tokens.name', 'en', 'Tokens: Witcher''s Silver Sword'),
           ('budget.witcher_blueprint_tokens.name', 'ru', 'Жетоны ведьмачьих чертежей'),
           ('budget.witcher_blueprint_tokens.name', 'en', 'Tokens: Witcher Blueprints'),
@@ -44365,6 +45203,17 @@ SELECT meta.qu_id
                  'items', jsonb_build_array('B002','B003','B004','B005','B007','B012','B017','B021','B028','B029','B033','B049','B050','B051','B053','B063','B064','B067','B081','B082','B094','B095','B097','B109','B119','B120','B122','B128','B129','B131','B145','B146','B148','B206','B153','B156','B159','B162','B163','B164','B165','B166','B171','B172','B175','B182','B184','B190','B191','B193','B197','B198','B202','B204','B205','B212','B216','B217','B232','B240','B245','B248','B253','B255','R039','R042','R043','R044','R048','R049','R050','R051','R052','R053','R054','R056','R062','R063','R064','R069','R070','R071','R072','R073','R074','R075','R076','R077','R078')
                ),
                'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.simple_blueprint_tokens.name')::text)
+             ),
+             jsonb_build_object(
+               'id', 'novice_recipe_tokens',
+               'type', 'tokens',
+               'source', 'characterRaw.professional_gear_options.novice_recipe_tokens',
+               'priority', 2,
+               'is_default', false,
+               'coverage', jsonb_build_object(
+                 'sources', jsonb_build_array('recipes')
+               ),
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.novice_recipe_tokens.name')::text)
              ),
              jsonb_build_object(
                'id', 'witcher_blueprint_tokens',
@@ -44723,7 +45572,6 @@ WHERE r.name = 'witcher_skip_professional_shop'
       AND t.ru_ru_id = r.ru_id
   );
 
-
 -- <<< END sql/149_shop.sql
 
 -- >>> BEGIN sql/150_shop_item_dlc_extra.sql
@@ -44829,7 +45677,21 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('budget.novice_hexes_tokens.name', 'ru', 'Жетоны порч с низкой опасностью'),
           ('budget.novice_hexes_tokens.name', 'en', 'Low Danger Hexes Tokens'),
           ('budget.magic_gifts_tokens.name', 'ru', 'Жетоны магических даров (!! Обязательно получи одобрение ГМа на использование !!)'),
-          ('budget.magic_gifts_tokens.name', 'en', 'Magical Gifts Tokens (!! Be sure to get GM approval for use !!)')
+          ('budget.magic_gifts_tokens.name', 'en', 'Magical Gifts Tokens (!! Be sure to get GM approval for use !!)'),
+          ('budget.journeyman_spells_tokens.name', 'ru', 'Жетоны заклинаний подмастерья'),
+          ('budget.journeyman_spells_tokens.name', 'en', 'Journeyman Spells Tokens'),
+          ('budget.imbue_trophy_tokens.name', 'ru', 'Жетоны ритуала «Наполнение трофея»'),
+          ('budget.imbue_trophy_tokens.name', 'en', 'Imbue Trophy Ritual Tokens'),
+          ('budget.detect_ley_line_tokens.name', 'ru', 'Жетоны заклинания «Обнаружение лей-линий»'),
+          ('budget.detect_ley_line_tokens.name', 'en', 'Detect Ley Line Spell Tokens'),
+          ('budget.hydromancy_tokens.name', 'ru', 'Жетоны ритуала «Гидромантия»'),
+          ('budget.hydromancy_tokens.name', 'en', 'Hydromancy Ritual Tokens'),
+          ('budget.pyromancy_tokens.name', 'ru', 'Жетоны ритуала «Пиромантия»'),
+          ('budget.pyromancy_tokens.name', 'en', 'Pyromancy Ritual Tokens'),
+          ('budget.tyromancy_tokens.name', 'ru', 'Жетоны ритуала «Тиромантия»'),
+          ('budget.tyromancy_tokens.name', 'en', 'Tyromancy Ritual Tokens'),
+          ('budget.oneiromancy_tokens.name', 'ru', 'Жетоны ритуала «Онейромантия»'),
+          ('budget.oneiromancy_tokens.name', 'en', 'Oneiromancy Ritual Tokens')
        ) AS v(key, lang, text)
 ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text;
@@ -44927,6 +45789,76 @@ SELECT meta.qu_id
                'is_required', false,
                'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.magic_gifts_tokens.name')::text),
                'coverage', jsonb_build_object('items', jsonb_build_array('MG001', 'MG002', 'MG003', 'MG004', 'MG005', 'MG006', 'MG007', 'MG008', 'MG009', 'MG010', 'MG011', 'MG012', 'MG013', 'MG014'))
+             ),
+             jsonb_build_object(
+               'id', 'journeyman_spells_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.journeyman_spells_tokens',
+               'priority', 1,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.journeyman_spells_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS041', 'MS042', 'MS043', 'MS044', 'MS045', 'MS046', 'MS047', 'MS048', 'MS049', 'MS050', 'MS051', 'MS052', 'MS053', 'MS054', 'MS055', 'MS099', 'MS100', 'MS101', 'MS102', 'MS103', 'MS149', 'MS150', 'MS151', 'MS152', 'MS153', 'MS154', 'MS155', 'MS156', 'MS157', 'MS158', 'MS159', 'MS160', 'MS161', 'MS162', 'MS163', 'MS164', 'MS165', 'MS166', 'MS210', 'MS211', 'MS228', 'MS229', 'MS230', 'MS231', 'MS232'))
+             ),
+             jsonb_build_object(
+               'id', 'imbue_trophy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.imbue_trophy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.imbue_trophy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS213'))
+             ),
+             jsonb_build_object(
+               'id', 'detect_ley_line_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.detect_ley_line_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.detect_ley_line_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS127'))
+             ),
+             jsonb_build_object(
+               'id', 'hydromancy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.hydromancy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.hydromancy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS105'))
+             ),
+             jsonb_build_object(
+               'id', 'pyromancy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.pyromancy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.pyromancy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS107'))
+             ),
+             jsonb_build_object(
+               'id', 'tyromancy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.tyromancy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.tyromancy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS214'))
+             ),
+             jsonb_build_object(
+               'id', 'oneiromancy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.oneiromancy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.oneiromancy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS115'))
              )
            ),
            'sources', jsonb_build_array(
@@ -46191,6 +47123,21 @@ VALUES
     ck_id('witcher_cc.rules.is_mage_academy_life_flag_eq_3_and_counter_valid'),
     'is_mage_academy_life_flag_eq_3_and_counter_valid',
     '{"and":[{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},3]},{"<":[{"var":"counters.lifeEventsCounter"},{"var":"characterRaw.age"}]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_benefit_not_profit_1_and_counter_valid'),
+    'is_mage_benefit_not_profit_1_and_counter_valid',
+    '{"and":[{"<":[{"var":"counters.lifeEventsCounter"},{"var":"characterRaw.age"}]},{"!=":[{"reduce":[{"var":["answers.byQuestion.wcc_mage_events_benefit",[]]},{"var":"current"},null]},"wcc_mage_events_benefit_o0001"]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_profit_1_and_academy_4_counter_valid'),
+    'is_profit_1_and_academy_4_counter_valid',
+    '{"and":[{"==":[{"var":"characterRaw.logicFields.last_node_and_answer"},"Profit 1"]},{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},4]},{"<":[{"var":"counters.lifeEventsCounter"},{"var":"characterRaw.age"}]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_profit_1_and_academy_4_counter_exhausted'),
+    'is_profit_1_and_academy_4_counter_exhausted',
+    '{"and":[{"==":[{"var":"characterRaw.logicFields.last_node_and_answer"},"Profit 1"]},{"==":[{"var":"characterRaw.logicFields.flags.academy_life"},4]},{">=":[{"var":"counters.lifeEventsCounter"},{"var":"characterRaw.age"}]}]}'::jsonb
   )
 ON CONFLICT (ru_id) DO UPDATE
 SET name = EXCLUDED.name,
@@ -46350,6 +47297,7 @@ VALUES
   ('wcc_mage_events_outcome', 'wcc_mage_events_knowledge', 'wcc_mage_events_outcome_o0404', NULL, 1),
 
   -- from: wcc_mage_events_benefit
+  ('wcc_mage_events_benefit', 'wcc_mage_events_ally_closeness', 'wcc_mage_events_benefit_o0001', NULL, 1),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0002', NULL, 2),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0003', NULL, 2),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0004', NULL, 2),
@@ -46357,7 +47305,7 @@ VALUES
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0006', NULL, 2),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0007', NULL, 2),
   ('wcc_mage_events_benefit', 'wcc_mage_events_benefit_details', 'wcc_mage_events_benefit_o0009', NULL, 2),
-  ('wcc_mage_events_benefit', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_mage_events_benefit', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_mage_benefit_not_profit_1_and_counter_valid' ORDER BY ru_id LIMIT 1), 1),
   ('wcc_mage_events_benefit', 'wcc_style_clothing', NULL, NULL, 0),
 
   -- from: wcc_mage_events_benefit_details
@@ -46392,7 +47340,7 @@ VALUES
   ('wcc_mage_events_benefit_details_2', 'wcc_style_clothing', NULL, NULL, 0),
 
   -- from: wcc_mage_events_knowledge
-  ('wcc_mage_events_knowledge', 'wcc_mage_events_knowledge_details', 'wcc_mage_events_knowledge_o0010', NULL, 1),
+  ('wcc_mage_events_knowledge', 'wcc_mage_events_knowledge_details', 'wcc_mage_events_knowledge_o0010', NULL, 3),
   ('wcc_mage_events_knowledge', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid' ORDER BY ru_id LIMIT 1), 2),
   ('wcc_mage_events_knowledge', 'wcc_style_clothing', NULL, NULL, 0),
 
@@ -46411,6 +47359,8 @@ VALUES
   ('wcc_past_academy_life', 'wcc_mage_events_ally_closeness', 'wcc_past_academy_life_o0308', NULL, 1),
 
   -- from: wcc_mage_events_ally_closeness
+  ('wcc_mage_events_ally_closeness', 'wcc_mage_events_risk', NULL, (SELECT ru_id FROM rules WHERE name = 'is_profit_1_and_academy_4_counter_valid' ORDER BY ru_id LIMIT 1), 1),
+  ('wcc_mage_events_ally_closeness', 'wcc_style_clothing', NULL, (SELECT ru_id FROM rules WHERE name = 'is_profit_1_and_academy_4_counter_exhausted' ORDER BY ru_id LIMIT 1), 1),
   ('wcc_mage_events_ally_closeness', 'wcc_mage_events_ally_value', NULL, NULL, 0),
   
   -- from: wcc_mage_events_ally_value
@@ -48456,6 +49406,7 @@ WITH raw_data (
   ('T036','general_gear.group.jewerly','','','Простой амулет','Amulet, Simple','Фокусирующее (1)','Focus (1).','core','concealment.S',0.1,250,'availability.R'),
   ('T147','general_gear.group.jewerly','','','Фокусирующий амулет','Amulet, Focusing','Фокусирующее (2)','Focus (2).','core','concealment.S',0.1,350,'availability.R'),
   ('T148','general_gear.group.standard','Ритуалы','Rituals','Магическая формула','Spell Formulae','При использовании формулы добавляется бонус +2 при попытке выучить указанное в формуле заклинание, инвокацию, знак или ритуал. Проверка Образования или Магического Познания со СЛ14 для понимания природы этого предмета.','Using a formula grants a +2 bonus when attempting to learn the spell, invocation, sign, or ritual specified in the formula. An Education or Magical Training check at DC 14 is required to understand the nature of this item.','core','concealment.S',0.1,0,''),
+  ('T149','general_gear.group.standard','Ритуалы','Rituals','Хрустальный череп животного','Crystal Animal Skull','При активации хрустальный череп превращается в животное, слушающееся ваших мысленных приказов, пока оно находится рядом. При смерти это существо деактивируется, но его можно вновь зарядить, потратив [2] Пятой сущности.','When activated, the crystal skull turns into an animal that obeys your mental commands while it remains nearby. If that creature dies, it deactivates, but it can be recharged by spending [2] Fifth Essence.','core','concealment.S',0.5,0,''),
   ('T037','general_gear.group.jewerly','','','Позолота','Gilding','Для оружия и брони. +1 к репутации (не стакается).','For weapons and armor. +1 to reputation (doesn''t stack).','exp_lal','',0.5,100,''),
   ('T038','general_gear.group.jewerly','','','Украшения','Jewelry','','','core','',0.5,50,''),
   ('T039','general_gear.group.jewerly','','','Совершенный самоцвет','Perfect Gemstone','','','core','',0.1,1000,'availability.R'),

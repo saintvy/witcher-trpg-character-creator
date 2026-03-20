@@ -190,3 +190,221 @@ SET label = EXCLUDED.label,
     sort_order = EXCLUDED.sort_order,
     visible_ru_ru_id = EXCLUDED.visible_ru_ru_id,
     metadata = EXCLUDED.metadata;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+VALUES
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.event_type_knowledge'), 'character', 'event_type', 'ru', 'Знания'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.event_type_knowledge'), 'character', 'event_type', 'en', 'Knowledge'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0001.event_desc'), 'character', 'event_desc', 'ru', 'Сведущий в порче, [+1 к Магическому познанию] и [+1 к Наведению порчи]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0001.event_desc'), 'character', 'event_desc', 'en', 'Stumped by a curse, [+1 to Magical Training] and [+1 to Hex Weaving]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0002.event_desc'), 'character', 'event_desc', 'ru', 'Заучивание формул заклинаний'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0002.event_desc'), 'character', 'event_desc', 'en', 'Memorized spell formulae'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0003.event_desc'), 'character', 'event_desc', 'ru', 'Изучение магии в останках монстров'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0003.event_desc'), 'character', 'event_desc', 'en', 'Studied magic in monster remains'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0004.event_desc'), 'character', 'event_desc', 'ru', 'Изучение зерриканского огня'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0004.event_desc'), 'character', 'event_desc', 'en', 'Studied Zerrikanian Fire'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0005.event_desc'), 'character', 'event_desc', 'ru', 'В символах и метафорах видел значимые события будущего. Уточнить у ведущего'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0005.event_desc'), 'character', 'event_desc', 'en', 'Saw significant future events through symbols and metaphors. Clarify with the GM'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0006.event_desc'), 'character', 'event_desc', 'ru', 'Изучение законов хаоса, [+2 к Магическому познанию]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0006.event_desc'), 'character', 'event_desc', 'en', 'Studied the laws of Chaos, [+2 to Magical Training]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0007.event_desc'), 'character', 'event_desc', 'ru', 'Исследования Лей-линий'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0007.event_desc'), 'character', 'event_desc', 'en', 'Ley Line studies'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0008.event_desc'), 'character', 'event_desc', 'ru', 'Учился быть учителем'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0008.event_desc'), 'character', 'event_desc', 'en', 'Learned to be a teacher'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0009.event_desc'), 'character', 'event_desc', 'ru', 'Учился алхимии, [+1 к Алхимии]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0009.event_desc'), 'character', 'event_desc', 'en', 'Studied alchemy, [+1 to Alchemy]'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0010.event_desc'), 'character', 'event_desc', 'ru', 'Изучал гадания и ясновидение'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge_o0010.event_desc'), 'character', 'event_desc', 'en', 'Studied divination and clairvoyance'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_name'), 'character', 'perk_name', 'ru', 'Понимание Лей-линий'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_name'), 'character', 'perk_name', 'en', 'Understanding of Ley Lines'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_desc'), 'character', 'perk_desc', 'ru', '+2 при попытке вытягивания силы из Лей-линии'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_desc'), 'character', 'perk_desc', 'en', '+2 when attempting to draw power from a Ley Line'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_name'), 'character', 'perk_name', 'ru', 'Учитель магии'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_name'), 'character', 'perk_name', 'en', 'Teacher of Magic'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_desc'), 'character', 'perk_desc', 'ru', 'Требуется вдвое меньше успешных проверок при обучении других магов новым заклинаниям'),
+  (ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_desc'), 'character', 'perk_desc', 'en', 'Teaching other mages new spells requires half as many successful learning checks')
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH
+  meta AS (
+    SELECT 'witcher_cc' AS su_su_id,
+           'wcc_mage_events_knowledge' AS qu_id
+  ),
+  vals AS (
+    SELECT generate_series(1, 10) AS num
+  )
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character',
+       meta.qu_id || '_o' || to_char(vals.num, 'FM0000'),
+       jsonb_build_object(
+         'add',
+         jsonb_build_array(
+           jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+           jsonb_build_object(
+             'timePeriod',
+             jsonb_build_object(
+               'jsonlogic_expression',
+               jsonb_build_object(
+                 'cat',
+                 jsonb_build_array(
+                   jsonb_build_object('var','counters.lifeEventsCounter'),
+                   '-',
+                   jsonb_build_object('+', jsonb_build_array(
+                     jsonb_build_object('var','counters.lifeEventsCounter'),
+                     10
+                   ))
+                 )
+               )
+             ),
+             'eventType',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '.event_type_knowledge')::text),
+             'description',
+             jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id || '.' || meta.qu_id || '_o' || to_char(vals.num, 'FM0000') || '.event_desc')::text)
+           )
+         )
+       )
+  FROM meta
+  CROSS JOIN vals;
+
+INSERT INTO effects (scope, an_an_id, body)
+VALUES
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0001',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.defining.bonus'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0001',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.common.hex_weaving.bonus'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0002',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.novice_spells_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0002',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.journeyman_spells_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0003',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.imbue_trophy_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0004',
+    jsonb_build_object(
+      'add',
+      jsonb_build_array(
+        jsonb_build_object('var','characterRaw.gear.recipes'),
+        jsonb_build_object('r_id','R046','sourceId','recipes','amount',0)
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0006',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.defining.bonus'),
+        2
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0007',
+    jsonb_build_object(
+      'add_unique',
+      jsonb_build_array(
+        jsonb_build_object('var','characterRaw.perks'),
+        jsonb_build_object(
+          'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_name')::text),
+          'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_knowledge.perk_ley_lines_desc')::text)
+        )
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0007',
+    jsonb_build_object(
+      'set',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.detect_ley_line_tokens'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0008',
+    jsonb_build_object(
+      'add_unique',
+      jsonb_build_array(
+        jsonb_build_object('var','characterRaw.perks'),
+        jsonb_build_object(
+          'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_name')::text),
+          'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_knowledge.perk_teacher_desc')::text)
+        )
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0009',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.skills.common.alchemy.bonus'),
+        1
+      )
+    )
+  ),
+  (
+    'character',
+    'wcc_mage_events_knowledge_o0009',
+    jsonb_build_object(
+      'inc',
+      jsonb_build_array(
+        jsonb_build_object('var', 'characterRaw.professional_gear_options.novice_recipe_tokens'),
+        2
+      )
+    )
+  )
+ON CONFLICT DO NOTHING;

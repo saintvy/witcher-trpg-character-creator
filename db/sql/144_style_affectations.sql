@@ -72,8 +72,32 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metada
     FROM vals
     CROSS JOIN meta
   ON CONFLICT (an_id) DO NOTHING;
+
+WITH meta AS (
+  SELECT 'witcher_cc' AS su_su_id
+)
+INSERT INTO rules (ru_id, name, body)
+SELECT ck_id(meta.su_su_id || '.rules.wcc_style_hair_is_bald')
+     , 'wcc_style_hair_is_bald'
+     , jsonb_build_object(
+         '==',
+         jsonb_build_array(
+           jsonb_build_object('var', 'characterRaw.lore.style.hair_style.i18n_uuid'),
+           ck_id(meta.su_su_id || '.wcc_style_hair_o0006.answer_options.label')::text
+         )
+       )
+  FROM meta
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
   
 -- Связи
+INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
+SELECT 'wcc_style_personality'
+     , 'wcc_style_affectations'
+     , ck_id('witcher_cc.rules.wcc_style_hair_is_bald')
+     , 1;
+
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_style_hair', 'wcc_style_affectations';
 

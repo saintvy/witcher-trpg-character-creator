@@ -153,9 +153,9 @@ INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visibl
   
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-  SELECT 'wcc_life_events_relationshipsstory', 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_relationshipsstory_o02', 2;
+  SELECT 'wcc_life_events_relationshipsstory', 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_relationshipsstory_o02', 3;
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
-  SELECT 'wcc_life_events_relationshipsstory', 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_relationshipsstory_o03', 2;
+  SELECT 'wcc_life_events_relationshipsstory', 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_relationshipsstory_o03', 3;
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_relationshipsstory_details', 'wcc_life_events_event', r.ru_id, 1

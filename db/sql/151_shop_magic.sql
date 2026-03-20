@@ -57,7 +57,21 @@ SELECT ck_id('witcher_cc.wcc_shop.' || v.key) AS id
           ('budget.novice_hexes_tokens.name', 'ru', 'Жетоны порч с низкой опасностью'),
           ('budget.novice_hexes_tokens.name', 'en', 'Low Danger Hexes Tokens'),
           ('budget.magic_gifts_tokens.name', 'ru', 'Жетоны магических даров (!! Обязательно получи одобрение ГМа на использование !!)'),
-          ('budget.magic_gifts_tokens.name', 'en', 'Magical Gifts Tokens (!! Be sure to get GM approval for use !!)')
+          ('budget.magic_gifts_tokens.name', 'en', 'Magical Gifts Tokens (!! Be sure to get GM approval for use !!)'),
+          ('budget.journeyman_spells_tokens.name', 'ru', 'Жетоны заклинаний подмастерья'),
+          ('budget.journeyman_spells_tokens.name', 'en', 'Journeyman Spells Tokens'),
+          ('budget.imbue_trophy_tokens.name', 'ru', 'Жетоны ритуала «Наполнение трофея»'),
+          ('budget.imbue_trophy_tokens.name', 'en', 'Imbue Trophy Ritual Tokens'),
+          ('budget.detect_ley_line_tokens.name', 'ru', 'Жетоны заклинания «Обнаружение лей-линий»'),
+          ('budget.detect_ley_line_tokens.name', 'en', 'Detect Ley Line Spell Tokens'),
+          ('budget.hydromancy_tokens.name', 'ru', 'Жетоны ритуала «Гидромантия»'),
+          ('budget.hydromancy_tokens.name', 'en', 'Hydromancy Ritual Tokens'),
+          ('budget.pyromancy_tokens.name', 'ru', 'Жетоны ритуала «Пиромантия»'),
+          ('budget.pyromancy_tokens.name', 'en', 'Pyromancy Ritual Tokens'),
+          ('budget.tyromancy_tokens.name', 'ru', 'Жетоны ритуала «Тиромантия»'),
+          ('budget.tyromancy_tokens.name', 'en', 'Tyromancy Ritual Tokens'),
+          ('budget.oneiromancy_tokens.name', 'ru', 'Жетоны ритуала «Онейромантия»'),
+          ('budget.oneiromancy_tokens.name', 'en', 'Oneiromancy Ritual Tokens')
        ) AS v(key, lang, text)
 ON CONFLICT (id, lang) DO UPDATE
   SET text = EXCLUDED.text;
@@ -155,6 +169,76 @@ SELECT meta.qu_id
                'is_required', false,
                'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.magic_gifts_tokens.name')::text),
                'coverage', jsonb_build_object('items', jsonb_build_array('MG001', 'MG002', 'MG003', 'MG004', 'MG005', 'MG006', 'MG007', 'MG008', 'MG009', 'MG010', 'MG011', 'MG012', 'MG013', 'MG014'))
+             ),
+             jsonb_build_object(
+               'id', 'journeyman_spells_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.journeyman_spells_tokens',
+               'priority', 1,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.journeyman_spells_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS041', 'MS042', 'MS043', 'MS044', 'MS045', 'MS046', 'MS047', 'MS048', 'MS049', 'MS050', 'MS051', 'MS052', 'MS053', 'MS054', 'MS055', 'MS099', 'MS100', 'MS101', 'MS102', 'MS103', 'MS149', 'MS150', 'MS151', 'MS152', 'MS153', 'MS154', 'MS155', 'MS156', 'MS157', 'MS158', 'MS159', 'MS160', 'MS161', 'MS162', 'MS163', 'MS164', 'MS165', 'MS166', 'MS210', 'MS211', 'MS228', 'MS229', 'MS230', 'MS231', 'MS232'))
+             ),
+             jsonb_build_object(
+               'id', 'imbue_trophy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.imbue_trophy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.imbue_trophy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS213'))
+             ),
+             jsonb_build_object(
+               'id', 'detect_ley_line_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.detect_ley_line_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.detect_ley_line_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS127'))
+             ),
+             jsonb_build_object(
+               'id', 'hydromancy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.hydromancy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.hydromancy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS105'))
+             ),
+             jsonb_build_object(
+               'id', 'pyromancy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.pyromancy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.pyromancy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS107'))
+             ),
+             jsonb_build_object(
+               'id', 'tyromancy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.tyromancy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.tyromancy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS214'))
+             ),
+             jsonb_build_object(
+               'id', 'oneiromancy_tokens',
+               'type', 'token',
+               'source', 'characterRaw.professional_gear_options.oneiromancy_tokens',
+               'priority', 2,
+               'is_default', false,
+               'is_required', true,
+               'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_shop.budget.oneiromancy_tokens.name')::text),
+               'coverage', jsonb_build_object('items', jsonb_build_array('MS115'))
              )
            ),
            'sources', jsonb_build_array(
