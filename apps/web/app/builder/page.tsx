@@ -59,6 +59,7 @@ type NextQuestionResponse = {
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
+const IS_DEV_BUILD = process.env.NODE_ENV !== "production";
 const RUN_SEED_STORAGE_KEY = "wcc_builder_run_seed";
 const RUN_PROGRESS_STORAGE_PREFIX = "wcc_builder_progress";
 const BUILDER_IMPORT_HANDOFF_STORAGE_KEY = "wcc_builder_import_handoff";
@@ -1485,7 +1486,7 @@ export default function BuilderPage() {
           ? { ...(baseJson as any), avatarDataUrl }
           : baseJson;
 
-      const res = await apiFetch(`${API_URL}/character/pdf`, {
+      const res = await apiFetch(`${API_URL}/character/pdf?lang=${encodeURIComponent(lang)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ character: characterJson, options }),
@@ -1543,7 +1544,7 @@ export default function BuilderPage() {
     } finally {
       setLoadingGeneratePdf(false);
     }
-  }, [getCharacterJson, avatarDataUrl]);
+  }, [getCharacterJson, avatarDataUrl, lang]);
 
   const pickAvatar = useCallback(async () => {
     const input = document.createElement("input");
@@ -1892,6 +1893,43 @@ export default function BuilderPage() {
                 {displayLang === "ru" ? "История пуста" : "History is empty"}
               </div>
             )}
+            {IS_DEV_BUILD ? (
+              <div
+                style={{
+                  marginTop: "0.75rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.5rem",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => void downloadPdf()}
+                  disabled={loadingGeneratePdf || loading || autoRandomising}
+                  className="badge-inline"
+                  style={{
+                    cursor: loadingGeneratePdf || loading || autoRandomising ? "default" : "pointer",
+                    border: "1px solid rgba(59,130,246,0.45)",
+                    justifyContent: "center",
+                    width: "100%",
+                  }}
+                  title={displayLang === "ru" ? "Скачать PDF текущего состояния" : "Download PDF for current state"}
+                >
+                  {loadingGeneratePdf
+                    ? displayLang === "ru"
+                      ? "Генерация PDF..."
+                      : "Generating PDF..."
+                    : displayLang === "ru"
+                      ? "Скачать PDF"
+                      : "Download PDF"}
+                </button>
+                {generatePdfError ? (
+                  <div style={{ color: "#fca5a5", fontSize: "0.8125rem", lineHeight: 1.4 }}>
+                    {generatePdfError}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
           <div className="wizard-body">
             <div className="section-title-row">

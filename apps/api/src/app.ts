@@ -11,6 +11,7 @@ import {
   resolveCharacterRawI18n,
   db,
 } from './core/index.js';
+import { buildPdfArtifactsFromRawCharacter } from './pdf/buildPdfArtifactsFromRawCharacter.js';
 import { generateCharacterPdfBuffer } from './pdf/characterPdf.js';
 
 type AppEnv = {
@@ -1082,6 +1083,7 @@ function buildDownloadContentDisposition(fileName: string): string {
 }
 
 const app = new Hono<AppEnv>().basePath('/api');
+const IS_DEV_SERVER = process.env.NODE_ENV !== 'production';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
@@ -1089,6 +1091,35 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 app.use('*', cors({ origin: allowedOrigins }));
 app.use('*', authMiddleware);
+
+const pdfArtifactDeps = {
+  db,
+  DEFAULT_USER_SETTINGS,
+  normalizeUserSettingsRow,
+  resolveCharacterRawI18n,
+  readIdListFromGear,
+  readIdListFromGearAny,
+  readIdListFromIngredients,
+  readIdListFromMagicList,
+  readIdListFromMagicInvocations,
+  readIdListFromMagicGifts,
+  ITEM_ID_RE,
+  patchResolvedGearFromDbViews,
+  getSkillsCatalog,
+  loadAvatarFromStorage,
+  generateCharacterPdfBuffer,
+  safeFileNameBase,
+};
+
+if (IS_DEV_SERVER) {
+  const { registerDevPdfRoute } = await import('./dev/registerDevPdfRoute.js');
+  registerDevPdfRoute(app, {
+    asRecord,
+    getUserEmail,
+    buildPdfArtifactsFromRawCharacter: (params) => buildPdfArtifactsFromRawCharacter({ ...params, deps: pdfArtifactDeps }),
+    buildDownloadContentDisposition,
+  });
+}
 
 app.post('/generate-character', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as unknown;
@@ -1561,401 +1592,14 @@ app.get('/characters/:id/pdf', async (c) => {
     if (!rawCharacter) {
       return c.json({ error: 'Saved raw character JSON is invalid' }, 500);
     }
-    let userSettings = DEFAULT_USER_SETTINGS;
-    try {
-      const settingsResult = await db.query<UserSettingsRow>(
-        `
-          SELECT owner_email, settings_json
-          FROM wcc_user_settings
-          WHERE owner_email = $1
-        `,
-        [ownerEmail],
-      );
-      userSettings = normalizeUserSettingsRow(settingsResult.rows[0]);
-    } catch (error) {
-      console.error('[characters] pdf user settings lookup failed, using defaults', error);
-    }
-    const rawCharacterForPdf: Record<string, unknown> = {
-      ...rawCharacter,
-      user_settings: {
-        use_w1_alchemy_icons: userSettings.useW1AlchemyIcons,
-        pdf_tables: userSettings.pdfTables,
-      },
-    };
-
-    const resolvedCharacter = await resolveCharacterRawI18n(rawCharacter, lang);
-    const weaponIds = readIdListFromGear(rawCharacter, 'weapons', 'w_id', ITEM_ID_RE.weapon);
-    const armorIds = readIdListFromGear(rawCharacter, 'armors', 'a_id', ITEM_ID_RE.armor);
-    const potionIds = readIdListFromGear(rawCharacter, 'potions', 'p_id', ITEM_ID_RE.potion);
-    const recipeIds = readIdListFromGearAny(rawCharacter, 'recipes', ['r_id', 'id'], ITEM_ID_RE.recipe);
-    const upgradeIds = readIdListFromGearAny(rawCharacter, 'upgrades', ['u_id', 'id'], ITEM_ID_RE.upgrade);
-    const blueprintIds = readIdListFromGearAny(rawCharacter, 'blueprints', ['b_id', 'bp_id', 'id'], ITEM_ID_RE.blueprint);
-    const generalGearIds = readIdListFromGearAny(rawCharacter, 'general_gear', ['t_id', 'id'], ITEM_ID_RE.generalGear);
-    const vehicleIds = readIdListFromGearAny(rawCharacter, 'vehicles', ['wt_id', 'id'], ITEM_ID_RE.vehicle);
-    const ingredientAlchemyIds = readIdListFromIngredients(rawCharacter, 'alchemy', 'i_id');
-    const ingredientCraftIds = readIdListFromIngredients(rawCharacter, 'craft', 'i_id');
-    const ingredientIds = Array.from(new Set([...ingredientAlchemyIds, ...ingredientCraftIds]));
-    const spellIds = readIdListFromMagicList(rawCharacter, 'spells');
-    const signIds = readIdListFromMagicList(rawCharacter, 'signs');
-    const ritualIds = readIdListFromMagicList(rawCharacter, 'rituals');
-    const hexIds = readIdListFromMagicList(rawCharacter, 'hexes');
-    const invocationDruidIds = readIdListFromMagicInvocations(rawCharacter, 'druid');
-    const invocationPriestIds = readIdListFromMagicInvocations(rawCharacter, 'priest');
-    const magicSpellLikeIds = Array.from(new Set([...spellIds, ...signIds]));
-    const magicInvocationIds = Array.from(new Set([...invocationDruidIds, ...invocationPriestIds]));
-    const giftIds = readIdListFromMagicGifts(rawCharacter);
-
-    const weaponsById = new Map<string, WeaponPdfDetailsRow>();
-    const armorsById = new Map<string, ArmorPdfDetailsRow>();
-    const potionsById = new Map<string, PotionPdfDetailsRow>();
-    const recipesById = new Map<string, RecipePdfDetailsRow>();
-    const blueprintsById = new Map<string, BlueprintPdfDetailsRow>();
-    const ingredientsById = new Map<string, IngredientPdfDetailsRow>();
-    const generalGearById = new Map<string, GeneralGearPdfDetailsRow>();
-    const vehiclesById = new Map<string, VehiclePdfDetailsRow>();
-    const magicSpellsById = new Map<string, MagicSpellPdfDetailsRow>();
-    const magicInvocationsById = new Map<string, MagicInvocationPdfDetailsRow>();
-    const magicRitualsById = new Map<string, MagicRitualPdfDetailsRow>();
-    const magicHexesById = new Map<string, MagicHexPdfDetailsRow>();
-    const giftsById = new Map<string, MagicGiftPdfDetailsRow>();
-    const itemEffectsGlossary: ItemEffectGlossaryRow[] = [];
-
-    try {
-      if (weaponIds.length > 0) {
-        const { rows } = await db.query<WeaponPdfDetailsRow>(
-          `
-            SELECT w_id, weapon_name, dmg, dmg_types, weight, price, hands, reliability, concealment, effect_names
-            FROM wcc_item_weapons_v
-            WHERE lang = $1 AND w_id = ANY($2::text[])
-          `,
-          [lang, weaponIds],
-        );
-        rows.forEach((r) => weaponsById.set(r.w_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf weapon lookup failed', error);
-    }
-
-    try {
-      if (armorIds.length > 0) {
-        const { rows } = await db.query<ArmorPdfDetailsRow>(
-          `
-            SELECT a_id, armor_name, stopping_power, encumbrance, enhancements, weight, price, effect_names
-            FROM wcc_item_armors_v
-            WHERE lang = $1 AND a_id = ANY($2::text[])
-          `,
-          [lang, armorIds],
-        );
-        rows.forEach((r) => armorsById.set(r.a_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf armor lookup failed', error);
-    }
-
-    try {
-      if (potionIds.length > 0) {
-        const { rows } = await db.query<PotionPdfDetailsRow>(
-          `
-            SELECT p_id, potion_name, toxicity, time_effect, effect, weight, price
-            FROM wcc_item_potions_v
-            WHERE lang = $1 AND p_id = ANY($2::text[])
-          `,
-          [lang, potionIds],
-        );
-        rows.forEach((r) => potionsById.set(r.p_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf potion lookup failed', error);
-    }
-
-    try {
-      if (recipeIds.length > 0) {
-        const { rows } = await db.query<RecipePdfDetailsRow>(
-          `
-            SELECT r_id, recipe_name, recipe_group, craft_level, complexity, time_craft, formula_en,
-                   price_formula, minimal_ingredients_cost, time_effect, toxicity, recipe_description,
-                   weight_potion, price_potion
-            FROM wcc_item_recipes_v
-            WHERE lang = $1 AND r_id = ANY($2::text[])
-          `,
-          [lang, recipeIds],
-        );
-        rows.forEach((r) => recipesById.set(r.r_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf recipe lookup failed', error);
-    }
-
-    try {
-      if (blueprintIds.length > 0) {
-        const { rows } = await db.query<BlueprintPdfDetailsRow>(
-          `
-            SELECT b_id, blueprint_name, blueprint_group, craft_level, difficulty_check, time_craft,
-                   item_id, components, item_desc, price_components, price, price_item
-            FROM wcc_item_blueprints_v
-            WHERE lang = $1 AND b_id = ANY($2::text[])
-          `,
-          [lang, blueprintIds],
-        );
-        rows.forEach((r) => blueprintsById.set(r.b_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf blueprint lookup failed', error);
-    }
-
-    try {
-      if (ingredientIds.length > 0) {
-        const { rows } = await db.query<IngredientPdfDetailsRow>(
-          `
-            SELECT i_id, ingredient_name, alchemy_substance, alchemy_substance_en, harvesting_complexity, weight, price
-            FROM wcc_item_ingredients_v
-            WHERE lang = $1 AND i_id = ANY($2::text[])
-          `,
-          [lang, ingredientIds],
-        );
-        rows.forEach((r) => ingredientsById.set(r.i_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf ingredient lookup failed', error);
-    }
-
-    try {
-      if (generalGearIds.length > 0) {
-        const { rows } = await db.query<GeneralGearPdfDetailsRow>(
-          `
-            SELECT t_id, gear_name, group_name, subgroup_name, gear_description, concealment, weight, price
-            FROM wcc_item_general_gear_v
-            WHERE lang = $1 AND t_id = ANY($2::text[])
-          `,
-          [lang, generalGearIds],
-        );
-        rows.forEach((r) => generalGearById.set(r.t_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf general gear lookup failed', error);
-    }
-
-    try {
-      if (vehicleIds.length > 0) {
-        const { rows } = await db.query<VehiclePdfDetailsRow>(
-          `
-            SELECT wt_id, vehicle_name, subgroup_name, base, control_modifier, speed, occupancy, hp, weight, price
-            FROM wcc_item_vehicles_v
-            WHERE lang = $1 AND wt_id = ANY($2::text[])
-          `,
-          [lang, vehicleIds],
-        );
-        rows.forEach((r) => vehiclesById.set(r.wt_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf vehicle lookup failed', error);
-    }
-
-    try {
-      if (magicSpellLikeIds.length > 0) {
-        const { rows } = await db.query<MagicSpellPdfDetailsRow>(
-          `
-            SELECT ms_id, spell_name, level, element, stamina_cast, stamina_keeping, damage, distance, zone_size, form, effect_time, effect, sort_key, type
-            FROM wcc_magic_spells_v
-            WHERE lang = $1 AND ms_id = ANY($2::text[])
-          `,
-          [lang, magicSpellLikeIds],
-        );
-        rows.forEach((r) => magicSpellsById.set(r.ms_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf spells/signs lookup failed', error);
-    }
-
-    try {
-      if (magicInvocationIds.length > 0) {
-        const { rows } = await db.query<MagicInvocationPdfDetailsRow>(
-          `
-            SELECT ms_id, invocation_name, level, cult_or_circle, stamina_cast, stamina_keeping, damage, distance, zone_size, form, effect_time, effect, type
-            FROM wcc_magic_invocations_v
-            WHERE lang = $1 AND ms_id = ANY($2::text[])
-          `,
-          [lang, magicInvocationIds],
-        );
-        rows.forEach((r) => magicInvocationsById.set(r.ms_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf invocations lookup failed', error);
-    }
-
-    try {
-      if (ritualIds.length > 0) {
-        const { rows } = await db.query<MagicRitualPdfDetailsRow>(
-          `
-            SELECT ms_id, ritual_name, level, dc, preparing_time, ingredients, zone_size, stamina_cast, stamina_keeping, effect_time, form, effect, effect_tpl, how_to_remove, sort_key
-            FROM wcc_magic_rituals_v
-            WHERE lang = $1 AND ms_id = ANY($2::text[])
-          `,
-          [lang, ritualIds],
-        );
-        rows.forEach((r) => magicRitualsById.set(r.ms_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf rituals lookup failed', error);
-    }
-
-    try {
-      if (hexIds.length > 0) {
-        const { rows } = await db.query<MagicHexPdfDetailsRow>(
-          `
-            SELECT ms_id, hex_name, level, stamina_cast, effect, remove_instructions, remove_components, tooltip, sort_key
-            FROM wcc_magic_hexes_v
-            WHERE lang = $1 AND ms_id = ANY($2::text[])
-          `,
-          [lang, hexIds],
-        );
-        rows.forEach((r) => magicHexesById.set(r.ms_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf hexes lookup failed', error);
-    }
-
-    try {
-      if (giftIds.length > 0) {
-        const { rows } = await db.query<MagicGiftPdfDetailsRow>(
-          `
-            SELECT mg_id, group_name, gift_name, dc, vigor_cost, action_cost, description, sort_key, is_major
-            FROM wcc_magic_gifts_v
-            WHERE lang = $1 AND mg_id = ANY($2::text[])
-          `,
-          [lang, giftIds],
-        );
-        rows.forEach((r) => giftsById.set(r.mg_id, r));
-      }
-    } catch (error) {
-      console.error('[characters] pdf gifts lookup failed', error);
-    }
-
-    try {
-      const blueprintItemIds: string[] = [];
-      for (const row of blueprintsById.values()) {
-        const itemId = typeof row.item_id === 'string' ? row.item_id.trim() : '';
-        if (itemId) blueprintItemIds.push(itemId);
-      }
-
-      const itemIdsForEffects = Array.from(
-        new Set([...weaponIds, ...armorIds, ...upgradeIds, ...blueprintItemIds]),
-      ).filter((id) => /^(W|A|U)/.test(id));
-
-      if (itemIdsForEffects.length > 0) {
-        const { rows } = await db.query<ItemEffectLookupRow>(
-          `
-            SELECT ite.item_id::text AS item_id,
-                   ite.e_e_id::text AS effect_id,
-                   ite.modifier AS modifier,
-                   COALESCE(ie_lang.text, ie_en.text, '') AS name_tpl,
-                   COALESCE(ide_lang.text, ide_en.text, '') AS desc_tpl,
-                   COALESCE(iec_lang.text, iec_en.text, '') AS cond_tpl
-            FROM wcc_item_to_effects ite
-            LEFT JOIN wcc_item_effects e ON e.e_id = ite.e_e_id
-            LEFT JOIN i18n_text ie_lang ON ie_lang.id = e.name_id AND ie_lang.lang = $1
-            LEFT JOIN i18n_text ie_en ON ie_en.id = e.name_id AND ie_en.lang = 'en'
-            LEFT JOIN i18n_text ide_lang ON ide_lang.id = e.description_id AND ide_lang.lang = $1
-            LEFT JOIN i18n_text ide_en ON ide_en.id = e.description_id AND ide_en.lang = 'en'
-            LEFT JOIN wcc_item_effect_conditions ec ON ec.ec_id = ite.ec_ec_id
-            LEFT JOIN i18n_text iec_lang ON iec_lang.id = ec.description_id AND iec_lang.lang = $1
-            LEFT JOIN i18n_text iec_en ON iec_en.id = ec.description_id AND iec_en.lang = 'en'
-            WHERE ite.item_id = ANY($2::text[])
-            ORDER BY ite.e_e_id ASC, ite.modifier ASC NULLS FIRST
-          `,
-          [lang, itemIdsForEffects],
-        );
-
-        const normalize = (v: string | null | undefined): string => String(v ?? '').trim();
-        const replaceMod = (tpl: string, modifier: number | null): string => {
-          const mod = modifier === null || modifier === undefined ? '' : String(modifier);
-          return tpl.replaceAll('<mod>', mod);
-        };
-        const toSortNumber = (effectId: string): number => {
-          const m = /^E(\d+)$/.exec(effectId.trim());
-          if (!m) return Number.POSITIVE_INFINITY;
-          const n = Number(m[1]);
-          return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
-        };
-
-        const byKey = new Map<string, { effectId: string; modifier: number | null; row: ItemEffectGlossaryRow }>();
-        for (const row of rows) {
-          const effectId = normalize(row.effect_id);
-          const nameTpl = normalize(row.name_tpl);
-          if (!effectId && !nameTpl) continue;
-          const cond = replaceMod(normalize(row.cond_tpl), row.modifier).trim();
-          const nameBase = replaceMod(nameTpl || effectId, row.modifier).trim();
-          const name = cond ? `${nameBase} [${cond}]` : nameBase;
-          const value = replaceMod(normalize(row.desc_tpl), row.modifier).trim();
-          const key = `${effectId}|${row.modifier ?? ''}|${cond}`;
-          if (byKey.has(key)) continue;
-          byKey.set(key, {
-            effectId,
-            modifier: row.modifier ?? null,
-            row: { name, value },
-          });
-        }
-
-        const sorted = Array.from(byKey.values()).sort((a, b) => {
-          const an = toSortNumber(a.effectId);
-          const bn = toSortNumber(b.effectId);
-          if (an !== bn) return an - bn;
-          const am = a.modifier ?? Number.NEGATIVE_INFINITY;
-          const bm = b.modifier ?? Number.NEGATIVE_INFINITY;
-          if (am !== bm) return am - bm;
-          return a.row.name.localeCompare(b.row.name, undefined, { sensitivity: 'base' });
-        });
-        itemEffectsGlossary.push(...sorted.map((x) => x.row));
-      }
-    } catch (error) {
-      console.error('[characters] pdf item effects lookup failed', error);
-    }
-
-    patchResolvedGearFromDbViews({
+    const { pdfBuffer, fileName } = await buildPdfArtifactsFromRawCharacter({
       rawCharacter,
-      resolvedCharacter,
-      weaponsById,
-      armorsById,
-      potionsById,
-      recipesById,
-      blueprintsById,
-      ingredientsById,
-      generalGearById,
-      vehiclesById,
-      magicSpellsById,
-      magicInvocationsById,
-      magicRitualsById,
-      magicHexesById,
-      giftsById,
-    });
-
-    const skillsCatalog = await getSkillsCatalog({ lang }).catch(() => ({ skills: [] as Array<{ id: string; param: string | null; name: string }> }));
-    const skillsCatalogById = new Map(
-      (Array.isArray(skillsCatalog.skills) ? skillsCatalog.skills : []).map((s) => [s.id, { param: s.param, name: s.name }] as const),
-    );
-
-    let avatarBuffer: Buffer | undefined = undefined;
-    if (row.avatar_url) {
-      try {
-        const avatarRes = await loadAvatarFromStorage(row.avatar_url);
-        if (avatarRes) {
-          avatarBuffer = avatarRes.data;
-        }
-      } catch (e) {
-        console.warn('[characters] pdf avatar load failed', e);
-      }
-    }
-
-    const pdfBuffer = await generateCharacterPdfBuffer({
-      rawCharacter: rawCharacterForPdf,
-      resolvedCharacter,
       lang,
-      skillsCatalogById,
-      itemEffectsGlossary,
-      avatarBuffer,
+      ownerEmail,
+      explicitName: row.name,
+      avatarUrl: row.avatar_url,
+      deps: pdfArtifactDeps,
     });
-
-    const fileName = `${safeFileNameBase(row.name, 'character')}-sheet.pdf`;
     return c.body(new Uint8Array(pdfBuffer), 200, {
       'Content-Type': 'application/pdf',
       'Cache-Control': 'no-store',
