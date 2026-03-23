@@ -11,6 +11,16 @@ ON CONFLICT (id, lang) DO NOTHING;
 INSERT INTO rules (ru_id, name, body)
 VALUES
   (
+    ck_id('witcher_cc.rules.is_academy_life_details_from_o0105'),
+    'is_academy_life_details_from_o0105',
+    '{
+      "and": [
+        { "==": [ { "var": "answers.lastAnswer.questionId" }, "wcc_past_academy_life" ] },
+        { "in": [ "wcc_past_academy_life_o0105", { "var": "answers.lastAnswer.answerIds" } ] }
+      ]
+    }'::jsonb
+  ),
+  (
     ck_id('witcher_cc.rules.is_academy_life_details_from_curse'),
     'is_academy_life_details_from_curse',
     '{
@@ -185,6 +195,31 @@ WITH
   raw_data AS (
     SELECT 'ru' AS lang, v.*
       FROM (VALUES
+        -- Group 0: details for o0105
+        ('wcc_past_academy_life_o010501', 1, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Редании', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010502', 2, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Каэдвена', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010503', 3, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Темерии', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010504', 4, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Аэдирна', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010505', 5, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Лирии и Ривии', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010506', 6, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Ковира и Повисса', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010507', 7, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Скеллиге', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010508', 8, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Цидариса', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010509', 9, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Вердэна', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010510', 10, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Цинтры', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010511', 11, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Сердца Нильфгаарда', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010512', 12, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Виковаро', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010513', 13, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Аигрена', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010514', 14, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Назаира', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010515', 15, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Метиины', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010516', 16, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Маг Турги', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010517', 17, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Гесо', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010518', 18, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Эббинга', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010519', 19, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Мехта', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010520', 20, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Геммеры', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010521', 21, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Этолии', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010522', 22, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Земли старших народов) Доль Блатанны', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010523', 23, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Земли старших народов) Махакама', 'is_academy_life_details_from_o0105'),
+
         -- Group 1: details for o0110/o0208/o0407
         ('wcc_past_academy_life_o011001', 1, 0.2::numeric, '<b>Проклятие чудовищности</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
         ('wcc_past_academy_life_o011002', 2, 0.2::numeric, '<b>Проклятие призраков</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
@@ -194,12 +229,12 @@ WITH
         ('wcc_past_academy_life_o011006', 6, 0.0::numeric, '<b>Другое проклятие</b> (кастомное)', 'is_academy_life_details_from_curse'),
 
         -- Group 2: details for o0207
-        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 100 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 200 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 300 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 400 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 500 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 600 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Наемничество: заработал 100 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Наемничество: заработал 200 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Наемничество: заработал 300 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Наемничество: заработал 400 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Наемничество: заработал 500 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Наемничество: заработал 600 крон', 'is_academy_life_details_from_o0207'),
 
         -- Group 3: details for o0307
         ('wcc_past_academy_life_o030701', 1, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Тактика', 'is_academy_life_details_from_o0307_tactics_new'),
@@ -253,6 +288,31 @@ WITH
 
     SELECT 'en' AS lang, v.*
       FROM (VALUES
+        -- Group 0: details for o0105
+        ('wcc_past_academy_life_o010501', 1, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Redania', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010502', 2, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Kaedwen', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010503', 3, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Temeria', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010504', 4, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Aedirn', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010505', 5, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Lyria & Rivia', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010506', 6, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Kovir & Poviss', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010507', 7, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Skellige', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010508', 8, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Cidaris', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010509', 9, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Verden', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010510', 10, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Cintra', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010511', 11, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) The Heart of Nilfgaard', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010512', 12, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Vicovaro', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010513', 13, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Angren', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010514', 14, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Nazair', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010515', 15, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Mettina', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010516', 16, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Mag Turga', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010517', 17, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Gheso', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010518', 18, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Ebbing', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010519', 19, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Maecht', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010520', 20, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Gemmeria', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010521', 21, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Etolia', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010522', 22, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Elderlands) Dol Blathanna', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010523', 23, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Elderlands) Mahakam', 'is_academy_life_details_from_o0105'),
+
         -- Group 1: details for o0110/o0208/o0407
         ('wcc_past_academy_life_o011001', 1, 0.2::numeric, '<b>Curse of Monstrosity</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
         ('wcc_past_academy_life_o011002', 2, 0.2::numeric, '<b>Curse of Phantoms</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
@@ -262,12 +322,12 @@ WITH
         ('wcc_past_academy_life_o011006', 6, 0.0::numeric, '<b>Other Curse</b> (custom)', 'is_academy_life_details_from_curse'),
 
         -- Group 2: details for o0207
-        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 100 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 200 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 300 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 400 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 500 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 600 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Mercenary work: earned 100 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Mercenary work: earned 200 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Mercenary work: earned 300 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Mercenary work: earned 400 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Mercenary work: earned 500 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Mercenary work: earned 600 crowns', 'is_academy_life_details_from_o0207'),
 
         -- Group 3: details for o0307
         ('wcc_past_academy_life_o030701', 1, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Tactics', 'is_academy_life_details_from_o0307_tactics_new'),
@@ -344,6 +404,8 @@ WITH
            END
       FROM raw_data
      WHERE raw_data.an_id LIKE 'wcc_past_academy_life_o0307%'
+        OR raw_data.an_id LIKE 'wcc_past_academy_life_o0105%'
+        OR raw_data.an_id LIKE 'wcc_past_academy_life_o0207%'
         OR raw_data.an_id LIKE 'wcc_past_academy_life_o0406%'
     ON CONFLICT (id, lang) DO NOTHING
 )
@@ -364,48 +426,52 @@ SELECT vals.an_id
  WHERE vals.lang = 'ru'
 ON CONFLICT (an_id) DO NOTHING;
 
--- Region names for social status effects (group o0406)
-WITH region_vals AS (
-  SELECT *
-    FROM (VALUES
-      (1,  'Редания (Северные королевства)', 'Redania (Northern Kingdoms)'),
-      (2,  'Каэдвен (Северные королевства)', 'Kaedwen (Northern Kingdoms)'),
-      (3,  'Темерия (Северные королевства)', 'Temeria (Northern Kingdoms)'),
-      (4,  'Аэдирн (Северные королевства)', 'Aedirn (Northern Kingdoms)'),
-      (5,  'Лирия и Ривия (Северные королевства)', 'Lyria & Rivia (Northern Kingdoms)'),
-      (6,  'Ковир и Повисс (Северные королевства)', 'Kovir & Poviss (Northern Kingdoms)'),
-      (7,  'Скеллиге (Северные королевства)', 'Skellige (Northern Kingdoms)'),
-      (8,  'Цидарис (Северные королевства)', 'Cidaris (Northern Kingdoms)'),
-      (9,  'Вердэн (Северные королевства)', 'Verden (Northern Kingdoms)'),
-      (10, 'Цинтра (Северные королевства)', 'Cintra (Northern Kingdoms)'),
-      (11, 'Сердце Нильфгаарда (Нильфгаард)', 'The Heart of Nilfgaard (Nilfgaard)'),
-      (12, 'Виковаро (Нильфгаард)', 'Vicovaro (Nilfgaard)'),
-      (13, 'Аигрен (Нильфгаард)', 'Angren (Nilfgaard)'),
-      (14, 'Назаир (Нильфгаард)', 'Nazair (Nilfgaard)'),
-      (15, 'Метиина (Нильфгаард)', 'Mettina (Nilfgaard)'),
-      (16, 'Маг Турга (Нильфгаард)', 'Mag Turga (Nilfgaard)'),
-      (17, 'Гесо (Нильфгаард)', 'Gheso (Nilfgaard)'),
-      (18, 'Эббинг (Нильфгаард)', 'Ebbing (Nilfgaard)'),
-      (19, 'Мехт (Нильфгаард)', 'Maecht (Nilfgaard)'),
-      (20, 'Геммера (Нильфгаард)', 'Gemmeria (Nilfgaard)'),
-      (21, 'Этолия (Нильфгаард)', 'Etolia (Nilfgaard)'),
-      (22, 'Доль Блатанна (Земли старших народов)', 'Dol Blathanna (Elderlands)'),
-      (23, 'Махакам (Земли старших народов)', 'Mahakam (Elderlands)')
-    ) AS v(num, ru_name, en_name)
-)
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-SELECT ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(v.num, 'FM00') || '.region_name') AS id
-     , 'character' AS entity
-     , 'social_status_group' AS entity_field
-     , x.lang
-     , x.text
-  FROM region_vals v
- CROSS JOIN LATERAL (
-    VALUES
-      ('ru', v.ru_name),
-      ('en', v.en_name)
- ) AS x(lang, text)
-ON CONFLICT (id, lang) DO NOTHING;
+SELECT ck_id(v.key), 'character', 'event_desc', v.lang, v.text
+FROM (VALUES
+  ('witcher_cc.wcc_past_academy_life_o030701.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Тактике]'),
+  ('witcher_cc.wcc_past_academy_life_o030701.event_desc', 'en', 'Mage hunter assistance: [+2 to Tactics]'),
+  ('witcher_cc.wcc_past_academy_life_o030702.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Тактике]'),
+  ('witcher_cc.wcc_past_academy_life_o030702.event_desc', 'en', 'Mage hunter assistance: [+1 to Tactics]'),
+  ('witcher_cc.wcc_past_academy_life_o030703.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Стрельбе из лука]'),
+  ('witcher_cc.wcc_past_academy_life_o030703.event_desc', 'en', 'Mage hunter assistance: [+2 to Archery]'),
+  ('witcher_cc.wcc_past_academy_life_o030704.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Стрельбе из лука]'),
+  ('witcher_cc.wcc_past_academy_life_o030704.event_desc', 'en', 'Mage hunter assistance: [+1 to Archery]'),
+  ('witcher_cc.wcc_past_academy_life_o030705.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Атлетике]'),
+  ('witcher_cc.wcc_past_academy_life_o030705.event_desc', 'en', 'Mage hunter assistance: [+2 to Athletics]'),
+  ('witcher_cc.wcc_past_academy_life_o030706.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Атлетике]'),
+  ('witcher_cc.wcc_past_academy_life_o030706.event_desc', 'en', 'Mage hunter assistance: [+1 to Athletics]'),
+  ('witcher_cc.wcc_past_academy_life_o030707.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Стрельбе из арбалета]'),
+  ('witcher_cc.wcc_past_academy_life_o030707.event_desc', 'en', 'Mage hunter assistance: [+2 to Crossbow]'),
+  ('witcher_cc.wcc_past_academy_life_o030708.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Стрельбе из арбалета]'),
+  ('witcher_cc.wcc_past_academy_life_o030708.event_desc', 'en', 'Mage hunter assistance: [+1 to Crossbow]'),
+  ('witcher_cc.wcc_past_academy_life_o030709.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Владению легкими клинками]'),
+  ('witcher_cc.wcc_past_academy_life_o030709.event_desc', 'en', 'Mage hunter assistance: [+2 to Small Blades]'),
+  ('witcher_cc.wcc_past_academy_life_o030710.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Владению легкими клинками]'),
+  ('witcher_cc.wcc_past_academy_life_o030710.event_desc', 'en', 'Mage hunter assistance: [+1 to Small Blades]'),
+  ('witcher_cc.wcc_past_academy_life_o030711.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Владению древковым оружием]'),
+  ('witcher_cc.wcc_past_academy_life_o030711.event_desc', 'en', 'Mage hunter assistance: [+2 to Staff/Spear]'),
+  ('witcher_cc.wcc_past_academy_life_o030712.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Владению древковым оружием]'),
+  ('witcher_cc.wcc_past_academy_life_o030712.event_desc', 'en', 'Mage hunter assistance: [+1 to Staff/Spear]'),
+  ('witcher_cc.wcc_past_academy_life_o030713.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Владению мечом]'),
+  ('witcher_cc.wcc_past_academy_life_o030713.event_desc', 'en', 'Mage hunter assistance: [+2 to Swordsmanship]'),
+  ('witcher_cc.wcc_past_academy_life_o030714.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Владению мечом]'),
+  ('witcher_cc.wcc_past_academy_life_o030714.event_desc', 'en', 'Mage hunter assistance: [+1 to Swordsmanship]'),
+  ('witcher_cc.wcc_past_academy_life_o030715.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Ближнему бою]'),
+  ('witcher_cc.wcc_past_academy_life_o030715.event_desc', 'en', 'Mage hunter assistance: [+2 to Melee]'),
+  ('witcher_cc.wcc_past_academy_life_o030716.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Ближнему бою]'),
+  ('witcher_cc.wcc_past_academy_life_o030716.event_desc', 'en', 'Mage hunter assistance: [+1 to Melee]'),
+  ('witcher_cc.wcc_past_academy_life_o030717.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Борьбе]'),
+  ('witcher_cc.wcc_past_academy_life_o030717.event_desc', 'en', 'Mage hunter assistance: [+2 to Brawling]'),
+  ('witcher_cc.wcc_past_academy_life_o030718.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Борьбе]'),
+  ('witcher_cc.wcc_past_academy_life_o030718.event_desc', 'en', 'Mage hunter assistance: [+1 to Brawling]'),
+  ('witcher_cc.wcc_past_academy_life_o030719.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Верховой езде]'),
+  ('witcher_cc.wcc_past_academy_life_o030719.event_desc', 'en', 'Mage hunter assistance: [+2 to Riding]'),
+  ('witcher_cc.wcc_past_academy_life_o030720.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Верховой езде]'),
+  ('witcher_cc.wcc_past_academy_life_o030720.event_desc', 'en', 'Mage hunter assistance: [+1 to Riding]')
+) AS v(key, lang, text)
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
 
 -- Effects: set academy life pass flag on every academy_life option
 WITH academy_answers AS (
@@ -512,6 +578,44 @@ SELECT
   )
 FROM curse_event_mapping;
 
+-- Effects: save o0105 detail choice to life events
+WITH options AS (
+  SELECT num
+    FROM generate_series(1, 23) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0105' || to_char(options.num, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0105' || to_char(options.num, 'FM00') || '.event_desc')::text)
+      )
+    )
+  )
+FROM options;
+
 -- Effects: crowns for o0207 details
 WITH crowns_vals AS (
   SELECT num, num * 100 AS crowns
@@ -527,8 +631,46 @@ SELECT
       jsonb_build_object('var', 'characterRaw.money.crowns'),
       crowns_vals.crowns
     )
+    )
+  FROM crowns_vals;
+
+-- Effects: save o0207 detail choice to life events
+WITH options AS (
+  SELECT num
+    FROM generate_series(1, 6) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0207' || to_char(options.num, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0207' || to_char(options.num, 'FM00') || '.event_desc')::text)
+      )
+    )
   )
-FROM crowns_vals;
+FROM options;
 
 -- Effects: combat skill increase for o0307 details
 WITH skill_mapping AS (
@@ -646,36 +788,3 @@ SELECT
     )
   )
 FROM options;
-
--- Effects: social status "Equal" in selected region for o0406 details
-WITH regions AS (
-  SELECT num
-    FROM generate_series(1, 23) AS num
-)
-INSERT INTO effects (scope, an_an_id, body)
-  SELECT
-    'character',
-    'wcc_past_academy_life_o0406' || to_char(regions.num, 'FM00'),
-    jsonb_build_object(
-      'when',
-      jsonb_build_object(
-        '!',
-        jsonb_build_object(
-          'in',
-          jsonb_build_array(
-            ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(regions.num, 'FM00') || '.region_name')::text,
-            jsonb_build_object('cat_array', 'characterRaw.social_status[].group_name.i18n_uuid')
-          )
-        )
-      ),
-      'add',
-      jsonb_build_array(
-        jsonb_build_object('var', 'characterRaw.social_status'),
-        jsonb_build_object(
-          'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(regions.num, 'FM00') || '.region_name')::text),
-        'group_status', 3,
-        'group_is_feared', false
-      )
-    )
-  )
-FROM regions;

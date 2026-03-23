@@ -16613,6 +16613,92 @@ SELECT 'character' AS scope
   FROM nums
  CROSS JOIN meta;
 
+-- Родной язык и языковой бонус зависят от выбранной родины
+WITH meta AS (
+  SELECT 'witcher_cc' AS su_su_id
+       , 'wcc_past_homeland_mage' AS qu_id
+       , 'character' AS entity
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| v.lang_key ||'.'|| meta.entity ||'.home_language')
+     , meta.entity
+     , 'home_language'
+     , v.lang
+     , v.text
+  FROM (VALUES
+    ('common', 'ru', 'Всеобщий'),
+    ('common', 'en', 'Common Speech'),
+    ('elder_speech', 'ru', 'Старшая речь'),
+    ('elder_speech', 'en', 'Elder Speech'),
+    ('dwarvish', 'ru', 'Краснолюдский'),
+    ('dwarvish', 'en', 'Dwarvish')
+  ) AS v(lang_key, lang, text)
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH meta AS (
+  SELECT 'witcher_cc' AS su_su_id
+       , 'wcc_past_homeland_mage' AS qu_id
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_past_homeland_mage_o' || to_char(v.num, 'FM00'),
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.home_language'),
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| v.lang_key ||'.character.home_language')::text)
+    )
+  )
+FROM (VALUES
+  ( 1, 'common'), ( 2, 'common'), ( 3, 'common'), ( 4, 'common'), ( 5, 'common'),
+  ( 6, 'common'), ( 7, 'common'), ( 8, 'common'), ( 9, 'common'), (10, 'common'),
+  (11, 'common'), (12, 'common'), (13, 'common'), (14, 'common'), (15, 'common'),
+  (16, 'common'), (17, 'common'), (18, 'common'), (19, 'common'), (20, 'common'),
+  (21, 'common'), (22, 'common'), (23, 'common'), (24, 'common'),
+  (25, 'elder_speech'),
+  (26, 'dwarvish')
+) AS v(num, lang_key)
+CROSS JOIN meta
+UNION ALL
+SELECT 'character', 'wcc_past_homeland_mage_o' || to_char(v.num, 'FM00'),
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.common.' || v.skill_id || '.bonus'),
+      8
+    )
+  )
+FROM (VALUES
+  ( 1, 'language_common_speech'), ( 2, 'language_common_speech'), ( 3, 'language_common_speech'), ( 4, 'language_common_speech'),
+  ( 5, 'language_common_speech'), ( 6, 'language_common_speech'), ( 7, 'language_common_speech'), ( 8, 'language_common_speech'),
+  ( 9, 'language_common_speech'), (10, 'language_common_speech'), (11, 'language_common_speech'), (12, 'language_common_speech'),
+  (13, 'language_common_speech'), (14, 'language_common_speech'), (15, 'language_common_speech'), (16, 'language_common_speech'),
+  (17, 'language_common_speech'), (18, 'language_common_speech'), (19, 'language_common_speech'), (20, 'language_common_speech'),
+  (21, 'language_common_speech'), (22, 'language_common_speech'), (23, 'language_common_speech'), (24, 'language_common_speech'),
+  (25, 'language_elder_speech'),
+  (26, 'language_dwarvish')
+) AS v(num, skill_id)
+UNION ALL
+SELECT 'character', 'wcc_past_homeland_mage_o' || to_char(v.num, 'FM00'),
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.logicFields.home_language'),
+      v.logic_value
+    )
+  )
+FROM (VALUES
+  ( 1, 'Common Speech'), ( 2, 'Common Speech'), ( 3, 'Common Speech'), ( 4, 'Common Speech'),
+  ( 5, 'Common Speech'), ( 6, 'Common Speech'), ( 7, 'Common Speech'), ( 8, 'Common Speech'),
+  ( 9, 'Common Speech'), (10, 'Common Speech'), (11, 'Common Speech'), (12, 'Common Speech'),
+  (13, 'Common Speech'), (14, 'Common Speech'), (15, 'Common Speech'), (16, 'Common Speech'),
+  (17, 'Common Speech'), (18, 'Common Speech'), (19, 'Common Speech'), (20, 'Common Speech'),
+  (21, 'Common Speech'), (22, 'Common Speech'), (23, 'Common Speech'), (24, 'Common Speech'),
+  (25, 'Elder Speech'),
+  (26, 'Dwarvish')
+) AS v(num, logic_value);
+
 -- Переход в Родину Мага из возраста персонажа
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
 SELECT 'wcc_ch_age', 'wcc_past_homeland_mage', ru_id, 1
@@ -17022,8 +17108,8 @@ VALUES
   (ck_id('witcher_cc.hierarchy.magic_discovery'), 'hierarchy', 'path', 'en', 'Magic discovery'),
   (ck_id('witcher_cc.hierarchy.magic_discovery_how'), 'hierarchy', 'path', 'ru', 'Как обнаружились'),
   (ck_id('witcher_cc.hierarchy.magic_discovery_how'), 'hierarchy', 'path', 'en', 'How discovered'),
-  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'ru', 'Реакция людей'),
-  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'en', 'People reaction')
+  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'ru', 'Реакция семьи'),
+  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'en', 'Family reaction')
 ON CONFLICT (id, lang) DO NOTHING;
 
 WITH
@@ -17655,66 +17741,26 @@ SELECT 'wcc_past_family_status_mage', 'wcc_past_magic_discovery_how', 1;
 
 \echo '023_past_magic_reaction.sql'
 
--- Visibility rules by homeland branch
-WITH north_ids AS (
-  SELECT unnest(ARRAY[
-    'wcc_past_homeland_mage_o01','wcc_past_homeland_mage_o02','wcc_past_homeland_mage_o03','wcc_past_homeland_mage_o04',
-    'wcc_past_homeland_mage_o05','wcc_past_homeland_mage_o06','wcc_past_homeland_mage_o07','wcc_past_homeland_mage_o08',
-    'wcc_past_homeland_mage_o09','wcc_past_homeland_mage_o10','wcc_past_homeland_mage_o11'
-  ]) AS an_id
-), nilf_ids AS (
-  SELECT unnest(ARRAY[
-    'wcc_past_homeland_mage_o12','wcc_past_homeland_mage_o13','wcc_past_homeland_mage_o14','wcc_past_homeland_mage_o15',
-    'wcc_past_homeland_mage_o16','wcc_past_homeland_mage_o17','wcc_past_homeland_mage_o18','wcc_past_homeland_mage_o19',
-    'wcc_past_homeland_mage_o20','wcc_past_homeland_mage_o21','wcc_past_homeland_mage_o22','wcc_past_homeland_mage_o23',
-    'wcc_past_homeland_mage_o24'
-  ]) AS an_id
-), elder_ids AS (
-  SELECT unnest(ARRAY['wcc_past_homeland_mage_o25','wcc_past_homeland_mage_o26']) AS an_id
-)
 INSERT INTO rules (ru_id, name, body)
-SELECT ck_id('witcher_cc.rules.is_mage_reaction_north'), 'is_mage_reaction_north',
-       jsonb_build_object(
-         'or',
-         (SELECT jsonb_agg(
-            jsonb_build_object(
-              'in',
-              jsonb_build_array(
-                n.an_id,
-                jsonb_build_object('var', jsonb_build_array('answers.byQuestion.wcc_past_homeland_mage', jsonb_build_array()))
-              )
-            )
-          ) FROM north_ids n)
-       )
-UNION ALL
-SELECT ck_id('witcher_cc.rules.is_mage_reaction_nilfgaard'), 'is_mage_reaction_nilfgaard',
-       jsonb_build_object(
-         'or',
-         (SELECT jsonb_agg(
-            jsonb_build_object(
-              'in',
-              jsonb_build_array(
-                n.an_id,
-                jsonb_build_object('var', jsonb_build_array('answers.byQuestion.wcc_past_homeland_mage', jsonb_build_array()))
-              )
-            )
-          ) FROM nilf_ids n)
-       )
-UNION ALL
-SELECT ck_id('witcher_cc.rules.is_mage_reaction_elderlands'), 'is_mage_reaction_elderlands',
-       jsonb_build_object(
-         'or',
-         (SELECT jsonb_agg(
-            jsonb_build_object(
-              'in',
-              jsonb_build_array(
-                n.an_id,
-                jsonb_build_object('var', jsonb_build_array('answers.byQuestion.wcc_past_homeland_mage', jsonb_build_array()))
-              )
-            )
-          ) FROM elder_ids n)
-       )
-ON CONFLICT (ru_id) DO UPDATE SET body = EXCLUDED.body;
+VALUES
+  (
+    ck_id('witcher_cc.rules.is_mage_reaction_family_discovery_1_10'),
+    'is_mage_reaction_family_discovery_1_10',
+    '{"or":[{"in":["wcc_past_magic_discovery_how_o01",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]},{"in":["wcc_past_magic_discovery_how_o10",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_reaction_family_discovery_2_9'),
+    'is_mage_reaction_family_discovery_2_9',
+    '{"or":[{"in":["wcc_past_magic_discovery_how_o02",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]},{"in":["wcc_past_magic_discovery_how_o09",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_mage_reaction_family_discovery_3_8'),
+    'is_mage_reaction_family_discovery_3_8',
+    '{"or":[{"in":["wcc_past_magic_discovery_how_o03",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]},{"in":["wcc_past_magic_discovery_how_o04",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]},{"in":["wcc_past_magic_discovery_how_o05",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]},{"in":["wcc_past_magic_discovery_how_o06",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]},{"in":["wcc_past_magic_discovery_how_o07",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]},{"in":["wcc_past_magic_discovery_how_o08",{"var":["answers.byQuestion.wcc_past_magic_discovery_how",[]]}]}]}'::jsonb
+  )
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
 
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
@@ -17725,11 +17771,12 @@ WITH
     SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| meta.entity ||'.body') AS id
          , meta.entity, 'body', v.lang, v.text
       FROM (VALUES
-              ('ru', 'Как люди реагировали на вашу магию?'),
-              ('en', 'How did people react to your magic?')
+              ('ru', 'Как семья отреагировала на вашу магию?'),
+              ('en', 'How did your family react to your magic?')
            ) AS v(lang, text)
       CROSS JOIN meta
-    ON CONFLICT (id, lang) DO NOTHING
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
 )
 , c_vals(lang, num, text) AS (
     VALUES
@@ -17744,7 +17791,8 @@ WITH
          , meta.entity, 'column_name', c_vals.lang, c_vals.text
       FROM c_vals
       CROSS JOIN meta
-    ON CONFLICT (id, lang) DO NOTHING
+    ON CONFLICT (id, lang) DO UPDATE
+    SET text = EXCLUDED.text
 )
 INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
 SELECT meta.qu_id
@@ -17757,11 +17805,6 @@ SELECT meta.qu_id
          'columns', (
            SELECT jsonb_agg(ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| to_char(num, 'FM9900') ||'.'|| meta.entity ||'.column_name')::text ORDER BY num)
            FROM (SELECT DISTINCT num FROM c_vals) cols
-         ),
-         'diceModifier', jsonb_build_object(
-           'jsonlogic_expression', jsonb_build_object(
-             'var', 'values.byQuestion.wcc_past_magic_discovery_how'
-           )
          ),
          'path', jsonb_build_array(
            ck_id('witcher_cc.hierarchy.magic_discovery')::text,
@@ -17778,79 +17821,82 @@ WITH
 , raw_data AS (
   SELECT 'ru' AS lang, raw_ru.*
     FROM (VALUES
-            (1,1,'Твоя семья бросила тебя',1.0),
-            (1,2,'Твоя семья ужасно боялась тебя',1.0),
-            (1,3,'Ваша семья пыталась продать вас семье с высоким положением',1.0),
-            (1,4,'Твоя семья немедленно отправила тебя в Аретузу или Бан Ард',1.0),
-            (1,5,'Твоя семья пыталась игнорировать твой дар',1.0),
-            (1,6,'Ваша семья и друзья обрадовались твоему таланту',1.0),
-            (2,1,'Твоя семья ужасно боялась тебя',1.0),
-            (2,2,'Твоя семья пыталась игнорировать твой дар',1.0),
-            (2,3,'Твоя семья немедленно отправила тебя учиться',1.0),
-            (2,4,'Твои братья, сестры и друзья стали ужасно ревнивыми',1.0),
-            (2,5,'Твоя семья подтолкнула тебя стать великим магом',1.0),
-            (2,6,'Ваша семья и друзья обрадовались твоему таланту',1.0),
-            (3,1,'Твоя семья отправила тебя в церковь',1.0),
-            (3,2,'Твоя семья немедленно отправила тебя в Гвейсон Хайл',1.0),
-            (3,3,'Твоя семья подтолкнула тебя к изучению магии и участию в политике',1.0),
-            (3,4,'Твоя семья пыталась использовать твою силу для себя',1.0),
-            (3,5,'Твоя семья ужасно боялась тебя',1.0),
-            (3,6,'Ваша семья и друзья обрадовались твоему таланту',1.0)
-         ) AS raw_ru(group_id, num, reaction_txt, probability)
+      (1, 1, 4.0::numeric, 'Твоя семья бросила тебя', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 2, 1.0::numeric, 'Твоя семья ужасно боялась тебя', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 3, 1.0::numeric, 'Ваша семья пыталась продать вас семье с высоким положением', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 4, 0.0::numeric, 'Твоя семья немедленно отправила тебя в Аретузу или Бан Ард', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 5, 0.0::numeric, 'Твоя семья пыталась игнорировать твой дар', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 6, 0.0::numeric, 'Ваша семья и друзья обрадовались твоему таланту', 'is_mage_reaction_family_discovery_1_10'),
+      (2, 1, 3.0::numeric, 'Твоя семья бросила тебя', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 2, 1.0::numeric, 'Твоя семья ужасно боялась тебя', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 3, 1.0::numeric, 'Ваша семья пыталась продать вас семье с высоким положением', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 4, 1.0::numeric, 'Твоя семья немедленно отправила тебя в Аретузу или Бан Ард', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 5, 0.0::numeric, 'Твоя семья пыталась игнорировать твой дар', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 6, 0.0::numeric, 'Ваша семья и друзья обрадовались твоему таланту', 'is_mage_reaction_family_discovery_2_9'),
+      (3, 1, 1.0::numeric, 'Твоя семья бросила тебя', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 2, 1.0::numeric, 'Твоя семья ужасно боялась тебя', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 3, 1.0::numeric, 'Ваша семья пыталась продать вас семье с высоким положением', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 4, 1.0::numeric, 'Твоя семья немедленно отправила тебя в Аретузу или Бан Ард', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 5, 1.0::numeric, 'Твоя семья пыталась игнорировать твой дар', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 6, 1.0::numeric, 'Ваша семья и друзья обрадовались твоему таланту', 'is_mage_reaction_family_discovery_3_8')
+    ) AS raw_ru(group_id, num, probability, reaction_txt, rule_name)
   UNION ALL
   SELECT 'en' AS lang, raw_en.*
     FROM (VALUES
-            (1,1,'Your family cast you out',1.0),
-            (1,2,'Your family became terribly scared of you',1.0),
-            (1,3,'Your family tried to sell you to a family of high standing',1.0),
-            (1,4,'Your family immediately sent you to Aretuza or Ban Ard',1.0),
-            (1,5,'Your family tried to ignore your gift',1.0),
-            (1,6,'Your family and friends celebrated your talent',1.0),
-            (2,1,'Your family became terribly scared of you',1.0),
-            (2,2,'Your family tried to ignore your gift',1.0),
-            (2,3,'Your family sent you to train immediately',1.0),
-            (2,4,'Your siblings and friends became horribly jealous',1.0),
-            (2,5,'Your family pushed you to become a great mage',1.0),
-            (2,6,'Your family and friends celebrated your talent',1.0),
-            (3,1,'Your family sent you to the church',1.0),
-            (3,2,'Your family immediately sent you to Gweison Haul',1.0),
-            (3,3,'Your family pushed you to study magic and get into politics',1.0),
-            (3,4,'Your family tried to use your power for themselves',1.0),
-            (3,5,'Your family became terribly scared of you',1.0),
-            (3,6,'Your family and friends celebrated your talent',1.0)
-         ) AS raw_en(group_id, num, reaction_txt, probability)
+      (1, 1, 4.0::numeric, 'Your family cast you out', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 2, 1.0::numeric, 'Your family became terribly scared of you', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 3, 1.0::numeric, 'Your family tried to sell you to a family of high standing', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 4, 0.0::numeric, 'Your family immediately sent you to Aretuza or Ban Ard', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 5, 0.0::numeric, 'Your family tried to ignore your gift', 'is_mage_reaction_family_discovery_1_10'),
+      (1, 6, 0.0::numeric, 'Your family and friends celebrated your talent', 'is_mage_reaction_family_discovery_1_10'),
+      (2, 1, 3.0::numeric, 'Your family cast you out', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 2, 1.0::numeric, 'Your family became terribly scared of you', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 3, 1.0::numeric, 'Your family tried to sell you to a family of high standing', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 4, 1.0::numeric, 'Your family immediately sent you to Aretuza or Ban Ard', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 5, 0.0::numeric, 'Your family tried to ignore your gift', 'is_mage_reaction_family_discovery_2_9'),
+      (2, 6, 0.0::numeric, 'Your family and friends celebrated your talent', 'is_mage_reaction_family_discovery_2_9'),
+      (3, 1, 1.0::numeric, 'Your family cast you out', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 2, 1.0::numeric, 'Your family became terribly scared of you', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 3, 1.0::numeric, 'Your family tried to sell you to a family of high standing', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 4, 1.0::numeric, 'Your family immediately sent you to Aretuza or Ban Ard', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 5, 1.0::numeric, 'Your family tried to ignore your gift', 'is_mage_reaction_family_discovery_3_8'),
+      (3, 6, 1.0::numeric, 'Your family and friends celebrated your talent', 'is_mage_reaction_family_discovery_3_8')
+    ) AS raw_en(group_id, num, probability, reaction_txt, rule_name)
 )
 , ins_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * raw_data.group_id + raw_data.num, 'FM0000') ||'.'|| meta.entity ||'.label') AS id
-       , meta.entity, 'label', raw_data.lang
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * raw_data.group_id + raw_data.num, 'FM0000') ||'.'|| meta.entity ||'.label')
+       , meta.entity
+       , 'label'
+       , raw_data.lang
        , '<td style="color: grey;">' || to_char(raw_data.probability * 100, 'FM990.00') || '%</td><td>' || raw_data.reaction_txt || '</td>'
     FROM raw_data
     CROSS JOIN meta
-  ON CONFLICT (id, lang) DO NOTHING
+  ON CONFLICT (id, lang) DO UPDATE
+  SET text = EXCLUDED.text
 )
 , ins_lore_i18n AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * raw_data.group_id + raw_data.num, 'FM0000') ||'.lore.people_reaction') AS id
-       , 'character', 'people_reaction', raw_data.lang, raw_data.reaction_txt
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * raw_data.group_id + raw_data.num, 'FM0000') ||'.lore.people_reaction')
+       , 'character'
+       , 'people_reaction'
+       , raw_data.lang
+       , raw_data.reaction_txt
     FROM raw_data
     CROSS JOIN meta
-  ON CONFLICT (id, lang) DO NOTHING
+  ON CONFLICT (id, lang) DO UPDATE
+  SET text = EXCLUDED.text
 )
 INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, visible_ru_ru_id, metadata)
-SELECT meta.qu_id || '_o' || to_char(raw_data.group_id, 'FM00') || to_char(raw_data.num, 'FM00') AS an_id
+SELECT meta.qu_id || '_o' || to_char(raw_data.group_id, 'FM00') || to_char(raw_data.num, 'FM00')
      , meta.su_su_id
      , meta.qu_id
-     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * raw_data.group_id + raw_data.num, 'FM0000') ||'.'|| meta.entity ||'.label') AS label
+     , ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * raw_data.group_id + raw_data.num, 'FM0000') ||'.'|| meta.entity ||'.label')
      , raw_data.num
-     , CASE raw_data.group_id
-         WHEN 1 THEN ck_id('witcher_cc.rules.is_mage_reaction_north')
-         WHEN 2 THEN ck_id('witcher_cc.rules.is_mage_reaction_nilfgaard')
-         WHEN 3 THEN ck_id('witcher_cc.rules.is_mage_reaction_elderlands')
-       END
+     , (SELECT ru_id FROM rules WHERE name = raw_data.rule_name ORDER BY ru_id LIMIT 1)
      , jsonb_build_object('probability', raw_data.probability)
   FROM raw_data
-  CROSS JOIN meta
+ CROSS JOIN meta
  WHERE raw_data.lang = 'ru'
 ON CONFLICT (an_id) DO NOTHING;
 
@@ -17860,24 +17906,24 @@ WITH
 , nums AS (
   SELECT group_id, num
     FROM (VALUES
-            (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),
-            (2,1),(2,2),(2,3),(2,4),(2,5),(2,6),
-            (3,1),(3,2),(3,3),(3,4),(3,5),(3,6)
-         ) v(group_id, num)
+      (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),
+      (2,1),(2,2),(2,3),(2,4),(2,5),(2,6),
+      (3,1),(3,2),(3,3),(3,4),(3,5),(3,6)
+    ) AS v(group_id, num)
 )
 INSERT INTO effects (scope, an_an_id, body)
-SELECT 'character' AS scope
-     , meta.qu_id || '_o' || to_char(nums.group_id, 'FM00') || to_char(nums.num, 'FM00') AS an_an_id
+SELECT 'character'
+     , meta.qu_id || '_o' || to_char(nums.group_id, 'FM00') || to_char(nums.num, 'FM00')
      , jsonb_build_object(
          'set',
          jsonb_build_array(
-           jsonb_build_object('var','characterRaw.lore.people_reaction'),
+           jsonb_build_object('var', 'characterRaw.lore.people_reaction'),
            jsonb_build_object(
              'i18n_uuid',
              ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * nums.group_id + nums.num, 'FM0000') ||'.lore.people_reaction')::text
            )
          )
-       ) AS body
+       )
   FROM nums
  CROSS JOIN meta;
 
@@ -20083,7 +20129,7 @@ WITH
       (1, 2, 'Сблизилась с другой ученицей', 'Вы и еще одна студента проводили время вместе, расслабляясь. Вы получаете союзника-мага. Сделайте бросок по таблице союзников, чтобы увидеть, насколько вы близки и какова их ценность.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 3, 'Выгнали соперницу', 'Из Аретузы выгнали твоего соперницу. Вы получаете врага-мага. Сделайте бросок по таблице Обиды, чтобы увидеть, как это обострилось и какова их сила.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 4, 'Любимица учителя', 'Вы получили персональное обучение от учителя. Начните с дополнительного известного заклинания новичка.', 1.0::numeric, 'is_mentor_school_aretuza'),
-      (1, 5, 'Впечатлила иностранного сановника - +2 к репутации при дворе выбранного королевства', 'Вы начинаете с +2 репутации при дворе одного королевства по вашему выбору.', 1.0::numeric, 'is_mentor_school_aretuza'),
+      (1, 5, 'Впечатлила иностранного сановника', 'Вы впечатлили иностранного сановника. Выберите королевство, при дворе которого о вас говорят.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 6, 'Украла ритуальные компоненты', 'Вы припрятали крошечные кусочки редких ритуальных компонентов. Начните с дополнительными компонентами стоимостью 100 крон.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 7, 'Нашла материал для шантажа учителя', 'Вы можете использовать эту информацию, чтобы добиться от них одной услуги на усмотрение ведущего.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 8, 'Найдены подсказки о местонахождении реликвии', 'Проконсультируйтесь с ведущим, чтобы определить, что это за реликвия и что вы знаете.', 1.0::numeric, 'is_mentor_school_aretuza'),
@@ -20099,14 +20145,14 @@ WITH
       (2, 6, 'Ошибка заклинания', 'Вы случайно наложили магию на ученика или преподавателя и испортили им день. Сделайте бросок по таблице Обиды.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 7, 'Наемничество', 'Вы сражались за мелкого дворянина в земельном споре. Вы сохранили часть своей зарплаты, после того как академия забрала свою долю, конечно. Получите 1d6 x 100 крон.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 8, 'Проклят', 'Вы были прокляты либо собственной рукой, либо гневом кого-то из вашей школы. Вместе с ведущим выберите подходящее проклятие из перечисленных в Основной книге.', 1.0::numeric, 'is_mentor_school_ban_ard'),
-      (2, 9, 'Посвящение в тайное общество - +2 к репутации среди выпускников Бан Арда', 'Вас приняли в тайное общество внутри школы. Получите +2 к репутации с другими выпускниками Бан Арда.', 1.0::numeric, 'is_mentor_school_ban_ard'),
+      (2, 9, 'Посвящение в тайное общество: +2 к репутации среди выпускников Бан Арда', 'Вас приняли в тайное общество внутри школы. Получите +2 к репутации с другими выпускниками Бан Арда.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 10, 'Перевел древний том', 'Вы помогли перевести древний эльфийский том. Вы получаете +2 к Старшей Речи.', 1.0::numeric, 'is_mentor_school_ban_ard'),
 
       -- Group 3: Gweison Haul (+ Imperial)
       (3, 1, 'Отдача заклинания', 'Заклинание, которое вы произнесли, имело ужасные неприятные последствия. Порог Энергии понижен на 1.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 2, 'Нарушитель правил', 'Вы нарушили одно из многих правил Гвейсон Хайль, но были пойманы в процессе. Вы получили наставника.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial_and_no_mentor'),
       (3, 3, 'Помогал разрабатывать оружие для Империи', 'Начните с 1 формулы бомбы. Определите с ведущим, какая это формула бомбы.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
-      (3, 4, 'Законник - +2 к репутации у властей Нильфгаарда', 'Вы помогли властям с преступлением, связанным с магией. Получите +2 к репутации у властей Нильфгаарда.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
+      (3, 4, 'Законник', 'Вы помогли властям с преступлением, связанным с магией.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 5, 'Исследовал катакомбы', 'Вы нашли свиток в катакомбах школы. Получите 1 свиток заклинаний подмастерья. Определите с ведущим, какое заклинание записано в свитке.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 6, 'Влияние цензуры', 'Вас попросили найти и стереть все следы запрещенного произведения. Его автор теперь жаждет мести. Сделайте бросок по таблице Обиды, чтобы определить, кто это.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 7, 'Помогли выследить маг-отступника', 'Вы помогли Охотникам на магов найти мага-изгоя. Получите +1 к любому боевому навыку или начните новый боевой навык с +2.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
@@ -20123,7 +20169,7 @@ WITH
       (4, 6, 'Помогали местным жителям с различными проблемами', 'Вы использовали свою магию, чтобы помочь нуждающемуся региону. Ваше социальное положение равно Равенству в этой области. Определите с ведущим, что это за область.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 7, 'Прокляты', 'Вы были прокляты либо собственной рукой, либо гневом кого-то из вашей школы. Вместе с ведущим выберите подходящее проклятие из перечисленных в Основной книге.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 8, 'Защитили деревню от чудовища', 'Вы использовали свою магию, чтобы отразить атаку монстра из деревни. Получите +1 к Монстрологии.', 1.0::numeric, 'is_mentor_school_minor'),
-      (4, 9, 'Обучение вне академии', 'Вы учились у многих наставников, узнавая столько, сколько могли. Начните с дополнительным заклинания новичка.', 1.0::numeric, 'is_mentor_school_minor'),
+      (4, 9, 'Обучение вне академии', 'Вы учились у многих наставников, узнавая столько, сколько могли. Начните с двумя дополнительными заклинаниями новичка.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 10, 'Создал собственный фокус', 'Вы создали свой первый фокусирующий предмет. Вы получаете Амулет, который считается для вас предметом Фокус (2).', 1.0::numeric, 'is_mentor_school_minor')
     ) AS ru(group_id, num, title_txt, desc_txt, probability, rule_name)
 
@@ -20136,7 +20182,7 @@ WITH
       (1, 2, 'Developed a Bond with Another Student', 'You and another student spent time together to unwind. You gain a Mage Ally. Roll on the Ally table to see how close you are and what their value is.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 3, 'Got a Rival Expelled', 'You got a rival of yours expelled from Aretuza. You gain a Mage Enemy. Roll on the Grudges table to see how it''s escalated and what their power is.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 4, 'Teacher''s Pet', 'You got preferential treatment from a teacher. Start with an extra known Novice spell.', 1.0::numeric, 'is_mentor_school_aretuza'),
-      (1, 5, 'Impressed a Foreign Dignitary - +2 Reputation at a chosen kingdom court', 'You start with +2 Reputation at the court of one kingdom of your choice.', 1.0::numeric, 'is_mentor_school_aretuza'),
+      (1, 5, 'Impressed a Foreign Dignitary', 'You impressed a foreign dignitary. Choose the kingdom where your reputation at court grew.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 6, 'Stole Ritual Components', 'You squirreled away tiny bits of rare ritual components. Start with an extra 100 crowns of components.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 7, 'Found Blackmail Material on a Teacher', 'You can use this information to force a single favor out of them at the GM''s discretion.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 8, 'Found Clues on the Location of a Relic', 'Consult with the GM to determine which Relic and what you know.', 1.0::numeric, 'is_mentor_school_aretuza'),
@@ -20152,14 +20198,14 @@ WITH
       (2, 6, 'Miscast', 'You accidentally cast magic on a school member or faculty and ruined their day. Roll on the Grudges table.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 7, 'Mercenary Work', 'You fought for a minor noble in a land dispute. You kept part of your pay, after the school took its cut of course. Gain 1d6 x 100 crowns.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 8, 'Cursed', 'You were cursed, either by your own hand or the ire of another at your school. Work with the GM to pick an appropriate curse from the ones listed in the Core Book.', 1.0::numeric, 'is_mentor_school_ban_ard'),
-      (2, 9, 'Secret Society Initiation - +2 Reputation with Ban Ard alumni', 'You were inducted into a secret society within the school. Gain +2 Reputation with the other alumni of Ban Ard.', 1.0::numeric, 'is_mentor_school_ban_ard'),
+      (2, 9, 'Secret Society Initiation: +2 Reputation with Ban Ard alumni', 'You were inducted into a secret society within the school. Gain +2 Reputation with the other alumni of Ban Ard.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 10, 'Translated a Tome', 'You helped translate an old elven tome. You gain +2 to Elder Speech.', 1.0::numeric, 'is_mentor_school_ban_ard'),
 
       -- Group 3: Gweison Haul (+ Imperial)
       (3, 1, 'Spell Backfired', 'A spell you cast backfired horribly. You lower your Vigor Threshold by 1.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 2, 'Rule-Breaker', 'You broke one of the many rules of Gweison Haul but were caught in the process. You were made an apprentice.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial_and_no_mentor'),
       (3, 3, 'Helped Develop Weapons of War for the Empire', 'Start with 1 bomb formula. Work with the GM to determine which bomb.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
-      (3, 4, 'Law Bringer - +2 Reputation with Nilfgaardian authorities', 'You helped the authorities with a magic related crime. Gain a +2 Reputation with Nilfgaardian authorities.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
+      (3, 4, 'Law Bringer', 'You helped the authorities with a magic-related crime.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 5, 'Explored the Catacombs', 'You found a scroll in the catacombs of the school. Gain 1 journeyman spell scroll. Work with the GM to determine which spell.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 6, 'Censorship', 'You were asked to find and erase all traces of a banned work. Its author is now out for revenge. Roll on the Grudges table to determine who it is.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 7, 'Helped hunt down a Renegade Mage', 'You helped the Mage Hunters bring in a rogue mage. Gain +1 in any combat skill or start a new combat skill at +2.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
@@ -20176,7 +20222,7 @@ WITH
       (4, 6, 'Helped Locals with Various Issues', 'You have used your magic to aid a region in need. Your Social Standing is Equal in this area. Work with the GM to determine where this is.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 7, 'Cursed', 'You were cursed, either by your own hand or the ire of another at your school. Work with the GM to pick an appropriate curse from the ones listed in the Core Book.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 8, 'Defended a Village from a Monster', 'You used your magic to repel a monster attack from a village. Gain +1 to Monster Lore.', 1.0::numeric, 'is_mentor_school_minor'),
-      (4, 9, 'Extracurricular Learning', 'You studied under many mentors, learning as much as you could. Start with an extra Novice spell.', 1.0::numeric, 'is_mentor_school_minor'),
+      (4, 9, 'Extracurricular Learning', 'You studied under many mentors, learning as much as you could. Start with two extra Novice spells.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 10, 'Crafted your Own Focus', 'You built your first focus item. You gain an Amulet which counts as a Focus (2) item for you.', 1.0::numeric, 'is_mentor_school_minor')
     ) AS en(group_id, num, title_txt, desc_txt, probability, rule_name)
 )
@@ -20207,10 +20253,10 @@ SELECT meta.qu_id || '_o' || to_char(raw_data.group_id, 'FM00') || to_char(raw_d
      , jsonb_build_object('probability', raw_data.probability)
        || CASE
             WHEN
-              (raw_data.group_id = 1 AND raw_data.num IN (1, 4, 5, 6, 7, 8))
+              (raw_data.group_id = 1 AND raw_data.num IN (1, 4, 6, 7, 8))
               OR (raw_data.group_id = 2 AND raw_data.num IN (1, 3, 5, 9, 10))
               OR (raw_data.group_id = 3 AND raw_data.num IN (1, 3, 4, 5, 9, 10))
-              OR (raw_data.group_id = 4 AND raw_data.num IN (1, 2, 4, 5, 8, 9, 10))
+              OR (raw_data.group_id = 4 AND raw_data.num IN (1, 2, 3, 4, 5, 8, 9, 10))
             THEN jsonb_build_object('counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10))
             ELSE '{}'::jsonb
           END
@@ -20226,11 +20272,74 @@ VALUES
   (ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life'), 'character', 'event_type', 'en', 'Academy Life'),
   (ck_id('witcher_cc.wcc_past_academy_life_o0107.gear_name'), 'items', 'general_gear_names', 'ru', 'Услуга учителя, полученная шантажом'),
   (ck_id('witcher_cc.wcc_past_academy_life_o0107.gear_name'), 'items', 'general_gear_names', 'en', 'Teacher''s Favor Obtained by Blackmail'),
-  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_formula.name'), 'items', 'general_gear_names', 'ru', 'Магическая формула (Подмастерье)'),
-  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_formula.name'), 'items', 'general_gear_names', 'en', 'Spell Formulae (Journeyman)'),
-  (ck_id('witcher_cc.wcc_past_academy_life_o0310.perks.description'), 'perks', 'description', 'ru', '<b>Шпионаж</b>: Вы можете попытаться замаскироваться без набора для маскировки без каких-либо штрафов.'),
-  (ck_id('witcher_cc.wcc_past_academy_life_o0310.perks.description'), 'perks', 'description', 'en', '<b>Spycraft</b>: You can attempt to disguise yourself without a disguise kit and suffer no penalties.')
+  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.name'), 'items', 'general_gear_names', 'ru', 'Свиток заклинания (Подмастерье)'),
+  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.name'), 'items', 'general_gear_names', 'en', 'Spell Scroll (Journeyman)'),
+  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.description'), 'items', 'general_gear_description', 'ru', 'Потратив 20 О.У., 7 дней и пройдя 4 проверки со СЛ18, вы выучите это заклинание.'),
+  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.description'), 'items', 'general_gear_description', 'en', 'By spending 20 i.P., 7 days, and passing 4 checks at DC 18, you can learn this spell.'),
+  (ck_id('witcher_cc.wcc_past_academy_life_o0310.perks.description'), 'perks', 'description', 'ru', '<b>Шпионаж</b>: Маскировка без набора для маскировки происходит без штрафа.'),
+  (ck_id('witcher_cc.wcc_past_academy_life_o0310.perks.description'), 'perks', 'description', 'en', '<b>Spycraft</b>: You can disguise yourself without a disguise kit and suffer no penalty.')
 ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(v.key), 'character', 'event_desc', v.lang, v.text
+FROM (VALUES
+  ('witcher_cc.wcc_past_academy_life_o0101.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
+  ('witcher_cc.wcc_past_academy_life_o0101.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
+  ('witcher_cc.wcc_past_academy_life_o0102.event_desc', 'ru', 'Сблизилась с другой ученицей: получила союзника'),
+  ('witcher_cc.wcc_past_academy_life_o0102.event_desc', 'en', 'Developed a bond with another student: gained an ally'),
+  ('witcher_cc.wcc_past_academy_life_o0103.event_desc', 'ru', 'Выгнали мага-соперницу: получили врага'),
+  ('witcher_cc.wcc_past_academy_life_o0103.event_desc', 'en', 'Expelled a rival mage: gained an enemy'),
+  ('witcher_cc.wcc_past_academy_life_o0104.event_desc', 'ru', 'Персональное обучение: [+1 заклинание новичка]'),
+  ('witcher_cc.wcc_past_academy_life_o0104.event_desc', 'en', 'Personal tutoring: [+1 novice spell]'),
+  ('witcher_cc.wcc_past_academy_life_o0106.event_desc', 'ru', 'Украла ритуальные компоненты на 100 крон'),
+  ('witcher_cc.wcc_past_academy_life_o0106.event_desc', 'en', 'Stole ritual components worth 100 crowns'),
+  ('witcher_cc.wcc_past_academy_life_o0108.event_desc', 'ru', 'Найдены подсказки о местонахождении реликвии, уточнить у ГМа'),
+  ('witcher_cc.wcc_past_academy_life_o0108.event_desc', 'en', 'Found clues to a relic''s location, ask the GM'),
+  ('witcher_cc.wcc_past_academy_life_o0201.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
+  ('witcher_cc.wcc_past_academy_life_o0201.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
+  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'ru', 'Украл магическую формулу'),
+  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'en', 'Stole a spell formula'),
+  ('witcher_cc.wcc_past_academy_life_o0205.event_desc', 'ru', 'Охота на монстра: [+1 к Монстрологии]'),
+  ('witcher_cc.wcc_past_academy_life_o0205.event_desc', 'en', 'Hunted a monster: [+1 to Monster Lore]'),
+  ('witcher_cc.wcc_past_academy_life_o0206.event_desc', 'ru', 'Новый враг из-за ошибки в заклинании'),
+  ('witcher_cc.wcc_past_academy_life_o0206.event_desc', 'en', 'A new enemy because of a spell mishap'),
+  ('witcher_cc.wcc_past_academy_life_o0209.event_desc', 'ru', 'Посвящение в тайное общество: +2 к репутации среди выпускников Бан Арда'),
+  ('witcher_cc.wcc_past_academy_life_o0209.event_desc', 'en', 'Secret society initiation: +2 Reputation with Ban Ard alumni'),
+  ('witcher_cc.wcc_past_academy_life_o0210.event_desc', 'ru', 'Перевел древний том: [+2 к Старшей речи]'),
+  ('witcher_cc.wcc_past_academy_life_o0210.event_desc', 'en', 'Translated a tome: [+2 to Elder Speech]'),
+  ('witcher_cc.wcc_past_academy_life_o0301.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
+  ('witcher_cc.wcc_past_academy_life_o0301.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
+  ('witcher_cc.wcc_past_academy_life_o0304.event_desc', 'ru', 'Помог властям Нильфгаарда: +2 к репутации у властей Нильфгаарда'),
+  ('witcher_cc.wcc_past_academy_life_o0304.event_desc', 'en', 'Helped Nilfgaardian authorities: +2 Reputation with Nilfgaardian authorities'),
+  ('witcher_cc.wcc_past_academy_life_o0305.event_desc', 'ru', 'Исследовал катакомбы: нашел свиток'),
+  ('witcher_cc.wcc_past_academy_life_o0305.event_desc', 'en', 'Explored the catacombs: found a scroll'),
+  ('witcher_cc.wcc_past_academy_life_o0306.event_desc', 'ru', 'Подвергли кого-то цензуре: получили врага'),
+  ('witcher_cc.wcc_past_academy_life_o0306.event_desc', 'en', 'Censored someone: gained an enemy'),
+  ('witcher_cc.wcc_past_academy_life_o0308.event_desc', 'ru', 'Укрыли мага-отступника: получили союзника'),
+  ('witcher_cc.wcc_past_academy_life_o0308.event_desc', 'en', 'Sheltered a renegade mage: gained an ally'),
+  ('witcher_cc.wcc_past_academy_life_o0309.event_desc', 'ru', 'Помощь Церкви Великого Солнца: [+1 к Харизме и Этикету]'),
+  ('witcher_cc.wcc_past_academy_life_o0309.event_desc', 'en', 'Aided the Church of the Great Sun: [+1 to Charisma and Social Etiquette]'),
+  ('witcher_cc.wcc_past_academy_life_o0310.event_desc', 'ru', 'Обучался шпионажу: [+1 к Маскировке] и [перк Шпионаж]'),
+  ('witcher_cc.wcc_past_academy_life_o0310.event_desc', 'en', 'Studied spycraft: [+1 to Disguise] and [Spycraft perk]'),
+  ('witcher_cc.wcc_past_academy_life_o0401.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
+  ('witcher_cc.wcc_past_academy_life_o0401.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
+  ('witcher_cc.wcc_past_academy_life_o0402.event_desc', 'ru', 'Занимался темной магией: на тебе Люцифуг демона, который всегда знает, где ты'),
+  ('witcher_cc.wcc_past_academy_life_o0402.event_desc', 'en', 'Dabbled in dark magic: you bear a demon''s lucifuge that always knows where you are'),
+  ('witcher_cc.wcc_past_academy_life_o0403.event_desc', 'ru', 'Нанесли ущерб магией: стал целью ведьмака школы Кота'),
+  ('witcher_cc.wcc_past_academy_life_o0403.event_desc', 'en', 'Caused magical damage: became the target of a Cat School witcher'),
+  ('witcher_cc.wcc_past_academy_life_o0404.event_desc', 'ru', 'Изучал лечение болезней: [+2 к Первой помощи]'),
+  ('witcher_cc.wcc_past_academy_life_o0404.event_desc', 'en', 'Studied how to treat illnesses: [+2 to First Aid]'),
+  ('witcher_cc.wcc_past_academy_life_o0405.event_desc', 'ru', 'Ухаживал за школьным садом: [+2 к Выживанию]'),
+  ('witcher_cc.wcc_past_academy_life_o0405.event_desc', 'en', 'Tended the school garden: [+2 to Wilderness Survival]'),
+  ('witcher_cc.wcc_past_academy_life_o0408.event_desc', 'ru', 'Защитили деревню от чудовища: [+1 к Монстрологии]'),
+  ('witcher_cc.wcc_past_academy_life_o0408.event_desc', 'en', 'Defended a village from a monster: [+1 to Monster Lore]'),
+  ('witcher_cc.wcc_past_academy_life_o0409.event_desc', 'ru', 'Обучение вне академии: [+2 заклинания Новичка]'),
+  ('witcher_cc.wcc_past_academy_life_o0409.event_desc', 'en', 'Extracurricular learning: [+2 novice spells]'),
+  ('witcher_cc.wcc_past_academy_life_o0410.event_desc', 'ru', 'Создал [Амулет с эффектом Фокусирующий(2)]'),
+  ('witcher_cc.wcc_past_academy_life_o0410.event_desc', 'en', 'Crafted [an amulet with the Focus(2) effect]')
+) AS v(key, lang, text)
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
 
 -- Effects: save every selected option to life events
 WITH
@@ -20277,6 +20386,7 @@ SELECT
 FROM options
 CROSS JOIN meta
 WHERE NOT (
+  (options.group_id = 1 AND options.num = 5) OR
   (options.group_id = 1 AND options.num = 10) OR
   (options.group_id = 2 AND options.num = 8) OR
   (options.group_id = 3 AND options.num = 7) OR
@@ -20303,11 +20413,11 @@ FROM (VALUES
 ) AS v(an_id);
 
 -- Effects: tokens for bomb formulae / novice spells
-WITH token_effects(an_id, target_path) AS (
+WITH token_effects(an_id, target_path, delta) AS (
   VALUES
-    ('wcc_past_academy_life_o0303', 'characterRaw.professional_gear_options.bomb_formulae_tokens'),
-    ('wcc_past_academy_life_o0104', 'characterRaw.professional_gear_options.novice_spells_tokens'),
-    ('wcc_past_academy_life_o0409', 'characterRaw.professional_gear_options.novice_spells_tokens')
+    ('wcc_past_academy_life_o0303', 'characterRaw.professional_gear_options.bomb_formulae_tokens', 1),
+    ('wcc_past_academy_life_o0104', 'characterRaw.professional_gear_options.novice_spells_tokens', 1),
+    ('wcc_past_academy_life_o0409', 'characterRaw.professional_gear_options.novice_spells_tokens', 2)
 )
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
@@ -20323,7 +20433,7 @@ SELECT
           '+',
           jsonb_build_array(
             jsonb_build_object('var', jsonb_build_array(token_effects.target_path, 0)),
-            1
+            token_effects.delta
           )
         )
       )
@@ -20331,7 +20441,7 @@ SELECT
   )
 FROM token_effects;
 
--- Effects: custom localized item "Spell Formulae (Journeyman)" for Ban Ard#3 and Gweison#5
+-- Effects: custom localized item "Spell Scroll (Journeyman)" for Ban Ard#3 and Gweison#5
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
   'character',
@@ -20341,8 +20451,8 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.gear.general_gear'),
       jsonb_build_object(
-        'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.journeyman_formula.name')::text),
-        'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.items.general_gear.description.T148')::text),
+        'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.name')::text),
+        'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.description')::text),
         'weight', 0.1,
         'price', 0,
         'amount', 1
@@ -20490,7 +20600,7 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.enemies'),
       jsonb_build_object(
-        'gender', '',
+        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_enemy_gender_o0001.answer_options.label_value')::text),
         'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0002.answer_options.label_value')::text),
         'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.position')::text),
         'cause', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.cause')::text),
@@ -20517,6 +20627,16 @@ ON CONFLICT (id, lang) DO NOTHING;
 -- Visibility rules by selected option in academy life node
 INSERT INTO rules (ru_id, name, body)
 VALUES
+  (
+    ck_id('witcher_cc.rules.is_academy_life_details_from_o0105'),
+    'is_academy_life_details_from_o0105',
+    '{
+      "and": [
+        { "==": [ { "var": "answers.lastAnswer.questionId" }, "wcc_past_academy_life" ] },
+        { "in": [ "wcc_past_academy_life_o0105", { "var": "answers.lastAnswer.answerIds" } ] }
+      ]
+    }'::jsonb
+  ),
   (
     ck_id('witcher_cc.rules.is_academy_life_details_from_curse'),
     'is_academy_life_details_from_curse',
@@ -20692,6 +20812,31 @@ WITH
   raw_data AS (
     SELECT 'ru' AS lang, v.*
       FROM (VALUES
+        -- Group 0: details for o0105
+        ('wcc_past_academy_life_o010501', 1, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Редании', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010502', 2, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Каэдвена', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010503', 3, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Темерии', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010504', 4, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Аэдирна', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010505', 5, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Лирии и Ривии', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010506', 6, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Ковира и Повисса', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010507', 7, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Скеллиге', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010508', 8, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Цидариса', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010509', 9, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Вердэна', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010510', 10, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Северные королевства) Цинтры', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010511', 11, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Сердца Нильфгаарда', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010512', 12, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Виковаро', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010513', 13, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Аигрена', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010514', 14, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Назаира', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010515', 15, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Метиины', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010516', 16, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Маг Турги', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010517', 17, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Гесо', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010518', 18, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Эббинга', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010519', 19, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Мехта', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010520', 20, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Геммеры', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010521', 21, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Нильфгаард) Этолии', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010522', 22, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Земли старших народов) Доль Блатанны', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010523', 23, 0.0434782609::numeric, 'Впечатленный сановник: +2 к репутации при дворе (Земли старших народов) Махакама', 'is_academy_life_details_from_o0105'),
+
         -- Group 1: details for o0110/o0208/o0407
         ('wcc_past_academy_life_o011001', 1, 0.2::numeric, '<b>Проклятие чудовищности</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
         ('wcc_past_academy_life_o011002', 2, 0.2::numeric, '<b>Проклятие призраков</b> (Интенсивность: Средняя)', 'is_academy_life_details_from_curse'),
@@ -20701,12 +20846,12 @@ WITH
         ('wcc_past_academy_life_o011006', 6, 0.0::numeric, '<b>Другое проклятие</b> (кастомное)', 'is_academy_life_details_from_curse'),
 
         -- Group 2: details for o0207
-        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 100 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 200 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 300 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 400 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 500 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Сражаясь за мелкого дворянина, вы получили 600 крон после того как отдали часть дохода в Академию.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Наемничество: заработал 100 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Наемничество: заработал 200 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Наемничество: заработал 300 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Наемничество: заработал 400 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Наемничество: заработал 500 крон', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Наемничество: заработал 600 крон', 'is_academy_life_details_from_o0207'),
 
         -- Group 3: details for o0307
         ('wcc_past_academy_life_o030701', 1, 1.0::numeric, 'Помощь охотникам на магов: +2 к новому навыку Тактика', 'is_academy_life_details_from_o0307_tactics_new'),
@@ -20760,6 +20905,31 @@ WITH
 
     SELECT 'en' AS lang, v.*
       FROM (VALUES
+        -- Group 0: details for o0105
+        ('wcc_past_academy_life_o010501', 1, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Redania', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010502', 2, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Kaedwen', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010503', 3, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Temeria', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010504', 4, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Aedirn', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010505', 5, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Lyria & Rivia', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010506', 6, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Kovir & Poviss', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010507', 7, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Skellige', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010508', 8, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Cidaris', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010509', 9, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Verden', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010510', 10, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Northern Kingdoms) Cintra', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010511', 11, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) The Heart of Nilfgaard', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010512', 12, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Vicovaro', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010513', 13, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Angren', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010514', 14, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Nazair', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010515', 15, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Mettina', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010516', 16, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Mag Turga', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010517', 17, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Gheso', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010518', 18, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Ebbing', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010519', 19, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Maecht', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010520', 20, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Gemmeria', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010521', 21, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Nilfgaard) Etolia', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010522', 22, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Elderlands) Dol Blathanna', 'is_academy_life_details_from_o0105'),
+        ('wcc_past_academy_life_o010523', 23, 0.0434782609::numeric, 'Impressed a foreign dignitary: +2 Reputation at the court of (Elderlands) Mahakam', 'is_academy_life_details_from_o0105'),
+
         -- Group 1: details for o0110/o0208/o0407
         ('wcc_past_academy_life_o011001', 1, 0.2::numeric, '<b>Curse of Monstrosity</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
         ('wcc_past_academy_life_o011002', 2, 0.2::numeric, '<b>Curse of Phantoms</b> (Intensity: Moderate)', 'is_academy_life_details_from_curse'),
@@ -20769,12 +20939,12 @@ WITH
         ('wcc_past_academy_life_o011006', 6, 0.0::numeric, '<b>Other Curse</b> (custom)', 'is_academy_life_details_from_curse'),
 
         -- Group 2: details for o0207
-        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 100 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 200 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 300 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 400 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 500 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
-        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Fighting for a minor noble, you kept 600 crowns after paying the Academy''s cut.', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020701', 1, 0.1666666667::numeric, 'Mercenary work: earned 100 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020702', 2, 0.1666666667::numeric, 'Mercenary work: earned 200 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020703', 3, 0.1666666667::numeric, 'Mercenary work: earned 300 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020704', 4, 0.1666666667::numeric, 'Mercenary work: earned 400 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020705', 5, 0.1666666667::numeric, 'Mercenary work: earned 500 crowns', 'is_academy_life_details_from_o0207'),
+        ('wcc_past_academy_life_o020706', 6, 0.1666666667::numeric, 'Mercenary work: earned 600 crowns', 'is_academy_life_details_from_o0207'),
 
         -- Group 3: details for o0307
         ('wcc_past_academy_life_o030701', 1, 1.0::numeric, 'Mage Hunters Support: +2 to new skill Tactics', 'is_academy_life_details_from_o0307_tactics_new'),
@@ -20851,6 +21021,8 @@ WITH
            END
       FROM raw_data
      WHERE raw_data.an_id LIKE 'wcc_past_academy_life_o0307%'
+        OR raw_data.an_id LIKE 'wcc_past_academy_life_o0105%'
+        OR raw_data.an_id LIKE 'wcc_past_academy_life_o0207%'
         OR raw_data.an_id LIKE 'wcc_past_academy_life_o0406%'
     ON CONFLICT (id, lang) DO NOTHING
 )
@@ -20871,48 +21043,52 @@ SELECT vals.an_id
  WHERE vals.lang = 'ru'
 ON CONFLICT (an_id) DO NOTHING;
 
--- Region names for social status effects (group o0406)
-WITH region_vals AS (
-  SELECT *
-    FROM (VALUES
-      (1,  'Редания (Северные королевства)', 'Redania (Northern Kingdoms)'),
-      (2,  'Каэдвен (Северные королевства)', 'Kaedwen (Northern Kingdoms)'),
-      (3,  'Темерия (Северные королевства)', 'Temeria (Northern Kingdoms)'),
-      (4,  'Аэдирн (Северные королевства)', 'Aedirn (Northern Kingdoms)'),
-      (5,  'Лирия и Ривия (Северные королевства)', 'Lyria & Rivia (Northern Kingdoms)'),
-      (6,  'Ковир и Повисс (Северные королевства)', 'Kovir & Poviss (Northern Kingdoms)'),
-      (7,  'Скеллиге (Северные королевства)', 'Skellige (Northern Kingdoms)'),
-      (8,  'Цидарис (Северные королевства)', 'Cidaris (Northern Kingdoms)'),
-      (9,  'Вердэн (Северные королевства)', 'Verden (Northern Kingdoms)'),
-      (10, 'Цинтра (Северные королевства)', 'Cintra (Northern Kingdoms)'),
-      (11, 'Сердце Нильфгаарда (Нильфгаард)', 'The Heart of Nilfgaard (Nilfgaard)'),
-      (12, 'Виковаро (Нильфгаард)', 'Vicovaro (Nilfgaard)'),
-      (13, 'Аигрен (Нильфгаард)', 'Angren (Nilfgaard)'),
-      (14, 'Назаир (Нильфгаард)', 'Nazair (Nilfgaard)'),
-      (15, 'Метиина (Нильфгаард)', 'Mettina (Nilfgaard)'),
-      (16, 'Маг Турга (Нильфгаард)', 'Mag Turga (Nilfgaard)'),
-      (17, 'Гесо (Нильфгаард)', 'Gheso (Nilfgaard)'),
-      (18, 'Эббинг (Нильфгаард)', 'Ebbing (Nilfgaard)'),
-      (19, 'Мехт (Нильфгаард)', 'Maecht (Nilfgaard)'),
-      (20, 'Геммера (Нильфгаард)', 'Gemmeria (Nilfgaard)'),
-      (21, 'Этолия (Нильфгаард)', 'Etolia (Nilfgaard)'),
-      (22, 'Доль Блатанна (Земли старших народов)', 'Dol Blathanna (Elderlands)'),
-      (23, 'Махакам (Земли старших народов)', 'Mahakam (Elderlands)')
-    ) AS v(num, ru_name, en_name)
-)
 INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-SELECT ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(v.num, 'FM00') || '.region_name') AS id
-     , 'character' AS entity
-     , 'social_status_group' AS entity_field
-     , x.lang
-     , x.text
-  FROM region_vals v
- CROSS JOIN LATERAL (
-    VALUES
-      ('ru', v.ru_name),
-      ('en', v.en_name)
- ) AS x(lang, text)
-ON CONFLICT (id, lang) DO NOTHING;
+SELECT ck_id(v.key), 'character', 'event_desc', v.lang, v.text
+FROM (VALUES
+  ('witcher_cc.wcc_past_academy_life_o030701.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Тактике]'),
+  ('witcher_cc.wcc_past_academy_life_o030701.event_desc', 'en', 'Mage hunter assistance: [+2 to Tactics]'),
+  ('witcher_cc.wcc_past_academy_life_o030702.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Тактике]'),
+  ('witcher_cc.wcc_past_academy_life_o030702.event_desc', 'en', 'Mage hunter assistance: [+1 to Tactics]'),
+  ('witcher_cc.wcc_past_academy_life_o030703.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Стрельбе из лука]'),
+  ('witcher_cc.wcc_past_academy_life_o030703.event_desc', 'en', 'Mage hunter assistance: [+2 to Archery]'),
+  ('witcher_cc.wcc_past_academy_life_o030704.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Стрельбе из лука]'),
+  ('witcher_cc.wcc_past_academy_life_o030704.event_desc', 'en', 'Mage hunter assistance: [+1 to Archery]'),
+  ('witcher_cc.wcc_past_academy_life_o030705.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Атлетике]'),
+  ('witcher_cc.wcc_past_academy_life_o030705.event_desc', 'en', 'Mage hunter assistance: [+2 to Athletics]'),
+  ('witcher_cc.wcc_past_academy_life_o030706.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Атлетике]'),
+  ('witcher_cc.wcc_past_academy_life_o030706.event_desc', 'en', 'Mage hunter assistance: [+1 to Athletics]'),
+  ('witcher_cc.wcc_past_academy_life_o030707.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Стрельбе из арбалета]'),
+  ('witcher_cc.wcc_past_academy_life_o030707.event_desc', 'en', 'Mage hunter assistance: [+2 to Crossbow]'),
+  ('witcher_cc.wcc_past_academy_life_o030708.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Стрельбе из арбалета]'),
+  ('witcher_cc.wcc_past_academy_life_o030708.event_desc', 'en', 'Mage hunter assistance: [+1 to Crossbow]'),
+  ('witcher_cc.wcc_past_academy_life_o030709.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Владению легкими клинками]'),
+  ('witcher_cc.wcc_past_academy_life_o030709.event_desc', 'en', 'Mage hunter assistance: [+2 to Small Blades]'),
+  ('witcher_cc.wcc_past_academy_life_o030710.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Владению легкими клинками]'),
+  ('witcher_cc.wcc_past_academy_life_o030710.event_desc', 'en', 'Mage hunter assistance: [+1 to Small Blades]'),
+  ('witcher_cc.wcc_past_academy_life_o030711.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Владению древковым оружием]'),
+  ('witcher_cc.wcc_past_academy_life_o030711.event_desc', 'en', 'Mage hunter assistance: [+2 to Staff/Spear]'),
+  ('witcher_cc.wcc_past_academy_life_o030712.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Владению древковым оружием]'),
+  ('witcher_cc.wcc_past_academy_life_o030712.event_desc', 'en', 'Mage hunter assistance: [+1 to Staff/Spear]'),
+  ('witcher_cc.wcc_past_academy_life_o030713.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Владению мечом]'),
+  ('witcher_cc.wcc_past_academy_life_o030713.event_desc', 'en', 'Mage hunter assistance: [+2 to Swordsmanship]'),
+  ('witcher_cc.wcc_past_academy_life_o030714.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Владению мечом]'),
+  ('witcher_cc.wcc_past_academy_life_o030714.event_desc', 'en', 'Mage hunter assistance: [+1 to Swordsmanship]'),
+  ('witcher_cc.wcc_past_academy_life_o030715.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Ближнему бою]'),
+  ('witcher_cc.wcc_past_academy_life_o030715.event_desc', 'en', 'Mage hunter assistance: [+2 to Melee]'),
+  ('witcher_cc.wcc_past_academy_life_o030716.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Ближнему бою]'),
+  ('witcher_cc.wcc_past_academy_life_o030716.event_desc', 'en', 'Mage hunter assistance: [+1 to Melee]'),
+  ('witcher_cc.wcc_past_academy_life_o030717.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Борьбе]'),
+  ('witcher_cc.wcc_past_academy_life_o030717.event_desc', 'en', 'Mage hunter assistance: [+2 to Brawling]'),
+  ('witcher_cc.wcc_past_academy_life_o030718.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Борьбе]'),
+  ('witcher_cc.wcc_past_academy_life_o030718.event_desc', 'en', 'Mage hunter assistance: [+1 to Brawling]'),
+  ('witcher_cc.wcc_past_academy_life_o030719.event_desc', 'ru', 'Помощь охотника на магов: [+2 к Верховой езде]'),
+  ('witcher_cc.wcc_past_academy_life_o030719.event_desc', 'en', 'Mage hunter assistance: [+2 to Riding]'),
+  ('witcher_cc.wcc_past_academy_life_o030720.event_desc', 'ru', 'Помощь охотника на магов: [+1 к Верховой езде]'),
+  ('witcher_cc.wcc_past_academy_life_o030720.event_desc', 'en', 'Mage hunter assistance: [+1 to Riding]')
+) AS v(key, lang, text)
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
 
 -- Effects: set academy life pass flag on every academy_life option
 WITH academy_answers AS (
@@ -21019,6 +21195,44 @@ SELECT
   )
 FROM curse_event_mapping;
 
+-- Effects: save o0105 detail choice to life events
+WITH options AS (
+  SELECT num
+    FROM generate_series(1, 23) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0105' || to_char(options.num, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0105' || to_char(options.num, 'FM00') || '.event_desc')::text)
+      )
+    )
+  )
+FROM options;
+
 -- Effects: crowns for o0207 details
 WITH crowns_vals AS (
   SELECT num, num * 100 AS crowns
@@ -21034,8 +21248,46 @@ SELECT
       jsonb_build_object('var', 'characterRaw.money.crowns'),
       crowns_vals.crowns
     )
+    )
+  FROM crowns_vals;
+
+-- Effects: save o0207 detail choice to life events
+WITH options AS (
+  SELECT num
+    FROM generate_series(1, 6) AS num
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT
+  'character',
+  'wcc_past_academy_life_o0207' || to_char(options.num, 'FM00'),
+  jsonb_build_object(
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0207' || to_char(options.num, 'FM00') || '.event_desc')::text)
+      )
+    )
   )
-FROM crowns_vals;
+FROM options;
 
 -- Effects: combat skill increase for o0307 details
 WITH skill_mapping AS (
@@ -21153,39 +21405,6 @@ SELECT
     )
   )
 FROM options;
-
--- Effects: social status "Equal" in selected region for o0406 details
-WITH regions AS (
-  SELECT num
-    FROM generate_series(1, 23) AS num
-)
-INSERT INTO effects (scope, an_an_id, body)
-  SELECT
-    'character',
-    'wcc_past_academy_life_o0406' || to_char(regions.num, 'FM00'),
-    jsonb_build_object(
-      'when',
-      jsonb_build_object(
-        '!',
-        jsonb_build_object(
-          'in',
-          jsonb_build_array(
-            ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(regions.num, 'FM00') || '.region_name')::text,
-            jsonb_build_object('cat_array', 'characterRaw.social_status[].group_name.i18n_uuid')
-          )
-        )
-      ),
-      'add',
-      jsonb_build_array(
-        jsonb_build_object('var', 'characterRaw.social_status'),
-        jsonb_build_object(
-          'group_name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0406' || to_char(regions.num, 'FM00') || '.region_name')::text),
-        'group_status', 3,
-        'group_is_feared', false
-      )
-    )
-  )
-FROM regions;
 
 -- <<< END sql/034_past_academy_life_details.sql
 
@@ -24856,7 +25075,7 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.enemies'),
       jsonb_build_object(
-        'gender', '',
+        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_enemy_gender_o0002.answer_options.label_value')::text),
         'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0002.answer_options.label_value')::text),
         'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_position_o0008.answer_options.label_value')::text),
         'cause', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_the_power.enemy_cause_academy_life_1_3')::text),
@@ -32632,6 +32851,17 @@ WITH
       CROSS JOIN meta
   ON CONFLICT (id, lang) DO NOTHING
 )
+, ins_event_type_academy_life AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life') AS id
+         , meta.entity, 'event_type', v.lang, v.text
+      FROM (VALUES
+        ('ru', 'Жизнь в Академии'),
+        ('en', 'Academy Life')
+      ) AS v(lang, text)
+      CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
 -- i18n для описания "Кастомная зависимость"
 , ins_event_desc AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -32660,9 +32890,83 @@ SELECT 'character', meta.qu_id, NULL,
   )
 FROM meta
 UNION ALL
--- 2. Добавление в lifeEvents
+-- 2. Добавление в lifeEvents как Academy Life
 SELECT 'character', meta.qu_id, NULL,
   jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      'and',
+      jsonb_build_array(
+        jsonb_build_object(
+          'or',
+          jsonb_build_array(
+            jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+            jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+          )
+        ),
+        jsonb_build_object(
+          '!=',
+          jsonb_build_array(
+            jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+            'academy life 1-9'
+          )
+        )
+      )
+    ),
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'event_desc')::text)
+      )
+    )
+  )
+FROM meta
+UNION ALL
+-- 3. Добавление в lifeEvents как Misfortune
+SELECT 'character', meta.qu_id, NULL,
+  jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      '!',
+      jsonb_build_object(
+        'and',
+        jsonb_build_array(
+          jsonb_build_object(
+            'or',
+            jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+            )
+          ),
+          jsonb_build_object(
+            '!=',
+            jsonb_build_array(
+              jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+              'academy life 1-9'
+            )
+          )
+        )
+      )
+    ),
     'add',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.lore.lifeEvents'),
@@ -32699,7 +33003,6 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details_addiction', 'wcc_life_events_event', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
-
 
 -- <<< END sql/088_life_events_fortune_or_not_details_addiction.sql
 
@@ -32796,6 +33099,17 @@ WITH
       CROSS JOIN meta
   ON CONFLICT (id, lang) DO NOTHING
 )
+, ins_event_type_academy_life AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life') AS id
+         , meta.entity, 'event_type', v.lang, v.text
+      FROM (VALUES
+        ('ru', 'Жизнь в Академии'),
+        ('en', 'Academy Life')
+      ) AS v(lang, text)
+      CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
 -- i18n для описания "Кастомное проклятие"
 , ins_event_desc AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -32824,9 +33138,83 @@ SELECT 'character', meta.qu_id, NULL,
   )
 FROM meta
 UNION ALL
--- 2. Добавление в lifeEvents
+-- 2. Добавление в lifeEvents как Academy Life
 SELECT 'character', meta.qu_id, NULL,
   jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      'and',
+      jsonb_build_array(
+        jsonb_build_object(
+          'or',
+          jsonb_build_array(
+            jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+            jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+          )
+        ),
+        jsonb_build_object(
+          '!=',
+          jsonb_build_array(
+            jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+            'academy life 1-9'
+          )
+        )
+      )
+    ),
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'event_desc')::text)
+      )
+    )
+  )
+FROM meta
+UNION ALL
+-- 3. Добавление в lifeEvents как Misfortune
+SELECT 'character', meta.qu_id, NULL,
+  jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      '!',
+      jsonb_build_object(
+        'and',
+        jsonb_build_array(
+          jsonb_build_object(
+            'or',
+            jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+            )
+          ),
+          jsonb_build_object(
+            '!=',
+            jsonb_build_array(
+              jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+              'academy life 1-9'
+            )
+          )
+        )
+      )
+    ),
     'add',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.lore.lifeEvents'),
@@ -32865,7 +33253,6 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
   SELECT 'wcc_mage_events_danger_details', 'wcc_life_events_fortune_or_not_details_curse', 'wcc_mage_events_danger_details_o041006', 1;
-
 
 -- <<< END sql/089_life_events_fortune_or_not_details_curse.sql
 
@@ -35319,41 +35706,6 @@ FROM vals
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
--- Эффекты: сохранение модификатора для Испытания травами в values.byQuestion
-WITH
-  meta AS (SELECT 'witcher_cc' AS su_su_id
-                , 'wcc_witcher_when' AS qu_id)
-INSERT INTO effects (scope, an_an_id, body)
-SELECT 'character', 'wcc_witcher_when_o01',
-  jsonb_build_object(
-    'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'values.byQuestion.wcc_witcher_when'),
-      -0.2
-    )
-  )
-FROM meta
-UNION ALL
-SELECT 'character', 'wcc_witcher_when_o02',
-  jsonb_build_object(
-    'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'values.byQuestion.wcc_witcher_when'),
-      0.0
-    )
-  )
-FROM meta
-UNION ALL
-SELECT 'character', 'wcc_witcher_when_o03',
-  jsonb_build_object(
-    'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'values.byQuestion.wcc_witcher_when'),
-      0.2
-    )
-  )
-FROM meta;
-
 -- Эффекты: сохранение текста после <br> в characterRaw.lore.witcher_initiation_moment
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
@@ -35394,6 +35746,7 @@ FROM meta;
 -- Связи
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_witcher_graduation_age', 'wcc_witcher_when';
+
 -- <<< END sql/107_witcher_when.sql
 
 -- >>> BEGIN sql/108_witcher_first_trainings.sql
@@ -36059,6 +36412,40 @@ WITH
     CROSS JOIN meta
   )
 
+INSERT INTO rules (ru_id, name, body)
+VALUES
+  (
+    ck_id('witcher_cc.rules.is_witcher_trials_from_infancy'),
+    'is_witcher_trials_from_infancy',
+    '{"in":["wcc_witcher_when_o01",{"var":["answers.byQuestion.wcc_witcher_when",[]]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_witcher_trials_from_early_childhood'),
+    'is_witcher_trials_from_early_childhood',
+    '{"in":["wcc_witcher_when_o02",{"var":["answers.byQuestion.wcc_witcher_when",[]]}]}'::jsonb
+  ),
+  (
+    ck_id('witcher_cc.rules.is_witcher_trials_from_late_childhood'),
+    'is_witcher_trials_from_late_childhood',
+    '{"in":["wcc_witcher_when_o03",{"var":["answers.byQuestion.wcc_witcher_when",[]]}]}'::jsonb
+  )
+ON CONFLICT (ru_id) DO UPDATE
+SET name = EXCLUDED.name,
+    body = EXCLUDED.body;
+
+WITH
+  meta AS (SELECT 'witcher_cc' AS su_su_id
+                , 'wcc_witcher_trials' AS qu_id
+                , 'questions' AS entity)
+, c_vals(lang, num, text) AS (
+    VALUES
+      ('ru', 1, 'Шанс'),
+      ('ru', 2, 'Эффект'),
+      ('ru', 3, 'Исход испытаний'),
+      ('en', 1, 'Chance'),
+      ('en', 2, 'Effect'),
+      ('en', 3, 'Outcome of the Trials')
+  )
 INSERT INTO questions (qu_id, su_su_id, title, body, qtype, metadata)
 SELECT meta.qu_id
      , meta.su_su_id
@@ -36070,11 +36457,6 @@ SELECT meta.qu_id
          'columns', (
            SELECT jsonb_agg(ck_id('witcher_cc' ||'.'|| 'wcc_witcher_trials' ||'.'|| to_char(num, 'FM9900') ||'.'|| 'questions' ||'.'|| 'column_name')::text ORDER BY num)
            FROM (SELECT DISTINCT num FROM c_vals) AS cols
-         ),
-         'diceModifier', jsonb_build_object(
-           'jsonlogic_expression', jsonb_build_object(
-             'var', 'values.byQuestion.wcc_witcher_when'
-           )
          ),
          'path', jsonb_build_array(
            ck_id('witcher_cc.hierarchy.witcher')::text,
@@ -36088,19 +36470,35 @@ WITH
 raw_data AS (
   SELECT 'ru' AS lang, raw_data_ru.*
   FROM (VALUES
-    (1, 0.1, '-1 к Эмп и -1 к Тел', '<b>Почти смертельно</b><br>Испытание травами практически разрушило ваше тело. Вы пережили процесс, но ваши тело и разум навсегда повреждены.'),
-    (2, 0.2, '-1 к Эмп', '<b>Тяжёлые последствия</b><br>Испытание травами у вас прошло тяжело, и ведьмаки, следившие за процессом, не были до конца уверены, что вы справитесь. Вы выжили, но разум ваш травмирован.'),
-    (3, 0.6, 'Нет эффектов', '<b>Приемлемые мутации</b><br>Испытание травами прошло успешно. Вы стали ведьмаком без тяжёлых последствий, если не считать воспоминаний об ужасной боли.'),
-    (4, 0.1, '+1 к Эмп и +1 к Лвк', '<b>Дополнительные мутации</b><br>Ваше тело очень хорошо отозвалось на Испытание травами, и вы получили дополнительные мутации. Вы успешно перенесли испытания, и вся испытанная боль того стоила.')
-  ) AS raw_data_ru(num, probability, effect, txt)
+    (1, 1, 0.3, '-1 к Эмп и -1 к Тел', '<b>Почти смертельно</b><br>Испытание травами практически разрушило ваше тело. Вы пережили процесс, но ваши тело и разум навсегда повреждены.', 'is_witcher_trials_from_infancy'),
+    (1, 2, 0.2, '-1 к Эмп', '<b>Тяжёлые последствия</b><br>Испытание травами у вас прошло тяжело, и ведьмаки, следившие за процессом, не были до конца уверены, что вы справитесь. Вы выжили, но разум ваш травмирован.', 'is_witcher_trials_from_infancy'),
+    (1, 3, 0.5, 'Нет эффектов', '<b>Приемлемые мутации</b><br>Испытание травами прошло успешно. Вы стали ведьмаком без тяжёлых последствий, если не считать воспоминаний об ужасной боли.', 'is_witcher_trials_from_infancy'),
+    (1, 4, 0.0, '+1 к Эмп и +1 к Лвк', '<b>Дополнительные мутации</b><br>Ваше тело очень хорошо отозвалось на Испытание травами, и вы получили дополнительные мутации. Вы успешно перенесли испытания, и вся испытанная боль того стоила.', 'is_witcher_trials_from_infancy'),
+    (2, 1, 0.1, '-1 к Эмп и -1 к Тел', '<b>Почти смертельно</b><br>Испытание травами практически разрушило ваше тело. Вы пережили процесс, но ваши тело и разум навсегда повреждены.', 'is_witcher_trials_from_early_childhood'),
+    (2, 2, 0.2, '-1 к Эмп', '<b>Тяжёлые последствия</b><br>Испытание травами у вас прошло тяжело, и ведьмаки, следившие за процессом, не были до конца уверены, что вы справитесь. Вы выжили, но разум ваш травмирован.', 'is_witcher_trials_from_early_childhood'),
+    (2, 3, 0.6, 'Нет эффектов', '<b>Приемлемые мутации</b><br>Испытание травами прошло успешно. Вы стали ведьмаком без тяжёлых последствий, если не считать воспоминаний об ужасной боли.', 'is_witcher_trials_from_early_childhood'),
+    (2, 4, 0.1, '+1 к Эмп и +1 к Лвк', '<b>Дополнительные мутации</b><br>Ваше тело очень хорошо отозвалось на Испытание травами, и вы получили дополнительные мутации. Вы успешно перенесли испытания, и вся испытанная боль того стоила.', 'is_witcher_trials_from_early_childhood'),
+    (3, 1, 0.0, '-1 к Эмп и -1 к Тел', '<b>Почти смертельно</b><br>Испытание травами практически разрушило ваше тело. Вы пережили процесс, но ваши тело и разум навсегда повреждены.', 'is_witcher_trials_from_late_childhood'),
+    (3, 2, 0.1, '-1 к Эмп', '<b>Тяжёлые последствия</b><br>Испытание травами у вас прошло тяжело, и ведьмаки, следившие за процессом, не были до конца уверены, что вы справитесь. Вы выжили, но разум ваш травмирован.', 'is_witcher_trials_from_late_childhood'),
+    (3, 3, 0.6, 'Нет эффектов', '<b>Приемлемые мутации</b><br>Испытание травами прошло успешно. Вы стали ведьмаком без тяжёлых последствий, если не считать воспоминаний об ужасной боли.', 'is_witcher_trials_from_late_childhood'),
+    (3, 4, 0.3, '+1 к Эмп и +1 к Лвк', '<b>Дополнительные мутации</b><br>Ваше тело очень хорошо отозвалось на Испытание травами, и вы получили дополнительные мутации. Вы успешно перенесли испытания, и вся испытанная боль того стоила.', 'is_witcher_trials_from_late_childhood')
+  ) AS raw_data_ru(group_id, num, probability, effect, txt, rule_name)
   UNION ALL
   SELECT 'en' AS lang, raw_data_en.*
   FROM (VALUES
-    (1, 0.1, '-1 EMP & -1 BODY', '<b>Nearly Fatal</b><br>The Trial of the Grasses nearly destroyed your body. Though you survived the process, your body and mind were damaged permanently.'),
-    (2, 0.2, '-1 EMP', '<b>Poorly Accepted</b><br>The Trial of the Grasses went poorly and the witchers in charge of mutation weren’t entirely sure you would make it. You survived, but not without mental scars.'),
-    (3, 0.6, 'No Modifiers', '<b>Passable Mutations</b><br>The Trial of the Grasses went well. You passed into the ranks of witchers with nothing more than memories of horrible pain.'),
-    (4, 0.1, '+1 EMP & +1 DEX', '<b>Extra Mutations</b><br>Your body was very receptive to the Trial of the Grasses and you had extra mutations applied to you. Your body handled it well, and all of the pain paid off in the end.')
-  ) AS raw_data_en(num, probability, effect, txt)
+    (1, 1, 0.3, '-1 EMP & -1 BODY', '<b>Nearly Fatal</b><br>The Trial of the Grasses nearly destroyed your body. Though you survived the process, your body and mind were damaged permanently.', 'is_witcher_trials_from_infancy'),
+    (1, 2, 0.2, '-1 EMP', '<b>Poorly Accepted</b><br>The Trial of the Grasses went poorly and the witchers in charge of mutation weren’t entirely sure you would make it. You survived, but not without mental scars.', 'is_witcher_trials_from_infancy'),
+    (1, 3, 0.5, 'No Modifiers', '<b>Passable Mutations</b><br>The Trial of the Grasses went well. You passed into the ranks of witchers with nothing more than memories of horrible pain.', 'is_witcher_trials_from_infancy'),
+    (1, 4, 0.0, '+1 EMP & +1 DEX', '<b>Extra Mutations</b><br>Your body was very receptive to the Trial of the Grasses and you had extra mutations applied to you. Your body handled it well, and all of the pain paid off in the end.', 'is_witcher_trials_from_infancy'),
+    (2, 1, 0.1, '-1 EMP & -1 BODY', '<b>Nearly Fatal</b><br>The Trial of the Grasses nearly destroyed your body. Though you survived the process, your body and mind were damaged permanently.', 'is_witcher_trials_from_early_childhood'),
+    (2, 2, 0.2, '-1 EMP', '<b>Poorly Accepted</b><br>The Trial of the Grasses went poorly and the witchers in charge of mutation weren’t entirely sure you would make it. You survived, but not without mental scars.', 'is_witcher_trials_from_early_childhood'),
+    (2, 3, 0.6, 'No Modifiers', '<b>Passable Mutations</b><br>The Trial of the Grasses went well. You passed into the ranks of witchers with nothing more than memories of horrible pain.', 'is_witcher_trials_from_early_childhood'),
+    (2, 4, 0.1, '+1 EMP & +1 DEX', '<b>Extra Mutations</b><br>Your body was very receptive to the Trial of the Grasses and you had extra mutations applied to you. Your body handled it well, and all of the pain paid off in the end.', 'is_witcher_trials_from_early_childhood'),
+    (3, 1, 0.0, '-1 EMP & -1 BODY', '<b>Nearly Fatal</b><br>The Trial of the Grasses nearly destroyed your body. Though you survived the process, your body and mind were damaged permanently.', 'is_witcher_trials_from_late_childhood'),
+    (3, 2, 0.1, '-1 EMP', '<b>Poorly Accepted</b><br>The Trial of the Grasses went poorly and the witchers in charge of mutation weren’t entirely sure you would make it. You survived, but not without mental scars.', 'is_witcher_trials_from_late_childhood'),
+    (3, 3, 0.6, 'No Modifiers', '<b>Passable Mutations</b><br>The Trial of the Grasses went well. You passed into the ranks of witchers with nothing more than memories of horrible pain.', 'is_witcher_trials_from_late_childhood'),
+    (3, 4, 0.3, '+1 EMP & +1 DEX', '<b>Extra Mutations</b><br>Your body was very receptive to the Trial of the Grasses and you had extra mutations applied to you. Your body handled it well, and all of the pain paid off in the end.', 'is_witcher_trials_from_late_childhood')
+  ) AS raw_data_en(group_id, num, probability, effect, txt, rule_name)
 ),
 
 vals AS (
@@ -36108,7 +36506,7 @@ vals AS (
     ('<td style="color: grey;">' || to_char(probability*100, 'FM990.00') || '%</td>'
      || '<td>' || effect || '</td>'
      || '<td>' || txt || '</td>') AS text,
-    num, probability, lang
+    group_id, num, probability, lang, rule_name
   FROM raw_data
 )
 , meta AS (SELECT 'witcher_cc' AS su_su_id
@@ -36117,18 +36515,19 @@ vals AS (
                 , 'label' AS entity_field)
 , ins_lbl AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
-  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS id
+  SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * vals.group_id + vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS id
        , meta.entity, meta.entity_field, vals.lang, vals.text
   FROM vals
   CROSS JOIN meta
 )
 
-INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, sort_order, metadata)
+INSERT INTO answer_options (an_id, su_su_id, qu_qu_id, label, visible_ru_ru_id, sort_order, metadata)
 SELECT
-  'wcc_witcher_trials_o' || to_char(vals.num, 'FM00') AS an_id,
+  'wcc_witcher_trials_o' || to_char(vals.group_id, 'FM00') || to_char(vals.num, 'FM00') AS an_id,
   meta.su_su_id,
   meta.qu_id,
-  ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(vals.num, 'FM9900') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label,
+  ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'_o'|| to_char(100 * vals.group_id + vals.num, 'FM0000') ||'.'|| meta.entity ||'.'|| meta.entity_field) AS label,
+  (SELECT ru_id FROM rules WHERE name = vals.rule_name ORDER BY ru_id LIMIT 1),
   vals.num,
   jsonb_build_object(
            'probability', vals.probability
@@ -36171,9 +36570,14 @@ SELECT 1 FROM meta;
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id
                 , 'wcc_witcher_trials' AS qu_id)
+, answer_groups AS (
+    SELECT 1 AS group_id
+    UNION ALL SELECT 2
+    UNION ALL SELECT 3
+  )
 INSERT INTO effects (scope, an_an_id, body)
 -- Вариант 1: Неудача, -1 EMP.bonus, -1 BODY.bonus
-SELECT 'character', 'wcc_witcher_trials_o01',
+SELECT 'character', 'wcc_witcher_trials_o' || to_char(answer_groups.group_id, 'FM00') || '01',
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -36191,8 +36595,9 @@ SELECT 'character', 'wcc_witcher_trials_o01',
     )
   )
 FROM meta
+CROSS JOIN answer_groups
 UNION ALL
-SELECT 'character', 'wcc_witcher_trials_o01',
+SELECT 'character', 'wcc_witcher_trials_o' || to_char(answer_groups.group_id, 'FM00') || '01',
   jsonb_build_object(
     'inc',
     jsonb_build_array(
@@ -36201,8 +36606,9 @@ SELECT 'character', 'wcc_witcher_trials_o01',
     )
   )
 FROM meta
+CROSS JOIN answer_groups
 UNION ALL
-SELECT 'character', 'wcc_witcher_trials_o01',
+SELECT 'character', 'wcc_witcher_trials_o' || to_char(answer_groups.group_id, 'FM00') || '01',
   jsonb_build_object(
     'inc',
     jsonb_build_array(
@@ -36211,9 +36617,10 @@ SELECT 'character', 'wcc_witcher_trials_o01',
     )
   )
 FROM meta
+CROSS JOIN answer_groups
 UNION ALL
 -- Вариант 2: Неудача, -1 EMP.bonus
-SELECT 'character', 'wcc_witcher_trials_o02',
+SELECT 'character', 'wcc_witcher_trials_o' || to_char(answer_groups.group_id, 'FM00') || '02',
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -36231,8 +36638,9 @@ SELECT 'character', 'wcc_witcher_trials_o02',
     )
   )
 FROM meta
+CROSS JOIN answer_groups
 UNION ALL
-SELECT 'character', 'wcc_witcher_trials_o02',
+SELECT 'character', 'wcc_witcher_trials_o' || to_char(answer_groups.group_id, 'FM00') || '02',
   jsonb_build_object(
     'inc',
     jsonb_build_array(
@@ -36241,9 +36649,10 @@ SELECT 'character', 'wcc_witcher_trials_o02',
     )
   )
 FROM meta
+CROSS JOIN answer_groups
 UNION ALL
 -- Вариант 3: Удача, +1 EMP.bonus, +1 DEX.bonus
-SELECT 'character', 'wcc_witcher_trials_o04',
+SELECT 'character', 'wcc_witcher_trials_o' || to_char(answer_groups.group_id, 'FM00') || '04',
   jsonb_build_object(
     'add',
     jsonb_build_array(
@@ -36261,8 +36670,9 @@ SELECT 'character', 'wcc_witcher_trials_o04',
     )
   )
 FROM meta
+CROSS JOIN answer_groups
 UNION ALL
-SELECT 'character', 'wcc_witcher_trials_o04',
+SELECT 'character', 'wcc_witcher_trials_o' || to_char(answer_groups.group_id, 'FM00') || '04',
   jsonb_build_object(
     'inc',
     jsonb_build_array(
@@ -36271,8 +36681,9 @@ SELECT 'character', 'wcc_witcher_trials_o04',
     )
   )
 FROM meta
+CROSS JOIN answer_groups
 UNION ALL
-SELECT 'character', 'wcc_witcher_trials_o04',
+SELECT 'character', 'wcc_witcher_trials_o' || to_char(answer_groups.group_id, 'FM00') || '04',
   jsonb_build_object(
     'inc',
     jsonb_build_array(
@@ -36280,17 +36691,12 @@ SELECT 'character', 'wcc_witcher_trials_o04',
       1
     )
   )
-FROM meta;
+FROM meta
+CROSS JOIN answer_groups;
 
 -- Переход с предыдущего узла
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id)
   SELECT 'wcc_witcher_first_trainings', 'wcc_witcher_trials';
-
-
-
-
-
-
 
 
 
@@ -46208,6 +46614,8 @@ VALUES
   (ck_id('witcher_cc.pdf.page1.base.age'), 'pdf', 'page1.base.age', 'en', 'Age'),
   (ck_id('witcher_cc.pdf.page1.base.profession'), 'pdf', 'page1.base.profession', 'ru', 'Профессия'),
   (ck_id('witcher_cc.pdf.page1.base.profession'), 'pdf', 'page1.base.profession', 'en', 'Profession'),
+  (ck_id('witcher_cc.pdf.page1.base.school'), 'pdf', 'page1.base.school', 'ru', 'Школа'),
+  (ck_id('witcher_cc.pdf.page1.base.school'), 'pdf', 'page1.base.school', 'en', 'School'),
   (ck_id('witcher_cc.pdf.page1.base.definingSkill'), 'pdf', 'page1.base.definingSkill', 'ru', 'Определяющий навык'),
   (ck_id('witcher_cc.pdf.page1.base.definingSkill'), 'pdf', 'page1.base.definingSkill', 'en', 'Defining skill'),
 
@@ -46410,6 +46818,8 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.section.values'), 'pdf', 'page2.section.values', 'en', 'Values'),
   (ck_id('witcher_cc.pdf.page2.section.siblings'), 'pdf', 'page2.section.siblings', 'ru', 'Братья и сёстры'),
   (ck_id('witcher_cc.pdf.page2.section.siblings'), 'pdf', 'page2.section.siblings', 'en', 'Siblings'),
+  (ck_id('witcher_cc.pdf.page2.section.mentor'), 'pdf', 'page2.section.mentor', 'ru', 'Наставник'),
+  (ck_id('witcher_cc.pdf.page2.section.mentor'), 'pdf', 'page2.section.mentor', 'en', 'Mentor'),
   (ck_id('witcher_cc.pdf.page2.section.allies'), 'pdf', 'page2.section.allies', 'ru', 'Союзники'),
   (ck_id('witcher_cc.pdf.page2.section.allies'), 'pdf', 'page2.section.allies', 'en', 'Allies'),
   (ck_id('witcher_cc.pdf.page2.section.enemies'), 'pdf', 'page2.section.enemies', 'ru', 'Враги'),
@@ -46460,6 +46870,10 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.lore.homeland'), 'pdf', 'page2.lore.homeland', 'en', 'Homeland'),
   (ck_id('witcher_cc.pdf.page2.lore.homeLanguage'), 'pdf', 'page2.lore.homeLanguage', 'ru', 'Родной язык'),
   (ck_id('witcher_cc.pdf.page2.lore.homeLanguage'), 'pdf', 'page2.lore.homeLanguage', 'en', 'Home language'),
+  (ck_id('witcher_cc.pdf.page2.lore.familySize'), 'pdf', 'page2.lore.familySize', 'ru', 'Размер семьи'),
+  (ck_id('witcher_cc.pdf.page2.lore.familySize'), 'pdf', 'page2.lore.familySize', 'en', 'Family size'),
+  (ck_id('witcher_cc.pdf.page2.lore.familyPersonality'), 'pdf', 'page2.lore.familyPersonality', 'ru', 'Характер семьи'),
+  (ck_id('witcher_cc.pdf.page2.lore.familyPersonality'), 'pdf', 'page2.lore.familyPersonality', 'en', 'Family character'),
   (ck_id('witcher_cc.pdf.page2.lore.familyStatus'), 'pdf', 'page2.lore.familyStatus', 'ru', 'Статус семьи'),
   (ck_id('witcher_cc.pdf.page2.lore.familyStatus'), 'pdf', 'page2.lore.familyStatus', 'en', 'Family status'),
   (ck_id('witcher_cc.pdf.page2.lore.familyFate'), 'pdf', 'page2.lore.familyFate', 'ru', 'Судьба семьи'),
@@ -46468,6 +46882,10 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.lore.parentsFateWho'), 'pdf', 'page2.lore.parentsFateWho', 'en', 'Parents'),
   (ck_id('witcher_cc.pdf.page2.lore.parentsFate'), 'pdf', 'page2.lore.parentsFate', 'ru', 'Судьба родителей'),
   (ck_id('witcher_cc.pdf.page2.lore.parentsFate'), 'pdf', 'page2.lore.parentsFate', 'en', 'Parents fate'),
+  (ck_id('witcher_cc.pdf.page2.lore.magicDiscoveryHow'), 'pdf', 'page2.lore.magicDiscoveryHow', 'ru', 'Обнаружение способностей'),
+  (ck_id('witcher_cc.pdf.page2.lore.magicDiscoveryHow'), 'pdf', 'page2.lore.magicDiscoveryHow', 'en', 'Discovery of abilities'),
+  (ck_id('witcher_cc.pdf.page2.lore.familyReaction'), 'pdf', 'page2.lore.familyReaction', 'ru', 'Реакция семьи'),
+  (ck_id('witcher_cc.pdf.page2.lore.familyReaction'), 'pdf', 'page2.lore.familyReaction', 'en', 'Family reaction'),
   (ck_id('witcher_cc.pdf.page2.lore.friend'), 'pdf', 'page2.lore.friend', 'ru', 'Друг'),
   (ck_id('witcher_cc.pdf.page2.lore.friend'), 'pdf', 'page2.lore.friend', 'en', 'Friend'),
   (ck_id('witcher_cc.pdf.page2.lore.school'), 'pdf', 'page2.lore.school', 'ru', 'Школа'),
@@ -46535,6 +46953,24 @@ VALUES
   (ck_id('witcher_cc.pdf.page2.tables.siblings.col.attitude'), 'pdf', 'page2.tables.siblings.col.attitude', 'en', 'Attitude'),
   (ck_id('witcher_cc.pdf.page2.tables.siblings.col.personality'), 'pdf', 'page2.tables.siblings.col.personality', 'ru', 'Характер'),
   (ck_id('witcher_cc.pdf.page2.tables.siblings.col.personality'), 'pdf', 'page2.tables.siblings.col.personality', 'en', 'Personality'),
+
+  -- mentor
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.personality'), 'pdf', 'page2.tables.mentor.col.personality', 'ru', 'Характер'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.personality'), 'pdf', 'page2.tables.mentor.col.personality', 'en', 'Personality'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.value'), 'pdf', 'page2.tables.mentor.col.value', 'ru', 'Ценности'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.value'), 'pdf', 'page2.tables.mentor.col.value', 'en', 'Values'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.lifestyle'), 'pdf', 'page2.tables.mentor.col.lifestyle', 'ru', 'Стиль жизни'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.lifestyle'), 'pdf', 'page2.tables.mentor.col.lifestyle', 'en', 'Lifestyle'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.hatred'), 'pdf', 'page2.tables.mentor.col.hatred', 'ru', 'Ненавидит'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.hatred'), 'pdf', 'page2.tables.mentor.col.hatred', 'en', 'Hates'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.teachingStyle'), 'pdf', 'page2.tables.mentor.col.teachingStyle', 'ru', 'Стиль преподавания'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.teachingStyle'), 'pdf', 'page2.tables.mentor.col.teachingStyle', 'en', 'Teaching style'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.event'), 'pdf', 'page2.tables.mentor.col.event', 'ru', 'Событие'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.event'), 'pdf', 'page2.tables.mentor.col.event', 'en', 'Event'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.relationshipEnd'), 'pdf', 'page2.tables.mentor.col.relationshipEnd', 'ru', 'Завершение отношений'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.relationshipEnd'), 'pdf', 'page2.tables.mentor.col.relationshipEnd', 'en', 'Relationship end'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.alive'), 'pdf', 'page2.tables.mentor.col.alive', 'ru', 'Жив?'),
+  (ck_id('witcher_cc.pdf.page2.tables.mentor.col.alive'), 'pdf', 'page2.tables.mentor.col.alive', 'en', 'Alive?'),
 
   -- allies
   (ck_id('witcher_cc.pdf.page2.tables.allies.col.gender'), 'pdf', 'page2.tables.allies.col.gender', 'ru', 'Пол'),
@@ -47149,6 +47585,7 @@ VALUES
   -- from: wcc_past_magic_graduation_age
   ('wcc_past_magic_graduation_age', 'wcc_past_academy_life', NULL, NULL, 0),
   -- from: wcc_past_academy_life
+  ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0105', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0110', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0207', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0208', NULL, 2),

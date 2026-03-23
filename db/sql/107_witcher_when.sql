@@ -108,41 +108,6 @@ FROM vals
 CROSS JOIN meta
 ON CONFLICT (an_id) DO NOTHING;
 
--- Эффекты: сохранение модификатора для Испытания травами в values.byQuestion
-WITH
-  meta AS (SELECT 'witcher_cc' AS su_su_id
-                , 'wcc_witcher_when' AS qu_id)
-INSERT INTO effects (scope, an_an_id, body)
-SELECT 'character', 'wcc_witcher_when_o01',
-  jsonb_build_object(
-    'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'values.byQuestion.wcc_witcher_when'),
-      -0.2
-    )
-  )
-FROM meta
-UNION ALL
-SELECT 'character', 'wcc_witcher_when_o02',
-  jsonb_build_object(
-    'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'values.byQuestion.wcc_witcher_when'),
-      0.0
-    )
-  )
-FROM meta
-UNION ALL
-SELECT 'character', 'wcc_witcher_when_o03',
-  jsonb_build_object(
-    'set',
-    jsonb_build_array(
-      jsonb_build_object('var', 'values.byQuestion.wcc_witcher_when'),
-      0.2
-    )
-  )
-FROM meta;
-
 -- Эффекты: сохранение текста после <br> в characterRaw.lore.witcher_initiation_moment
 WITH
   meta AS (SELECT 'witcher_cc' AS su_su_id

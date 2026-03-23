@@ -11,8 +11,8 @@ VALUES
   (ck_id('witcher_cc.hierarchy.magic_discovery'), 'hierarchy', 'path', 'en', 'Magic discovery'),
   (ck_id('witcher_cc.hierarchy.magic_discovery_how'), 'hierarchy', 'path', 'ru', 'Как обнаружились'),
   (ck_id('witcher_cc.hierarchy.magic_discovery_how'), 'hierarchy', 'path', 'en', 'How discovered'),
-  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'ru', 'Реакция людей'),
-  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'en', 'People reaction')
+  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'ru', 'Реакция семьи'),
+  (ck_id('witcher_cc.hierarchy.magic_reaction'), 'hierarchy', 'path', 'en', 'Family reaction')
 ON CONFLICT (id, lang) DO NOTHING;
 
 WITH

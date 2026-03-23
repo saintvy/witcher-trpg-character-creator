@@ -63,6 +63,7 @@ VALUES
   -- from: wcc_past_magic_graduation_age
   ('wcc_past_magic_graduation_age', 'wcc_past_academy_life', NULL, NULL, 0),
   -- from: wcc_past_academy_life
+  ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0105', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0110', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0207', NULL, 2),
   ('wcc_past_academy_life', 'wcc_past_academy_life_details', 'wcc_past_academy_life_o0208', NULL, 2),

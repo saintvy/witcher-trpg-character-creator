@@ -224,6 +224,92 @@ SELECT 'character' AS scope
   FROM nums
  CROSS JOIN meta;
 
+-- Родной язык и языковой бонус зависят от выбранной родины
+WITH meta AS (
+  SELECT 'witcher_cc' AS su_su_id
+       , 'wcc_past_homeland_mage' AS qu_id
+       , 'character' AS entity
+)
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| v.lang_key ||'.'|| meta.entity ||'.home_language')
+     , meta.entity
+     , 'home_language'
+     , v.lang
+     , v.text
+  FROM (VALUES
+    ('common', 'ru', 'Всеобщий'),
+    ('common', 'en', 'Common Speech'),
+    ('elder_speech', 'ru', 'Старшая речь'),
+    ('elder_speech', 'en', 'Elder Speech'),
+    ('dwarvish', 'ru', 'Краснолюдский'),
+    ('dwarvish', 'en', 'Dwarvish')
+  ) AS v(lang_key, lang, text)
+ CROSS JOIN meta
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
+
+WITH meta AS (
+  SELECT 'witcher_cc' AS su_su_id
+       , 'wcc_past_homeland_mage' AS qu_id
+)
+INSERT INTO effects (scope, an_an_id, body)
+SELECT 'character', 'wcc_past_homeland_mage_o' || to_char(v.num, 'FM00'),
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.lore.home_language'),
+      jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| v.lang_key ||'.character.home_language')::text)
+    )
+  )
+FROM (VALUES
+  ( 1, 'common'), ( 2, 'common'), ( 3, 'common'), ( 4, 'common'), ( 5, 'common'),
+  ( 6, 'common'), ( 7, 'common'), ( 8, 'common'), ( 9, 'common'), (10, 'common'),
+  (11, 'common'), (12, 'common'), (13, 'common'), (14, 'common'), (15, 'common'),
+  (16, 'common'), (17, 'common'), (18, 'common'), (19, 'common'), (20, 'common'),
+  (21, 'common'), (22, 'common'), (23, 'common'), (24, 'common'),
+  (25, 'elder_speech'),
+  (26, 'dwarvish')
+) AS v(num, lang_key)
+CROSS JOIN meta
+UNION ALL
+SELECT 'character', 'wcc_past_homeland_mage_o' || to_char(v.num, 'FM00'),
+  jsonb_build_object(
+    'inc',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.skills.common.' || v.skill_id || '.bonus'),
+      8
+    )
+  )
+FROM (VALUES
+  ( 1, 'language_common_speech'), ( 2, 'language_common_speech'), ( 3, 'language_common_speech'), ( 4, 'language_common_speech'),
+  ( 5, 'language_common_speech'), ( 6, 'language_common_speech'), ( 7, 'language_common_speech'), ( 8, 'language_common_speech'),
+  ( 9, 'language_common_speech'), (10, 'language_common_speech'), (11, 'language_common_speech'), (12, 'language_common_speech'),
+  (13, 'language_common_speech'), (14, 'language_common_speech'), (15, 'language_common_speech'), (16, 'language_common_speech'),
+  (17, 'language_common_speech'), (18, 'language_common_speech'), (19, 'language_common_speech'), (20, 'language_common_speech'),
+  (21, 'language_common_speech'), (22, 'language_common_speech'), (23, 'language_common_speech'), (24, 'language_common_speech'),
+  (25, 'language_elder_speech'),
+  (26, 'language_dwarvish')
+) AS v(num, skill_id)
+UNION ALL
+SELECT 'character', 'wcc_past_homeland_mage_o' || to_char(v.num, 'FM00'),
+  jsonb_build_object(
+    'set',
+    jsonb_build_array(
+      jsonb_build_object('var', 'characterRaw.logicFields.home_language'),
+      v.logic_value
+    )
+  )
+FROM (VALUES
+  ( 1, 'Common Speech'), ( 2, 'Common Speech'), ( 3, 'Common Speech'), ( 4, 'Common Speech'),
+  ( 5, 'Common Speech'), ( 6, 'Common Speech'), ( 7, 'Common Speech'), ( 8, 'Common Speech'),
+  ( 9, 'Common Speech'), (10, 'Common Speech'), (11, 'Common Speech'), (12, 'Common Speech'),
+  (13, 'Common Speech'), (14, 'Common Speech'), (15, 'Common Speech'), (16, 'Common Speech'),
+  (17, 'Common Speech'), (18, 'Common Speech'), (19, 'Common Speech'), (20, 'Common Speech'),
+  (21, 'Common Speech'), (22, 'Common Speech'), (23, 'Common Speech'), (24, 'Common Speech'),
+  (25, 'Elder Speech'),
+  (26, 'Dwarvish')
+) AS v(num, logic_value);
+
 -- Переход в Родину Мага из возраста персонажа
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
 SELECT 'wcc_ch_age', 'wcc_past_homeland_mage', ru_id, 1

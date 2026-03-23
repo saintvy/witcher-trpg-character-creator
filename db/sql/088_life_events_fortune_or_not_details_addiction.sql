@@ -89,6 +89,17 @@ WITH
       CROSS JOIN meta
   ON CONFLICT (id, lang) DO NOTHING
 )
+, ins_event_type_academy_life AS (
+  INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+    SELECT ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life') AS id
+         , meta.entity, 'event_type', v.lang, v.text
+      FROM (VALUES
+        ('ru', 'Жизнь в Академии'),
+        ('en', 'Academy Life')
+      ) AS v(lang, text)
+      CROSS JOIN meta
+  ON CONFLICT (id, lang) DO NOTHING
+)
 -- i18n для описания "Кастомная зависимость"
 , ins_event_desc AS (
   INSERT INTO i18n_text (id, entity, entity_field, lang, text)
@@ -117,9 +128,83 @@ SELECT 'character', meta.qu_id, NULL,
   )
 FROM meta
 UNION ALL
--- 2. Добавление в lifeEvents
+-- 2. Добавление в lifeEvents как Academy Life
 SELECT 'character', meta.qu_id, NULL,
   jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      'and',
+      jsonb_build_array(
+        jsonb_build_object(
+          'or',
+          jsonb_build_array(
+            jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+            jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+          )
+        ),
+        jsonb_build_object(
+          '!=',
+          jsonb_build_array(
+            jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+            'academy life 1-9'
+          )
+        )
+      )
+    ),
+    'add',
+    jsonb_build_array(
+      jsonb_build_object('var','characterRaw.lore.lifeEvents'),
+      jsonb_build_object(
+        'timePeriod',
+        jsonb_build_object(
+          'jsonlogic_expression', jsonb_build_object(
+            'cat', jsonb_build_array(
+              jsonb_build_object('var', 'counters.lifeEventsCounter'),
+              '-',
+              jsonb_build_object(
+                '+', jsonb_build_array(
+                  jsonb_build_object('var', 'counters.lifeEventsCounter'),
+                  10
+                )
+              )
+            )
+          )
+        ),
+        'eventType',
+        jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life')::text),
+        'description',
+        jsonb_build_object('i18n_uuid', ck_id(meta.su_su_id ||'.'|| meta.qu_id ||'.'|| 'event_desc')::text)
+      )
+    )
+  )
+FROM meta
+UNION ALL
+-- 3. Добавление в lifeEvents как Misfortune
+SELECT 'character', meta.qu_id, NULL,
+  jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      '!',
+      jsonb_build_object(
+        'and',
+        jsonb_build_array(
+          jsonb_build_object(
+            'or',
+            jsonb_build_array(
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 1)),
+              jsonb_build_object('==', jsonb_build_array(jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'), 2))
+            )
+          ),
+          jsonb_build_object(
+            '!=',
+            jsonb_build_array(
+              jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+              'academy life 1-9'
+            )
+          )
+        )
+      )
+    ),
     'add',
     jsonb_build_array(
       jsonb_build_object('var','characterRaw.lore.lifeEvents'),
@@ -156,4 +241,3 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, ru_ru_id, priority)
   SELECT 'wcc_life_events_fortune_or_not_details_addiction', 'wcc_life_events_event', r.ru_id, 1
     FROM (SELECT ru_id FROM rules WHERE name = 'lifeEventsCounter_is_valid') r;
-

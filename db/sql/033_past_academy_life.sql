@@ -136,7 +136,7 @@ WITH
       (1, 2, 'Сблизилась с другой ученицей', 'Вы и еще одна студента проводили время вместе, расслабляясь. Вы получаете союзника-мага. Сделайте бросок по таблице союзников, чтобы увидеть, насколько вы близки и какова их ценность.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 3, 'Выгнали соперницу', 'Из Аретузы выгнали твоего соперницу. Вы получаете врага-мага. Сделайте бросок по таблице Обиды, чтобы увидеть, как это обострилось и какова их сила.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 4, 'Любимица учителя', 'Вы получили персональное обучение от учителя. Начните с дополнительного известного заклинания новичка.', 1.0::numeric, 'is_mentor_school_aretuza'),
-      (1, 5, 'Впечатлила иностранного сановника - +2 к репутации при дворе выбранного королевства', 'Вы начинаете с +2 репутации при дворе одного королевства по вашему выбору.', 1.0::numeric, 'is_mentor_school_aretuza'),
+      (1, 5, 'Впечатлила иностранного сановника', 'Вы впечатлили иностранного сановника. Выберите королевство, при дворе которого о вас говорят.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 6, 'Украла ритуальные компоненты', 'Вы припрятали крошечные кусочки редких ритуальных компонентов. Начните с дополнительными компонентами стоимостью 100 крон.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 7, 'Нашла материал для шантажа учителя', 'Вы можете использовать эту информацию, чтобы добиться от них одной услуги на усмотрение ведущего.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 8, 'Найдены подсказки о местонахождении реликвии', 'Проконсультируйтесь с ведущим, чтобы определить, что это за реликвия и что вы знаете.', 1.0::numeric, 'is_mentor_school_aretuza'),
@@ -152,14 +152,14 @@ WITH
       (2, 6, 'Ошибка заклинания', 'Вы случайно наложили магию на ученика или преподавателя и испортили им день. Сделайте бросок по таблице Обиды.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 7, 'Наемничество', 'Вы сражались за мелкого дворянина в земельном споре. Вы сохранили часть своей зарплаты, после того как академия забрала свою долю, конечно. Получите 1d6 x 100 крон.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 8, 'Проклят', 'Вы были прокляты либо собственной рукой, либо гневом кого-то из вашей школы. Вместе с ведущим выберите подходящее проклятие из перечисленных в Основной книге.', 1.0::numeric, 'is_mentor_school_ban_ard'),
-      (2, 9, 'Посвящение в тайное общество - +2 к репутации среди выпускников Бан Арда', 'Вас приняли в тайное общество внутри школы. Получите +2 к репутации с другими выпускниками Бан Арда.', 1.0::numeric, 'is_mentor_school_ban_ard'),
+      (2, 9, 'Посвящение в тайное общество: +2 к репутации среди выпускников Бан Арда', 'Вас приняли в тайное общество внутри школы. Получите +2 к репутации с другими выпускниками Бан Арда.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 10, 'Перевел древний том', 'Вы помогли перевести древний эльфийский том. Вы получаете +2 к Старшей Речи.', 1.0::numeric, 'is_mentor_school_ban_ard'),
 
       -- Group 3: Gweison Haul (+ Imperial)
       (3, 1, 'Отдача заклинания', 'Заклинание, которое вы произнесли, имело ужасные неприятные последствия. Порог Энергии понижен на 1.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 2, 'Нарушитель правил', 'Вы нарушили одно из многих правил Гвейсон Хайль, но были пойманы в процессе. Вы получили наставника.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial_and_no_mentor'),
       (3, 3, 'Помогал разрабатывать оружие для Империи', 'Начните с 1 формулы бомбы. Определите с ведущим, какая это формула бомбы.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
-      (3, 4, 'Законник - +2 к репутации у властей Нильфгаарда', 'Вы помогли властям с преступлением, связанным с магией. Получите +2 к репутации у властей Нильфгаарда.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
+      (3, 4, 'Законник', 'Вы помогли властям с преступлением, связанным с магией.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 5, 'Исследовал катакомбы', 'Вы нашли свиток в катакомбах школы. Получите 1 свиток заклинаний подмастерья. Определите с ведущим, какое заклинание записано в свитке.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 6, 'Влияние цензуры', 'Вас попросили найти и стереть все следы запрещенного произведения. Его автор теперь жаждет мести. Сделайте бросок по таблице Обиды, чтобы определить, кто это.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 7, 'Помогли выследить маг-отступника', 'Вы помогли Охотникам на магов найти мага-изгоя. Получите +1 к любому боевому навыку или начните новый боевой навык с +2.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
@@ -176,7 +176,7 @@ WITH
       (4, 6, 'Помогали местным жителям с различными проблемами', 'Вы использовали свою магию, чтобы помочь нуждающемуся региону. Ваше социальное положение равно Равенству в этой области. Определите с ведущим, что это за область.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 7, 'Прокляты', 'Вы были прокляты либо собственной рукой, либо гневом кого-то из вашей школы. Вместе с ведущим выберите подходящее проклятие из перечисленных в Основной книге.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 8, 'Защитили деревню от чудовища', 'Вы использовали свою магию, чтобы отразить атаку монстра из деревни. Получите +1 к Монстрологии.', 1.0::numeric, 'is_mentor_school_minor'),
-      (4, 9, 'Обучение вне академии', 'Вы учились у многих наставников, узнавая столько, сколько могли. Начните с дополнительным заклинания новичка.', 1.0::numeric, 'is_mentor_school_minor'),
+      (4, 9, 'Обучение вне академии', 'Вы учились у многих наставников, узнавая столько, сколько могли. Начните с двумя дополнительными заклинаниями новичка.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 10, 'Создал собственный фокус', 'Вы создали свой первый фокусирующий предмет. Вы получаете Амулет, который считается для вас предметом Фокус (2).', 1.0::numeric, 'is_mentor_school_minor')
     ) AS ru(group_id, num, title_txt, desc_txt, probability, rule_name)
 
@@ -189,7 +189,7 @@ WITH
       (1, 2, 'Developed a Bond with Another Student', 'You and another student spent time together to unwind. You gain a Mage Ally. Roll on the Ally table to see how close you are and what their value is.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 3, 'Got a Rival Expelled', 'You got a rival of yours expelled from Aretuza. You gain a Mage Enemy. Roll on the Grudges table to see how it''s escalated and what their power is.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 4, 'Teacher''s Pet', 'You got preferential treatment from a teacher. Start with an extra known Novice spell.', 1.0::numeric, 'is_mentor_school_aretuza'),
-      (1, 5, 'Impressed a Foreign Dignitary - +2 Reputation at a chosen kingdom court', 'You start with +2 Reputation at the court of one kingdom of your choice.', 1.0::numeric, 'is_mentor_school_aretuza'),
+      (1, 5, 'Impressed a Foreign Dignitary', 'You impressed a foreign dignitary. Choose the kingdom where your reputation at court grew.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 6, 'Stole Ritual Components', 'You squirreled away tiny bits of rare ritual components. Start with an extra 100 crowns of components.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 7, 'Found Blackmail Material on a Teacher', 'You can use this information to force a single favor out of them at the GM''s discretion.', 1.0::numeric, 'is_mentor_school_aretuza'),
       (1, 8, 'Found Clues on the Location of a Relic', 'Consult with the GM to determine which Relic and what you know.', 1.0::numeric, 'is_mentor_school_aretuza'),
@@ -205,14 +205,14 @@ WITH
       (2, 6, 'Miscast', 'You accidentally cast magic on a school member or faculty and ruined their day. Roll on the Grudges table.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 7, 'Mercenary Work', 'You fought for a minor noble in a land dispute. You kept part of your pay, after the school took its cut of course. Gain 1d6 x 100 crowns.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 8, 'Cursed', 'You were cursed, either by your own hand or the ire of another at your school. Work with the GM to pick an appropriate curse from the ones listed in the Core Book.', 1.0::numeric, 'is_mentor_school_ban_ard'),
-      (2, 9, 'Secret Society Initiation - +2 Reputation with Ban Ard alumni', 'You were inducted into a secret society within the school. Gain +2 Reputation with the other alumni of Ban Ard.', 1.0::numeric, 'is_mentor_school_ban_ard'),
+      (2, 9, 'Secret Society Initiation: +2 Reputation with Ban Ard alumni', 'You were inducted into a secret society within the school. Gain +2 Reputation with the other alumni of Ban Ard.', 1.0::numeric, 'is_mentor_school_ban_ard'),
       (2, 10, 'Translated a Tome', 'You helped translate an old elven tome. You gain +2 to Elder Speech.', 1.0::numeric, 'is_mentor_school_ban_ard'),
 
       -- Group 3: Gweison Haul (+ Imperial)
       (3, 1, 'Spell Backfired', 'A spell you cast backfired horribly. You lower your Vigor Threshold by 1.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 2, 'Rule-Breaker', 'You broke one of the many rules of Gweison Haul but were caught in the process. You were made an apprentice.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial_and_no_mentor'),
       (3, 3, 'Helped Develop Weapons of War for the Empire', 'Start with 1 bomb formula. Work with the GM to determine which bomb.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
-      (3, 4, 'Law Bringer - +2 Reputation with Nilfgaardian authorities', 'You helped the authorities with a magic related crime. Gain a +2 Reputation with Nilfgaardian authorities.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
+      (3, 4, 'Law Bringer', 'You helped the authorities with a magic-related crime.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 5, 'Explored the Catacombs', 'You found a scroll in the catacombs of the school. Gain 1 journeyman spell scroll. Work with the GM to determine which spell.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 6, 'Censorship', 'You were asked to find and erase all traces of a banned work. Its author is now out for revenge. Roll on the Grudges table to determine who it is.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
       (3, 7, 'Helped hunt down a Renegade Mage', 'You helped the Mage Hunters bring in a rogue mage. Gain +1 in any combat skill or start a new combat skill at +2.', 1.0::numeric, 'is_mentor_school_gweison_or_imperial'),
@@ -229,7 +229,7 @@ WITH
       (4, 6, 'Helped Locals with Various Issues', 'You have used your magic to aid a region in need. Your Social Standing is Equal in this area. Work with the GM to determine where this is.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 7, 'Cursed', 'You were cursed, either by your own hand or the ire of another at your school. Work with the GM to pick an appropriate curse from the ones listed in the Core Book.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 8, 'Defended a Village from a Monster', 'You used your magic to repel a monster attack from a village. Gain +1 to Monster Lore.', 1.0::numeric, 'is_mentor_school_minor'),
-      (4, 9, 'Extracurricular Learning', 'You studied under many mentors, learning as much as you could. Start with an extra Novice spell.', 1.0::numeric, 'is_mentor_school_minor'),
+      (4, 9, 'Extracurricular Learning', 'You studied under many mentors, learning as much as you could. Start with two extra Novice spells.', 1.0::numeric, 'is_mentor_school_minor'),
       (4, 10, 'Crafted your Own Focus', 'You built your first focus item. You gain an Amulet which counts as a Focus (2) item for you.', 1.0::numeric, 'is_mentor_school_minor')
     ) AS en(group_id, num, title_txt, desc_txt, probability, rule_name)
 )
@@ -260,10 +260,10 @@ SELECT meta.qu_id || '_o' || to_char(raw_data.group_id, 'FM00') || to_char(raw_d
      , jsonb_build_object('probability', raw_data.probability)
        || CASE
             WHEN
-              (raw_data.group_id = 1 AND raw_data.num IN (1, 4, 5, 6, 7, 8))
+              (raw_data.group_id = 1 AND raw_data.num IN (1, 4, 6, 7, 8))
               OR (raw_data.group_id = 2 AND raw_data.num IN (1, 3, 5, 9, 10))
               OR (raw_data.group_id = 3 AND raw_data.num IN (1, 3, 4, 5, 9, 10))
-              OR (raw_data.group_id = 4 AND raw_data.num IN (1, 2, 4, 5, 8, 9, 10))
+              OR (raw_data.group_id = 4 AND raw_data.num IN (1, 2, 3, 4, 5, 8, 9, 10))
             THEN jsonb_build_object('counterIncrement', jsonb_build_object('id', 'lifeEventsCounter', 'step', 10))
             ELSE '{}'::jsonb
           END
@@ -279,11 +279,74 @@ VALUES
   (ck_id('witcher_cc.wcc_past_academy_life.life_event_type.academy_life'), 'character', 'event_type', 'en', 'Academy Life'),
   (ck_id('witcher_cc.wcc_past_academy_life_o0107.gear_name'), 'items', 'general_gear_names', 'ru', 'Услуга учителя, полученная шантажом'),
   (ck_id('witcher_cc.wcc_past_academy_life_o0107.gear_name'), 'items', 'general_gear_names', 'en', 'Teacher''s Favor Obtained by Blackmail'),
-  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_formula.name'), 'items', 'general_gear_names', 'ru', 'Магическая формула (Подмастерье)'),
-  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_formula.name'), 'items', 'general_gear_names', 'en', 'Spell Formulae (Journeyman)'),
-  (ck_id('witcher_cc.wcc_past_academy_life_o0310.perks.description'), 'perks', 'description', 'ru', '<b>Шпионаж</b>: Вы можете попытаться замаскироваться без набора для маскировки без каких-либо штрафов.'),
-  (ck_id('witcher_cc.wcc_past_academy_life_o0310.perks.description'), 'perks', 'description', 'en', '<b>Spycraft</b>: You can attempt to disguise yourself without a disguise kit and suffer no penalties.')
+  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.name'), 'items', 'general_gear_names', 'ru', 'Свиток заклинания (Подмастерье)'),
+  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.name'), 'items', 'general_gear_names', 'en', 'Spell Scroll (Journeyman)'),
+  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.description'), 'items', 'general_gear_description', 'ru', 'Потратив 20 О.У., 7 дней и пройдя 4 проверки со СЛ18, вы выучите это заклинание.'),
+  (ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.description'), 'items', 'general_gear_description', 'en', 'By spending 20 i.P., 7 days, and passing 4 checks at DC 18, you can learn this spell.'),
+  (ck_id('witcher_cc.wcc_past_academy_life_o0310.perks.description'), 'perks', 'description', 'ru', '<b>Шпионаж</b>: Маскировка без набора для маскировки происходит без штрафа.'),
+  (ck_id('witcher_cc.wcc_past_academy_life_o0310.perks.description'), 'perks', 'description', 'en', '<b>Spycraft</b>: You can disguise yourself without a disguise kit and suffer no penalty.')
 ON CONFLICT (id, lang) DO NOTHING;
+
+INSERT INTO i18n_text (id, entity, entity_field, lang, text)
+SELECT ck_id(v.key), 'character', 'event_desc', v.lang, v.text
+FROM (VALUES
+  ('witcher_cc.wcc_past_academy_life_o0101.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
+  ('witcher_cc.wcc_past_academy_life_o0101.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
+  ('witcher_cc.wcc_past_academy_life_o0102.event_desc', 'ru', 'Сблизилась с другой ученицей: получила союзника'),
+  ('witcher_cc.wcc_past_academy_life_o0102.event_desc', 'en', 'Developed a bond with another student: gained an ally'),
+  ('witcher_cc.wcc_past_academy_life_o0103.event_desc', 'ru', 'Выгнали мага-соперницу: получили врага'),
+  ('witcher_cc.wcc_past_academy_life_o0103.event_desc', 'en', 'Expelled a rival mage: gained an enemy'),
+  ('witcher_cc.wcc_past_academy_life_o0104.event_desc', 'ru', 'Персональное обучение: [+1 заклинание новичка]'),
+  ('witcher_cc.wcc_past_academy_life_o0104.event_desc', 'en', 'Personal tutoring: [+1 novice spell]'),
+  ('witcher_cc.wcc_past_academy_life_o0106.event_desc', 'ru', 'Украла ритуальные компоненты на 100 крон'),
+  ('witcher_cc.wcc_past_academy_life_o0106.event_desc', 'en', 'Stole ritual components worth 100 crowns'),
+  ('witcher_cc.wcc_past_academy_life_o0108.event_desc', 'ru', 'Найдены подсказки о местонахождении реликвии, уточнить у ГМа'),
+  ('witcher_cc.wcc_past_academy_life_o0108.event_desc', 'en', 'Found clues to a relic''s location, ask the GM'),
+  ('witcher_cc.wcc_past_academy_life_o0201.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
+  ('witcher_cc.wcc_past_academy_life_o0201.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
+  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'ru', 'Украл магическую формулу'),
+  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'en', 'Stole a spell formula'),
+  ('witcher_cc.wcc_past_academy_life_o0205.event_desc', 'ru', 'Охота на монстра: [+1 к Монстрологии]'),
+  ('witcher_cc.wcc_past_academy_life_o0205.event_desc', 'en', 'Hunted a monster: [+1 to Monster Lore]'),
+  ('witcher_cc.wcc_past_academy_life_o0206.event_desc', 'ru', 'Новый враг из-за ошибки в заклинании'),
+  ('witcher_cc.wcc_past_academy_life_o0206.event_desc', 'en', 'A new enemy because of a spell mishap'),
+  ('witcher_cc.wcc_past_academy_life_o0209.event_desc', 'ru', 'Посвящение в тайное общество: +2 к репутации среди выпускников Бан Арда'),
+  ('witcher_cc.wcc_past_academy_life_o0209.event_desc', 'en', 'Secret society initiation: +2 Reputation with Ban Ard alumni'),
+  ('witcher_cc.wcc_past_academy_life_o0210.event_desc', 'ru', 'Перевел древний том: [+2 к Старшей речи]'),
+  ('witcher_cc.wcc_past_academy_life_o0210.event_desc', 'en', 'Translated a tome: [+2 to Elder Speech]'),
+  ('witcher_cc.wcc_past_academy_life_o0301.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
+  ('witcher_cc.wcc_past_academy_life_o0301.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
+  ('witcher_cc.wcc_past_academy_life_o0304.event_desc', 'ru', 'Помог властям Нильфгаарда: +2 к репутации у властей Нильфгаарда'),
+  ('witcher_cc.wcc_past_academy_life_o0304.event_desc', 'en', 'Helped Nilfgaardian authorities: +2 Reputation with Nilfgaardian authorities'),
+  ('witcher_cc.wcc_past_academy_life_o0305.event_desc', 'ru', 'Исследовал катакомбы: нашел свиток'),
+  ('witcher_cc.wcc_past_academy_life_o0305.event_desc', 'en', 'Explored the catacombs: found a scroll'),
+  ('witcher_cc.wcc_past_academy_life_o0306.event_desc', 'ru', 'Подвергли кого-то цензуре: получили врага'),
+  ('witcher_cc.wcc_past_academy_life_o0306.event_desc', 'en', 'Censored someone: gained an enemy'),
+  ('witcher_cc.wcc_past_academy_life_o0308.event_desc', 'ru', 'Укрыли мага-отступника: получили союзника'),
+  ('witcher_cc.wcc_past_academy_life_o0308.event_desc', 'en', 'Sheltered a renegade mage: gained an ally'),
+  ('witcher_cc.wcc_past_academy_life_o0309.event_desc', 'ru', 'Помощь Церкви Великого Солнца: [+1 к Харизме и Этикету]'),
+  ('witcher_cc.wcc_past_academy_life_o0309.event_desc', 'en', 'Aided the Church of the Great Sun: [+1 to Charisma and Social Etiquette]'),
+  ('witcher_cc.wcc_past_academy_life_o0310.event_desc', 'ru', 'Обучался шпионажу: [+1 к Маскировке] и [перк Шпионаж]'),
+  ('witcher_cc.wcc_past_academy_life_o0310.event_desc', 'en', 'Studied spycraft: [+1 to Disguise] and [Spycraft perk]'),
+  ('witcher_cc.wcc_past_academy_life_o0401.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
+  ('witcher_cc.wcc_past_academy_life_o0401.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
+  ('witcher_cc.wcc_past_academy_life_o0402.event_desc', 'ru', 'Занимался темной магией: на тебе Люцифуг демона, который всегда знает, где ты'),
+  ('witcher_cc.wcc_past_academy_life_o0402.event_desc', 'en', 'Dabbled in dark magic: you bear a demon''s lucifuge that always knows where you are'),
+  ('witcher_cc.wcc_past_academy_life_o0403.event_desc', 'ru', 'Нанесли ущерб магией: стал целью ведьмака школы Кота'),
+  ('witcher_cc.wcc_past_academy_life_o0403.event_desc', 'en', 'Caused magical damage: became the target of a Cat School witcher'),
+  ('witcher_cc.wcc_past_academy_life_o0404.event_desc', 'ru', 'Изучал лечение болезней: [+2 к Первой помощи]'),
+  ('witcher_cc.wcc_past_academy_life_o0404.event_desc', 'en', 'Studied how to treat illnesses: [+2 to First Aid]'),
+  ('witcher_cc.wcc_past_academy_life_o0405.event_desc', 'ru', 'Ухаживал за школьным садом: [+2 к Выживанию]'),
+  ('witcher_cc.wcc_past_academy_life_o0405.event_desc', 'en', 'Tended the school garden: [+2 to Wilderness Survival]'),
+  ('witcher_cc.wcc_past_academy_life_o0408.event_desc', 'ru', 'Защитили деревню от чудовища: [+1 к Монстрологии]'),
+  ('witcher_cc.wcc_past_academy_life_o0408.event_desc', 'en', 'Defended a village from a monster: [+1 to Monster Lore]'),
+  ('witcher_cc.wcc_past_academy_life_o0409.event_desc', 'ru', 'Обучение вне академии: [+2 заклинания Новичка]'),
+  ('witcher_cc.wcc_past_academy_life_o0409.event_desc', 'en', 'Extracurricular learning: [+2 novice spells]'),
+  ('witcher_cc.wcc_past_academy_life_o0410.event_desc', 'ru', 'Создал [Амулет с эффектом Фокусирующий(2)]'),
+  ('witcher_cc.wcc_past_academy_life_o0410.event_desc', 'en', 'Crafted [an amulet with the Focus(2) effect]')
+) AS v(key, lang, text)
+ON CONFLICT (id, lang) DO UPDATE
+SET text = EXCLUDED.text;
 
 -- Effects: save every selected option to life events
 WITH
@@ -330,6 +393,7 @@ SELECT
 FROM options
 CROSS JOIN meta
 WHERE NOT (
+  (options.group_id = 1 AND options.num = 5) OR
   (options.group_id = 1 AND options.num = 10) OR
   (options.group_id = 2 AND options.num = 8) OR
   (options.group_id = 3 AND options.num = 7) OR
@@ -356,11 +420,11 @@ FROM (VALUES
 ) AS v(an_id);
 
 -- Effects: tokens for bomb formulae / novice spells
-WITH token_effects(an_id, target_path) AS (
+WITH token_effects(an_id, target_path, delta) AS (
   VALUES
-    ('wcc_past_academy_life_o0303', 'characterRaw.professional_gear_options.bomb_formulae_tokens'),
-    ('wcc_past_academy_life_o0104', 'characterRaw.professional_gear_options.novice_spells_tokens'),
-    ('wcc_past_academy_life_o0409', 'characterRaw.professional_gear_options.novice_spells_tokens')
+    ('wcc_past_academy_life_o0303', 'characterRaw.professional_gear_options.bomb_formulae_tokens', 1),
+    ('wcc_past_academy_life_o0104', 'characterRaw.professional_gear_options.novice_spells_tokens', 1),
+    ('wcc_past_academy_life_o0409', 'characterRaw.professional_gear_options.novice_spells_tokens', 2)
 )
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
@@ -376,7 +440,7 @@ SELECT
           '+',
           jsonb_build_array(
             jsonb_build_object('var', jsonb_build_array(token_effects.target_path, 0)),
-            1
+            token_effects.delta
           )
         )
       )
@@ -384,7 +448,7 @@ SELECT
   )
 FROM token_effects;
 
--- Effects: custom localized item "Spell Formulae (Journeyman)" for Ban Ard#3 and Gweison#5
+-- Effects: custom localized item "Spell Scroll (Journeyman)" for Ban Ard#3 and Gweison#5
 INSERT INTO effects (scope, an_an_id, body)
 SELECT
   'character',
@@ -394,8 +458,8 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.gear.general_gear'),
       jsonb_build_object(
-        'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.journeyman_formula.name')::text),
-        'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.items.general_gear.description.T148')::text),
+        'name', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.name')::text),
+        'description', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life.journeyman_scroll.description')::text),
         'weight', 0.1,
         'price', 0,
         'amount', 1
@@ -543,7 +607,7 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.enemies'),
       jsonb_build_object(
-        'gender', '',
+        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_enemy_gender_o0001.answer_options.label_value')::text),
         'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0002.answer_options.label_value')::text),
         'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.position')::text),
         'cause', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.cause')::text),
