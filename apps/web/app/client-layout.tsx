@@ -19,7 +19,7 @@ function Sidebar() {
   const content = {
     en: {
       subtitle: "Witcher character creator",
-      tavernTitle: "The Pickles and Lard Tavern",
+      tavernTitle: "The Pickles and Lard Inn",
       navigation: "Navigation",
       home: "Notice Board",
       characters: "Characters",
@@ -28,7 +28,7 @@ function Sidebar() {
     },
     ru: {
       subtitle: "Witcher character creator",
-      tavernTitle: 'Таверна "Сало и Огурчики"',
+      tavernTitle: 'Корчма "Сало и Огурчики"',
       navigation: "Навигация",
       home: "Доска объявлений",
       characters: "Персонажи",
@@ -38,6 +38,7 @@ function Sidebar() {
   } as const;
 
   const t = content[displayLang];
+  const surveyGraphLabel = displayLang === "ru" ? "Граф опросника" : "Survey Graph";
 
   const isActive = (path: string) => {
     if (!pathname) return false;
@@ -120,6 +121,11 @@ function Sidebar() {
       </div>
 
       <div className="sidebar-footer">
+        <div className="sidebar-footer-row">
+          <a href="/survey-graph.html" className="footer-link footer-link-subtle">
+            <span suppressHydrationWarning>{surveyGraphLabel}</span>
+          </a>
+        </div>
         <div className="sidebar-footer-row">
           <a
             href="https://talsorianstore.com/collections/the-witcher-trpg"

@@ -244,8 +244,16 @@ body {
     transition: color var(--transition-fast);
 }
 
+.footer-link-subtle {
+    opacity: 0.82;
+}
+
 .footer-link:hover {
     color: var(--text-main);
+}
+
+.footer-link-subtle:hover {
+    opacity: 1;
 }
 
 /* Main */

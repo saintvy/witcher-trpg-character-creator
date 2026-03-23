@@ -88,6 +88,16 @@ function parseJwtExp(token: string): number | undefined {
   return typeof claims.exp === "number" ? claims.exp : undefined;
 }
 
+function createGoogleSession(idToken: string): AuthSession {
+  const claims = parseJwtClaims(idToken);
+  return {
+    provider: "google",
+    idToken,
+    expiresAt: parseJwtExp(idToken),
+    user: claimsToUser(claims),
+  };
+}
+
 function claimsToUser(claims: Record<string, unknown>): AuthUser {
   return {
     sub:
@@ -510,13 +520,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const acceptGoogleCredential = useCallback((credential: string) => {
     try {
-      const claims = parseJwtClaims(credential);
-      const nextSession: AuthSession = {
-        provider: "google",
-        idToken: credential,
-        expiresAt: parseJwtExp(credential),
-        user: claimsToUser(claims),
-      };
+      const nextSession = createGoogleSession(credential);
       setError(null);
       setSession(nextSession);
     } catch (err) {
@@ -533,9 +537,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (AUTH_PROVIDER === "google") {
       if (!googleReady) {
-        throw new Error("Google auth is not ready yet");
+        setError("Google sign-in is not ready yet");
+        return;
       }
-      (window as any).google?.accounts?.id?.prompt();
+      const google = (window as any).google;
+      if (!google?.accounts?.id?.prompt) {
+        setError("Google sign-in is not available");
+        return;
+      }
+
+      setIsBusy(true);
+      google.accounts.id.prompt((notification: {
+        isNotDisplayed?: () => boolean;
+        isSkippedMoment?: () => boolean;
+      }) => {
+        if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
+          setError("Google sign-in could not be opened. Use the Google button if it is visible.");
+        }
+        setIsBusy(false);
+      });
       return;
     }
 
