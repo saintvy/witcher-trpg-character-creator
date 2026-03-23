@@ -15,6 +15,63 @@ import { Construct } from 'constructs';
 import * as fs from 'fs';
 import * as path from 'path';
 
+function readLocalEnvFile(filePath: string): Record<string, string> {
+  if (!fs.existsSync(filePath)) {
+    return {};
+  }
+
+  const result: Record<string, string> = {};
+  const raw = fs.readFileSync(filePath, 'utf8');
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) {
+      continue;
+    }
+
+    const separator = trimmed.indexOf('=');
+    if (separator <= 0) {
+      continue;
+    }
+
+    const key = trimmed.slice(0, separator).trim();
+    let value = trimmed.slice(separator + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    result[key] = value;
+  }
+
+  return result;
+}
+
+function loadLocalEnv(): Record<string, string> {
+  const infraDir = path.resolve(__dirname, '..');
+  const repoRoot = path.resolve(infraDir, '..');
+  const candidates: string[] = [];
+
+  if (path.basename(repoRoot).startsWith('.worktree-')) {
+    const parentRoot = path.resolve(repoRoot, '..');
+    candidates.push(path.join(parentRoot, 'infra', '.env.local'));
+  }
+
+  candidates.push(path.join(infraDir, '.env.local'));
+
+  return candidates.reduce<Record<string, string>>((acc, candidate) => {
+    return fs.existsSync(candidate)
+      ? { ...acc, ...readLocalEnvFile(candidate) }
+      : acc;
+  }, {});
+}
+
+const localEnv = loadLocalEnv();
+
+function envValue(name: string): string {
+  return process.env[name]?.trim() || localEnv[name]?.trim() || '';
+}
+
 export class WccStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -28,11 +85,11 @@ export class WccStack extends cdk.Stack {
     const contextApiAuthMode = this.node.tryGetContext('wccApiAuthMode');
 
     const cognitoJwtIssuer =
-      process.env.WCC_COGNITO_JWT_ISSUER?.trim() ||
+      envValue('WCC_COGNITO_JWT_ISSUER') ||
       (typeof contextIssuer === 'string' ? contextIssuer.trim() : undefined);
 
     const cognitoJwtAudienceRaw =
-      process.env.WCC_COGNITO_JWT_AUDIENCE ??
+      envValue('WCC_COGNITO_JWT_AUDIENCE') ??
       (Array.isArray(contextAudience)
         ? contextAudience.join(',')
         : typeof contextAudience === 'string'
@@ -44,7 +101,7 @@ export class WccStack extends cdk.Stack {
       .filter(Boolean);
 
     const apiAuthModeOverride =
-      process.env.WCC_API_AUTH_MODE?.trim() ||
+      envValue('WCC_API_AUTH_MODE') ||
       (typeof contextApiAuthMode === 'string' ? contextApiAuthMode.trim() : '') ||
       'none';
     const generatedSqlVersionPath = path.join(
@@ -256,7 +313,7 @@ export class WccStack extends cdk.Stack {
           cognitoJwtIssuer && cognitoJwtAudience.length > 0
             ? 'trust-apigw'
             : apiAuthModeOverride,
-        AUTH_GOOGLE_CLIENT_IDS: process.env.WCC_GOOGLE_CLIENT_IDS ?? '',
+        AUTH_GOOGLE_CLIENT_IDS: envValue('WCC_GOOGLE_CLIENT_IDS'),
         AUTH_PROTECT_HEALTH: 'true',
         NODE_OPTIONS: '--enable-source-maps',
       },

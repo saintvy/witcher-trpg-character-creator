@@ -13,7 +13,7 @@
     "build": "npm-run-all -s build:prepare-sql build:api build:web",
     "build:prepare-sql": "node scripts/prepare-deploy-sql.mjs",
     "build:api": "npm --workspace @wcc/api run build",
-    "build:web": "npm --workspace @wcc/web run build",
+    "build:web": "node scripts/prepare-web-env.mjs && npm --workspace @wcc/web run build",
     "deploy": "npm --workspace @wcc/infra run deploy",
     "lint": "echo \"(add ESLint later)\"",
     "format": "echo \"(add Prettier later)\""
