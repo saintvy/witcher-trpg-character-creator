@@ -71,24 +71,39 @@ function normalized(value) {
 const googleClientId =
   envValue("NEXT_PUBLIC_GOOGLE_CLIENT_ID") || pickFirstCsv(envValue("WCC_GOOGLE_CLIENT_IDS"));
 
-const cognitoDomain = envValue("NEXT_PUBLIC_COGNITO_DOMAIN");
+const cognitoDomain =
+  envValue("NEXT_PUBLIC_COGNITO_DOMAIN") || envValue("WCC_COGNITO_DOMAIN");
 const cognitoClientId =
-  envValue("NEXT_PUBLIC_COGNITO_CLIENT_ID") || envValue("WCC_COGNITO_JWT_AUDIENCE");
-const cognitoRedirectUri = envValue("NEXT_PUBLIC_COGNITO_REDIRECT_URI");
-const cognitoLogoutRedirectUri = envValue("NEXT_PUBLIC_COGNITO_LOGOUT_REDIRECT_URI");
-const cognitoScope = envValue("NEXT_PUBLIC_COGNITO_SCOPE") || "openid email profile";
+  envValue("NEXT_PUBLIC_COGNITO_CLIENT_ID") ||
+  envValue("WCC_COGNITO_CLIENT_ID") ||
+  envValue("WCC_COGNITO_JWT_AUDIENCE");
+const cognitoRedirectUri =
+  envValue("NEXT_PUBLIC_COGNITO_REDIRECT_URI") || envValue("WCC_COGNITO_REDIRECT_URI");
+const cognitoLogoutRedirectUri =
+  envValue("NEXT_PUBLIC_COGNITO_LOGOUT_REDIRECT_URI") || envValue("WCC_COGNITO_LOGOUT_REDIRECT_URI");
+const cognitoScope =
+  envValue("NEXT_PUBLIC_COGNITO_SCOPE") || envValue("WCC_COGNITO_SCOPE") || "openid email profile";
 const siteUrl = envValue("NEXT_PUBLIC_SITE_URL") || envValue("WCC_SITE_URL");
 const googleSiteVerification =
   envValue("NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION") || envValue("GOOGLE_SITE_VERIFICATION");
+const explicitFrontendAuthProvider =
+  envValue("WCC_FRONTEND_AUTH_PROVIDER") || envValue("NEXT_PUBLIC_AUTH_PROVIDER");
 
-const inferredProvider = googleClientId
-  ? "google"
+const hasCognitoFrontendConfig =
+  Boolean(cognitoDomain) &&
+  Boolean(cognitoClientId) &&
+  Boolean(cognitoRedirectUri) &&
+  Boolean(cognitoLogoutRedirectUri);
+
+const inferredProvider = hasCognitoFrontendConfig
+  ? "cognito"
+  : googleClientId
+    ? "google"
   : cognitoDomain && cognitoClientId
     ? "cognito"
     : "none";
 
-const authProvider =
-  envValue("NEXT_PUBLIC_AUTH_PROVIDER").toLowerCase() || inferredProvider;
+const authProvider = explicitFrontendAuthProvider.toLowerCase() || inferredProvider;
 
 if (authProvider === "google" && !googleClientId) {
   throw new Error(
