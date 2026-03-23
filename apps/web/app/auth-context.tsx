@@ -45,6 +45,8 @@ const COGNITO_SCOPE = process.env.NEXT_PUBLIC_COGNITO_SCOPE ?? "openid email pro
 const SESSION_STORAGE_KEY = "wcc.auth.session";
 const PKCE_VERIFIER_KEY = "wcc.auth.pkceVerifier";
 const PKCE_STATE_KEY = "wcc.auth.pkceState";
+const GOOGLE_STATE_KEY = "wcc.auth.googleState";
+const GOOGLE_NONCE_KEY = "wcc.auth.googleNonce";
 const RETURN_TO_KEY = "wcc.auth.returnTo";
 const REFRESH_LEEWAY_SECONDS = 300;
 const FOCUS_REFRESH_LEEWAY_SECONDS = 120;
@@ -86,6 +88,16 @@ function parseJwtClaims(token: string): Record<string, unknown> {
 function parseJwtExp(token: string): number | undefined {
   const claims = parseJwtClaims(token);
   return typeof claims.exp === "number" ? claims.exp : undefined;
+}
+
+function createGoogleSession(idToken: string): AuthSession {
+  const claims = parseJwtClaims(idToken);
+  return {
+    provider: "google",
+    idToken,
+    expiresAt: parseJwtExp(idToken),
+    user: claimsToUser(claims),
+  };
 }
 
 function claimsToUser(claims: Record<string, unknown>): AuthUser {
@@ -134,6 +146,11 @@ function writeStoredSession(session: AuthSession | null): void {
     return;
   }
   window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+}
+
+function getGoogleRedirectUri(): string {
+  if (typeof window === "undefined") return "/";
+  return `${window.location.origin}${window.location.pathname}`;
 }
 
 async function refreshCognitoSession(force = false): Promise<AuthSession | null> {
@@ -374,6 +391,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
+    if (AUTH_PROVIDER !== "google") return;
+
+    const hash = window.location.hash.startsWith("#")
+      ? new URLSearchParams(window.location.hash.slice(1))
+      : null;
+    const idToken = hash?.get("id_token");
+    const state = hash?.get("state");
+    const authError = hash?.get("error");
+    if (!idToken && !authError) return;
+
+    setIsBusy(true);
+    setError(null);
+
+    try {
+      const expectedState = window.sessionStorage.getItem(GOOGLE_STATE_KEY);
+      const expectedNonce = window.sessionStorage.getItem(GOOGLE_NONCE_KEY);
+      if (!state || !expectedState || state !== expectedState) {
+        throw new Error("Invalid Google OAuth state");
+      }
+      if (authError) {
+        throw new Error(`Google sign-in failed: ${authError}`);
+      }
+      if (!idToken) {
+        throw new Error("Google sign-in did not return id_token");
+      }
+
+      const claims = parseJwtClaims(idToken);
+      const nonce =
+        typeof claims.nonce === "string" && claims.nonce.trim().length > 0
+          ? claims.nonce
+          : null;
+      if (!expectedNonce || !nonce || nonce !== expectedNonce) {
+        throw new Error("Invalid Google OAuth nonce");
+      }
+
+      const nextSession = createGoogleSession(idToken);
+      setSession(nextSession);
+      window.sessionStorage.removeItem(GOOGLE_STATE_KEY);
+      window.sessionStorage.removeItem(GOOGLE_NONCE_KEY);
+
+      const returnTo = window.sessionStorage.getItem(RETURN_TO_KEY) || "/";
+      window.sessionStorage.removeItem(RETURN_TO_KEY);
+
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.hash = "";
+      window.history.replaceState({}, "", cleanUrl.pathname + cleanUrl.search);
+
+      if (returnTo && returnTo !== window.location.pathname + window.location.search + window.location.hash) {
+        window.location.assign(returnTo);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsBusy(false);
+    }
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
     if (AUTH_PROVIDER !== "cognito") return;
     if (cognitoCallbackHandledRef.current) return;
 
@@ -510,13 +586,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const acceptGoogleCredential = useCallback((credential: string) => {
     try {
-      const claims = parseJwtClaims(credential);
-      const nextSession: AuthSession = {
-        provider: "google",
-        idToken: credential,
-        expiresAt: parseJwtExp(credential),
-        user: claimsToUser(claims),
-      };
+      const nextSession = createGoogleSession(credential);
       setError(null);
       setSession(nextSession);
     } catch (err) {
@@ -532,10 +602,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (AUTH_PROVIDER === "google") {
-      if (!googleReady) {
-        throw new Error("Google auth is not ready yet");
+      if (!GOOGLE_CLIENT_ID) {
+        throw new Error("Google auth is not configured in frontend env");
       }
-      (window as any).google?.accounts?.id?.prompt();
+      const state = randomString(32);
+      const nonce = randomString(32);
+      window.sessionStorage.setItem(GOOGLE_STATE_KEY, state);
+      window.sessionStorage.setItem(GOOGLE_NONCE_KEY, nonce);
+      window.sessionStorage.setItem(
+        RETURN_TO_KEY,
+        window.location.pathname + window.location.search + window.location.hash,
+      );
+
+      const authorizeUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+      authorizeUrl.searchParams.set("client_id", GOOGLE_CLIENT_ID);
+      authorizeUrl.searchParams.set("redirect_uri", getGoogleRedirectUri());
+      authorizeUrl.searchParams.set("response_type", "id_token");
+      authorizeUrl.searchParams.set("scope", "openid email profile");
+      authorizeUrl.searchParams.set("state", state);
+      authorizeUrl.searchParams.set("nonce", nonce);
+      authorizeUrl.searchParams.set("prompt", "select_account");
+
+      setIsBusy(true);
+      window.location.assign(authorizeUrl.toString());
       return;
     }
 
@@ -564,7 +653,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authorizeUrl.searchParams.set("code_challenge", challenge);
 
     window.location.assign(authorizeUrl.toString());
-  }, [googleReady]);
+  }, []);
 
   const signOut = useCallback(async () => {
     const provider = session?.provider;
