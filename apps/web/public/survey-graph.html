@@ -56,6 +56,7 @@
       width: 100vw;
       height: 100vh;
       cursor: grab;
+      touch-action: none;
     }
 
     #graph.dragging {
@@ -66,9 +67,12 @@
       position: fixed;
       top: 18px;
       left: 18px;
+      display: flex;
+      flex-direction: column;
       width: 360px;
       min-width: 360px;
       max-width: min(calc(100vw - 36px), 66vw);
+      max-height: calc(100vh - 36px);
       padding: 16px 18px;
       border-radius: 18px;
       background: var(--panel);
@@ -88,6 +92,11 @@
 
     .hud-body {
       margin-top: 8px;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
 
     .hud.collapsed {
@@ -433,6 +442,7 @@
         top: 10px;
         left: 10px;
         max-width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
       }
 
       .corner-actions {
@@ -453,7 +463,7 @@
       <button id="hudToggleButton" class="hud-toggle-button" type="button" aria-expanded="true" aria-label="Collapse panel">▴</button>
     </div>
     <div id="hudBody" class="hud-body">
-      <p id="introText">Offline visualization of the question graph from the local database. Zoom with the mouse wheel, drag the background with the mouse, and drag nodes individually.</p>
+      <p id="introText">Offline visualization of the question graph from the local database. Zoom with the mouse wheel or a two-finger pinch, drag the background, and drag nodes individually.</p>
     <div class="language-switch" aria-label="Language switcher">
       <span>Language</span>
       <button class="language-button active" type="button" data-ui-lang="en" aria-label="English">🇬🇧</button>
@@ -567,7 +577,7 @@
 
     const UI_TEXT = {
       en: {
-        intro: "Offline visualization of the question graph from the local database. Zoom with the mouse wheel, drag the background with the mouse, and drag nodes individually.",
+        intro: "Offline visualization of the question graph from the local database. Zoom with the mouse wheel or a two-finger pinch, drag the background, and drag nodes individually.",
         nodes: "Nodes",
         edges: "Edges",
         options: "Options",
@@ -602,7 +612,7 @@
         }
       },
       ru: {
-        intro: "Оффлайн-визуализация графа вопросов из локальной БД. Масштаб колёсиком, перетаскивание фона мышью, узел можно тянуть отдельно.",
+        intro: "Оффлайн-визуализация графа вопросов из локальной БД. Масштаб колёсиком или щипком двумя пальцами, фон можно перетаскивать, узел можно тянуть отдельно.",
         nodes: "Нод",
         edges: "Рёбер",
         options: "Опций",
@@ -647,6 +657,11 @@
       isResizingHud: false,
       hudResizeStartX: 0,
       hudResizeStartWidth: SETTINGS.hudMinWidth,
+      touchPointers: new Map(),
+      isPinching: false,
+      pinchStartDistance: 0,
+      pinchStartScale: 1,
+      pinchWorldCenter: null,
       hoveredNode: null,
       selectedNode: null,
       draggedNode: null,
@@ -1220,6 +1235,69 @@
       };
     }
 
+    function resetInteractionState() {
+      if (state.draggedNode) {
+        state.draggedNode.fx = null;
+        state.draggedNode.fy = null;
+      }
+
+      state.draggedNode = null;
+      state.isPanning = false;
+      state.pointerId = null;
+      state.pointerDownNode = null;
+      state.pointerDownPosition = null;
+      state.dragMoved = false;
+      state.pointerStart = null;
+      state.cameraStart = null;
+      canvas.classList.remove("dragging");
+    }
+
+    function getTouchGestureMetrics() {
+      if (state.touchPointers.size < 2) {
+        return null;
+      }
+
+      const [firstPointer, secondPointer] = [...state.touchPointers.values()];
+      return {
+        centerX: (firstPointer.x + secondPointer.x) / 2,
+        centerY: (firstPointer.y + secondPointer.y) / 2,
+        distance: Math.hypot(firstPointer.x - secondPointer.x, firstPointer.y - secondPointer.y)
+      };
+    }
+
+    function beginPinchGesture() {
+      const metrics = getTouchGestureMetrics();
+      if (!metrics) {
+        return;
+      }
+
+      resetInteractionState();
+      state.isPinching = true;
+      state.pinchStartDistance = Math.max(metrics.distance, 1);
+      state.pinchStartScale = state.camera.scale;
+      state.pinchWorldCenter = screenToWorld(metrics.centerX, metrics.centerY);
+    }
+
+    function updatePinchGesture() {
+      const metrics = getTouchGestureMetrics();
+      if (!state.isPinching || !metrics || !state.pinchWorldCenter) {
+        return;
+      }
+
+      const factor = Math.max(0.1, metrics.distance / Math.max(state.pinchStartDistance, 1));
+      state.camera.scale = Math.max(SETTINGS.zoomMin, Math.min(SETTINGS.zoomMax, state.pinchStartScale * factor));
+      const afterZoom = screenToWorld(metrics.centerX, metrics.centerY);
+      state.camera.x += state.pinchWorldCenter.x - afterZoom.x;
+      state.camera.y += state.pinchWorldCenter.y - afterZoom.y;
+    }
+
+    function endPinchGesture() {
+      state.isPinching = false;
+      state.pinchStartDistance = 0;
+      state.pinchStartScale = state.camera.scale;
+      state.pinchWorldCenter = null;
+    }
+
     hudResizeHandle.addEventListener("pointerdown", (event) => {
       if (state.isHudCollapsed) {
         return;
@@ -1264,12 +1342,20 @@
 
     canvas.addEventListener("pointerdown", (event) => {
       const pointer = pointerPosition(event);
+      if (event.pointerType === "touch") {
+        state.touchPointers.set(event.pointerId, pointer);
+      }
       const hitNode = findNodeAt(pointer.x, pointer.y);
       state.pointerId = event.pointerId;
       state.pointerDownNode = hitNode;
       state.pointerDownPosition = pointer;
       state.dragMoved = false;
       canvas.setPointerCapture(event.pointerId);
+
+      if (state.touchPointers.size >= 2) {
+        beginPinchGesture();
+        return;
+      }
 
       if (hitNode) {
         state.draggedNode = hitNode;
@@ -1286,6 +1372,15 @@
 
     canvas.addEventListener("pointermove", (event) => {
       const pointer = pointerPosition(event);
+      if (event.pointerType === "touch") {
+        state.touchPointers.set(event.pointerId, pointer);
+      }
+
+      if (state.isPinching) {
+        updatePinchGesture();
+        return;
+      }
+
       const hovered = findNodeAt(pointer.x, pointer.y);
       const pointerDelta =
         state.pointerDownPosition
@@ -1313,10 +1408,21 @@
       }
     });
 
-    canvas.addEventListener("pointerup", () => {
-      if (state.draggedNode) {
-        state.draggedNode.fx = null;
-        state.draggedNode.fy = null;
+    function handleCanvasPointerEnd(event) {
+      if (event.pointerType === "touch") {
+        state.touchPointers.delete(event.pointerId);
+      }
+
+      if (state.isPinching) {
+        if (state.touchPointers.size >= 2) {
+          updatePinchGesture();
+          return;
+        }
+
+        endPinchGesture();
+        resetInteractionState();
+        updateDetailsPanel();
+        return;
       }
 
       if (!state.dragMoved) {
@@ -1328,17 +1434,13 @@
         }
       }
 
-      state.draggedNode = null;
-      state.isPanning = false;
-      state.pointerId = null;
-      state.pointerDownNode = null;
-      state.pointerDownPosition = null;
-      state.dragMoved = false;
-      state.pointerStart = null;
-      state.cameraStart = null;
-      canvas.classList.remove("dragging");
+      resetInteractionState();
       updateDetailsPanel();
-    });
+    }
+
+    canvas.addEventListener("pointerup", handleCanvasPointerEnd);
+
+    canvas.addEventListener("pointercancel", handleCanvasPointerEnd);
 
     canvas.addEventListener("pointerleave", () => {
       if (!state.draggedNode && !state.isPanning) {
