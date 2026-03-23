@@ -26,6 +26,7 @@ function Sidebar() {
       home: "Notice Board",
       characters: "Characters",
       settings: "Settings",
+      surveyGraph: "Survey Graph",
       rulesStore: "Rules store",
     },
     ru: {
@@ -40,6 +41,7 @@ function Sidebar() {
   } as const;
 
   const t = content[displayLang];
+  const surveyGraphLabel = displayLang === "ru" ? "Граф опросника" : "Survey Graph";
 
   const isActive = (path: string) => {
     if (!pathname) return false;
@@ -122,6 +124,11 @@ function Sidebar() {
       </div>
 
       <div className="sidebar-footer">
+        <div className="sidebar-footer-row">
+          <a href="/survey-graph.html" className="footer-link footer-link-subtle">
+            <span suppressHydrationWarning>{surveyGraphLabel}</span>
+          </a>
+        </div>
         <div className="sidebar-footer-row">
           <a
             href="https://talsorianstore.com/collections/the-witcher-trpg"
