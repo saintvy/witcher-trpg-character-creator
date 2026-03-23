@@ -10,6 +10,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
   const auth = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [isMobileSafari, setIsMobileSafari] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const googleButtonRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +41,13 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
   useEffect(() => {
     setAvatarFailed(false);
   }, [auth.session?.user.picture]);
+
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isAppleMobile = /iPhone|iPad|iPod/.test(ua);
+    const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|Focus/i.test(ua);
+    setIsMobileSafari(isAppleMobile && isSafari);
+  }, []);
 
   const userName = getDisplayName(auth.session?.user);
   const userRole =
@@ -128,14 +136,16 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
           ) : auth.provider === "google" ? (
             <div className="user-login-slot">
               <div ref={googleButtonRef} />
-              <button
-                type="button"
-                className="user-pill-button"
-                onClick={() => void auth.signIn()}
-                title="Open Google sign-in"
-              >
-                Sign in
-              </button>
+              {!isMobileSafari ? (
+                <button
+                  type="button"
+                  className="user-pill-button"
+                  onClick={() => void auth.signIn()}
+                  title="Open Google sign-in"
+                >
+                  Sign in
+                </button>
+              ) : null}
             </div>
           ) : (
             <div className="user-login-slot">
