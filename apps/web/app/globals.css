@@ -34,7 +34,9 @@ html, body {
 
 body {
     display: flex;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    min-width: 1250px;
 }
 
 /* Layout */
@@ -46,7 +48,7 @@ body {
     width: 100%;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 0px) {
     .layout {
         grid-template-columns: 72px minmax(0, 1fr);
     }
@@ -529,7 +531,7 @@ body {
     min-height: 0;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 0px) {
     .wizard {
         grid-template-columns: minmax(0,1fr);
     }
@@ -754,7 +756,7 @@ body {
     gap: 10px;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 0px) {
     .field-grid {
         grid-template-columns: minmax(0,1fr);
     }
@@ -1024,6 +1026,12 @@ body {
     font-size: 12px;
 }
 
+.survey-table-single-table th:first-child,
+.survey-table-single-table td:first-child {
+    width: 1%;
+    white-space: nowrap;
+}
+
 .survey-actions {
     display: flex;
     gap: 0.5rem;
@@ -1195,13 +1203,13 @@ body {
     gap: 12px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 0px) {
     .grid {
         grid-template-columns: repeat(2, minmax(0,1fr));
     }
 }
 
-@media (max-width: 800px) {
+@media (max-width: 0px) {
     .grid {
         grid-template-columns: minmax(0,1fr);
     }
@@ -1405,7 +1413,7 @@ body {
     margin-top: 6px;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 0px) {
     .sheet-layout {
         grid-template-columns: minmax(0,1fr);
     }
@@ -1501,13 +1509,13 @@ body {
     margin-top: 4px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 0px) {
     .skills-grid {
         grid-template-columns: repeat(2, minmax(0,1fr));
     }
 }
 
-@media (max-width: 800px) {
+@media (max-width: 0px) {
     .skills-grid {
         grid-template-columns: minmax(0,1fr);
     }
@@ -2100,7 +2108,7 @@ body {
     gap: 10px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 0px) {
     .ss-budgets {
         grid-template-columns: 1fr;
     }
@@ -2212,13 +2220,13 @@ body {
     gap: 16px;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 0px) {
     .ss-groups-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 0px) {
     .ss-groups-grid {
         grid-template-columns: 1fr;
     }
@@ -2322,7 +2330,7 @@ body {
     gap: 12px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 0px) {
     .ss-pro-grid {
         grid-template-columns: 1fr;
     }

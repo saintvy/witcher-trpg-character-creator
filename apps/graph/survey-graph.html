@@ -79,6 +79,26 @@
       z-index: 10;
     }
 
+    .hud-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .hud-body {
+      margin-top: 8px;
+    }
+
+    .hud.collapsed {
+      overflow: hidden;
+    }
+
+    .hud.collapsed .hud-body,
+    .hud.collapsed .hud-resize-handle {
+      display: none;
+    }
+
     .hud.resizing {
       user-select: none;
       cursor: ew-resize;
@@ -122,9 +142,34 @@
     }
 
     .hud h1 {
-      margin: 0 0 8px;
+      margin: 0;
       font: 700 24px/1 var(--font-display);
       letter-spacing: 0.02em;
+    }
+
+    .hud-toggle-button {
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      border: 1px solid rgba(77, 58, 38, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.54);
+      color: var(--ink);
+      font: 700 18px/1 var(--font-ui);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .hud-toggle-button:hover {
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: 0 10px 20px rgba(54, 34, 15, 0.08);
+    }
+
+    .hud-toggle-button:active {
+      transform: translateY(1px);
     }
 
     .hud p,
@@ -383,6 +428,19 @@
       border: none;
     }
 
+    @media (max-width: 768px) {
+      .hud {
+        top: 10px;
+        left: 10px;
+        max-width: calc(100vw - 20px);
+      }
+
+      .corner-actions {
+        right: 10px;
+        bottom: 10px;
+      }
+    }
+
     .muted {
       color: var(--muted);
     }
@@ -390,8 +448,12 @@
 </head>
 <body>
   <aside class="hud">
-    <h1>WCC Graph Viewer</h1>
-    <p id="introText">Offline visualization of the question graph from the local database. Zoom with the mouse wheel, drag the background with the mouse, and drag nodes individually.</p>
+    <div class="hud-header">
+      <h1>WCC Graph Viewer</h1>
+      <button id="hudToggleButton" class="hud-toggle-button" type="button" aria-expanded="true" aria-label="Collapse panel">▴</button>
+    </div>
+    <div id="hudBody" class="hud-body">
+      <p id="introText">Offline visualization of the question graph from the local database. Zoom with the mouse wheel, drag the background with the mouse, and drag nodes individually.</p>
     <div class="language-switch" aria-label="Language switcher">
       <span>Language</span>
       <button class="language-button active" type="button" data-ui-lang="en" aria-label="English">🇬🇧</button>
@@ -412,6 +474,7 @@
       <h2 id="detailsTitle">Node Details</h2>
       <div id="hoverDetails" class="muted">Наведите курсор на ноду или кликните по ней, чтобы закрепить фокус и увидеть текст вопроса и локализованные опции.</div>
     </section>
+    </div>
     <div id="hudResizeHandle" class="hud-resize-handle" aria-hidden="true"></div>
   </aside>
 
@@ -492,10 +555,12 @@
     const optionsLabel = document.getElementById("optionsLabel");
     const introText = document.getElementById("introText");
     const hud = document.querySelector(".hud");
+    const hudBody = document.getElementById("hudBody");
     const hudResizeHandle = document.getElementById("hudResizeHandle");
     const typeLegend = document.getElementById("typeLegend");
     const edgeLegend = document.getElementById("edgeLegend");
     const detailsTitle = document.getElementById("detailsTitle");
+    const hudToggleButton = document.getElementById("hudToggleButton");
     const findStartButton = document.getElementById("findStartButton");
     const returnToTavernButton = document.getElementById("returnToTavernButton");
     const languageButtons = [...document.querySelectorAll("[data-ui-lang]")];
@@ -507,6 +572,8 @@
         edges: "Edges",
         options: "Options",
         detailsTitle: "Node Details",
+        collapsePanel: "Collapse panel",
+        expandPanel: "Expand panel",
         findStart: "Find Start",
         detailsHint: "Hover a node or click it to pin focus and inspect the question text and option text.",
         noTitle: "No title",
@@ -576,6 +643,7 @@
       camera: { x: 0, y: 0, scale: 1 },
       currentLanguage: "en",
       hudWidth: SETTINGS.hudMinWidth,
+      isHudCollapsed: false,
       isResizingHud: false,
       hudResizeStartX: 0,
       hudResizeStartWidth: SETTINGS.hudMinWidth,
@@ -659,12 +727,16 @@
       return SETTINGS.typeColors[type] || "#dadada";
     }
 
+    function getHudMinWidth() {
+      return Math.min(SETTINGS.hudMinWidth, Math.max(260, window.innerWidth - 20));
+    }
+
     function getHudMaxWidth() {
-      return Math.min(window.innerWidth * SETTINGS.hudMaxViewportRatio, window.innerWidth - 36);
+      return Math.max(getHudMinWidth(), Math.min(window.innerWidth * SETTINGS.hudMaxViewportRatio, window.innerWidth - 20));
     }
 
     function applyHudWidth(width) {
-      const nextWidth = Math.max(SETTINGS.hudMinWidth, Math.min(getHudMaxWidth(), width));
+      const nextWidth = Math.max(getHudMinWidth(), Math.min(getHudMaxWidth(), width));
       state.hudWidth = nextWidth;
       hud.style.width = `${nextWidth}px`;
     }
@@ -1044,8 +1116,23 @@
       edgesLabel.textContent = uiText.edges;
       optionsLabel.textContent = uiText.options;
       detailsTitle.textContent = uiText.detailsTitle;
+      hudToggleButton.textContent = state.isHudCollapsed ? "▾" : "▴";
+      hudToggleButton.setAttribute("aria-expanded", String(!state.isHudCollapsed));
+      hudToggleButton.setAttribute(
+        "aria-label",
+        state.isHudCollapsed
+          ? (state.currentLanguage === "ru" ? "Развернуть панель" : uiText.expandPanel)
+          : (state.currentLanguage === "ru" ? "Свернуть панель" : uiText.collapsePanel)
+      );
       returnToTavernButton.textContent = state.currentLanguage === "ru" ? "Вернуться в корчму" : "Return to Tavern";
       findStartButton.textContent = uiText.findStart;
+    }
+
+    function setHudCollapsed(collapsed) {
+      state.isHudCollapsed = !!collapsed;
+      hud.classList.toggle("collapsed", state.isHudCollapsed);
+      hudBody.hidden = state.isHudCollapsed;
+      updateUiLabels();
     }
 
     function centerCameraOnNode(node) {
@@ -1134,6 +1221,9 @@
     }
 
     hudResizeHandle.addEventListener("pointerdown", (event) => {
+      if (state.isHudCollapsed) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       state.isResizingHud = true;
@@ -1278,6 +1368,10 @@
       });
     }
 
+    hudToggleButton.addEventListener("click", () => {
+      setHudCollapsed(!state.isHudCollapsed);
+    });
+
     findStartButton.addEventListener("click", () => {
       centerCameraOnNode(entryNode);
     });
@@ -1290,6 +1384,7 @@
 
     applyHudWidth(SETTINGS.hudMinWidth);
     resizeCanvas();
+    setHudCollapsed(false);
     updateLanguageButtons();
     updateUiLabels();
     updateStats();
