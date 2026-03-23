@@ -1,12 +1,16 @@
-import { MetadataRoute } from 'next';
+import { MetadataRoute } from "next";
+import { getAbsoluteUrl } from "./seo";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/api/'],
-    },
-    sitemap: 'https://witcher-character-creator.com/sitemap.xml', // Update this with your actual domain when deploying
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/api/", "/builder/", "/characters/", "/settings/", "/sheet/", "/survey-graph.html"],
+      },
+    ],
+    sitemap: getAbsoluteUrl("/sitemap.xml"),
+    host: getAbsoluteUrl("/").replace(/\/$/, ""),
   };
 }
