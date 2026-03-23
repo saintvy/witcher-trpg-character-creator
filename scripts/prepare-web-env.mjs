@@ -77,6 +77,9 @@ const cognitoClientId =
 const cognitoRedirectUri = envValue("NEXT_PUBLIC_COGNITO_REDIRECT_URI");
 const cognitoLogoutRedirectUri = envValue("NEXT_PUBLIC_COGNITO_LOGOUT_REDIRECT_URI");
 const cognitoScope = envValue("NEXT_PUBLIC_COGNITO_SCOPE") || "openid email profile";
+const siteUrl = envValue("NEXT_PUBLIC_SITE_URL") || envValue("WCC_SITE_URL");
+const googleSiteVerification =
+  envValue("NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION") || envValue("GOOGLE_SITE_VERIFICATION");
 
 const inferredProvider = googleClientId
   ? "google"
@@ -118,6 +121,8 @@ const lines = [
   `NEXT_PUBLIC_COGNITO_REDIRECT_URI=${cognitoRedirectUri}`,
   `NEXT_PUBLIC_COGNITO_LOGOUT_REDIRECT_URI=${cognitoLogoutRedirectUri}`,
   `NEXT_PUBLIC_COGNITO_SCOPE=${cognitoScope}`,
+  `NEXT_PUBLIC_SITE_URL=${siteUrl}`,
+  `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${googleSiteVerification}`,
   "",
 ];
 

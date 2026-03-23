@@ -33,3 +33,6 @@ apps/web/tsconfig.tsbuildinfo
 
 # Data
 apps/api/data
+
+# Temp
+temp/
