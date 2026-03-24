@@ -125,7 +125,11 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Topbar title={t.title} subtitle={t.subtitle} />
-      <section className="content" suppressHydrationWarning>
+      <section
+        className="content"
+        suppressHydrationWarning
+        style={{ overflowY: "auto", overflowX: "hidden" }}
+      >
         <h1
           style={{
             color: accentColor,
