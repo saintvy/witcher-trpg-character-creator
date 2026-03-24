@@ -39,6 +39,10 @@ function Sidebar() {
 
   const t = content[displayLang];
   const surveyGraphLabel = displayLang === "ru" ? "Граф опросника" : "Survey Graph";
+  const rulesStoreUrl =
+    displayLang === "ru"
+      ? "https://hobbygames.ru/vedmak-nri-category"
+      : "https://talsorianstore.com/collections/the-witcher-trpg";
 
   const isActive = (path: string) => {
     if (!pathname) return false;
@@ -128,7 +132,7 @@ function Sidebar() {
         </div>
         <div className="sidebar-footer-row">
           <a
-            href="https://talsorianstore.com/collections/the-witcher-trpg"
+            href={rulesStoreUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="footer-link"
