@@ -30,6 +30,8 @@ html, body {
     background: radial-gradient(circle at top, #151826 0, #05060a 55%, #020308 100%);
     color: var(--text-main);
     font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
 }
 
 body {
