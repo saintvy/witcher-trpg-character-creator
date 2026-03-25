@@ -521,6 +521,67 @@ body {
     overflow: hidden;
 }
 
+.home-content {
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
+}
+
+.home-hero-title {
+    color: #c67a2b;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 2px 0 10px;
+    text-shadow: 0 2px 12px rgba(198,122,43,0.22);
+}
+
+.home-section-title {
+    color: #c67a2b;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+}
+
+.home-section-title-large {
+    font-size: 24px;
+    letter-spacing: 0.06em;
+}
+
+.home-section-title-spaced {
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+.home-prose {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-main);
+}
+
+.home-prose-pretty {
+    white-space: pre-line;
+}
+
+.home-prose-spaced {
+    margin-bottom: 12px;
+}
+
+.home-highlights-list {
+    margin: 0;
+    padding-left: 20px;
+    line-height: 1.8;
+}
+
+.home-news-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
 /* Wizard / forms */
 
 .wizard {
@@ -1573,6 +1634,10 @@ body {
     letter-spacing: 0.14em;
     color: var(--text-soft);
     margin-bottom: 2px;
+}
+
+.timeline-label.home-news-label {
+    color: #c67a2b;
 }
 
 .timeline-text {
