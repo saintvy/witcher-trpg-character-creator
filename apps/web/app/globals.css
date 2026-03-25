@@ -30,8 +30,8 @@ html, body {
     background: radial-gradient(circle at top, #151826 0, #05060a 55%, #020308 100%);
     color: var(--text-main);
     font-family: var(--font-sans);
-    -webkit-text-size-adjust: none;
-    text-size-adjust: none;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
 }
 
 body {
@@ -521,11 +521,6 @@ body {
     overflow: hidden;
 }
 
-.home-content {
-    -webkit-text-size-adjust: none;
-    text-size-adjust: none;
-}
-
 .home-hero-title {
     color: #c67a2b;
     font-size: 28px;
@@ -557,9 +552,11 @@ body {
 
 .home-prose {
     margin: 0;
-    font-size: 15px;
-    line-height: 1.7;
+    font-size: 15px !important;
+    line-height: 1.7 !important;
     color: var(--text-main);
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
 }
 
 .home-prose-pretty {
@@ -573,7 +570,10 @@ body {
 .home-highlights-list {
     margin: 0;
     padding-left: 20px;
-    line-height: 1.8;
+    font-size: 15px !important;
+    line-height: 1.8 !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
 }
 
 .home-news-stack {
@@ -1638,10 +1638,17 @@ body {
 
 .timeline-label.home-news-label {
     color: #c67a2b;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
 }
 
 .timeline-text {
-    font-size: 12px;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
 }
 
 /* Settings panel */
