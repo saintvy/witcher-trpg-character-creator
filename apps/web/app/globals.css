@@ -30,6 +30,8 @@ html, body {
     background: radial-gradient(circle at top, #151826 0, #05060a 55%, #020308 100%);
     color: var(--text-main);
     font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
 }
 
 body {
@@ -517,6 +519,67 @@ body {
     gap: 14px;
     border: 1px solid rgba(255,255,255,0.04);
     overflow: hidden;
+}
+
+.home-hero-title {
+    color: #c67a2b;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 2px 0 10px;
+    text-shadow: 0 2px 12px rgba(198,122,43,0.22);
+}
+
+.home-section-title {
+    color: #c67a2b;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+}
+
+.home-section-title-large {
+    font-size: 24px;
+    letter-spacing: 0.06em;
+}
+
+.home-section-title-spaced {
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+.home-prose {
+    margin: 0;
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+    color: var(--text-main);
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+}
+
+.home-prose-pretty {
+    white-space: pre-line;
+}
+
+.home-prose-spaced {
+    margin-bottom: 12px;
+}
+
+.home-highlights-list {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 15px !important;
+    line-height: 1.8 !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+}
+
+.home-news-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 /* Wizard / forms */
@@ -1573,8 +1636,19 @@ body {
     margin-bottom: 2px;
 }
 
+.timeline-label.home-news-label {
+    color: #c67a2b;
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+}
+
 .timeline-text {
-    font-size: 12px;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
 }
 
 /* Settings panel */

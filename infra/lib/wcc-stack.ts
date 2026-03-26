@@ -72,6 +72,14 @@ function envValue(name: string): string {
   return process.env[name]?.trim() || localEnv[name]?.trim() || '';
 }
 
+function requireEnvValue(name: string): string {
+  const value = envValue(name);
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
 export class WccStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -104,6 +112,8 @@ export class WccStack extends cdk.Stack {
       envValue('WCC_API_AUTH_MODE') ||
       (typeof contextApiAuthMode === 'string' ? contextApiAuthMode.trim() : '') ||
       'none';
+    const dbUser = requireEnvValue('WCC_DB_USER');
+    const dbPassword = requireEnvValue('WCC_DB_PASSWORD');
     const generatedSqlVersionPath = path.join(
       __dirname,
       '../generated/sql-bundle-version.json',
@@ -122,8 +132,7 @@ export class WccStack extends cdk.Stack {
     // ================================================================
     // 1. NETWORK (VPC)
     // ================================================================
-    // Cost-optimized VPC for Lambda + RDS. NAT is disabled on purpose:
-    // Lambda uses VPC endpoints to reach required AWS APIs privately.
+    // Cost-optimized VPC for Lambda + RDS. NAT is disabled on purpose.
     const vpc = new ec2.Vpc(this, 'WccVpc', {
       maxAzs: 2,
       natGateways: 0,
@@ -158,32 +167,10 @@ export class WccStack extends cdk.Stack {
       'Allow PostgreSQL from API Lambda',
     );
 
-    const secretsManagerEndpointSecurityGroup = new ec2.SecurityGroup(
-      this,
-      'WccSecretsManagerEndpointSecurityGroup',
-      {
-        vpc,
-        description: 'Allow HTTPS from API Lambda to Secrets Manager VPC endpoint',
-        allowAllOutbound: true,
-      },
-    );
-
-    secretsManagerEndpointSecurityGroup.addIngressRule(
-      lambdaSecurityGroup,
-      ec2.Port.tcp(443),
-      'Allow Lambda to use Secrets Manager interface endpoint',
-    );
-
     lambdaSecurityGroup.addEgressRule(
       dbSecurityGroup,
       ec2.Port.tcp(5432),
       'Allow Lambda to connect to PostgreSQL',
-    );
-
-    lambdaSecurityGroup.addEgressRule(
-      secretsManagerEndpointSecurityGroup,
-      ec2.Port.tcp(443),
-      'Allow Lambda to call Secrets Manager through VPCE',
     );
 
     lambdaSecurityGroup.addEgressRule(
@@ -192,8 +179,7 @@ export class WccStack extends cdk.Stack {
       'Allow HTTPS to S3 Gateway Endpoint (isolated subnet drops all other internet bounds)',
     );
 
-    // DNS queries for private hostname resolution inside the VPC
-    // (RDS endpoint + Secrets Manager private DNS).
+    // DNS queries for private hostname resolution inside the VPC.
     lambdaSecurityGroup.addEgressRule(
       ec2.Peer.ipv4(vpc.vpcCidrBlock),
       ec2.Port.udp(53),
@@ -203,18 +189,6 @@ export class WccStack extends cdk.Stack {
       ec2.Peer.ipv4(vpc.vpcCidrBlock),
       ec2.Port.tcp(53),
       'Allow DNS (TCP) inside VPC',
-    );
-
-    const secretsManagerVpcEndpoint = new ec2.InterfaceVpcEndpoint(
-      this,
-      'WccSecretsManagerVpcEndpoint',
-      {
-        vpc,
-        service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
-        privateDnsEnabled: true,
-        subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
-        securityGroups: [secretsManagerEndpointSecurityGroup],
-      },
     );
 
     // ================================================================
@@ -228,15 +202,11 @@ export class WccStack extends cdk.Stack {
 
     // S3 Gateway endpoint so Lambda in isolated subnets can access the
     // data bucket without a NAT Gateway (free, no data-transfer cost).
-    const s3GatewayEndpoint = new ec2.GatewayVpcEndpoint(
-      this,
-      'WccS3GatewayEndpoint',
-      {
-        vpc,
-        service: ec2.GatewayVpcEndpointAwsService.S3,
-        subnets: [{ subnetType: ec2.SubnetType.PRIVATE_ISOLATED }],
-      },
-    );
+    new ec2.GatewayVpcEndpoint(this, 'WccS3GatewayEndpoint', {
+      vpc,
+      service: ec2.GatewayVpcEndpointAwsService.S3,
+      subnets: [{ subnetType: ec2.SubnetType.PRIVATE_ISOLATED }],
+    });
 
     // ================================================================
     // 2. DATABASE (RDS PostgreSQL)
@@ -254,7 +224,9 @@ export class WccStack extends cdk.Stack {
       securityGroups: [dbSecurityGroup],
       publiclyAccessible: false,
       databaseName: 'witcher_cc',
-      credentials: rds.Credentials.fromGeneratedSecret('cc_user'),
+      credentials: rds.Credentials.fromUsername(dbUser, {
+        password: cdk.SecretValue.unsafePlainText(dbPassword),
+      }),
       multiAz: false,
       allocatedStorage: 20,
       storageType: rds.StorageType.GP3,
@@ -306,6 +278,8 @@ export class WccStack extends cdk.Stack {
       environment: {
         POSTGRES_HOST: database.instanceEndpoint.hostname,
         POSTGRES_PORT: '5432',
+        POSTGRES_USER: dbUser,
+        POSTGRES_PASSWORD: dbPassword,
         POSTGRES_DB: 'witcher_cc',
         POSTGRES_SSL: 'true',
         WCC_DEFAULT_CHARACTER_PATH: '/var/task/defaultCharacter.json',
@@ -318,12 +292,6 @@ export class WccStack extends cdk.Stack {
         NODE_OPTIONS: '--enable-source-maps',
       },
     });
-
-    // Pass DB password from Secrets Manager
-    if (database.secret) {
-      apiFunction.addEnvironment('DB_SECRET_ARN', database.secret.secretArn);
-      database.secret.grantRead(apiFunction);
-    }
 
     // Data bucket: grant Lambda read/write and pass bucket name
     dataBucket.grantReadWrite(apiFunction);
@@ -364,16 +332,13 @@ export class WccStack extends cdk.Stack {
         environment: {
           POSTGRES_HOST: database.instanceEndpoint.hostname,
           POSTGRES_PORT: '5432',
+          POSTGRES_USER: dbUser,
+          POSTGRES_PASSWORD: dbPassword,
           POSTGRES_DB: 'witcher_cc',
           NODE_OPTIONS: '--enable-source-maps',
         },
       },
     );
-
-    if (database.secret) {
-      dbSeedOnEventFunction.addEnvironment('DB_SECRET_ARN', database.secret.secretArn);
-      database.secret.grantRead(dbSeedOnEventFunction);
-    }
 
     const dbSeedProvider = new cr.Provider(this, 'WccDbSeedProvider', {
       onEventHandler: dbSeedOnEventFunction,
@@ -387,10 +352,6 @@ export class WccStack extends cdk.Stack {
       },
     });
     dbSeedResource.node.addDependency(database);
-    if (database.secret) {
-      dbSeedResource.node.addDependency(database.secret);
-    }
-    dbSeedResource.node.addDependency(secretsManagerVpcEndpoint);
     apiFunction.node.addDependency(dbSeedResource);
 
     // ================================================================
@@ -547,10 +508,6 @@ function handler(event) {
     new cdk.CfnOutput(this, 'DbEndpoint', {
       value: database.instanceEndpoint.hostname,
       description: 'RDS endpoint (internal)',
-    });
-    new cdk.CfnOutput(this, 'SecretsManagerVpcEndpointId', {
-      value: secretsManagerVpcEndpoint.vpcEndpointId,
-      description: 'Interface VPC endpoint used by Lambda to reach Secrets Manager privately',
     });
     new cdk.CfnOutput(this, 'DataBucketName', {
       value: dataBucket.bucketName,

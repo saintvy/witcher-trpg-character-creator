@@ -19,7 +19,7 @@ function Sidebar() {
   const content = {
     en: {
       subtitle: "Witcher character creator",
-      tavernTitle: "The Pickles and Lard Inn",
+      tavernTitle: "The Pickles and Lard Tavern",
       navigation: "Navigation",
       home: "Notice Board",
       characters: "Characters",

@@ -89,7 +89,6 @@ export default function HomePage() {
   } as const;
 
   const t = content[displayLang];
-  const accentColor = "#c67a2b";
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -126,87 +125,36 @@ export default function HomePage() {
       />
       <Topbar title={t.title} subtitle={t.subtitle} />
       <section
-        className="content"
+        className="content home-content"
         suppressHydrationWarning
         style={{ overflowY: "auto", overflowX: "hidden" }}
       >
-        <h1
-          style={{
-            color: accentColor,
-            fontSize: 28,
-            fontWeight: 800,
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-            margin: "2px 0 10px",
-            textShadow: "0 2px 12px rgba(198,122,43,0.22)",
-          }}
-        >
-          {t.greetingTitle}
-        </h1>
+        <h1 className="home-hero-title">{t.greetingTitle}</h1>
 
         <div className="card">
-          <p
-            style={{
-              margin: 0,
-              lineHeight: 1.7,
-              fontSize: 15,
-              color: "var(--text-main)",
-              whiteSpace: "pre-line",
-            }}
-          >
-            {t.welcome}
-          </p>
+          <p className="home-prose home-prose-pretty">{t.welcome}</p>
         </div>
 
         <div className="card">
-          <h2
-            style={{
-              color: accentColor,
-              fontSize: 22,
-              fontWeight: 800,
-              letterSpacing: "0.05em",
-              textTransform: "uppercase",
-              margin: "0 0 12px",
-            }}
-          >
-            {t.highlightsTitle}
-          </h2>
-          <p
-            style={{
-              margin: "0 0 12px",
-              lineHeight: 1.7,
-              fontSize: 15,
-              color: "var(--text-main)",
-            }}
-          >
-            {t.highlightsLead}
-          </p>
-          <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: 1.8 }}>
+          <h2 className="home-section-title">{t.highlightsTitle}</h2>
+          <p className="home-prose home-prose-spaced">{t.highlightsLead}</p>
+          <ul className="home-highlights-list">
             {t.highlights.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
         </div>
 
-        <h2
-          style={{
-            color: accentColor,
-            fontSize: 24,
-            fontWeight: 800,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            margin: "16px 0 8px",
-          }}
-        >
+        <h2 className="home-section-title home-section-title-large home-section-title-spaced">
           {t.whatsNew}
         </h2>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="home-news-stack">
           {t.news.map((item, index) => (
             <div className="card" key={index}>
               <div className="timeline-list" style={{ marginTop: 0 }}>
                 <div className="timeline-item" style={{ paddingBottom: 0 }}>
-                  <div className="timeline-label" style={{ color: accentColor }}>{item.title}</div>
+                  <div className="timeline-label home-news-label">{item.title}</div>
                   {item.text && <div className="timeline-text">{item.text}</div>}
                 </div>
               </div>
