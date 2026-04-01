@@ -304,8 +304,8 @@ FROM (VALUES
   ('witcher_cc.wcc_past_academy_life_o0108.event_desc', 'en', 'Found clues to a relic''s location, ask the GM'),
   ('witcher_cc.wcc_past_academy_life_o0201.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
   ('witcher_cc.wcc_past_academy_life_o0201.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
-  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'ru', 'Украл магическую формулу'),
-  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'en', 'Stole a spell formula'),
+  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'ru', 'Украл [свиток заклинания (Подмастерье)]'),
+  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'en', 'Stole a [spell scroll (Journeyman)]'),
   ('witcher_cc.wcc_past_academy_life_o0205.event_desc', 'ru', 'Охота на монстра: [+1 к Монстрологии]'),
   ('witcher_cc.wcc_past_academy_life_o0205.event_desc', 'en', 'Hunted a monster: [+1 to Monster Lore]'),
   ('witcher_cc.wcc_past_academy_life_o0206.event_desc', 'ru', 'Новый враг из-за ошибки в заклинании'),
@@ -395,6 +395,7 @@ CROSS JOIN meta
 WHERE NOT (
   (options.group_id = 1 AND options.num = 5) OR
   (options.group_id = 1 AND options.num = 10) OR
+  (options.group_id = 2 AND options.num = 7) OR
   (options.group_id = 2 AND options.num = 8) OR
   (options.group_id = 3 AND options.num = 7) OR
   (options.group_id = 4 AND options.num IN (6, 7))
@@ -607,7 +608,7 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.enemies'),
       jsonb_build_object(
-        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_enemy_gender_o0001.answer_options.label_value')::text),
+        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_sex.male.character.sex')::text),
         'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0002.answer_options.label_value')::text),
         'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.position')::text),
         'cause', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.cause')::text),

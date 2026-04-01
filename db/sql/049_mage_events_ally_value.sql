@@ -46,10 +46,49 @@ SELECT meta.qu_id,
              'if',
              jsonb_build_array(
                jsonb_build_object(
-                 '==',
+                 'or',
                  jsonb_build_array(
-                   jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
-                   3
+                   jsonb_build_object(
+                     '==',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                       3
+                     )
+                   ),
+                   jsonb_build_object(
+                     'and',
+                     jsonb_build_array(
+                       jsonb_build_object(
+                         'in',
+                         jsonb_build_array(
+                           jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+                           jsonb_build_array(
+                             'academy life 1-2',
+                             'academy life 3-8'
+                           )
+                         )
+                       ),
+                       jsonb_build_object(
+                         'or',
+                         jsonb_build_array(
+                           jsonb_build_object(
+                             '==',
+                             jsonb_build_array(
+                               jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                               1
+                             )
+                           ),
+                           jsonb_build_object(
+                             '==',
+                             jsonb_build_array(
+                               jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                               2
+                             )
+                           )
+                         )
+                       )
+                     )
+                   )
                  )
                ),
                jsonb_build_object('id', 'lifeEventsCounter', 'step', 10),
@@ -310,6 +349,20 @@ SELECT 'character',
        meta.qu_id,
        NULL,
        jsonb_build_object(
+         'when',
+         jsonb_build_object(
+           '!',
+           jsonb_build_object(
+             'in',
+             jsonb_build_array(
+               jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+               jsonb_build_array(
+                 'academy life 1-2',
+                 'academy life 3-8'
+               )
+             )
+           )
+         ),
          'add',
          jsonb_build_array(
            jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),

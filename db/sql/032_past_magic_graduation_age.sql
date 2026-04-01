@@ -128,5 +128,5 @@ SELECT 'wcc_past_mentor_presence', 'wcc_past_magic_graduation_age', v.an_id, 1
        ) AS v(an_id);
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
-SELECT 'wcc_past_mentor_relationship_end', 'wcc_past_magic_graduation_age', 1;
+SELECT 'wcc_past_mentor_relationship_end', 'wcc_past_magic_graduation_age', 0;
 

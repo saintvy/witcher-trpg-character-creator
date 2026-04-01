@@ -19984,7 +19984,7 @@ SELECT 'wcc_past_mentor_presence', 'wcc_past_magic_graduation_age', v.an_id, 1
        ) AS v(an_id);
 
 INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, priority)
-SELECT 'wcc_past_mentor_relationship_end', 'wcc_past_magic_graduation_age', 1;
+SELECT 'wcc_past_mentor_relationship_end', 'wcc_past_magic_graduation_age', 0;
 
 
 -- <<< END sql/032_past_magic_graduation_age.sql
@@ -20297,8 +20297,8 @@ FROM (VALUES
   ('witcher_cc.wcc_past_academy_life_o0108.event_desc', 'en', 'Found clues to a relic''s location, ask the GM'),
   ('witcher_cc.wcc_past_academy_life_o0201.event_desc', 'ru', 'Отдача заклинания: [-1 к Энергии]'),
   ('witcher_cc.wcc_past_academy_life_o0201.event_desc', 'en', 'Spell backfired: [-1 to Vigor]'),
-  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'ru', 'Украл магическую формулу'),
-  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'en', 'Stole a spell formula'),
+  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'ru', 'Украл [свиток заклинания (Подмастерье)]'),
+  ('witcher_cc.wcc_past_academy_life_o0203.event_desc', 'en', 'Stole a [spell scroll (Journeyman)]'),
   ('witcher_cc.wcc_past_academy_life_o0205.event_desc', 'ru', 'Охота на монстра: [+1 к Монстрологии]'),
   ('witcher_cc.wcc_past_academy_life_o0205.event_desc', 'en', 'Hunted a monster: [+1 to Monster Lore]'),
   ('witcher_cc.wcc_past_academy_life_o0206.event_desc', 'ru', 'Новый враг из-за ошибки в заклинании'),
@@ -20388,6 +20388,7 @@ CROSS JOIN meta
 WHERE NOT (
   (options.group_id = 1 AND options.num = 5) OR
   (options.group_id = 1 AND options.num = 10) OR
+  (options.group_id = 2 AND options.num = 7) OR
   (options.group_id = 2 AND options.num = 8) OR
   (options.group_id = 3 AND options.num = 7) OR
   (options.group_id = 4 AND options.num IN (6, 7))
@@ -20600,7 +20601,7 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.enemies'),
       jsonb_build_object(
-        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_enemy_gender_o0001.answer_options.label_value')::text),
+        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_sex.male.character.sex')::text),
         'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0002.answer_options.label_value')::text),
         'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.position')::text),
         'cause', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_past_academy_life_o0403.enemy.cause')::text),
@@ -25075,7 +25076,7 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.enemies'),
       jsonb_build_object(
-        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_enemy_gender_o0002.answer_options.label_value')::text),
+        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_sex.female.character.sex')::text),
         'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0002.answer_options.label_value')::text),
         'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_position_o0008.answer_options.label_value')::text),
         'cause', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_the_power.enemy_cause_academy_life_1_3')::text),
@@ -25233,6 +25234,21 @@ SELECT
   meta.qu_id,
   NULL,
   jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      '!',
+      jsonb_build_object(
+        'in',
+        jsonb_build_array(
+          jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+          jsonb_build_array(
+            'academy life 1-3',
+            'academy life 2-6',
+            'academy life 3-6'
+          )
+        )
+      )
+    ),
     'add',
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
@@ -26029,10 +26045,49 @@ SELECT meta.qu_id,
              'if',
              jsonb_build_array(
                jsonb_build_object(
-                 '==',
+                 'or',
                  jsonb_build_array(
-                   jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
-                   3
+                   jsonb_build_object(
+                     '==',
+                     jsonb_build_array(
+                       jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                       3
+                     )
+                   ),
+                   jsonb_build_object(
+                     'and',
+                     jsonb_build_array(
+                       jsonb_build_object(
+                         'in',
+                         jsonb_build_array(
+                           jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+                           jsonb_build_array(
+                             'academy life 1-2',
+                             'academy life 3-8'
+                           )
+                         )
+                       ),
+                       jsonb_build_object(
+                         'or',
+                         jsonb_build_array(
+                           jsonb_build_object(
+                             '==',
+                             jsonb_build_array(
+                               jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                               1
+                             )
+                           ),
+                           jsonb_build_object(
+                             '==',
+                             jsonb_build_array(
+                               jsonb_build_object('var', 'characterRaw.logicFields.flags.academy_life'),
+                               2
+                             )
+                           )
+                         )
+                       )
+                     )
+                   )
                  )
                ),
                jsonb_build_object('id', 'lifeEventsCounter', 'step', 10),
@@ -26293,6 +26348,20 @@ SELECT 'character',
        meta.qu_id,
        NULL,
        jsonb_build_object(
+         'when',
+         jsonb_build_object(
+           '!',
+           jsonb_build_object(
+             'in',
+             jsonb_build_array(
+               jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+               jsonb_build_array(
+                 'academy life 1-2',
+                 'academy life 3-8'
+               )
+             )
+           )
+         ),
          'add',
          jsonb_build_array(
            jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),

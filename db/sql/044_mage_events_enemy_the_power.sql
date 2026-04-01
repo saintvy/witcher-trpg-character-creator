@@ -236,7 +236,7 @@ SELECT
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.enemies'),
       jsonb_build_object(
-        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_life_events_enemy_gender_o0002.answer_options.label_value')::text),
+        'gender', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_sex.female.character.sex')::text),
         'victim', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_victim_o0002.answer_options.label_value')::text),
         'position', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_position_o0008.answer_options.label_value')::text),
         'cause', jsonb_build_object('i18n_uuid', ck_id('witcher_cc.wcc_mage_events_enemy_the_power.enemy_cause_academy_life_1_3')::text),
@@ -394,6 +394,21 @@ SELECT
   meta.qu_id,
   NULL,
   jsonb_build_object(
+    'when',
+    jsonb_build_object(
+      '!',
+      jsonb_build_object(
+        'in',
+        jsonb_build_array(
+          jsonb_build_object('var', 'characterRaw.logicFields.last_node_and_answer'),
+          jsonb_build_array(
+            'academy life 1-3',
+            'academy life 2-6',
+            'academy life 3-6'
+          )
+        )
+      )
+    ),
     'add',
     jsonb_build_array(
       jsonb_build_object('var', 'characterRaw.lore.lifeEvents'),
