@@ -605,7 +605,7 @@ WITH skill_mapping (skill_name) AS ( VALUES
     ('intimidation'),         -- Запугивание
     ('courage'),              -- Храбрость
     ('wilderness_survival'),  -- Выживание в дикой природе
-    ('dodge'),                -- Уклонение / Изворотливость
+    ('dodge_escape'),        -- Уклонение / Изворотливость
     ('physique')              -- Сила
 )
 INSERT INTO effects (scope, an_an_id, body)

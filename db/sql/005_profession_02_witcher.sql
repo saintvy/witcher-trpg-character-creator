@@ -1142,7 +1142,7 @@ WITH skill_mapping (skill_name) AS ( VALUES
     ('stealth'),               -- Скрытность
     ('riding'),                -- Верховая езда
     ('swordsmanship'),         -- Владение мечом
-    ('dodge'),                 -- Уклонение / Изворотливость
+    ('dodge_escape'),         -- Уклонение / Изворотливость
     ('alchemy')                -- Алхимия
 )
 INSERT INTO effects (scope, an_an_id, body)

@@ -555,7 +555,7 @@ WITH skill_mapping (skill_name) AS ( VALUES
     ('spell_casting'),        -- Сотворение заклинаний
     ('education'),            -- Образование
     ('social_etiquette'),     -- Этикет
-    ('staff'),                -- Владение древковым оружием
+    ('staff_spear'),          -- Владение древковым оружием
     ('grooming_and_style'),   -- Внешний вид
     ('seduction'),            -- Соблазнение
     ('human_perception')      -- Понимание людей

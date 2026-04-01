@@ -1355,7 +1355,7 @@ WITH
   UNION ALL SELECT 2, 'melee'
   UNION ALL SELECT 3, 'brawling'
   UNION ALL SELECT 4, 'riding'
-  UNION ALL SELECT 5, 'staff'
+  UNION ALL SELECT 5, 'staff_spear'
   UNION ALL SELECT 6, 'small_blades'
   UNION ALL SELECT 7, 'swordsmanship'
   UNION ALL SELECT 8, 'crossbow'

@@ -240,7 +240,6 @@ WITH raw_data (dict_key, name_ru, name_en) AS ( VALUES
   ('skill.ritual_crafting',     'Проведение ритуалов',              'Ritual Crafting'),
 
   -- Extra defense labels used in TSVs (not standard skill names)
-  ('skill.dodge',    'Уклонение',        'Dodge'),
   ('skill.blocking', 'Блокирование',     'Blocking'),
   ('skill.gm_dc',    'СЛ от ведущего',   'GM DC')
 ),

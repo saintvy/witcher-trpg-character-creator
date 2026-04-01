@@ -257,7 +257,7 @@ SELECT rd.ms_id
        END AS effect_time_value
      , ARRAY_REMOVE(ARRAY[
          CASE btrim(rd.defense_1)
-           WHEN 'Уклонение' THEN ck_id('skill.dodge')
+           WHEN 'Уклонение' THEN ck_id('skill.dodge_escape')
            WHEN 'Атлетика' THEN ck_id('skill.athletics')
            WHEN 'Блокирование' THEN ck_id('skill.blocking')
            WHEN 'Сопротивление магии' THEN ck_id('skill.resist_magic')
@@ -267,7 +267,7 @@ SELECT rd.ms_id
            ELSE NULL
          END,
          CASE btrim(rd.defense_2)
-           WHEN 'Уклонение' THEN ck_id('skill.dodge')
+           WHEN 'Уклонение' THEN ck_id('skill.dodge_escape')
            WHEN 'Атлетика' THEN ck_id('skill.athletics')
            WHEN 'Блокирование' THEN ck_id('skill.blocking')
            WHEN 'Сопротивление магии' THEN ck_id('skill.resist_magic')

@@ -47,24 +47,6 @@ const STAT_META: Record<
   LUCK: { en: { name: "Luck", abbr: "LUCK" }, ru: { name: "Удача", abbr: "Удача" } },
 };
 
-// DB skill_id -> legacy key used in characterRaw.skills.common (defaultCharacter.json)
-const SKILL_ID_TO_STATE_ID: Record<string, string> = {
-  staff_spear: "staff",
-  dodge_escape: "dodge",
-};
-const STATE_ID_TO_SKILL_ID: Record<string, string> = {
-  staff: "staff_spear",
-  dodge: "dodge_escape",
-};
-
-function toStateSkillId(skillId: string): string {
-  return SKILL_ID_TO_STATE_ID[skillId] ?? skillId;
-}
-
-function toCatalogSkillId(skillId: string): string {
-  return STATE_ID_TO_SKILL_ID[skillId] ?? skillId;
-}
-
 function looksLikeUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
@@ -100,6 +82,13 @@ function calcStatFinal(cur: number, bonus: number, raceBonus: number): number {
 
 function calcSkillContribution(cur: number, bonus: number, raceBonus: number): number {
   return Math.max(0, Math.min(cur + bonus, 10) + raceBonus);
+}
+
+function getSkillPointCost(skillId: string, skillMetaById: Map<string, SkillCatalogEntry>): number {
+  const meta = skillMetaById.get(skillId);
+  if (meta?.isDifficult) return 2;
+  if (skillId.startsWith("language_")) return 2;
+  return 1;
 }
 
 function getAtPath(source: unknown, path: string): unknown {
@@ -324,7 +313,8 @@ export function StatsSkillsRenderer(props: {
     const out: Record<string, number> = {};
     if (isRecord(common)) {
       for (const skillId of Object.keys(common)) {
-        out[skillId] = clampInt(toNumber(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0), 0, 99);
+        const cur = clampInt(toNumber(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0), 0, 99);
+        out[skillId] = cur;
       }
     }
 
@@ -365,7 +355,8 @@ export function StatsSkillsRenderer(props: {
     const nextSkills: Record<string, number> = {};
     if (isRecord(common)) {
       for (const skillId of Object.keys(common)) {
-        nextSkills[skillId] = clampInt(toNumber(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0), 0, 99);
+        const cur = clampInt(toNumber(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0), 0, 99);
+        nextSkills[skillId] = cur;
       }
     }
 
@@ -397,7 +388,7 @@ export function StatsSkillsRenderer(props: {
   const initialSkills = useMemo(() => {
     const raw = getAtPath(state, "characterRaw.skills.initial");
     if (!Array.isArray(raw)) return [];
-    return raw.filter((x): x is string => typeof x === "string" && x.length > 0);
+    return Array.from(new Set(raw.filter((x): x is string => typeof x === "string" && x.length > 0)));
   }, [state]);
 
   const definingSkillId = useMemo(() => {
@@ -500,10 +491,12 @@ export function StatsSkillsRenderer(props: {
     let spentProfessional = 0;
     let spentCommon = 0;
     const baselineSkills = baselineRef.current?.skills ?? {};
+    const baseProfessionalCost = Array.from(professionalSkillSet).reduce((acc, skillId) => {
+      return acc + getSkillPointCost(skillId, skillMetaById);
+    }, 0);
 
     for (const [skillId, cur] of Object.entries(skillCurById)) {
-      const meta = skillMetaById.get(skillId);
-      const cost = meta?.isDifficult ? 2 : 1;
+      const cost = getSkillPointCost(skillId, skillMetaById);
       const baseline = Math.max(0, clampInt(baselineSkills[skillId] ?? 0, 0, 99));
       const allocatedInNode = Math.max(0, clampInt(cur, 0, 99) - baseline);
       const tokens = allocatedInNode * cost;
@@ -514,21 +507,20 @@ export function StatsSkillsRenderer(props: {
     return {
       spentProfessional,
       spentCommon,
-      remainingProfessional: 44 - spentProfessional,
+      remainingProfessional: 44 - baseProfessionalCost - spentProfessional,
       remainingCommon: generalBudget - spentCommon,
     };
   }, [generalBudget, professionalSkillSet, skillCurById, skillMetaById]);
 
   const groupedCommonSkills = useMemo(() => {
     const list: SkillRowEntry[] = (catalog ?? [])
-      .filter((s) => s.type === "common" && stateCommonSkillIdSet.has(toStateSkillId(s.id)))
+      .filter((s) => s.type === "common" && stateCommonSkillIdSet.has(s.id))
       .map((s) => ({ ...s }));
 
-    const definingStateId = definingSkillId ? toStateSkillId(definingSkillId) : null;
-    if (definingStateId) {
-      const existing = list.some((s) => toStateSkillId(s.id) === definingStateId);
+    if (definingSkillId) {
+      const existing = list.some((s) => s.id === definingSkillId);
       if (!existing) {
-        const meta = (catalog ?? []).find((s) => toStateSkillId(s.id) === definingStateId);
+        const meta = (catalog ?? []).find((s) => s.id === definingSkillId);
         if (meta) {
           list.push({ ...meta, isDefining: true });
         }
@@ -620,9 +612,8 @@ export function StatsSkillsRenderer(props: {
         if (!isRecord(value)) continue;
         const id = typeof value.id === "string" ? value.id : "";
         const metaByExactId = id ? skillMetaById.get(id) : undefined;
-        const metaByStateId = id ? (catalog ?? []).find((s) => toStateSkillId(s.id) === id) : undefined;
         const fallbackRawName = typeof value.name === "string" ? value.name : "";
-        const name = (metaByExactId?.name ?? metaByStateId?.name ?? fallbackRawName).trim();
+        const name = (metaByExactId?.name ?? fallbackRawName).trim();
         if (!name) continue;
         byBranch[branch - 1]!.push({ id, name, idx });
       }
@@ -671,8 +662,7 @@ export function StatsSkillsRenderer(props: {
     const baseline = baselineRef.current?.skills?.[skillId] ?? 0;
     const bonus = getSkillNumber(skillId, "bonus");
     const maxCur = Math.max(Math.max(6 - bonus, 0), Math.max(0, baseline));
-    const meta = skillMetaById.get(skillId);
-    const cost = meta?.isDifficult ? 2 : 1;
+    const cost = getSkillPointCost(skillId, skillMetaById);
     const isProfessional = professionalSkillSet.has(skillId);
 
     setSkillCurById((prev) => {
@@ -922,20 +912,19 @@ export function StatsSkillsRenderer(props: {
                   <div className="ss-skill-group-title">{g.title}</div>
                   <div className="ss-skill-list">
                     {g.skills.map((s) => {
-                      const stateId = toStateSkillId(s.id);
                       const isDefining = Boolean((s as SkillRowEntry).isDefining);
-                      const cur = clampInt(skillCurById[stateId] ?? 0, 0, 99);
-                      const baseline = baselineRef.current?.skills?.[stateId] ?? 0;
-                      const bonus = getSkillNumber(stateId, "bonus");
-                      const race = getSkillNumber(stateId, "race_bonus");
+                      const cur = clampInt(skillCurById[s.id] ?? 0, 0, 99);
+                      const baseline = baselineRef.current?.skills?.[s.id] ?? 0;
+                      const bonus = getSkillNumber(s.id, "bonus");
+                      const race = getSkillNumber(s.id, "race_bonus");
                       const maxCur = Math.max(Math.max(6 - bonus, 0), Math.max(0, baseline));
                       const statKey = normaliseStatKey(s.param) ?? "INT";
                       const base =
                         (statForSkillsById[statKey]?.total ?? 0) +
                         calcSkillContribution(cur, bonus, race);
 
-                      const cost = s.isDifficult ? 2 : 1;
-                      const isProfessional = professionalSkillSet.has(stateId);
+                      const cost = getSkillPointCost(s.id, skillMetaById);
+                      const isProfessional = professionalSkillSet.has(s.id);
                       const remaining = isProfessional ? budgets.remainingProfessional : budgets.remainingCommon;
                       const canInc = !disabled && cur < maxCur && remaining >= cost;
                       const canDec = !disabled && cur > Math.max(0, baseline);
@@ -948,15 +937,15 @@ export function StatsSkillsRenderer(props: {
                           {renderStepper(cur, {
                             disabled,
                             blankWhenZero: true,
-                            onInc: canInc ? () => adjustSkill(stateId, 1) : undefined,
-                            onDec: canDec ? () => adjustSkill(stateId, -1) : undefined,
+                            onInc: canInc ? () => adjustSkill(s.id, 1) : undefined,
+                            onDec: canDec ? () => adjustSkill(s.id, -1) : undefined,
                           })}
                           <div className="ss-pill ss-pill-num">{bonus}</div>
                           <div className="ss-pill ss-pill-num">{race}</div>
                           <div className="ss-pill ss-pill-base">{base}</div>
                           <div className="ss-skill-name">
                             {s.name}
-                            {s.isDifficult && <span className="muted"> (2)</span>}
+                            {cost > 1 && <span className="muted"> (2)</span>}
                           </div>
                         </div>
                       );

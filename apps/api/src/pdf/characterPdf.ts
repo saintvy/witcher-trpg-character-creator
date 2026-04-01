@@ -238,7 +238,7 @@ const DEFAULT_PDF_TABLE_SETTINGS_VM: PdfTablesSettingsVm = {
 const SKILL_TO_STAT: Record<string, string> = {
   awareness: 'INT', business: 'INT', deduction: 'INT', education: 'INT', monster_lore: 'INT', tactics: 'INT', streetwise: 'INT',
   language_common_speech: 'INT', language_elder_speech: 'INT', language_dwarvish: 'INT', wilderness_survival: 'INT',
-  brawling: 'REF', dodge: 'REF', melee: 'REF', riding: 'REF', sailing: 'REF', small_blades: 'REF', staff: 'REF', swordsmanship: 'REF',
+  brawling: 'REF', dodge_escape: 'REF', melee: 'REF', riding: 'REF', sailing: 'REF', small_blades: 'REF', staff_spear: 'REF', swordsmanship: 'REF',
   archery: 'DEX', athletics: 'DEX', crossbow: 'DEX', sleight_of_hand: 'DEX', stealth: 'DEX',
   endurance: 'BODY', physique: 'BODY',
   charisma: 'EMP', deceit: 'EMP', fine_arts: 'EMP', gambling: 'EMP', grooming_and_style: 'EMP', human_perception: 'EMP', leadership: 'EMP', persuasion: 'EMP', performance: 'EMP', seduction: 'EMP',
@@ -917,16 +917,8 @@ function buildVmWithCatalog(
 
   const grouped = new Map<string, Row[]>();
   const skillSidebarGrouped = new Map<string, SkillSidebarRow[]>();
-  const canonicalSkillId = (skillId: string): string => {
-    if (skillId === 'dodge') return 'dodge_escape';
-    if (skillId === 'staff') return 'staff_spear';
-    return skillId;
-  };
   const definingSkillId = typeof defining?.id === 'string' ? defining.id : '';
-  const definingSkillCanonicalId = definingSkillId ? canonicalSkillId(definingSkillId) : '';
   const paramFallbackBySkillId = (skillId: string): string | null => {
-    if (skillId === 'staff') return 'REF';
-    if (skillId === 'dodge') return 'REF';
     if (skillId === 'sailing') return 'REF';
     if (skillId === 'small_blades') return 'REF';
     if (skillId === 'swordsmanship') return 'REF';
@@ -948,10 +940,9 @@ function buildVmWithCatalog(
   };
   for (const [skillId, rawValue] of Object.entries(rawSkillsCommon)) {
     const v = statValue(asRecord(rawValue)).full;
-    const metaId = canonicalSkillId(skillId);
-    if (skillId === definingSkillId || (definingSkillCanonicalId && metaId === definingSkillCanonicalId)) continue;
-    const catalog = skillsCatalogById?.get(metaId) ?? skillsCatalogById?.get(skillId);
-    const key = ((catalog?.param?.toUpperCase()) || paramFallbackBySkillId(metaId) || SKILL_TO_STAT[metaId] || SKILL_TO_STAT[skillId] || 'OTHER').toUpperCase();
+    if (skillId === definingSkillId) continue;
+    const catalog = skillsCatalogById?.get(skillId);
+    const key = ((catalog?.param?.toUpperCase()) || paramFallbackBySkillId(skillId) || SKILL_TO_STAT[skillId] || 'OTHER').toUpperCase();
     const arr = grouped.get(key) ?? [];
     const fallbackLangName = languageSkillFallbackName(skillId);
     const displayName = (catalog?.name?.trim() || text(asRecord(rawValue)?.name, '') || fallbackLangName || pretty(skillId));

@@ -3218,7 +3218,10 @@ async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
   }
 
   const budgetStats = statsBudgetByLevel(level);
-  const budgetProfessional = 44;
+  const getSkillStateNumber = (skillId: string, field: string, fallback = 0): number => {
+    const value = getAtPath(state, `characterRaw.skills.common.${skillId}.${field}`);
+    return value !== undefined ? toInt(value, fallback) : fallback;
+  };
 
   const statKeys = ['INT', 'REF', 'DEX', 'BODY', 'SPD', 'EMP', 'CRA', 'WILL', 'LUCK'] as const;
 
@@ -3250,7 +3253,7 @@ async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
   const initialSkills = (() => {
     const raw = getAtPath(state, 'characterRaw.skills.initial');
     if (!Array.isArray(raw)) return [] as string[];
-    return raw.filter((x): x is string => typeof x === 'string' && x.length > 0);
+    return Array.from(new Set(raw.filter((x): x is string => typeof x === 'string' && x.length > 0)));
   })();
 
   const definingSkillId = (() => {
@@ -3271,48 +3274,53 @@ async function applyStatsSkillsNode(rawValue: string, state: SurveyState) {
   for (const sid of professionalSet) commonSkillIdSet.add(sid);
   const commonSkillIds = Array.from(commonSkillIdSet);
 
-  // Legacy skill ids used in characterRaw.skills.common vs DB ids in wcc_skills
-  const stateSkillToDbSkill: Record<string, string> = {
-    staff: 'staff_spear',
-    dodge: 'dodge_escape',
-  };
-  const dbSkillToStateSkill: Record<string, string> = {
-    staff_spear: 'staff',
-    dodge_escape: 'dodge',
-  };
-
   const difficultyBySkillId = new Map<string, boolean>();
   if (commonSkillIds.length > 0) {
-    const queryIds = commonSkillIds.map((id) => stateSkillToDbSkill[id] ?? id);
     const { rows } = await db.query<{ skill_id: string; is_difficult: boolean }>(
       `
         SELECT skill_id, COALESCE(is_difficult, false) AS is_difficult
         FROM wcc_skills
         WHERE skill_id = ANY($1::text[])
       `,
-      [queryIds],
+      [commonSkillIds],
     );
     for (const r of rows) {
-      const stateId = dbSkillToStateSkill[r.skill_id] ?? r.skill_id;
-      difficultyBySkillId.set(stateId, Boolean(r.is_difficult));
+      difficultyBySkillId.set(r.skill_id, Boolean(r.is_difficult));
     }
   }
+
+  const requestedSkillValues = (() => {
+    const out: Record<string, number> = {};
+    const rawSkills = payload.skills;
+    if (!rawSkills || typeof rawSkills !== 'object') return out;
+    for (const [skillId, rawValue] of Object.entries(rawSkills)) {
+      out[skillId] = toInt(rawValue, 0);
+    }
+    return out;
+  })();
+
+  const getSkillPointCost = (skillId: string): number => {
+    if (difficultyBySkillId.get(skillId)) return 2;
+    if (skillId.startsWith('language_')) return 2;
+    return 1;
+  };
+  const budgetProfessional = 44 - Array.from(professionalSet).reduce((acc, skillId) => acc + getSkillPointCost(skillId), 0);
 
   const nextSkillsCur: Record<string, number> = {};
   let spentProfessional = 0;
   let spentCommon = 0;
 
   for (const skillId of commonSkillIds) {
-    const baselineRaw = toInt(getAtPath(state, `characterRaw.skills.common.${skillId}.cur`), 0);
-    const bonus = toInt(getAtPath(state, `characterRaw.skills.common.${skillId}.bonus`), 0);
+    const baselineRaw = getSkillStateNumber(skillId, 'cur', 0);
+    const bonus = getSkillStateNumber(skillId, 'bonus', 0);
     const baseline = professionalSet.has(skillId) ? Math.max(baselineRaw, 1) : baselineRaw;
     const maxCur = Math.max(Math.max(6 - bonus, 0), Math.max(0, baseline));
 
-    const requested = payload.skills && typeof payload.skills === 'object' ? toInt(payload.skills[skillId], baseline) : baseline;
+    const requested = skillId in requestedSkillValues ? requestedSkillValues[skillId]! : baseline;
     const clamped = Math.max(baseline, Math.min(maxCur, Math.max(0, requested)));
     nextSkillsCur[skillId] = clamped;
 
-    const cost = difficultyBySkillId.get(skillId) ? 2 : 1;
+    const cost = getSkillPointCost(skillId);
     // Budget is spent only on points allocated at this node, not on pre-existing baseline.
     const allocatedInNode = Math.max(0, clamped - baseline);
     const tokens = allocatedInNode * cost;

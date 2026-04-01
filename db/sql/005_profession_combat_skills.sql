@@ -157,14 +157,13 @@ INSERT INTO transitions (from_qu_qu_id, to_qu_qu_id, via_an_an_id, priority)
        ) AS v(an_id);
 
 -- Эффекты: добавление выбранных навыков в characterRaw.skills.initial[]
--- Маппинг skill_id -> название навыка в defaultCharacter.json
 WITH skill_mapping (skill_id, skill_name) AS ( VALUES
     ('tactics', 'tactics'),
     ('archery', 'archery'),
     ('athletics', 'athletics'),
     ('crossbow', 'crossbow'),
     ('small_blades', 'small_blades'),
-    ('staff_spear', 'staff'),  -- в defaultCharacter.json это 'staff'
+    ('staff_spear', 'staff_spear'),
     ('swordsmanship', 'swordsmanship'),
     ('melee', 'melee'),
     ('brawling', 'brawling'),
